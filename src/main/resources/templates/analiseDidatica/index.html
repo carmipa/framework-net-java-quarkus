@@ -1,0 +1,189 @@
+{#include shared/base.html}
+{#title}CyberNet Framework | FIAP - Paulo André{/title}
+{#content}
+<div class="container py-5">
+    {#include shared/main_menu.html activeMainMenu='analise' /}
+    {#include shared/project_header.html /}
+
+    {#if erro}
+    <div class="alert alert-danger" role="alert">
+        <strong>Erro:</strong> {erro}
+        {#if erroDidatico}
+        <div class="mt-2 small">
+            <div><strong>Causa:</strong> {erroDidatico.causa}</div>
+            <div><strong>Como corrigir:</strong> {erroDidatico.como_corrigir}</div>
+        </div>
+        {/if}
+    </div>
+    {/if}
+
+    <div class="card-tech p-4 shadow analise-didatica-wrap aed-card" data-active-tab="{activeTabPre}">
+        <span class="aed-eyebrow">Modo de análise</span>
+        <div class="aed-mode-grid tab-nav mb-3" role="tablist">
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="cidr" role="tab">
+                <span class="material-symbols-outlined">calculate</span><span>CIDR</span>
+            </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="mask" role="tab">
+                <span class="material-symbols-outlined">straighten</span><span>Máscara</span>
+            </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="wildcard" role="tab">
+                <span class="material-symbols-outlined">grid_view</span><span>Wildcard</span>
+            </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="autoip" role="tab">
+                <span class="material-symbols-outlined">auto_fix_high</span><span>Auto CIDR</span>
+            </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="dominio" role="tab">
+                <span class="material-symbols-outlined">language</span><span>Domínio</span>
+            </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="ipv6" role="tab">
+                <span class="material-symbols-outlined">public</span><span>IPv6</span>
+            </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="comparador" role="tab">
+                <span class="material-symbols-outlined">compare_arrows</span><span>Comparador</span>
+            </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="geo" role="tab">
+                <span class="material-symbols-outlined">travel_explore</span><span>Região Geo</span>
+            </button>
+        </div>
+
+        <div class="tab-panel" data-tab-panel="cidr">{#include analiseDidatica/partials/tab_cidr.html /}</div>
+        <div class="tab-panel" data-tab-panel="mask">{#include analiseDidatica/partials/tab_mask.html /}</div>
+        <div class="tab-panel" data-tab-panel="wildcard">{#include analiseDidatica/partials/tab_wildcard.html /}</div>
+        <div class="tab-panel" data-tab-panel="autoip">{#include analiseDidatica/partials/tab_autoip.html /}</div>
+        <div class="tab-panel" data-tab-panel="dominio">{#include analiseDidatica/partials/tab_dominio.html /}</div>
+        <div class="tab-panel" data-tab-panel="ipv6">{#include analiseDidatica/partials/tab_ipv6.html /}</div>
+        <div class="tab-panel" data-tab-panel="comparador">{#include analiseDidatica/partials/tab_comparador.html /}</div>
+        <div class="tab-panel" data-tab-panel="geo">{#include analiseDidatica/partials/tab_regiaoGeografica.html /}</div>
+
+        <div class="aed-action-row action-buttons mt-3">
+            <a href="/export/json" class="aed-btn aed-btn-json" target="_blank" rel="noopener">
+                <span class="material-symbols-outlined">download</span> Exportar JSON
+            </a>
+            <a href="/export/pdf" class="aed-btn aed-btn-pdf">
+                <span class="material-symbols-outlined">picture_as_pdf</span> Exportar PDF
+            </a>
+            <button type="button" class="aed-btn aed-btn-neutral" id="btn-copiar-resultado">
+                <span class="material-symbols-outlined">content_copy</span> Copiar resultado
+            </button>
+            <a id="btn-limpar-tela" href="/?tab={activeTabPre}" class="aed-btn aed-btn-danger">
+                <span class="material-symbols-outlined">delete_sweep</span> Limpar Tela
+            </a>
+        </div>
+        {#if textoCopia}
+        <textarea id="texto-copia-oculto" class="d-none" readonly>{textoCopia}</textarea>
+        {/if}
+    </div>
+
+    {#if comparadorOnly && comparadorCards}
+    <div class="aed-card card-tech p-4 shadow mt-4">
+        <span class="aed-eyebrow">Comparador</span>
+        <h5 class="mb-3 d-flex align-items-center gap-2" style="font-family:var(--aed-font-display);">
+            <span class="material-symbols-outlined text-warning">compare_arrows</span>
+            Comparador — IP {comparadorIp}
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-bordered table-sm mb-0">
+                <thead>
+                <tr>
+                    <th>Métrica</th>
+                    {#for card in comparadorCards}
+                    <th>/{card.cidr}</th>
+                    {/for}
+                </tr>
+                </thead>
+                <tbody>
+                <tr><td>Máscara</td>{#for card in comparadorCards}<td>{card.mask}</td>{/for}</tr>
+                <tr><td>Pulo</td>{#for card in comparadorCards}<td>{card.pulo}</td>{/for}</tr>
+                <tr><td>Hosts úteis</td>{#for card in comparadorCards}<td>{card.uteis}</td>{/for}</tr>
+                <tr><td>Rede</td>{#for card in comparadorCards}<td>{card.rede}</td>{/for}</tr>
+                <tr><td>Broadcast</td>{#for card in comparadorCards}<td>{card.broadcast}</td>{/for}</tr>
+                <tr><td>Risco/tema</td>{#for card in comparadorCards}<td>{card.nivel_tema}</td>{/for}</tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {/if}
+
+    {#include analiseDidatica/partials/resultado_ipv4.html /}
+
+    {#if ipv6Res}
+    <div class="aed-card card-tech p-4 shadow mt-4">
+        <span class="aed-eyebrow aed-eyebrow-indigo">IPv6</span>
+        <h5 class="mb-3 d-flex align-items-center gap-2" style="font-family:var(--aed-font-display);">
+            <span class="material-symbols-outlined text-info">public</span>
+            Resultado IPv6
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-sm table-bordered mb-0">
+                <tbody>
+                {#for item in ipv6Res.itens_exibicao}
+                <tr>
+                    <td>{item.icone} {item.campo}</td>
+                    <td>{item.valor}</td>
+                </tr>
+                {/for}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {/if}
+
+    <div class="card-tech p-3 shadow mt-4 history-box">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <h6 class="text-info mb-0 d-flex align-items-center gap-2"><span class="material-symbols-outlined">history</span> Histórico</h6>
+            <form method="GET" action="/" class="d-flex flex-wrap align-items-center gap-2 small">
+                <input type="hidden" name="tab" value="{activeTabPre}">
+                <label class="text-secondary">Por página</label>
+                <select name="history_limit" class="form-select form-select-sm bg-dark text-light border-secondary" style="width:auto;">
+                    <option value="5" {#if historyLimitPre == '5'}selected{/if}>5</option>
+                    <option value="10" {#if historyLimitPre == '10'}selected{/if}>10</option>
+                    <option value="20" {#if historyLimitPre == '20'}selected{/if}>20</option>
+                </select>
+                <input type="hidden" name="history_page" value="{historyPage}">
+                <button type="submit" class="btn btn-sm btn-outline-info">Aplicar</button>
+            </form>
+        </div>
+        <p class="small text-secondary mb-2">Página {historyPage} de {totalHistoryPages} · {historyPageItems.size} registro(s) nesta página</p>
+        <div class="table-responsive">
+            <table class="table table-dark table-sm table-bordered mb-0">
+                <thead>
+                <tr class="small text-secondary">
+                    <th>Data</th><th>Modo</th><th>Entrada</th><th>Rede</th><th>Tema</th><th></th>
+                </tr>
+                </thead>
+                <tbody>
+                {#if historyPageItems.isEmpty}
+                <tr><td colspan="6" class="text-secondary">Sem histórico.</td></tr>
+                {#else}
+                {#for item in historyPageItems}
+                <tr class="small">
+                    <td>{item.timestamp_utc}</td>
+                    <td>{item.modo}</td>
+                    <td>{item.ip_entrada}{item.ipv6_entrada}</td>
+                    <td>{item.rede}</td>
+                    <td>{item.tema}</td>
+                    <td><a href="/?replay={item.id}&tab={item.modo}" class="btn btn-sm btn-outline-info">Replay</a></td>
+                </tr>
+                {/for}
+                {/if}
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex flex-wrap justify-content-center align-items-center gap-3 mt-2">
+            {#if hasPrevHistory}
+            <a class="aed-btn aed-btn-neutral btn-sm" href="/?tab={activeTabPre}&history_limit={historyLimitPre}&history_page={historyPage - 1}"><span class="material-symbols-outlined">chevron_left</span> Anterior</a>
+            {/if}
+            <span class="small text-secondary fw-bold">Página {historyPage}/{totalHistoryPages}</span>
+            {#if hasNextHistory}
+            <a class="aed-btn aed-btn-neutral btn-sm" href="/?tab={activeTabPre}&history_limit={historyLimitPre}&history_page={historyPage + 1}">Próxima <span class="material-symbols-outlined">chevron_right</span></a>
+            {/if}
+        </div>
+    </div>
+</div>
+{/content}
+{#extraScripts}
+<script src="/analiseDidatica/js/geo_report.js"></script>
+<script src="/analiseDidatica/js/analise_widgets.js"></script>
+<script src="/analiseDidatica/js/analise.js"></script>
+{/extraScripts}
+{/include}

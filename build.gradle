@@ -1,0 +1,61 @@
+plugins {
+    id 'java'
+    id 'io.quarkus'
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+    implementation 'io.quarkus:quarkus-arc'
+    implementation 'io.quarkus:quarkus-rest'
+    implementation 'io.quarkus:quarkus-rest-jackson'
+    implementation 'io.quarkus:quarkus-rest-qute'
+    implementation 'io.quarkus:quarkus-qute'
+    implementation 'io.quarkus:quarkus-cache'
+    implementation 'io.quarkus:quarkus-vertx-http'
+    implementation 'com.github.seancfoley:ipaddress:5.5.1'
+    implementation 'com.maxmind.geoip2:geoip2:4.2.0'
+    testImplementation 'io.quarkus:quarkus-junit'
+    testImplementation 'io.rest-assured:rest-assured'
+}
+
+group = 'org.framework.net'
+version = '1.0.0-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+compileJava {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-parameters'
+}
+
+compileTestJava {
+    options.encoding = 'UTF-8'
+}
+
+quarkusDev {
+    jvmArgs = ['-Djava.awt.headless=false']
+    dependsOn 'purgeStaleDevConfig'
+}
+
+tasks.register('purgeStaleDevConfig') {
+    group = 'quarkus'
+    description = 'Remove artefatos de config obsoletos que quebram o hot-reload do Quarkus dev.'
+    doLast {
+        delete file('build/resources/main/application-dev.properties')
+    }
+}
+
+tasks.register('dev') {
+    group = 'application'
+    description = 'Inicia o Quarkus em modo dev (abre o navegador automaticamente).'
+    dependsOn tasks.named('quarkusDev')
+}
+

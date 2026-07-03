@@ -1,0 +1,813 @@
+/* =============================================================================
+   Framework A&D — Command Center Design System (FIAP 2026)
+   Spec: entrega-aed/prompt-framework-aed.md
+   ============================================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap");
+
+:root {
+    --aed-bg: #06080f;
+    --aed-text: #eef2f8;
+    --aed-text-secondary: #8b97ad;
+    --aed-text-faint: #5b6679;
+    --aed-teal: #2dd4bf;
+    --aed-teal-dim: rgba(45, 212, 191, 0.15);
+    --aed-indigo: #6366f1;
+    --aed-card-top: #0f1622;
+    --aed-card-bottom: #0a0e16;
+    --aed-input-bg: #0a0e16;
+    --aed-border: rgba(255, 255, 255, 0.07);
+    --aed-border-input: rgba(255, 255, 255, 0.10);
+    --aed-radius-card: 16px;
+    --aed-radius-input: 10px;
+    --aed-risk-critical: #f43f5e;
+    --aed-risk-attention: #f59e0b;
+    --aed-risk-safe: #34d399;
+    --aed-risk-didactic: #60a5fa;
+    --aed-nav-bg: rgba(6, 8, 15, 0.82);
+    --aed-font-ui: "Inter Tight", system-ui, sans-serif;
+    --aed-font-display: "Space Grotesk", system-ui, sans-serif;
+    --aed-font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* --- Base page --- */
+body.aed-app {
+    background-color: var(--aed-bg);
+    background-image:
+        radial-gradient(ellipse 80% 50% at 100% 0%, rgba(45, 212, 191, 0.08), transparent 50%),
+        radial-gradient(ellipse 60% 40% at 0% 0%, rgba(99, 102, 241, 0.07), transparent 45%);
+    background-attachment: fixed;
+    color: var(--aed-text);
+    font-family: var(--aed-font-ui);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    min-height: 100vh;
+}
+
+body.aed-app .container,
+body.aed-app .aed-page {
+    max-width: 1280px;
+}
+
+/* --- Top navigation --- */
+.aed-topnav {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 20px;
+    padding: 12px 20px;
+    margin: 0 calc(-1 * var(--bs-gutter-x, 12px)) 24px;
+    background: var(--aed-nav-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--aed-border);
+}
+
+.aed-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.aed-brand-logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--aed-teal), #22d3ee);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--aed-font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #041016;
+    flex-shrink: 0;
+}
+
+.aed-brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.aed-brand-kicker {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--aed-text-faint);
+}
+
+.aed-brand-title {
+    font-family: var(--aed-font-display);
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--aed-text);
+}
+
+.aed-nav-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.aed-nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--aed-text-secondary);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--aed-border);
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    min-height: 40px;
+}
+
+.aed-nav-link .material-symbols-outlined {
+    font-size: 1.1rem;
+}
+
+.aed-nav-link:hover {
+    color: var(--aed-text);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.aed-nav-link.is-active {
+    background: linear-gradient(135deg, var(--aed-teal), #22d3ee);
+    color: #041016;
+    border-color: transparent;
+    box-shadow: 0 4px 20px rgba(45, 212, 191, 0.25);
+}
+
+.aed-nav-link.is-active .material-symbols-outlined {
+    font-variation-settings: "FILL" 1;
+}
+
+/* --- Cards (override card-tech) --- */
+body.aed-app .card-tech,
+body.aed-app .aed-card {
+    background: linear-gradient(180deg, var(--aed-card-top), var(--aed-card-bottom)) !important;
+    border: 1px solid var(--aed-border) !important;
+    border-radius: var(--aed-radius-card) !important;
+    color: var(--aed-text);
+    box-shadow: none !important;
+}
+
+body.aed-app .header-tech {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin-bottom: 1.5rem;
+}
+
+/* --- Hero (Análise Didática) --- */
+.aed-hero {
+    display: grid;
+    grid-template-columns: minmax(200px, 420px) 1fr;
+    gap: 24px;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.aed-hero-art {
+    border-radius: var(--aed-radius-card);
+    border: 1px dashed var(--aed-border-input);
+    background: var(--aed-input-bg);
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.aed-hero-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--aed-radius-card);
+}
+
+.aed-hero-art-placeholder {
+    text-align: center;
+    padding: 24px;
+    color: var(--aed-text-faint);
+    font-size: 0.8rem;
+}
+
+.aed-hero-title {
+    font-family: var(--aed-font-display);
+    font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+    font-weight: 700;
+    color: var(--aed-text);
+    margin: 0 0 8px;
+    line-height: 1.2;
+}
+
+.aed-hero-sub {
+    color: var(--aed-text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+}
+
+.aed-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.aed-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border: 1px solid var(--aed-border);
+}
+
+.aed-chip-teal { background: var(--aed-teal-dim); color: var(--aed-teal); border-color: rgba(45, 212, 191, 0.3); }
+.aed-chip-blue { background: rgba(96, 165, 250, 0.12); color: var(--aed-risk-didactic); border-color: rgba(96, 165, 250, 0.25); }
+.aed-chip-amber { background: rgba(245, 158, 11, 0.12); color: var(--aed-risk-attention); border-color: rgba(245, 158, 11, 0.25); }
+.aed-chip-indigo { background: rgba(99, 102, 241, 0.12); color: #a5b4fc; border-color: rgba(99, 102, 241, 0.25); }
+
+/* --- Eyebrow labels --- */
+.aed-eyebrow {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--aed-teal);
+    margin-bottom: 6px;
+}
+
+.aed-eyebrow-indigo { color: #a5b4fc; }
+.aed-eyebrow-amber { color: var(--aed-risk-attention); }
+
+/* --- Mode selector grid --- */
+.aed-mode-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.aed-mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 8px;
+    border-radius: 12px;
+    border: 1px solid var(--aed-border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--aed-text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    min-height: 72px;
+}
+
+.aed-mode-btn .material-symbols-outlined {
+    font-size: 1.35rem;
+}
+
+.aed-mode-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--aed-text);
+}
+
+.aed-mode-btn.active,
+.tab-trigger.aed-mode-btn.active {
+    background: var(--aed-teal-dim);
+    border-color: rgba(45, 212, 191, 0.45);
+    color: var(--aed-teal);
+    box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.2);
+}
+
+/* --- Inputs --- */
+body.aed-app .form-control,
+body.aed-app .form-select,
+body.aed-app textarea.form-control {
+    background: var(--aed-input-bg) !important;
+    border: 1px solid var(--aed-border-input) !important;
+    border-radius: var(--aed-radius-input) !important;
+    color: var(--aed-text) !important;
+}
+
+body.aed-app .input-ip,
+body.aed-app .input-ipv4,
+body.aed-app .input-cidr,
+body.aed-app .font-monospace {
+    font-family: var(--aed-font-mono) !important;
+}
+
+body.aed-app .form-control:focus,
+body.aed-app .form-select:focus {
+    border-color: rgba(45, 212, 191, 0.5) !important;
+    box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.12) !important;
+}
+
+/* --- Action buttons row --- */
+.aed-action-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.aed-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border-radius: var(--aed-radius-input);
+    font-weight: 600;
+    font-size: 0.85rem;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    min-height: 44px;
+    transition: filter 0.15s, transform 0.1s;
+}
+
+.aed-btn:hover { filter: brightness(1.08); color: inherit; }
+.aed-btn:active { transform: scale(0.98); }
+
+.aed-btn-execute {
+    background: linear-gradient(135deg, var(--aed-teal), #22d3ee);
+    color: #041016;
+}
+
+.aed-btn-json {
+    background: rgba(45, 212, 191, 0.2);
+    color: var(--aed-teal);
+    border: 1px solid rgba(45, 212, 191, 0.35);
+}
+
+.aed-btn-pdf {
+    background: rgba(96, 165, 250, 0.2);
+    color: var(--aed-risk-didactic);
+    border: 1px solid rgba(96, 165, 250, 0.35);
+}
+
+.aed-btn-neutral {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--aed-text-secondary);
+    border: 1px solid var(--aed-border);
+}
+
+.aed-btn-danger {
+    background: rgba(244, 63, 94, 0.15);
+    color: var(--aed-risk-critical);
+    border: 1px solid rgba(244, 63, 94, 0.35);
+}
+
+.aed-btn-indigo {
+    background: linear-gradient(135deg, var(--aed-indigo), #818cf8);
+    color: #fff;
+}
+
+.aed-btn-amber {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--aed-risk-attention);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+/* --- Class result banner --- */
+.aed-class-banner {
+    border-radius: var(--aed-radius-card);
+    padding: 24px;
+    background: linear-gradient(135deg, rgba(45, 212, 191, 0.08), rgba(99, 102, 241, 0.06));
+    border: 1px solid rgba(45, 212, 191, 0.2);
+    box-shadow: 0 0 40px rgba(45, 212, 191, 0.06);
+    margin-bottom: 20px;
+}
+
+.aed-class-cidr {
+    color: var(--aed-text);
+    font-size: 0.55em;
+    font-weight: 600;
+}
+
+.classe-unif-classe {
+    font-family: var(--aed-font-display);
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 700;
+    color: var(--aed-teal);
+}
+
+/* --- Bit decomposition --- */
+.aed-bit-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.aed-octet-card {
+    background: var(--aed-input-bg);
+    border: 1px solid var(--aed-border);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+}
+
+.aed-bit-cell {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--aed-font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin: 2px;
+}
+
+.aed-bit-on {
+    background: var(--aed-teal);
+    color: #041016;
+}
+
+.aed-bit-off {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--aed-text-faint);
+    border: 1px solid var(--aed-border);
+}
+
+/* --- Capacity mini-cards --- */
+.aed-capacity-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.aed-capacity-card {
+    background: var(--aed-input-bg);
+    border: 1px solid var(--aed-border);
+    border-radius: 12px;
+    padding: 14px;
+}
+
+.aed-capacity-card strong {
+    display: block;
+    font-family: var(--aed-font-display);
+    font-size: 1.5rem;
+    color: var(--aed-teal);
+}
+
+.aed-capacity-label {
+    font-size: 0.7rem;
+    color: var(--aed-text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* --- Stats bar (Portas) --- */
+.aed-stats-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 24px 40px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.aed-stat-num {
+    font-family: var(--aed-font-display);
+    font-size: 1.75rem;
+    font-weight: 700;
+    display: block;
+}
+
+.aed-stat-num.critical { color: var(--aed-risk-critical); }
+.aed-stat-num.attention { color: var(--aed-risk-attention); }
+.aed-stat-num.safe { color: var(--aed-risk-safe); }
+.aed-stat-num.total { color: var(--aed-teal); }
+
+.aed-stat-label {
+    font-size: 0.72rem;
+    color: var(--aed-text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* --- Risk badges --- */
+.aed-risk-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.aed-risk-badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+/* --- Telemetry KPI --- */
+.aed-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.aed-kpi-card {
+    padding: 18px 20px;
+    border-radius: var(--aed-radius-card);
+    background: linear-gradient(180deg, var(--aed-card-top), var(--aed-card-bottom));
+    border: 1px solid var(--aed-border);
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.aed-kpi-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.aed-kpi-icon.teal { background: var(--aed-teal-dim); color: var(--aed-teal); }
+.aed-kpi-icon.indigo { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; }
+.aed-kpi-icon.amber { background: rgba(245, 158, 11, 0.15); color: var(--aed-risk-attention); }
+.aed-kpi-icon.rose { background: rgba(244, 63, 94, 0.15); color: var(--aed-risk-critical); }
+
+.aed-kpi-value {
+    font-family: var(--aed-font-display);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--aed-text);
+    line-height: 1.1;
+}
+
+.aed-kpi-label {
+    font-size: 0.72rem;
+    color: var(--aed-text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.aed-charts-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr 1.2fr;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+/* --- Console --- */
+.aed-console {
+    font-family: var(--aed-font-mono);
+    font-size: 0.78rem;
+    background: #050810;
+    border: 1px solid var(--aed-border);
+    border-radius: 12px;
+    padding: 14px;
+    max-height: 280px;
+    overflow: auto;
+    color: var(--aed-text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.aed-console .level-info { color: var(--aed-risk-didactic); }
+.aed-console .level-warn { color: var(--aed-risk-attention); }
+.aed-console .level-error { color: var(--aed-risk-critical); }
+.aed-console .level-post { color: var(--aed-teal); }
+.aed-console .level-auth { color: #c4b5fd; }
+
+/* --- Documentation layout --- */
+.aed-doc-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+.aed-doc-sidebar {
+    position: sticky;
+    top: 80px;
+}
+
+/* --- Footer --- */
+.aed-footer {
+    text-align: center;
+    padding: 28px 16px 36px;
+    color: var(--aed-text-faint);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--aed-border);
+    margin-top: 40px;
+}
+
+.aed-footer strong {
+    color: var(--aed-text-secondary);
+}
+
+.aed-footer a {
+    color: var(--aed-teal);
+    text-decoration: none;
+}
+
+.aed-footer a:hover {
+    text-decoration: underline;
+}
+
+/* --- Tables --- */
+body.aed-app .table-dark {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--aed-text);
+    --bs-table-border-color: var(--aed-border);
+}
+
+body.aed-app .datagrid-table td:first-child {
+    font-family: var(--aed-font-mono);
+    color: var(--aed-teal);
+}
+
+body.aed-app .protocolos-grid .datagrid-table td:first-child {
+    color: #a5b4fc;
+}
+
+/* --- Material symbols baseline --- */
+.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+    vertical-align: middle;
+    line-height: 1;
+}
+
+/* --- Hide legacy main menu when aed topnav present --- */
+body.aed-app .main-menu-wrap {
+    display: none;
+}
+
+/* --- Tab panels --- */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* --- Admin login --- */
+.aed-admin-card {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 28px;
+}
+
+/* --- Input history dropdown (últimas 5 pesquisas) --- */
+.fn-input-history-panel {
+    position: fixed;
+    z-index: 2000;
+    background: linear-gradient(180deg, var(--aed-card-top), var(--aed-card-bottom));
+    border: 1px solid var(--aed-border);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    padding: 6px;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.fn-ih-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px 8px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--aed-text-faint);
+}
+
+.fn-ih-header .material-symbols-outlined {
+    font-size: 0.95rem;
+}
+
+.fn-ih-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.fn-ih-label {
+    flex: 1 1 auto;
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: var(--aed-text);
+    font-family: var(--aed-font-mono);
+    font-size: 0.82rem;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fn-ih-label:hover {
+    background: rgba(45, 212, 191, 0.12);
+    color: var(--aed-teal);
+}
+
+.fn-ih-del {
+    flex: 0 0 auto;
+    background: transparent;
+    border: none;
+    color: var(--aed-text-faint);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.fn-ih-del .material-symbols-outlined {
+    font-size: 1rem;
+}
+
+.fn-ih-del:hover {
+    color: var(--aed-risk-critical);
+    background: rgba(244, 63, 94, 0.12);
+}
+
+.fn-ih-clear {
+    width: 100%;
+    margin-top: 4px;
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--aed-border);
+    color: var(--aed-text-secondary);
+    font-size: 0.72rem;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 0 0 8px 8px;
+}
+
+.fn-ih-clear:hover {
+    color: var(--aed-risk-critical);
+}
+
+/* --- Responsive --- */
+@media (max-width: 992px) {
+    .aed-hero { grid-template-columns: 1fr; }
+    .aed-action-row { grid-template-columns: repeat(2, 1fr); }
+    .aed-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .aed-charts-grid { grid-template-columns: 1fr; }
+    .aed-bit-grid { grid-template-columns: repeat(2, 1fr); }
+    .aed-doc-layout { grid-template-columns: 1fr; }
+    .aed-doc-sidebar { position: static; }
+}
+
+@media (max-width: 576px) {
+    .aed-topnav { padding: 10px 12px; }
+    .aed-nav-tabs { width: 100%; }
+    .aed-nav-link { flex: 1 1 auto; justify-content: center; font-size: 0.72rem; padding: 8px 10px; }
+    .aed-nav-link span:not(.material-symbols-outlined) { display: none; }
+    .aed-action-row { grid-template-columns: 1fr; }
+    .aed-mode-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* --- Bootstrap alert overrides --- */
+body.aed-app .alert-secondary {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--aed-border);
+    color: var(--aed-text-secondary);
+}
+
+body.aed-app .text-muted,
+body.aed-app .text-secondary {
+    color: var(--aed-text-secondary) !important;
+}
+
+body.aed-app h2, body.aed-app h3, body.aed-app h4, body.aed-app h5, body.aed-app h6 {
+    font-family: var(--aed-font-display);
+}
+
+body.aed-app .text-warning { color: var(--aed-risk-attention) !important; }
+body.aed-app .text-info { color: var(--aed-teal) !important; }

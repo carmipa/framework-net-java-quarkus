@@ -1,0 +1,192 @@
+.telemetry-page {
+    width: var(--layout-max, 96%);
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.telemetry-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.telemetry-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.section-kicker {
+    display: block;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8b949e;
+}
+
+.telemetry-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.telemetry-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14.062%, 1fr));
+    gap: 0.75rem;
+}
+
+.telemetry-metric-card {
+    padding: 1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.metric-eyebrow {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #8b949e;
+}
+
+.telemetry-metric-card strong {
+    font-size: 1.6rem;
+    color: #f0b429;
+    line-height: 1.1;
+}
+
+.console-card {
+    padding: 1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.console-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.console-header h3 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #8b949e;
+    margin: 0;
+}
+
+.console-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.btn-clear-console,
+.btn-toggle-console,
+.btn-copy-console {
+    background-color: transparent;
+    border: var(--border-thin, 0.1%) solid #30363d;
+    padding: 0.312% 0.781%;
+    border-radius: 0.312%;
+    color: #c9d1d9;
+    font-family: Consolas, monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+.btn-clear-console:hover,
+.btn-toggle-console:hover,
+.btn-copy-console:hover {
+    color: #f0b429;
+    border-color: #f0b429;
+    background-color: rgba(240, 180, 41, 0.08);
+}
+
+.telemetry-shell {
+    min-height: 60%;
+}
+
+.console-body {
+    background-color: #0d1117;
+    border-radius: var(--radius-md, 0.47%);
+    padding: 1.094%;
+    font-family: Consolas, monospace;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: #c9d1d9;
+    border: var(--border-thin, 0.1%) solid #30363d;
+    height: 32%;
+    min-height: 18%;
+    max-height: 70%;
+    overflow-y: auto;
+    resize: vertical;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.console-body.expanded {
+    height: 52%;
+    min-height: 28%;
+}
+
+.telemetry-search {
+    max-width: 25.0%;
+    background-color: #0d1117;
+    border-color: #30363d;
+    color: #c9d1d9;
+}
+
+.telemetry-table-count {
+    font-size: 0.76rem;
+    color: #8b949e;
+}
+
+.telemetry-table thead th {
+    background-color: #21262d;
+    border-color: #30363d;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.telemetry-table td {
+    font-size: 0.78rem;
+    vertical-align: top;
+}
+
+.telemetry-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    font-size: 0.8rem;
+    color: #8b949e;
+}
+
+.level-info { color: #58a6ff; }
+.level-warn { color: #d29922; }
+.level-error { color: #f85149; }
+.level-debug { color: #8b949e; }
+
+.telemetry-path {
+    font-family: Consolas, monospace;
+}
+
+.console-body::-webkit-scrollbar {
+    width: 0.625%;
+}
+
+.console-body::-webkit-scrollbar-thumb {
+    background: #30363d;
+    border-radius: 0.312%;
+}

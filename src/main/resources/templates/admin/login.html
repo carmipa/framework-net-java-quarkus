@@ -1,0 +1,38 @@
+{#include shared/base.html}
+{#title}Acesso administrativo | Framework A&D{/title}
+{#content}
+<div class="container py-5">
+    {#include shared/main_menu.html activeMainMenu='' /}
+    <div class="aed-card card-tech aed-admin-card">
+        <span class="aed-eyebrow aed-eyebrow-amber">Administração</span>
+        <h2 class="mb-2" style="font-family:var(--aed-font-display);">Acesso administrativo</h2>
+        <p class="small text-secondary mb-3">
+            Necessário apenas para <strong class="text-light">Exportação</strong> de dados sensíveis.
+            {#if !enforcementActive}
+            <span class="d-block mt-2 text-info">Proteção por API key desativada neste ambiente.</span>
+            {/if}
+        </p>
+
+        {#if erro}
+        <div class="alert alert-danger py-2 small">Chave inválida. Tente novamente.</div>
+        {/if}
+
+        <form method="POST" action="/admin/login" class="problem-box p-3 border border-secondary rounded">
+            <input type="hidden" name="redirect" value="{redirect}">
+            <div class="mb-3">
+                <label class="form-label text-secondary small">API key administrativa</label>
+                <input type="password" name="api_key" class="form-control font-monospace"
+                       autocomplete="current-password" required {#if !enforcementActive}disabled{/if}>
+            </div>
+            <button type="submit" class="aed-btn aed-btn-amber w-100" {#if !enforcementActive}disabled{/if}>
+                <span class="material-symbols-outlined">login</span> Entrar
+            </button>
+        </form>
+
+        <p class="small text-secondary mt-3 mb-0">
+            Para scripts, envie o header <code class="text-info">X-Admin-Api-Key</code> em cada requisição.
+        </p>
+    </div>
+</div>
+{/content}
+{/include}

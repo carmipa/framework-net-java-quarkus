@@ -1,0 +1,50 @@
+{#include shared/base.html}
+{#title}Documentação | CyberNet Framework{/title}
+{#extraHead}
+<link rel="stylesheet" href="/web/css/documentacao.css?v=20260703">
+{/extraHead}
+{#content}
+<div class="container py-5">
+    {#include shared/main_menu.html activeMainMenu='documentacao' /}
+    {#include shared/project_header.html /}
+
+    <div class="doc-hero mb-3 card-tech p-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h4 class="text-warning mb-1 d-flex align-items-center gap-2"><span class="material-symbols-outlined">menu_book</span> Central de Documentação</h4>
+                <div class="text-light opacity-75 small">Visão arquitetural, stack e guias em formato web.</div>
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <span class="badge bg-secondary">{nomeDocumento}</span>
+                <a href="/documentacao" class="aed-btn aed-btn-amber btn-sm"><span class="material-symbols-outlined">refresh</span> Atualizar</a>
+            </div>
+        </div>
+    </div>
+
+    {#if erro}
+    <div class="alert alert-danger">{erro}</div>
+    {#else}
+    <div class="doc-layout aed-doc-layout">
+        <aside class="doc-sidebar aed-doc-sidebar aed-card card-tech p-3">
+            <span class="aed-eyebrow">Sumário</span>
+            <div class="small text-secondary fw-semibold mb-2">NAVEGAÇÃO</div>
+            {#if secoes.isEmpty}
+            <div class="small text-secondary">Sem títulos mapeados.</div>
+            {#else}
+            {#for secao in secoes}
+            <a href="#{secao.id}" class="doc-toc-link doc-toc-nivel-{secao.nivel}">{secao.titulo}</a>
+            {/for}
+            {/if}
+        </aside>
+        <section class="doc-content-wrap card-tech p-3">
+            <article class="markdown-doc">{conteudoHtml}</article>
+        </section>
+    </div>
+    {/if}
+</div>
+{/content}
+{#extraScripts}
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="/web/js/documentacao.js?v=20260703"></script>
+{/extraScripts}
+{/include}

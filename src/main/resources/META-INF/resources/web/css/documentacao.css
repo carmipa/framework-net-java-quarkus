@@ -1,0 +1,95 @@
+.doc-hero {
+    border-left: 0.312% solid #f0b429;
+}
+
+.doc-layout {
+    display: grid;
+    grid-template-columns: 21.875% minmax(0, 1fr);
+    gap: 1rem;
+    min-height: 70%;
+}
+
+.doc-sidebar {
+    max-height: 70%;
+    overflow: auto;
+    position: sticky;
+    top: 1rem;
+}
+
+.doc-toc-link {
+    display: block;
+    color: #c9d1d9;
+    text-decoration: none;
+    padding: 0.35rem 0.5rem;
+    border-radius: 0.469%;
+    margin-bottom: 0.1rem;
+    font-size: 0.92rem;
+    border: var(--border-thin, 0.1%) solid transparent;
+}
+
+.doc-toc-link:hover {
+    background: rgba(88, 166, 255, 0.16);
+    border-color: #388bfd;
+    color: #fff;
+}
+
+.doc-toc-link.active {
+    background: rgba(240, 180, 41, 0.2);
+    border-color: #f0b429;
+    color: #f9e2a4;
+    font-weight: 700;
+}
+
+.doc-toc-nivel-1 { padding-left: 0.469%; }
+.doc-toc-nivel-2 { padding-left: 1.406%; }
+.doc-toc-nivel-3 { padding-left: 2.344%; }
+.doc-toc-nivel-4 { padding-left: 3.281%; }
+
+.doc-content-wrap {
+    max-height: 70%;
+    overflow: auto;
+}
+
+.markdown-doc {
+    line-height: 1.65;
+    color: #c9d1d9;
+}
+
+.markdown-doc h1,
+.markdown-doc h2,
+.markdown-doc h3,
+.markdown-doc h4 {
+    color: #58a6ff;
+    margin-top: 1.2rem;
+    margin-bottom: 0.55rem;
+    scroll-margin-top: 1rem;
+}
+
+.markdown-doc pre {
+    background: #0d1117;
+    border: var(--border-thin, 0.1%) solid #30363d;
+    border-radius: 0.469%;
+    padding: 0.75rem;
+    overflow-x: auto;
+}
+
+.markdown-doc code {
+    color: #f0b429;
+}
+
+.markdown-doc .mermaid {
+    background: #fff;
+    border-radius: 0.625%;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+@media (max-width: 62em) {
+    .doc-layout {
+        grid-template-columns: 1fr;
+    }
+    .doc-sidebar {
+        position: static;
+        max-height: 70%;
+    }
+}

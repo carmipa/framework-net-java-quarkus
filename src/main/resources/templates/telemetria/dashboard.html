@@ -1,0 +1,132 @@
+{#include shared/base.html}
+{#title}Telemetria | Framework de Redes A&D{/title}
+{#extraHead}
+<link rel="stylesheet" href="/telemetria/css/dashboard.css?v=20260703">
+{/extraHead}
+{#content}
+<div class="container py-4 telemetry-page aed-page">
+    {#include shared/main_menu.html activeMainMenu='telemetria' /}
+
+    <div class="aed-card card-tech p-4 mb-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div>
+                <span class="aed-eyebrow">Observabilidade</span>
+                <h2 class="mb-1" style="font-family:var(--aed-font-display);">Telemetria do Framework</h2>
+                <p class="text-secondary small mb-0">Eventos, métricas HTTP, gráficos e console em tempo real.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="aed-btn aed-btn-neutral" id="btn-refresh-telemetria">
+                    <span class="material-symbols-outlined">refresh</span> Atualizar
+                </button>
+                <a class="aed-btn aed-btn-json" href="/telemetria/api/exportar" target="_blank" rel="noopener">
+                    <span class="material-symbols-outlined">download</span> Exportar JSON
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="aed-kpi-grid">
+        <article class="aed-kpi-card">
+            <div class="aed-kpi-icon teal"><span class="material-symbols-outlined">analytics</span></div>
+            <div>
+                <div class="aed-kpi-label">Total de eventos</div>
+                <div class="aed-kpi-value" id="t-total-eventos">0</div>
+            </div>
+        </article>
+        <article class="aed-kpi-card">
+            <div class="aed-kpi-icon indigo"><span class="material-symbols-outlined">hub</span></div>
+            <div>
+                <div class="aed-kpi-label">Módulos ativos</div>
+                <div class="aed-kpi-value" id="t-modulos">0</div>
+            </div>
+        </article>
+        <article class="aed-kpi-card">
+            <div class="aed-kpi-icon amber"><span class="material-symbols-outlined">http</span></div>
+            <div>
+                <div class="aed-kpi-label">HTTP OK / Erro</div>
+                <div class="aed-kpi-value" id="t-http-ratio" style="font-size:1.25rem;">0 / 0</div>
+            </div>
+        </article>
+        <article class="aed-kpi-card">
+            <div class="aed-kpi-icon rose"><span class="material-symbols-outlined">speed</span></div>
+            <div>
+                <div class="aed-kpi-label">Latência média</div>
+                <div class="aed-kpi-value" id="t-latencia" style="font-size:1.25rem;">-- ms</div>
+            </div>
+        </article>
+    </div>
+
+    <div class="aed-charts-grid">
+        <div class="aed-card card-tech p-3">
+            <span class="aed-eyebrow aed-eyebrow-indigo">Análise</span>
+            <h6 class="text-secondary text-uppercase small mb-2">Eventos por módulo</h6>
+            <canvas id="chart-modulos" height="200"></canvas>
+        </div>
+        <div class="aed-card card-tech p-3">
+            <span class="aed-eyebrow">HTTP</span>
+            <h6 class="text-secondary text-uppercase small mb-2">Métodos HTTP</h6>
+            <canvas id="chart-niveis" height="200"></canvas>
+        </div>
+        <div class="aed-card card-tech p-3">
+            <span class="aed-eyebrow aed-eyebrow-amber">Tempo real</span>
+            <h6 class="text-secondary text-uppercase small mb-2">Requisições/minuto</h6>
+            <canvas id="chart-atividade" height="200"></canvas>
+        </div>
+    </div>
+
+    <div class="aed-card card-tech console-card mb-3 p-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <div>
+                <span class="aed-eyebrow">Console</span>
+                <h3 class="h6 mb-0">Console ao vivo</h3>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="aed-btn aed-btn-neutral btn-sm btn-toggle-console" data-target="console-telemetria">
+                    <span class="material-symbols-outlined">unfold_more</span>
+                </button>
+                <button type="button" class="aed-btn aed-btn-neutral btn-sm btn-copy-console" data-target="console-telemetria">
+                    <span class="material-symbols-outlined">content_copy</span>
+                </button>
+                <button type="button" class="aed-btn aed-btn-danger btn-sm btn-clear-console" data-target="console-telemetria">Limpar</button>
+            </div>
+        </div>
+        <pre class="aed-console console-body" id="console-telemetria">Aguardando eventos...</pre>
+        <p class="telemetry-path small text-secondary mb-0 mt-2" id="t-pasta-logs"></p>
+    </div>
+
+    <div class="aed-card card-tech p-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <h6 class="mb-0">Histórico de eventos</h6>
+            <input type="search" class="form-control form-control-sm telemetry-search" id="t-table-search" placeholder="Buscar evento, módulo ou mensagem..." style="max-width:280px;">
+        </div>
+        <p class="telemetry-table-count small text-secondary" id="t-table-count">0 eventos</p>
+        <div class="table-responsive">
+            <table class="table table-dark table-sm table-hover telemetry-table mb-2">
+                <thead>
+                <tr>
+                    <th>Horário</th>
+                    <th>Nível</th>
+                    <th>Módulo</th>
+                    <th>Evento</th>
+                    <th>Status</th>
+                    <th>Mensagem</th>
+                </tr>
+                </thead>
+                <tbody id="t-table-body">
+                <tr><td colspan="6" class="text-secondary">Carregando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="telemetry-pagination d-flex gap-2 align-items-center justify-content-center mt-2">
+            <button type="button" class="aed-btn aed-btn-neutral btn-sm" id="t-page-prev">Anterior</button>
+            <span id="t-page-info" class="small text-secondary">Página 1</span>
+            <button type="button" class="aed-btn aed-btn-neutral btn-sm" id="t-page-next">Próxima</button>
+        </div>
+    </div>
+</div>
+{/content}
+{#extraScripts}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/telemetria/js/dashboard.js?v=20260703b"></script>
+{/extraScripts}
+{/include}

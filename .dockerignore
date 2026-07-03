@@ -1,0 +1,17 @@
+# Contexto de build multi-stage (Gradle compila dentro da imagem)
+.git
+.github
+.idea
+.vscode
+.cursor
+.gradle
+build
+python
+logs
+docker-data
+data
+**/*.md
+**/*.iml
+**/.DS_Store
+terminals
+agent-transcripts

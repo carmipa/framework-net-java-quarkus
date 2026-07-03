@@ -1,0 +1,47 @@
+<nav class="aed-topnav" aria-label="Menu principal">
+    <a href="/" class="aed-brand">
+        <div class="aed-brand-logo" aria-hidden="true">A&amp;D</div>
+        <div class="aed-brand-text">
+            <span class="aed-brand-kicker">Menu principal</span>
+            <span class="aed-brand-title">Framework de Redes</span>
+        </div>
+    </a>
+    <div class="aed-nav-tabs">
+        <a href="/"
+           class="aed-nav-link {#if activeMainMenu == 'analise'}is-active{/if}"
+           title="Análise didática de IPv4/IPv6, CIDR, máscara, wildcard e comparador">
+            <span class="material-symbols-outlined" aria-hidden="true">insights</span>
+            <span>Análise Didática</span>
+        </a>
+        <a href="/portas"
+           class="aed-nav-link {#if activeMainMenu == 'portas'}is-active{/if}"
+           title="Catálogo de portas TCP/UDP">
+            <span class="material-symbols-outlined" aria-hidden="true">settings_ethernet</span>
+            <span>Portas</span>
+        </a>
+        <a href="/protocolos"
+           class="aed-nav-link {#if activeMainMenu == 'protocolos'}is-active{/if}"
+           title="Catálogo de protocolos de rede">
+            <span class="material-symbols-outlined" aria-hidden="true">lan</span>
+            <span>Protocolos</span>
+        </a>
+        <a href="/resolucao-problemas"
+           class="aed-nav-link {#if activeMainMenu == 'resolucao'}is-active{/if}"
+           title="VLSM dinâmico, WAN e roteamento">
+            <span class="material-symbols-outlined" aria-hidden="true">extension</span>
+            <span>Resolução (VLSM+WAN)</span>
+        </a>
+        <a href="/telemetria"
+           class="aed-nav-link {#if activeMainMenu == 'telemetria'}is-active{/if}"
+           title="Dashboard de telemetria e console ao vivo">
+            <span class="material-symbols-outlined" aria-hidden="true">monitoring</span>
+            <span>Telemetria</span>
+        </a>
+        <a href="/documentacao"
+           class="aed-nav-link {#if activeMainMenu == 'documentacao'}is-active{/if}"
+           title="Documentação técnica do projeto">
+            <span class="material-symbols-outlined" aria-hidden="true">menu_book</span>
+            <span>Documentação</span>
+        </a>
+    </div>
+</nav>
