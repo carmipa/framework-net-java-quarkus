@@ -61,7 +61,12 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 
 | Módulo | Rota | Método | Descrição |
 |--------|------|--------|-----------|
-| Análise Didática | `/` | GET/POST | CIDR, máscara, wildcard, auto-CIDR, domínio, IPv6, comparador (parâmetro `?tab=`) |
+| Início | `/` | GET | Página inicial (landing) com atalhos para os módulos |
+| Análise Didática | `/analise` | GET/POST | CIDR, máscara, wildcard, auto-CIDR, domínio, IPv6, comparador (parâmetro `?tab=`) |
+| Localização | `/localizacao` | GET | Localização por IP e por CEP no mapa |
+| Localização (API) | `/localizacao/api/ip`, `/localizacao/api/cep` | GET | JSON: geolocalização por IP / endereço por CEP (ViaCEP + OSM) |
+| Tráfego | `/trafego` | GET | Decodificador didático de pacotes (hex dump) |
+| Tráfego (API) | `/trafego/api/decodificar` | POST | JSON: camadas Ethernet/IP/TCP/UDP/ICMP decodificadas |
 | GeoIP | `/informacoes` | GET | Página de geolocalização (`?ip=`) |
 | GeoIP (API) | `/api/informacoes/geo` | GET | JSON de geolocalização (`?ip=`) |
 | Referência de máscaras | `/mascara-referencia` | GET | Tabela JSON de máscaras/prefixos |

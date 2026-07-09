@@ -16,9 +16,9 @@ Cobre análise de IPv4/IPv6, CIDR, máscaras, wildcard, VLSM, topologia WAN, scr
 |--------|------|-----------|
 | Início | `/` | Página inicial (landing) com visão geral e atalhos para os módulos |
 | Análise Didática | `/analise` | CIDR, máscara, wildcard, auto-CIDR, domínio, IPv6, comparador |
-| Localização | `/localizacao` | Localização por IP (aproximada) e por CEP (ViaCEP) em mapa OpenStreetMap |
+| Localização | `/localizacao` | **GeoIP por IP** (região/ISP/risco, movido da Análise Didática) + **CEP** (ViaCEP) em mapa OpenStreetMap |
 | Tráfego | `/trafego` | Decodificador didático de pacotes (hex dump → Ethernet/IP/TCP/UDP/ICMP) |
-| GeoIP | `/informacoes` | Geolocalização de IP (MaxMind, opcional) |
+| GeoIP (página) | `/informacoes` | Página autônoma de geolocalização de IP (MaxMind + fallback) |
 | Portas | `/portas` | Catálogo interativo TCP/UDP |
 | Protocolos | `/protocolos` | Catálogo + troubleshooting de roteamento |
 | Resolução VLSM | `/resolucao-problemas` | Cenários VLSM/WAN, demos, exports e **ZIP da turma** |

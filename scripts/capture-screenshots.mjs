@@ -93,11 +93,10 @@ const SCENARIOS = [
         },
     },
     {
-        file: "08-home-geo",
+        file: "08-localizacao-geo",
         async run(page) {
-            await page.goto(`${BASE}/analise?tab=geo`, { waitUntil: "networkidle" });
-            await page.click('.tab-trigger[data-tab="geo"]');
-            await page.waitForTimeout(500);
+            await page.goto(`${BASE}/localizacao`, { waitUntil: "networkidle" });
+            await page.waitForSelector("#form-geo-ip", { timeout: 15000 });
             await page.fill("#geo-ip-digitar", "8.8.8.8");
             await page.click("#btn-geo-localizar");
             await page.waitForFunction(

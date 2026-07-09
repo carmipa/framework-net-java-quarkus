@@ -1,5 +1,5 @@
-/* Módulo Localização: consulta IP/CEP e plota no mapa Leaflet/OpenStreetMap. */
-(function () {
+/* Módulo Localização: mapa Leaflet compartilhado + consulta de CEP (ViaCEP + OSM). */
+(function (w) {
     "use strict";
 
     var map = null;
@@ -17,6 +17,7 @@
         }).addTo(map);
     }
 
+    // Exposto para o painel GeoIP (geo-panel.js) plotar resultados no mesmo mapa.
     function setMarker(lat, lon, label) {
         if (!map || lat === null || lat === undefined || lon === null || lon === undefined) {
             return false;
@@ -59,7 +60,7 @@
     }
 
     function titulo(el, texto) {
-        var h = document.createElement("h3");
+        var h = document.createElement("h5");
         h.className = "loc-form-title";
         h.textContent = texto;
         el.appendChild(h);
@@ -79,34 +80,13 @@
         el.appendChild(p);
     }
 
-    function mostrarErro(mensagem) {
-        var el = painel();
-        titulo(el, "Não foi possível localizar");
-        aviso(el, mensagem || "Tente novamente.", "loc-alerta loc-erro");
-    }
-
-    function renderIp(data) {
-        var el = painel();
-        titulo(el, "Localização por IP (aproximada)");
-        var g = grid(el);
-        g.appendChild(item("IP consultado", data.ip));
-        g.appendChild(item("País", data.pais));
-        g.appendChild(item("Região/Estado", data.regiao));
-        g.appendChild(item("Cidade", data.cidade));
-        g.appendChild(item("Provedor (ISP)", data.isp));
-        g.appendChild(item("Coordenadas", (data.latitude != null && data.longitude != null)
-            ? (data.latitude + ", " + data.longitude) : null));
-        g.appendChild(item("Risco", data.risco_nivel));
-        g.appendChild(item("Fonte", data.fonte));
-        aviso(el, "Precisão: cidade/provedor. O IP não identifica a residência de uma pessoa.");
-        if (!setMarker(data.latitude, data.longitude, "IP " + (data.ip || "") + " · " + (data.cidade || ""))) {
-            if (data.reservado) {
-                aviso(el, "IP reservado/privado (RFC 1918, loopback, etc.) — sem localização pública.", "loc-alerta");
-            }
-        }
-    }
-
     function renderCep(data) {
+        if (!data || data.ok === false) {
+            var e = painel();
+            titulo(e, "CEP não localizado");
+            aviso(e, (data && data.mensagem) || "Verifique o CEP informado.", "loc-alerta loc-erro");
+            return;
+        }
         var el = painel();
         titulo(el, "Endereço por CEP");
         var g = grid(el);
@@ -126,45 +106,25 @@
         }
     }
 
-    function buscarJson(url, onOk) {
-        fetch(url, { headers: { Accept: "application/json" } })
+    function buscarCep() {
+        var cep = (document.getElementById("loc-cep").value || "").trim();
+        fetch("/localizacao/api/cep?cep=" + encodeURIComponent(cep), { headers: { Accept: "application/json" } })
             .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (data && data.ok === false) {
-                    mostrarErro(data.mensagem);
-                    return;
-                }
-                onOk(data);
-            })
-            .catch(function () { mostrarErro("Falha de rede na consulta."); });
-    }
-
-    function bind() {
-        var formIp = document.getElementById("form-loc-ip");
-        var formCep = document.getElementById("form-loc-cep");
-        var meuIp = document.getElementById("loc-meu-ip");
-
-        if (formIp) {
-            formIp.addEventListener("submit", function () {
-                var ip = (document.getElementById("loc-ip").value || "").trim();
-                buscarJson("/localizacao/api/ip?ip=" + encodeURIComponent(ip), renderIp);
+            .then(renderCep)
+            .catch(function () {
+                var e = painel();
+                titulo(e, "Falha na consulta");
+                aviso(e, "Falha de rede ao consultar o CEP.", "loc-alerta loc-erro");
             });
-        }
-        if (meuIp) {
-            meuIp.addEventListener("click", function () {
-                buscarJson("/localizacao/api/ip", renderIp);
-            });
-        }
-        if (formCep) {
-            formCep.addEventListener("submit", function () {
-                var cep = (document.getElementById("loc-cep").value || "").trim();
-                buscarJson("/localizacao/api/cep?cep=" + encodeURIComponent(cep), renderCep);
-            });
-        }
     }
 
     document.addEventListener("DOMContentLoaded", function () {
         initMap();
-        bind();
+        var formCep = document.getElementById("form-loc-cep");
+        if (formCep) {
+            formCep.addEventListener("submit", buscarCep);
+        }
     });
-})();
+
+    w.LocMap = { setMarker: setMarker };
+})(window);
