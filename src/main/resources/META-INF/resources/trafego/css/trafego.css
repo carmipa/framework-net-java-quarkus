@@ -1,0 +1,121 @@
+/* Estilos do módulo Tráfego (decodificador de pacotes). Só em templates/trafego/index.html. */
+
+.loc-nota {
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-start;
+    padding: 1rem 1.2rem;
+    border-left: 3px solid var(--aed-teal, #2dd4bf);
+}
+
+.loc-nota .material-symbols-outlined {
+    color: var(--aed-teal, #2dd4bf);
+    font-size: 1.6rem;
+    flex-shrink: 0;
+}
+
+.loc-nota strong {
+    color: var(--aed-text, #eef2f8);
+}
+
+.trafego-form {
+    padding: 4% 5%;
+    margin-bottom: 4%;
+}
+
+.trafego-hex {
+    font-family: var(--aed-font-mono, "JetBrains Mono", monospace);
+    font-size: 0.85rem;
+    resize: vertical;
+    letter-spacing: 0.02em;
+}
+
+.trafego-resultado {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.trafego-erro {
+    color: var(--aed-risk-critical, #f43f5e);
+    padding: 1rem 1.2rem;
+}
+
+.trafego-camada {
+    padding: 0 !important;
+    overflow: hidden;
+}
+
+.trafego-camada-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.6rem;
+    padding: 0.8rem 1.2rem;
+    background: rgba(45, 212, 191, 0.08);
+    border-bottom: 1px solid var(--aed-border, rgba(255, 255, 255, 0.07));
+}
+
+.trafego-camada-nome {
+    font-family: var(--aed-font-display, "Space Grotesk", sans-serif);
+    font-size: 1.05rem;
+    color: var(--aed-teal, #2dd4bf);
+    margin: 0;
+}
+
+.trafego-camada-resumo {
+    font-family: var(--aed-font-mono, "JetBrains Mono", monospace);
+    font-size: 0.82rem;
+    color: var(--aed-text-secondary, #8b97ad);
+}
+
+.trafego-campos {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.trafego-campos tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.trafego-campos td {
+    padding: 0.5rem 1.2rem;
+    vertical-align: top;
+    border-bottom: 1px solid var(--aed-border, rgba(255, 255, 255, 0.05));
+}
+
+.trafego-campo-nome {
+    color: var(--aed-text-secondary, #8b97ad);
+    white-space: nowrap;
+    width: 26%;
+}
+
+.trafego-campo-valor {
+    font-family: var(--aed-font-mono, "JetBrains Mono", monospace);
+    color: var(--aed-text, #eef2f8);
+    word-break: break-word;
+    width: 34%;
+}
+
+.trafego-campo-desc {
+    color: var(--aed-text-faint, #5b6679);
+    font-size: 0.82rem;
+}
+
+@media (max-width: 48em) {
+    .trafego-campos,
+    .trafego-campos tbody,
+    .trafego-campos tr,
+    .trafego-campos td {
+        display: block;
+        width: 100%;
+    }
+
+    .trafego-campo-nome {
+        padding-bottom: 0;
+    }
+
+    .trafego-campo-valor {
+        padding-top: 0.15rem;
+    }
+}

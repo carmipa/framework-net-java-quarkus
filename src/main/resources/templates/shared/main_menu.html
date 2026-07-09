@@ -19,6 +19,18 @@
             <span class="material-symbols-outlined" aria-hidden="true">insights</span>
             <span>Análise Didática</span>
         </a>
+        <a href="/localizacao"
+           class="aed-nav-link {#if activeMainMenu == 'localizacao'}is-active{/if}"
+           title="Localização por IP (aproximada) e por CEP no mapa">
+            <span class="material-symbols-outlined" aria-hidden="true">pin_drop</span>
+            <span>Localização</span>
+        </a>
+        <a href="/trafego"
+           class="aed-nav-link {#if activeMainMenu == 'trafego'}is-active{/if}"
+           title="Análise de tráfego: decodificador didático de pacotes (hex/pcap)">
+            <span class="material-symbols-outlined" aria-hidden="true">travel_explore</span>
+            <span>Tráfego</span>
+        </a>
         <a href="/portas"
            class="aed-nav-link {#if activeMainMenu == 'portas'}is-active{/if}"
            title="Catálogo de portas TCP/UDP">

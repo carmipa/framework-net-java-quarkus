@@ -1,0 +1,71 @@
+{#include shared/base.html}
+{#title}Framework de Redes A&D | Localização{/title}
+{#extraHead}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="/localizacao/css/localizacao.css?v=20260709">
+{/extraHead}
+{#content}
+<div class="container py-5">
+    {#include shared/main_menu.html activeMainMenu='localizacao' /}
+
+    <div class="text-center mb-4">
+        <span class="aed-eyebrow aed-eyebrow-teal">Localização</span>
+        <h2 class="mb-2" style="font-family:var(--aed-font-display);">Localização por IP e por CEP</h2>
+        <p class="text-secondary small mx-auto" style="max-width:44rem;">
+            Consulte a geolocalização aproximada de um IP e o endereço de um CEP, plotados no mapa (OpenStreetMap).
+        </p>
+    </div>
+
+    <div class="aed-card card-tech loc-nota mb-4" role="note">
+        <span class="material-symbols-outlined" aria-hidden="true">info</span>
+        <div>
+            <strong>O que o IP revela — e o que não revela.</strong>
+            A geolocalização por IP entrega no máximo a <em>cidade/registro do provedor</em> (ISP), não a residência
+            de uma pessoa. O endereço preciso vem do <strong>CEP</strong>, que é informado por você — não é derivado
+            do IP. Use este módulo para entender essa diferença, não para "rastrear pessoas".
+        </div>
+    </div>
+
+    <div class="loc-forms">
+        <form id="form-loc-ip" class="aed-card card-tech" autocomplete="off" onsubmit="return false;">
+            <span class="aed-eyebrow aed-eyebrow-indigo">Por IP</span>
+            <h3 class="loc-form-title">Geolocalização aproximada</h3>
+            <label class="form-label small text-secondary" for="loc-ip">Endereço IPv4/IPv6</label>
+            <div class="loc-input-row">
+                <input type="text" id="loc-ip" class="form-control bg-dark text-light border-secondary input-ipv4"
+                       placeholder="8.8.8.8" value="8.8.8.8" inputmode="text">
+                <button type="submit" class="aed-btn aed-btn-teal">
+                    <span class="material-symbols-outlined" aria-hidden="true">travel_explore</span> Localizar IP
+                </button>
+            </div>
+            <button type="button" id="loc-meu-ip" class="aed-btn aed-btn-neutral btn-sm mt-2">
+                <span class="material-symbols-outlined" aria-hidden="true">my_location</span> Usar meu IP
+            </button>
+        </form>
+
+        <form id="form-loc-cep" class="aed-card card-tech" autocomplete="off" onsubmit="return false;">
+            <span class="aed-eyebrow aed-eyebrow-indigo">Por CEP</span>
+            <h3 class="loc-form-title">Endereço no mapa (ViaCEP + OSM)</h3>
+            <label class="form-label small text-secondary" for="loc-cep">CEP</label>
+            <div class="loc-input-row">
+                <input type="text" id="loc-cep" class="form-control bg-dark text-light border-secondary"
+                       placeholder="01001-000" inputmode="numeric" maxlength="9">
+                <button type="submit" class="aed-btn aed-btn-teal">
+                    <span class="material-symbols-outlined" aria-hidden="true">pin_drop</span> Localizar CEP
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div id="loc-resultado" class="aed-card card-tech loc-resultado d-none mb-4" aria-live="polite"></div>
+
+    <div class="aed-card card-tech p-2">
+        <div id="loc-map" class="loc-map" role="img" aria-label="Mapa de localização"></div>
+    </div>
+</div>
+{/content}
+{#extraScripts}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/localizacao/js/localizacao.js?v=20260709"></script>
+{/extraScripts}
+{/include}
