@@ -10,8 +10,10 @@ python
 logs
 docker-data
 data
-**/*.md
-!src/main/resources/README.md
+# Exclui só o README da raiz (usado no GitHub) e docs auxiliares — NÃO varrer src/,
+# pois /documentacao renderiza src/main/resources/README.md (precisa entrar no jar).
+/README.md
+entrega-aed
 **/*.iml
 **/.DS_Store
 terminals

@@ -12,6 +12,9 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -19,6 +22,7 @@ import org.framework.net.analiseTrafego.aovivo.SnapshotAoVivo;
 import org.framework.net.analiseTrafego.aovivo.TrafegoAoVivoService;
 import org.framework.net.analiseTrafego.application.TrafegoDecoderService;
 import org.framework.net.analiseTrafego.domain.model.ResultadoDecodificacao;
+import org.framework.net.security.AdminApiKeyService;
 import org.framework.net.telemetria.TelemetriaLogger;
 
 import java.nio.charset.StandardCharsets;
@@ -36,6 +40,9 @@ public class TrafegoResource {
 
     @Inject
     TrafegoAoVivoService aoVivoService;
+
+    @Inject
+    AdminApiKeyService adminApiKeyService;
 
     @Inject
     TelemetriaLogger telemetriaLogger;
@@ -71,8 +78,30 @@ public class TrafegoResource {
     @GET
     @Path("/api/aovivo")
     @Produces(MediaType.APPLICATION_JSON)
-    public SnapshotAoVivo aovivo(@QueryParam("modo") @DefaultValue("demo") String modo) {
-        return "agente".equalsIgnoreCase(modo) ? aoVivoService.snapshotAgente() : aoVivoService.snapshotDemo();
+    public SnapshotAoVivo aovivo(@QueryParam("modo") @DefaultValue("demo") String modo,
+                                 @Context HttpHeaders headers) {
+        if ("agente".equalsIgnoreCase(modo)) {
+            // Dados reais da máquina do usuário: exigem login admin quando a chave está ativa (VPS).
+            if (adminApiKeyService.isEnforcementActive()) {
+                String submitted = firstNonBlank(
+                        headers.getHeaderString(AdminApiKeyService.HEADER_NAME),
+                        adminApiKeyService.extractFromCookie(headers.getHeaderString("Cookie")));
+                if (!adminApiKeyService.isValid(submitted)) {
+                    throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+                            .entity(Map.of("erro", "Dados do agente exigem autenticação admin. Faça login em /admin/login."))
+                            .build());
+                }
+            }
+            return aoVivoService.snapshotAgente();
+        }
+        return aoVivoService.snapshotDemo();
+    }
+
+    private static String firstNonBlank(String a, String b) {
+        if (a != null && !a.isBlank()) {
+            return a.strip();
+        }
+        return b == null ? "" : b.strip();
     }
 
     /** Ingestão de dados reais do agente local. Requer o header {@code X-Trafego-Token}. */
