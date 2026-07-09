@@ -21,9 +21,7 @@ ENV LANGUAGE='pt_BR:pt' \
     JAVA_APP_JAR="/deployments/quarkus-run.jar"
 
 USER root
-RUN microdnf install -y curl \
-    && microdnf clean all \
-    && mkdir -p /deployments/data/logs /deployments/data/geo /deployments/data/.framework-net \
+RUN mkdir -p /deployments/data/logs /deployments/data/geo /deployments/data/.framework-net \
     && chown -R 185:0 /deployments/data \
     && chmod -R g+rwX /deployments/data
 
