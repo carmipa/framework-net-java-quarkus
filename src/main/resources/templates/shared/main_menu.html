@@ -8,6 +8,12 @@
     </a>
     <div class="aed-nav-tabs">
         <a href="/"
+           class="aed-nav-link {#if activeMainMenu == 'home'}is-active{/if}"
+           title="Página inicial do framework">
+            <span class="material-symbols-outlined" aria-hidden="true">home</span>
+            <span>Início</span>
+        </a>
+        <a href="/analise"
            class="aed-nav-link {#if activeMainMenu == 'analise'}is-active{/if}"
            title="Análise didática de IPv4/IPv6, CIDR, máscara, wildcard e comparador">
             <span class="material-symbols-outlined" aria-hidden="true">insights</span>

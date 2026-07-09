@@ -6,8 +6,10 @@ import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.ext.Provider;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.io.IOException;
 
@@ -17,6 +19,9 @@ public class CsrfResponseFilter implements ContainerResponseFilter {
 
     @Inject
     CsrfTokenService csrfTokenService;
+
+    @ConfigProperty(name = "framework.security.cookie-secure", defaultValue = "false")
+    boolean cookieSecure;
 
     @Override
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext)
@@ -30,10 +35,11 @@ public class CsrfResponseFilter implements ContainerResponseFilter {
                 .value(token)
                 .path("/")
                 .maxAge(3600)
-                .secure(false)
+                .secure(cookieSecure)
                 .httpOnly(false)
                 .sameSite(NewCookie.SameSite.LAX)
                 .build();
-        responseContext.getHeaders().add("Set-Cookie", cookie.toString());
+        // Passa o NewCookie (serializado via RuntimeDelegate) em vez de NewCookie.toString() (deprecado).
+        responseContext.getHeaders().add(HttpHeaders.SET_COOKIE, cookie);
     }
 }

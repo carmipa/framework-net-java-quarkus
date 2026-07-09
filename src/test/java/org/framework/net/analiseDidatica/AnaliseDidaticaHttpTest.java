@@ -18,7 +18,7 @@ class AnaliseDidaticaHttpTest {
                 .formParam("modo", "cidr")
                 .formParam("ip", "192.168.1.10")
                 .formParam("cidr", "24")
-                .when().post("/")
+                .when().post("/analise")
                 .then()
                 .statusCode(200)
                 .body(containsString("Decomposição bitwise AND"))
@@ -33,7 +33,7 @@ class AnaliseDidaticaHttpTest {
                 .formParam("modo", "cidr")
                 .formParam("ip", "10.0.0.0")
                 .formParam("cidr", "31")
-                .when().post("/")
+                .when().post("/analise")
                 .then()
                 .statusCode(200)
                 .body(containsString("/31"));
@@ -46,7 +46,7 @@ class AnaliseDidaticaHttpTest {
                 .formParam("modo", "cidr")
                 .formParam("ip", "10.5.5.5")
                 .formParam("cidr", "")
-                .when().post("/")
+                .when().post("/analise")
                 .then()
                 .statusCode(200)
                 .body(containsString("/8"));
@@ -59,7 +59,7 @@ class AnaliseDidaticaHttpTest {
                 .formParam("modo", "cidr")
                 .formParam("ip", "200.1.1.1")
                 .formParam("cidr", "")
-                .when().post("/")
+                .when().post("/analise")
                 .then()
                 .statusCode(200)
                 .body(containsString("/24"));
@@ -72,7 +72,7 @@ class AnaliseDidaticaHttpTest {
                 .formParam("modo", "wildcard")
                 .formParam("ip", "172.16.8.8")
                 .formParam("wildcard_mask", "0.0.255.0")
-                .when().post("/")
+                .when().post("/analise")
                 .then()
                 .statusCode(200)
                 .body(containsString("Wildcard"));
@@ -84,7 +84,7 @@ class AnaliseDidaticaHttpTest {
                 .contentType("application/x-www-form-urlencoded")
                 .formParam("modo", "dominio")
                 .formParam("ip", "dominio@@invalido")
-                .when().post("/")
+                .when().post("/analise")
                 .then()
                 .statusCode(200)
                 .body(anyOf(containsString("inválido"), containsString("invalido"), containsString("Domínio")));
@@ -96,7 +96,7 @@ class AnaliseDidaticaHttpTest {
                 .contentType("application/x-www-form-urlencoded")
                 .formParam("modo", "mask")
                 .formParam("mask_decimal", "255.255.192.0")
-                .when().post("/")
+                .when().post("/analise")
                 .then()
                 .statusCode(200)
                 .body(containsString("/18"));
@@ -108,7 +108,7 @@ class AnaliseDidaticaHttpTest {
                 .contentType("application/x-www-form-urlencoded")
                 .formParam("modo", "ipv6")
                 .formParam("ipv6", "2001:db8::1")
-                .when().post("/")
+                .when().post("/analise")
                 .then()
                 .statusCode(200)
                 .body(anyOf(containsString("IPv6"), containsString("2001")));
@@ -121,7 +121,7 @@ class AnaliseDidaticaHttpTest {
                 .formParam("modo", "cidr")
                 .formParam("ip", "172.16.0.10/24")
                 .formParam("cidr", "")
-                .when().post("/")
+                .when().post("/analise")
                 .then()
                 .statusCode(200)
                 .body(containsString("/24"))
@@ -136,7 +136,7 @@ class AnaliseDidaticaHttpTest {
                 .formParam("ip", "10.0.0.1")
                 .formParam("comparador_cidr_a", "99")
                 .formParam("comparador_cidr_b", "24")
-                .when().post("/")
+                .when().post("/analise")
                 .then()
                 .statusCode(200)
                 .body(containsString("is-invalid"))
@@ -151,7 +151,7 @@ class AnaliseDidaticaHttpTest {
                 .formParam("ip", "10.0.0.1")
                 .formParam("comparador_cidr_a", "20")
                 .formParam("comparador_cidr_b", "24")
-                .when().post("/")
+                .when().post("/analise")
                 .then()
                 .statusCode(200)
                 .body(not(containsString("Erro:")));

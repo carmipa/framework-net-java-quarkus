@@ -10,9 +10,19 @@ import static org.hamcrest.CoreMatchers.containsString;
 class WebIntegrationTest {
 
     @Test
-    void homeDeveResponderComAnaliseDidatica() {
+    void raizDeveResponderComLandingPage() {
         given()
                 .when().get("/")
+                .then()
+                .statusCode(200)
+                .body(containsString("Análise Didática Avançada"))
+                .body(containsString("Módulos"));
+    }
+
+    @Test
+    void analiseDeveResponderComAnaliseDidatica() {
+        given()
+                .when().get("/analise")
                 .then()
                 .statusCode(200)
                 .body(containsString("Análise Didática"))

@@ -28,6 +28,7 @@ public class RequestRateLimiter {
     CurrentVertxRequest currentVertxRequest;
 
     private final ConcurrentHashMap<String, Bucket> buckets = new ConcurrentHashMap<>();
+    private final java.util.concurrent.atomic.AtomicLong lastPruneMinute = new java.util.concurrent.atomic.AtomicLong(-1);
 
     public boolean allow(ContainerRequestContext ctx, boolean heavy) {
         if (!rateLimitEnabled) {
@@ -36,6 +37,12 @@ public class RequestRateLimiter {
         int limit = heavy ? heavyLimitPerMinute : defaultLimitPerMinute;
         String key = clientKey(ctx) + "|" + normalizePath(ctx.getUriInfo().getPath()) + (heavy ? "|heavy" : "");
         long windowMinute = System.currentTimeMillis() / 60_000L;
+        // Limpeza oportunista (sem scheduler): no máximo uma vez por minuto, evita crescimento
+        // ilimitado do mapa de buckets (memory leak / vetor de DoS).
+        long previousPrune = lastPruneMinute.get();
+        if (windowMinute != previousPrune && lastPruneMinute.compareAndSet(previousPrune, windowMinute)) {
+            prune();
+        }
         Bucket bucket = buckets.compute(key, (k, existing) -> {
             if (existing == null || existing.windowMinute != windowMinute) {
                 return new Bucket(windowMinute, new AtomicInteger(0));

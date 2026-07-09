@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Path("/")
+@Path("/analise")
 public class AnaliseDidaticaResource {
 
     @Inject

@@ -96,6 +96,7 @@ public class HomeAnaliseService {
         return telemetriaLogger.medir("analiseDidatica", "calc_request", () -> processarPostInterno(form));
     }
 
+    @SuppressWarnings("unchecked")
     private HomeViewModel processarPostInterno(Map<String, String> form) {
         HomeViewModel vm = estadoPadrao(form.getOrDefault("tab", "cidr"));
         aplicarDefaultsHistorico(vm, form.get("history_limit"), form.get("history_page"));

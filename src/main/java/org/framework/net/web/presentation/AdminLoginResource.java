@@ -12,6 +12,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.framework.net.security.AdminApiKeyService;
 
 import java.net.URI;
@@ -23,6 +24,9 @@ public class AdminLoginResource {
 
     @Inject
     AdminApiKeyService adminApiKeyService;
+
+    @ConfigProperty(name = "framework.security.cookie-secure", defaultValue = "false")
+    boolean cookieSecure;
 
     @Inject
     @io.quarkus.qute.Location("admin/login.html")
@@ -58,7 +62,7 @@ public class AdminLoginResource {
                 .path("/")
                 .maxAge(COOKIE_MAX_AGE)
                 .httpOnly(true)
-                .secure(false)
+                .secure(cookieSecure)
                 .sameSite(NewCookie.SameSite.STRICT)
                 .build();
         return Response.seeOther(URI.create(safeRedirect(redirect)))
@@ -74,7 +78,7 @@ public class AdminLoginResource {
                 .path("/")
                 .maxAge(0)
                 .httpOnly(true)
-                .secure(false)
+                .secure(cookieSecure)
                 .sameSite(NewCookie.SameSite.STRICT)
                 .build();
         return Response.seeOther(URI.create(safeRedirect(redirect)))

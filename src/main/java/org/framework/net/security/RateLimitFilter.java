@@ -17,7 +17,7 @@ import java.util.Set;
 public class RateLimitFilter implements ContainerRequestFilter {
 
     private static final Set<String> HEAVY_PATHS = Set.of(
-            "/",
+            "/analise",
             "/resolucao-problemas",
             "/api/informacoes/geo",
             "/informacoes"

@@ -195,6 +195,7 @@ public class TelemetriaLogger {
     private static String montarMensagem(String evento, String status, Map<String, Object> fields) {
         StringBuilder sb = new StringBuilder("evento=").append(evento).append(" status=").append(status);
         fields.entrySet().stream()
+                .filter(entry -> !"status".equals(entry.getKey())) // 'status' já vai no prefixo — evita "status=ok status=ok"
                 .sorted(Map.Entry.comparingByKey())
                 .forEach(entry -> sb.append(' ').append(entry.getKey()).append('=').append(entry.getValue()));
         return sb.toString();

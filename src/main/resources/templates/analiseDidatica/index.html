@@ -65,7 +65,7 @@
             <button type="button" class="aed-btn aed-btn-neutral" id="btn-copiar-resultado">
                 <span class="material-symbols-outlined">content_copy</span> Copiar resultado
             </button>
-            <a id="btn-limpar-tela" href="/?tab={activeTabPre}" class="aed-btn aed-btn-danger">
+            <a id="btn-limpar-tela" href="/analise?tab={activeTabPre}" class="aed-btn aed-btn-danger">
                 <span class="material-symbols-outlined">delete_sweep</span> Limpar Tela
             </a>
         </div>
@@ -131,7 +131,7 @@
     <div class="card-tech p-3 shadow mt-4 history-box">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
             <h6 class="text-info mb-0 d-flex align-items-center gap-2"><span class="material-symbols-outlined">history</span> Histórico</h6>
-            <form method="GET" action="/" class="d-flex flex-wrap align-items-center gap-2 small">
+            <form method="GET" action="/analise" class="d-flex flex-wrap align-items-center gap-2 small">
                 <input type="hidden" name="tab" value="{activeTabPre}">
                 <label class="text-secondary">Por página</label>
                 <select name="history_limit" class="form-select form-select-sm bg-dark text-light border-secondary" style="width:auto;">
@@ -162,7 +162,7 @@
                     <td>{item.ip_entrada}{item.ipv6_entrada}</td>
                     <td>{item.rede}</td>
                     <td>{item.tema}</td>
-                    <td><a href="/?replay={item.id}&tab={item.modo}" class="btn btn-sm btn-outline-info">Replay</a></td>
+                    <td><a href="/analise?replay={item.id}&tab={item.modo}" class="btn btn-sm btn-outline-info">Replay</a></td>
                 </tr>
                 {/for}
                 {/if}
@@ -171,11 +171,11 @@
         </div>
         <div class="d-flex flex-wrap justify-content-center align-items-center gap-3 mt-2">
             {#if hasPrevHistory}
-            <a class="aed-btn aed-btn-neutral btn-sm" href="/?tab={activeTabPre}&history_limit={historyLimitPre}&history_page={historyPage - 1}"><span class="material-symbols-outlined">chevron_left</span> Anterior</a>
+            <a class="aed-btn aed-btn-neutral btn-sm" href="/analise?tab={activeTabPre}&history_limit={historyLimitPre}&history_page={historyPage - 1}"><span class="material-symbols-outlined">chevron_left</span> Anterior</a>
             {/if}
             <span class="small text-secondary fw-bold">Página {historyPage}/{totalHistoryPages}</span>
             {#if hasNextHistory}
-            <a class="aed-btn aed-btn-neutral btn-sm" href="/?tab={activeTabPre}&history_limit={historyLimitPre}&history_page={historyPage + 1}">Próxima <span class="material-symbols-outlined">chevron_right</span></a>
+            <a class="aed-btn aed-btn-neutral btn-sm" href="/analise?tab={activeTabPre}&history_limit={historyLimitPre}&history_page={historyPage + 1}">Próxima <span class="material-symbols-outlined">chevron_right</span></a>
             {/if}
         </div>
     </div>

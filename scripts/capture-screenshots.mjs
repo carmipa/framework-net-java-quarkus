@@ -17,9 +17,16 @@ const ADMIN_KEY = process.env.ADMIN_API_KEY || "dev-admin-key-local";
 /** @type {Scenario[]} */
 const SCENARIOS = [
     {
+        file: "00-landing",
+        async run(page) {
+            await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+            await page.waitForSelector(".home-grid", { timeout: 15000 });
+        },
+    },
+    {
         file: "01-home-cidr",
         async run(page) {
-            await page.goto(`${BASE}/?tab=cidr`, { waitUntil: "networkidle" });
+            await page.goto(`${BASE}/analise?tab=cidr`, { waitUntil: "networkidle" });
             await page.fill('form[data-tab-form="cidr"] input[name="ip"]', "192.168.1.10");
             await page.fill('form[data-tab-form="cidr"] input[name="cidr"]', "24");
             await submitForm(page, 'form[data-tab-form="cidr"] button[value="cidr"]');
@@ -30,7 +37,7 @@ const SCENARIOS = [
     {
         file: "02-home-mask",
         async run(page) {
-            await page.goto(`${BASE}/?tab=mask`, { waitUntil: "networkidle" });
+            await page.goto(`${BASE}/analise?tab=mask`, { waitUntil: "networkidle" });
             await page.fill('form[data-tab-form="mask"] input[name="mask_decimal"]', "255.255.255.240");
             await submitForm(page, 'form[data-tab-form="mask"] button[value="mask"]');
             await page.waitForSelector(".resultado-ipv4-block", { timeout: 25000 });
@@ -39,7 +46,7 @@ const SCENARIOS = [
     {
         file: "03-home-wildcard",
         async run(page) {
-            await page.goto(`${BASE}/?tab=wildcard`, { waitUntil: "networkidle" });
+            await page.goto(`${BASE}/analise?tab=wildcard`, { waitUntil: "networkidle" });
             await page.fill('form[data-tab-form="wildcard"] input[name="ip"]', "172.16.8.8");
             await page.fill('form[data-tab-form="wildcard"] input[name="wildcard_mask"]', "0.0.15.255");
             await submitForm(page, 'form[data-tab-form="wildcard"] button[value="wildcard"]');
@@ -49,7 +56,7 @@ const SCENARIOS = [
     {
         file: "04-home-autoip",
         async run(page) {
-            await page.goto(`${BASE}/?tab=autoip`, { waitUntil: "networkidle" });
+            await page.goto(`${BASE}/analise?tab=autoip`, { waitUntil: "networkidle" });
             await page.fill('form[data-tab-form="autoip"] input[name="ip"]', "10.5.5.5");
             await submitForm(page, 'form[data-tab-form="autoip"] button[value="autoip"]');
             await page.waitForSelector(".resultado-ipv4-block", { timeout: 25000 });
@@ -58,7 +65,7 @@ const SCENARIOS = [
     {
         file: "05-home-dominio",
         async run(page) {
-            await page.goto(`${BASE}/?tab=dominio`, { waitUntil: "networkidle" });
+            await page.goto(`${BASE}/analise?tab=dominio`, { waitUntil: "networkidle" });
             await page.fill('form[data-tab-form="dominio"] input[name="ip"]', "one.one.one.one");
             await page.fill('form[data-tab-form="dominio"] input[name="cidr"]', "24");
             await submitForm(page, 'form[data-tab-form="dominio"] button[value="dominio"]');
@@ -68,7 +75,7 @@ const SCENARIOS = [
     {
         file: "06-home-ipv6",
         async run(page) {
-            await page.goto(`${BASE}/?tab=ipv6`, { waitUntil: "networkidle" });
+            await page.goto(`${BASE}/analise?tab=ipv6`, { waitUntil: "networkidle" });
             await page.fill('form[data-tab-form="ipv6"] input[name="ipv6"]', "2001:db8::1");
             await submitForm(page, 'form[data-tab-form="ipv6"] button[value="ipv6"]');
             await page.waitForSelector("text=Resultado IPv6", { timeout: 25000 });
@@ -77,7 +84,7 @@ const SCENARIOS = [
     {
         file: "07-home-comparador",
         async run(page) {
-            await page.goto(`${BASE}/?tab=comparador`, { waitUntil: "networkidle" });
+            await page.goto(`${BASE}/analise?tab=comparador`, { waitUntil: "networkidle" });
             await page.fill('form[data-tab-form="comparador"] input[name="ip"]', "10.0.0.1");
             await page.fill('form[data-tab-form="comparador"] input[name="comparador_cidr_a"]', "20");
             await page.fill('form[data-tab-form="comparador"] input[name="comparador_cidr_b"]', "24");
@@ -88,7 +95,7 @@ const SCENARIOS = [
     {
         file: "08-home-geo",
         async run(page) {
-            await page.goto(`${BASE}/?tab=geo`, { waitUntil: "networkidle" });
+            await page.goto(`${BASE}/analise?tab=geo`, { waitUntil: "networkidle" });
             await page.click('.tab-trigger[data-tab="geo"]');
             await page.waitForTimeout(500);
             await page.fill("#geo-ip-digitar", "8.8.8.8");
