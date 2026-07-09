@@ -1,92 +1,171 @@
-{#include shared/base.html}
-{#title}Framework de Redes A&D | Início{/title}
+{#include shared/base.html} {#title}Framework de Redes A&D | Início{/title}
 {#extraHead}
-<link rel="stylesheet" href="/home/css/home.css?v=20260709">
-{/extraHead}
-{#content}
+<link rel="stylesheet" href="/home/css/home.css?v=20260709" />
+{/extraHead} {#content}
 <div class="container py-5">
-    {#include shared/main_menu.html activeMainMenu='home' /}
+  {#include shared/main_menu.html activeMainMenu='home' /}
 
-    <header class="home-hero aed-card card-tech">
-        <img src="/icone.png" alt="Framework de Redes — Análise Didática Avançada" class="home-hero-banner">
-        <div class="home-hero-text">
-            <span class="aed-eyebrow aed-eyebrow-teal">Framework didático de redes · Java 25 + Quarkus</span>
-            <h1 class="home-hero-title">Framework de Redes — Análise Didática Avançada</h1>
-            <p class="home-hero-sub">
-                Ferramenta educacional de análise de redes: IPv4/IPv6, CIDR, máscaras, wildcard, VLSM,
-                topologia WAN, catálogos de portas e protocolos, GeoIP e telemetria — tudo em um monólito
-                modular pronto para produção.
-            </p>
-            <div class="home-hero-chips">
-                <span class="home-chip">Bitwise AND</span>
-                <span class="home-chip">RFC 1918</span>
-                <span class="home-chip">VLSM / WAN</span>
-                <span class="home-chip">Cisco CLI</span>
-                <span class="home-chip">OTLP/JSON</span>
-            </div>
-            <div class="home-hero-actions">
-                <a href="/analise" class="aed-btn aed-btn-teal">
-                    <span class="material-symbols-outlined" aria-hidden="true">insights</span> Começar pela Análise
-                </a>
-                <a href="/documentacao" class="aed-btn aed-btn-neutral">
-                    <span class="material-symbols-outlined" aria-hidden="true">menu_book</span> Documentação
-                </a>
-            </div>
-        </div>
-    </header>
+  <header class="home-hero aed-card card-tech">
+    <img
+      src="/icone.png"
+      alt="Framework de Redes — Análise Didática Avançada"
+      class="home-hero-banner"
+    />
+    <div class="home-hero-text">
+      <span class="aed-eyebrow aed-eyebrow-teal"
+        >Framework didático de redes · Java 25 + Quarkus</span
+      >
+      <h1 class="home-hero-title">
+        Framework de Redes — Análise Didática Avançada
+      </h1>
+      <p class="home-hero-sub">
+        Ferramenta educacional de análise de redes: IPv4/IPv6, CIDR, máscaras,
+        wildcard, VLSM, topologia WAN, catálogos de portas e protocolos, GeoIP e
+        telemetria — tudo em um monólito modular pronto para produção.
+      </p>
+      <div class="home-hero-chips">
+        <span class="home-chip">Bitwise AND</span>
+        <span class="home-chip">RFC 1918</span>
+        <span class="home-chip">VLSM / WAN</span>
+        <span class="home-chip">Cisco CLI</span>
+        <span class="home-chip">OTLP/JSON</span>
+      </div>
+      <div class="home-hero-actions">
+        <a href="/analise" class="aed-btn aed-btn-teal">
+          <span class="material-symbols-outlined" aria-hidden="true"
+            >insights</span
+          >
+          Começar pela Análise
+        </a>
+        <a href="/documentacao" class="aed-btn aed-btn-neutral">
+          <span class="material-symbols-outlined" aria-hidden="true"
+            >menu_book</span
+          >
+          Documentação
+        </a>
+      </div>
+    </div>
+  </header>
 
-    <section aria-label="Módulos do framework" class="home-grid">
-        <a href="/analise" class="home-module aed-card card-tech">
-            <span class="home-module-icon material-symbols-outlined" aria-hidden="true">insights</span>
-            <h2 class="home-module-title">Análise Didática</h2>
-            <p class="home-module-desc">CIDR, máscara, wildcard, auto-CIDR, domínio/DNS, IPv6 e comparador de prefixos.</p>
-        </a>
-        <a href="/informacoes" class="home-module aed-card card-tech">
-            <span class="home-module-icon material-symbols-outlined" aria-hidden="true">public</span>
-            <h2 class="home-module-title">GeoIP</h2>
-            <p class="home-module-desc">Geolocalização de IP com classificação de risco (MaxMind + fallback).</p>
-        </a>
-        <a href="/localizacao" class="home-module aed-card card-tech">
-            <span class="home-module-icon material-symbols-outlined" aria-hidden="true">pin_drop</span>
-            <h2 class="home-module-title">Localização</h2>
-            <p class="home-module-desc">Localização por IP (aproximada) e por CEP (ViaCEP) plotadas em mapa OpenStreetMap.</p>
-        </a>
-        <a href="/trafego" class="home-module aed-card card-tech">
-            <span class="home-module-icon material-symbols-outlined" aria-hidden="true">travel_explore</span>
-            <h2 class="home-module-title">Tráfego</h2>
-            <p class="home-module-desc">Decodificador didático de pacotes: cole um hex dump e veja Ethernet/IP/TCP/UDP explicados.</p>
-        </a>
-        <a href="/portas" class="home-module aed-card card-tech">
-            <span class="home-module-icon material-symbols-outlined" aria-hidden="true">settings_ethernet</span>
-            <h2 class="home-module-title">Portas</h2>
-            <p class="home-module-desc">Catálogo TCP/UDP com busca, filtros por risco e paginação.</p>
-        </a>
-        <a href="/protocolos" class="home-module aed-card card-tech">
-            <span class="home-module-icon material-symbols-outlined" aria-hidden="true">lan</span>
-            <h2 class="home-module-title">Protocolos</h2>
-            <p class="home-module-desc">Catálogo de protocolos e troubleshooting de roteamento.</p>
-        </a>
-        <a href="/resolucao-problemas" class="home-module aed-card card-tech">
-            <span class="home-module-icon material-symbols-outlined" aria-hidden="true">extension</span>
-            <h2 class="home-module-title">Resolução (VLSM + WAN)</h2>
-            <p class="home-module-desc">Cenários VLSM dinâmicos, links WAN, EIGRP/OSPF e exports Packet Tracer.</p>
-        </a>
-        <a href="/telemetria" class="home-module aed-card card-tech">
-            <span class="home-module-icon material-symbols-outlined" aria-hidden="true">monitoring</span>
-            <h2 class="home-module-title">Telemetria</h2>
-            <p class="home-module-desc">Dashboard de eventos, console ao vivo e exportação OpenTelemetry OTLP/JSON.</p>
-        </a>
-        <a href="/documentacao" class="home-module aed-card card-tech">
-            <span class="home-module-icon material-symbols-outlined" aria-hidden="true">menu_book</span>
-            <h2 class="home-module-title">Documentação</h2>
-            <p class="home-module-desc">README técnico renderizado: arquitetura, endpoints e deploy.</p>
-        </a>
-        <a href="/admin/login" class="home-module aed-card card-tech">
-            <span class="home-module-icon material-symbols-outlined" aria-hidden="true">admin_panel_settings</span>
-            <h2 class="home-module-title">Administração</h2>
-            <p class="home-module-desc">Autenticação para rotas sensíveis de exportação (<code>/export/*</code>).</p>
-        </a>
-    </section>
+  <section aria-label="Módulos do framework" class="home-grid">
+    <a href="/analise" class="home-module aed-card card-tech">
+      <span
+        class="home-module-icon material-symbols-outlined"
+        aria-hidden="true"
+        >insights</span
+      >
+      <h2 class="home-module-title">Análise Didática</h2>
+      <p class="home-module-desc">
+        CIDR, máscara, wildcard, auto-CIDR, domínio/DNS, IPv6 e comparador de
+        prefixos.
+      </p>
+    </a>
+
+    <a href="/trafego" class="home-module aed-card card-tech">
+      <span
+        class="home-module-icon material-symbols-outlined"
+        aria-hidden="true"
+        >travel_explore</span
+      >
+      <h2 class="home-module-title">Tráfego</h2>
+      <p class="home-module-desc">
+        Decodificador didático de pacotes: cole um hex dump e veja
+        Ethernet/IP/TCP/UDP explicados.
+      </p>
+    </a>
+    <a href="/portas" class="home-module aed-card card-tech">
+      <span
+        class="home-module-icon material-symbols-outlined"
+        aria-hidden="true"
+        >settings_ethernet</span
+      >
+      <h2 class="home-module-title">Portas</h2>
+      <p class="home-module-desc">
+        Catálogo TCP/UDP com busca, filtros por risco e paginação.
+      </p>
+    </a>
+    <a href="/protocolos" class="home-module aed-card card-tech">
+      <span
+        class="home-module-icon material-symbols-outlined"
+        aria-hidden="true"
+        >lan</span
+      >
+      <h2 class="home-module-title">Protocolos</h2>
+      <p class="home-module-desc">
+        Catálogo de protocolos e troubleshooting de roteamento.
+      </p>
+    </a>
+    <a href="/resolucao-problemas" class="home-module aed-card card-tech">
+      <span
+        class="home-module-icon material-symbols-outlined"
+        aria-hidden="true"
+        >extension</span
+      >
+      <h2 class="home-module-title">Resolução (VLSM + WAN)</h2>
+      <p class="home-module-desc">
+        Cenários VLSM dinâmicos, links WAN, EIGRP/OSPF e exports Packet Tracer.
+      </p>
+    </a>
+
+    <a href="/informacoes" class="home-module aed-card card-tech">
+      <span
+        class="home-module-icon material-symbols-outlined"
+        aria-hidden="true"
+        >public</span
+      >
+      <h2 class="home-module-title">GeoIP</h2>
+      <p class="home-module-desc">
+        Geolocalização de IP com classificação de risco (MaxMind + fallback).
+      </p>
+    </a>
+    <a href="/localizacao" class="home-module aed-card card-tech">
+      <span
+        class="home-module-icon material-symbols-outlined"
+        aria-hidden="true"
+        >pin_drop</span
+      >
+      <h2 class="home-module-title">Localização</h2>
+      <p class="home-module-desc">
+        Localização por IP (aproximada) e por CEP (ViaCEP) plotadas em mapa
+        OpenStreetMap.
+      </p>
+    </a>
+
+    <a href="/telemetria" class="home-module aed-card card-tech">
+      <span
+        class="home-module-icon material-symbols-outlined"
+        aria-hidden="true"
+        >monitoring</span
+      >
+      <h2 class="home-module-title">Telemetria</h2>
+      <p class="home-module-desc">
+        Dashboard de eventos, console ao vivo e exportação OpenTelemetry
+        OTLP/JSON.
+      </p>
+    </a>
+    <a href="/documentacao" class="home-module aed-card card-tech">
+      <span
+        class="home-module-icon material-symbols-outlined"
+        aria-hidden="true"
+        >menu_book</span
+      >
+      <h2 class="home-module-title">Documentação</h2>
+      <p class="home-module-desc">
+        README técnico renderizado: arquitetura, endpoints e deploy.
+      </p>
+    </a>
+    <a href="/admin/login" class="home-module aed-card card-tech">
+      <span
+        class="home-module-icon material-symbols-outlined"
+        aria-hidden="true"
+        >admin_panel_settings</span
+      >
+      <h2 class="home-module-title">Administração</h2>
+      <p class="home-module-desc">
+        Autenticação para rotas sensíveis de exportação
+        (<code>/export/*</code>).
+      </p>
+    </a>
+  </section>
 </div>
-{/content}
-{/include}
+{/content} {/include}

@@ -56,7 +56,11 @@ public class LocalizacaoService {
                     Map.of("motivo", String.valueOf(endereco.getOrDefault("motivo", "-"))));
             return endereco;
         }
+        // Tenta o endereço completo; se o Nominatim não achar, cai para cidade/UF (centra o mapa na cidade).
         Optional<Map<String, Object>> ponto = nominatimGeocoder.geocodificar(montarConsulta(endereco));
+        if (ponto.isEmpty()) {
+            ponto = nominatimGeocoder.geocodificar(montarConsultaCidade(endereco));
+        }
         Map<String, Object> out = new LinkedHashMap<>(endereco);
         out.put("origem", "cep");
         if (ponto.isPresent()) {
@@ -72,6 +76,40 @@ public class LocalizacaoService {
                 Map.of("cidade", String.valueOf(out.getOrDefault("cidade", "-")),
                         "geocoded", out.get("geocoded")));
         return out;
+    }
+
+    /** Localização exata por coordenadas do navegador (GPS) — consentida pelo usuário. */
+    public Map<String, Object> localizarPorCoordenadas(double lat, double lon) {
+        telemetriaLogger.logEvent("info", "localizacao", "lookup_gps",
+                Map.of("lat", lat, "lon", lon));
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("ok", true);
+        out.put("origem", "gps");
+        out.put("lat", lat);
+        out.put("lon", lon);
+        nominatimGeocoder.reverse(lat, lon).ifPresentOrElse(
+                out::putAll,
+                () -> out.put("aviso", "Coordenadas obtidas, mas sem endereço reverso disponível."));
+        // Reforça as coordenadas exatas do GPS (o reverse pode ajustar levemente).
+        out.put("lat", lat);
+        out.put("lon", lon);
+        out.put("geocoded", true);
+        return out;
+    }
+
+    private static String montarConsultaCidade(Map<String, Object> endereco) {
+        String cidade = str(endereco.get("cidade"));
+        String uf = str(endereco.get("uf"));
+        StringBuilder sb = new StringBuilder();
+        if (!cidade.isBlank()) {
+            sb.append(cidade);
+            if (!uf.isBlank()) {
+                sb.append(" - ").append(uf);
+            }
+            sb.append(", ");
+        }
+        sb.append("Brasil");
+        return sb.toString();
     }
 
     private static String montarConsulta(Map<String, Object> endereco) {

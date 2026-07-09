@@ -33,6 +33,18 @@ class LocalizacaoHttpTest {
     }
 
     @Test
+    void gpsCoordenadasInvalidasRetornaOkFalse() {
+        given()
+                .queryParam("lat", "999")
+                .queryParam("lon", "0")
+                .when().get("/localizacao/api/gps")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("json"))
+                .body("ok", equalTo(false));
+    }
+
+    @Test
     void ipReservadoRetornaJsonSemRede() {
         given()
                 .queryParam("ip", "127.0.0.1")

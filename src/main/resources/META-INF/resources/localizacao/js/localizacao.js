@@ -15,6 +15,13 @@
             maxZoom: 19,
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(map);
+        // Corrige o render parcial (tiles só no canto): o Leaflet precisa recalcular o tamanho
+        // do container depois do layout/fontes carregarem.
+        var fix = function () { if (map) map.invalidateSize(); };
+        setTimeout(fix, 200);
+        setTimeout(fix, 600);
+        w.addEventListener("resize", fix);
+        w.addEventListener("load", fix);
     }
 
     // Exposto para o painel GeoIP (geo-panel.js) plotar resultados no mesmo mapa.
@@ -34,6 +41,7 @@
         if (label) {
             marker.bindPopup(label).openPopup();
         }
+        map.invalidateSize();
         map.setView([la, lo], 13);
         return true;
     }
@@ -106,6 +114,43 @@
         }
     }
 
+    function renderGps(data, coords) {
+        var el = painel();
+        titulo(el, "Minha localização (GPS)");
+        var g = grid(el);
+        g.appendChild(item("Latitude", coords.latitude.toFixed(6)));
+        g.appendChild(item("Longitude", coords.longitude.toFixed(6)));
+        g.appendChild(item("Precisão (m)", coords.accuracy ? Math.round(coords.accuracy) : null));
+        if (data && data.ok !== false) {
+            g.appendChild(item("Logradouro", data.logradouro));
+            g.appendChild(item("Bairro", data.bairro));
+            g.appendChild(item("Cidade", data.cidade));
+            g.appendChild(item("UF", data.uf));
+            g.appendChild(item("CEP", data.cep));
+        }
+        setMarker(coords.latitude, coords.longitude, "Minha localização (GPS)");
+        aviso(el, "Esta é a posição real do aparelho (com sua permissão) — bem diferente do que o IP indica.");
+    }
+
+    function usarGps() {
+        var status = document.getElementById("loc-gps-status");
+        if (!navigator.geolocation) {
+            if (status) status.textContent = "Geolocalização não suportada neste navegador.";
+            return;
+        }
+        if (status) status.textContent = "Pedindo permissão…";
+        navigator.geolocation.getCurrentPosition(function (pos) {
+            if (status) status.textContent = "Localização obtida.";
+            var c = pos.coords;
+            fetch("/localizacao/api/gps?lat=" + c.latitude + "&lon=" + c.longitude, { headers: { Accept: "application/json" } })
+                .then(function (r) { return r.json(); })
+                .then(function (data) { renderGps(data, c); })
+                .catch(function () { renderGps({ ok: false }, c); });
+        }, function (err) {
+            if (status) status.textContent = "Permissão negada ou indisponível (" + err.message + ").";
+        }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+    }
+
     function buscarCep() {
         var cep = (document.getElementById("loc-cep").value || "").trim();
         fetch("/localizacao/api/cep?cep=" + encodeURIComponent(cep), { headers: { Accept: "application/json" } })
@@ -123,6 +168,10 @@
         var formCep = document.getElementById("form-loc-cep");
         if (formCep) {
             formCep.addEventListener("submit", buscarCep);
+        }
+        var btnGps = document.getElementById("btn-loc-gps");
+        if (btnGps) {
+            btnGps.addEventListener("click", usarGps);
         }
     });
 

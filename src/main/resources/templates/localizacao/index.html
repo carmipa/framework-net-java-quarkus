@@ -96,6 +96,22 @@
         </div>
     </form>
 
+    <!-- Localização exata via GPS do navegador (com consentimento) -->
+    <div class="aed-card card-tech loc-cep-form mb-4">
+        <span class="aed-eyebrow aed-eyebrow-teal">Precisa · com sua permissão</span>
+        <h5 class="loc-form-title">Minha localização exata (GPS do navegador)</h5>
+        <p class="small text-secondary mb-2">
+            Diferente do IP, o <strong>GPS/Wi-Fi do seu aparelho</strong> dá a posição real — o navegador
+            vai <strong>pedir sua permissão</strong>. Nada é enviado sem você autorizar.
+        </p>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <button type="button" id="btn-loc-gps" class="aed-btn aed-btn-teal">
+                <span class="material-symbols-outlined" aria-hidden="true">my_location</span> Usar minha localização (GPS)
+            </button>
+            <span id="loc-gps-status" class="small text-secondary"></span>
+        </div>
+    </div>
+
     <div id="loc-resultado" class="aed-card card-tech loc-resultado d-none mb-4" aria-live="polite"></div>
 
     <div class="aed-card card-tech p-2 mb-4">

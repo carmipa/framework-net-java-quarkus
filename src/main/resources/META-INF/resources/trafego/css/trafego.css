@@ -18,6 +18,109 @@
     color: var(--aed-text, #eef2f8);
 }
 
+/* ---- Tráfego ao vivo ---- */
+.trafego-live {
+    padding: clamp(1rem, 3%, 1.6rem);
+}
+
+.trafego-live-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+}
+
+.trafego-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 0.8rem;
+    margin-bottom: 1.2rem;
+}
+
+.trafego-kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--aed-border, rgba(255, 255, 255, 0.07));
+    border-radius: 0.7rem;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.trafego-kpi .k {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--aed-text-faint, #5b6679);
+}
+
+.trafego-kpi .v {
+    font-family: var(--aed-font-display, "Space Grotesk", sans-serif);
+    font-size: 1.5rem;
+    color: var(--aed-text, #eef2f8);
+}
+
+.trafego-kpi-alerta.ativo {
+    border-color: var(--aed-risk-critical, #f43f5e);
+    background: rgba(244, 63, 94, 0.1);
+}
+
+.trafego-kpi-alerta.ativo .v {
+    color: var(--aed-risk-critical, #f43f5e);
+}
+
+.trafego-charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+}
+
+.trafego-chart-card {
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--aed-border, rgba(255, 255, 255, 0.07));
+    border-radius: 0.8rem;
+    background: linear-gradient(180deg, #0f1622, #0a0e16);
+    min-width: 0;
+}
+
+.trafego-redes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.trafego-rede-card {
+    min-width: 0;
+}
+
+.trafego-badge {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    white-space: nowrap;
+}
+
+.trafego-badge.risco {
+    color: var(--aed-risk-critical, #f43f5e);
+    border: 1px solid var(--aed-risk-critical, #f43f5e);
+    background: rgba(244, 63, 94, 0.1);
+}
+
+.trafego-badge.ok {
+    color: var(--aed-risk-safe, #34d399);
+    border: 1px solid rgba(52, 211, 153, 0.5);
+    background: rgba(52, 211, 153, 0.08);
+}
+
+.trafego-pacotes td {
+    font-family: var(--aed-font-mono, "JetBrains Mono", monospace);
+    font-size: 0.78rem;
+}
+
 .trafego-form {
     padding: 4% 5%;
     margin-bottom: 4%;

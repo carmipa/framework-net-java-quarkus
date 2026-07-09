@@ -29,6 +29,21 @@
     padding: 4% 5%;
 }
 
+/* Cards de CEP e GPS (fora do grid .loc-forms) precisam do mesmo respiro interno,
+   senão o rótulo/input encostam na borda e o botão "vaza" à direita. */
+.loc-cep-form {
+    padding: clamp(1rem, 4%, 1.6rem);
+}
+
+.loc-cep-form .loc-input-row {
+    max-width: 100%;
+}
+
+.loc-cep-form .loc-input-row .aed-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
 .loc-form-title {
     font-family: var(--aed-font-display, "Space Grotesk", sans-serif);
     font-size: 1.05rem;
@@ -100,7 +115,8 @@
 }
 
 .loc-map {
-    height: 26rem;
+    /* Altura fluida: adapta a celular/tablet/desktop pela altura do viewport. */
+    height: clamp(16rem, 55vh, 34rem);
     width: 100%;
     border-radius: var(--aed-radius-card, 0.75rem);
     z-index: 0;

@@ -96,6 +96,57 @@ public class NominatimGeocoder {
         }
     }
 
+    /** Geocodificação reversa (coordenadas → endereço), usada pela localização via GPS do navegador. */
+    public Optional<Map<String, Object>> reverse(double lat, double lon) {
+        try {
+            String base = nominatimUrl.contains("/search")
+                    ? nominatimUrl.replace("/search", "/reverse")
+                    : "https://nominatim.openstreetmap.org/reverse";
+            String uri = base + "?format=jsonv2&zoom=18&addressdetails=1&lat=" + lat + "&lon=" + lon;
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(uri))
+                    .header("Accept", "application/json")
+                    .header("Accept-Language", "pt-BR")
+                    .header("User-Agent", userAgent)
+                    .timeout(Duration.ofSeconds(Math.max(1, timeoutSeconds)))
+                    .GET()
+                    .build();
+            HttpResponse<String> response = client().send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                return Optional.empty();
+            }
+            JsonNode data = objectMapper.readTree(response.body());
+            if (data.has("error") || !data.has("display_name")) {
+                return Optional.empty();
+            }
+            JsonNode addr = data.path("address");
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("lat", lat);
+            out.put("lon", lon);
+            out.put("display_name", data.path("display_name").asText(""));
+            out.put("logradouro", addr.path("road").asText(""));
+            out.put("bairro", firstNonBlank(addr, "suburb", "neighbourhood", "quarter"));
+            out.put("cidade", firstNonBlank(addr, "city", "town", "village", "municipality"));
+            out.put("uf", addr.path("state").asText(""));
+            out.put("cep", addr.path("postcode").asText(""));
+            out.put("fonte", "OpenStreetMap/Nominatim (reverse)");
+            return Optional.of(out);
+        } catch (Exception ex) {
+            LOG.warnf("Falha no reverse geocoding Nominatim (%s, %s): %s", lat, lon, ex.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private static String firstNonBlank(JsonNode node, String... campos) {
+        for (String c : campos) {
+            String v = node.path(c).asText("");
+            if (!v.isBlank()) {
+                return v;
+            }
+        }
+        return "";
+    }
+
     private static Double parseDouble(String value) {
         try {
             return Double.parseDouble(value);

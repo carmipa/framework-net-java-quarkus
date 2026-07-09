@@ -8,7 +8,95 @@
     {#include shared/main_menu.html activeMainMenu='trafego' /}
 
     <div class="text-center mb-4">
-        <span class="aed-eyebrow aed-eyebrow-teal">Análise de tráfego</span>
+        <span class="aed-eyebrow aed-eyebrow-teal">Análise de tráfego · ao vivo</span>
+        <h2 class="mb-2" style="font-family:var(--aed-font-display);">Tráfego de rede em tempo real</h2>
+        <p class="text-secondary small mx-auto" style="max-width:48rem;">
+            Pacotes, protocolos e redes Wi-Fi/Bluetooth da máquina, com gráficos estilo Wireshark
+            e alerta de redes abertas (inseguras).
+        </p>
+    </div>
+
+    <div class="aed-card card-tech loc-nota mb-4" role="note">
+        <span class="material-symbols-outlined" aria-hidden="true">dns</span>
+        <div>
+            <strong>Como funciona (app em VPS).</strong>
+            O servidor não enxerga a sua máquina — a captura real vem de um <strong>agente local</strong>
+            (Npcap + admin) que envia os dados ao painel. Sem o agente, use o <strong>modo demo</strong>
+            (simulação) para conhecer o dashboard.
+        </div>
+    </div>
+
+    <div class="aed-card card-tech trafego-live mb-4">
+        <div class="trafego-live-bar">
+            <div class="btn-group" role="group" aria-label="Fonte de dados">
+                <button type="button" class="aed-btn aed-btn-teal btn-sm" id="live-modo-demo">Demo</button>
+                <button type="button" class="aed-btn aed-btn-neutral btn-sm" id="live-modo-agente">Agente</button>
+            </div>
+            <button type="button" class="aed-btn aed-btn-teal btn-sm" id="live-start">
+                <span class="material-symbols-outlined" aria-hidden="true">play_arrow</span> Iniciar
+            </button>
+            <button type="button" class="aed-btn aed-btn-danger btn-sm" id="live-stop" disabled>
+                <span class="material-symbols-outlined" aria-hidden="true">stop</span> Parar
+            </button>
+            <span id="live-status" class="small text-secondary">parado</span>
+        </div>
+
+        <div class="trafego-kpis">
+            <div class="trafego-kpi"><span class="k">Total de pacotes</span><span class="v" id="kpi-total">0</span></div>
+            <div class="trafego-kpi"><span class="k">Pacotes/seg</span><span class="v" id="kpi-pps">0</span></div>
+            <div class="trafego-kpi"><span class="k">Throughput</span><span class="v" id="kpi-kbps">0 kbps</span></div>
+            <div class="trafego-kpi trafego-kpi-alerta"><span class="k">Redes abertas</span><span class="v" id="kpi-abertas">0</span></div>
+        </div>
+
+        <div class="trafego-charts">
+            <div class="trafego-chart-card">
+                <span class="aed-eyebrow aed-eyebrow-indigo">Protocolos</span>
+                <canvas id="chart-proto" height="180"></canvas>
+            </div>
+            <div class="trafego-chart-card">
+                <span class="aed-eyebrow aed-eyebrow-teal">Pacotes/seg (I/O)</span>
+                <canvas id="chart-pps" height="180"></canvas>
+            </div>
+            <div class="trafego-chart-card">
+                <span class="aed-eyebrow aed-eyebrow-amber">Top hosts</span>
+                <canvas id="chart-hosts" height="180"></canvas>
+            </div>
+        </div>
+
+        <div class="trafego-redes">
+            <div class="trafego-rede-card">
+                <h3 class="loc-form-title"><span class="material-symbols-outlined" aria-hidden="true">wifi</span> Redes Wi-Fi</h3>
+                <div class="table-responsive">
+                    <table class="table table-dark table-sm table-bordered align-middle mb-0">
+                        <thead><tr class="text-secondary small"><th>SSID</th><th>Segurança</th><th>Sinal</th><th>Status</th></tr></thead>
+                        <tbody id="wifi-body"><tr><td colspan="4" class="text-secondary">—</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="trafego-rede-card">
+                <h3 class="loc-form-title"><span class="material-symbols-outlined" aria-hidden="true">bluetooth</span> Bluetooth</h3>
+                <div class="table-responsive">
+                    <table class="table table-dark table-sm table-bordered align-middle mb-0">
+                        <thead><tr class="text-secondary small"><th>Nome</th><th>Endereço</th><th>Tipo</th><th>Estado</th></tr></thead>
+                        <tbody id="bt-body"><tr><td colspan="4" class="text-secondary">—</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="loc-form-title mt-3"><span class="material-symbols-outlined" aria-hidden="true">list</span> Pacotes ao vivo</h3>
+        <div class="table-responsive">
+            <table class="table table-dark table-sm table-hover align-middle mb-0 trafego-pacotes">
+                <thead><tr class="text-secondary small">
+                    <th>#</th><th>Hora</th><th>Proto</th><th>Origem</th><th>Destino</th><th>Portas</th><th>Tam</th><th>Info</th>
+                </tr></thead>
+                <tbody id="pacotes-body"><tr><td colspan="8" class="text-secondary">Clique em Iniciar.</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="text-center mb-4">
+        <span class="aed-eyebrow aed-eyebrow-teal">Análise offline</span>
         <h2 class="mb-2" style="font-family:var(--aed-font-display);">Decodificador didático de pacotes</h2>
         <p class="text-secondary small mx-auto" style="max-width:46rem;">
             Cole um <strong>hex dump</strong> de um quadro/pacote e veja os cabeçalhos
@@ -62,6 +150,8 @@
 </div>
 {/content}
 {#extraScripts}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/trafego/js/trafego-aovivo.js?v=20260709"></script>
 <script src="/trafego/js/trafego.js?v=20260709"></script>
 {/extraScripts}
 {/include}

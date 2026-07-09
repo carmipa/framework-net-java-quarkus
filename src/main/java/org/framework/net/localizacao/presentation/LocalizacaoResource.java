@@ -54,6 +54,18 @@ public class LocalizacaoResource {
         return Response.ok(localizacaoService.localizarPorCep(cep)).build();
     }
 
+    /** Localização exata via GPS do navegador (coordenadas informadas com consentimento do usuário). */
+    @GET
+    @Path("/api/gps")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response porGps(@QueryParam("lat") Double lat, @QueryParam("lon") Double lon) {
+        if (lat == null || lon == null || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+            return Response.ok(java.util.Map.of("ok", false,
+                    "mensagem", "Coordenadas inválidas.")).build();
+        }
+        return Response.ok(localizacaoService.localizarPorCoordenadas(lat, lon)).build();
+    }
+
     private static String clienteIp(HttpHeaders headers, HttpServerRequest request) {
         String xff = headers.getHeaderString("X-Forwarded-For");
         if (xff != null && !xff.isBlank()) {
