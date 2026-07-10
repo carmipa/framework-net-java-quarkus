@@ -26,24 +26,7 @@
 {#insert extraScripts}{/insert}
 
 <div id="google_translate_element" style="display:none;"></div>
-<script type="text/javascript">
-{|
-function googleTranslateElementInit() {
-    new google.translate.TranslateElement({pageLanguage: 'pt', autoDisplay: false}, 'google_translate_element');
-}
-function aedTranslate(lang) {
-    var domain = window.location.hostname;
-    if (lang === 'pt') {
-        document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + domain + ';';
-    } else {
-        document.cookie = 'googtrans=/pt/' + lang + '; path=/;';
-        document.cookie = 'googtrans=/pt/' + lang + '; path=/; domain=' + domain + ';';
-    }
-    window.location.reload();
-}
-|}
-</script>
+<script type="text/javascript" src="/web/js/i18n-translate.js?v=20260710"></script>
 <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 </body>
