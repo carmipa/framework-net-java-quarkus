@@ -1,48 +1,16 @@
-/* Documentação: Mermaid em tema DARK (alinhado ao design) + scroll-spy do sumário. */
+/* Documentação: scroll-spy do sumário agrupado (sem Mermaid — diagramas são HTML/CSS dark). */
 (function () {
     "use strict";
 
-    function initMermaid() {
-        if (typeof mermaid === "undefined") return;
-        mermaid.initialize({
-            startOnLoad: false,
-            securityLevel: "strict",
-            theme: "base",
-            themeVariables: {
-                darkMode: true,
-                background: "#0a0e16",
-                mainBkg: "#0f1622",
-                primaryColor: "#0f1622",
-                primaryTextColor: "#eef2f8",
-                primaryBorderColor: "#2dd4bf",
-                secondaryColor: "#111a27",
-                tertiaryColor: "#0a0e16",
-                lineColor: "#5b6679",
-                textColor: "#c9d1d9",
-                clusterBkg: "#0c1220",
-                clusterBorder: "rgba(255,255,255,0.12)",
-                nodeBorder: "rgba(255,255,255,0.18)",
-                edgeLabelBackground: "#0a0e16",
-                fontFamily: "Inter Tight, system-ui, sans-serif",
-                fontSize: "14px"
-            }
-        });
-        try {
-            mermaid.run({ querySelector: ".markdown-doc .mermaid" });
-        } catch (e) {
-            /* diagramas inválidos não devem quebrar a página */
-        }
-    }
-
     function initScrollSpy() {
-        const links = Array.from(document.querySelectorAll(".doc-sidebar a[href^='#']"));
+        const links = Array.from(document.querySelectorAll(".doc-nav a[href^='#']"));
         const sections = links
             .map((link) => document.querySelector(link.getAttribute("href")))
             .filter(Boolean);
         if (!links.length || !sections.length) return;
 
         const sync = () => {
-            const threshold = window.scrollY + 150;
+            const threshold = window.scrollY + 160;
             let activeId = sections[0].id;
             sections.forEach((sec) => {
                 if (sec.offsetTop <= threshold) activeId = sec.id;
@@ -62,14 +30,9 @@
         sync();
     }
 
-    function boot() {
-        initMermaid();
-        initScrollSpy();
-    }
-
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", boot);
+        document.addEventListener("DOMContentLoaded", initScrollSpy);
     } else {
-        boot();
+        initScrollSpy();
     }
 })();

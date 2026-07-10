@@ -1,50 +1,253 @@
 {#include shared/base.html}
-{#title}Documentação | CyberNet Framework{/title}
+{#title}Documentação | Framework de Redes A&D{/title}
 {#extraHead}
 <link rel="stylesheet" href="/documentacao/css/documentacao.css?v=20260710">
 {/extraHead}
 {#content}
 <div class="container py-5">
     {#include shared/main_menu.html activeMainMenu='documentacao' /}
-    {#include shared/project_header.html /}
 
-    <div class="doc-hero mb-3 card-tech p-3">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <div>
-                <h4 class="text-warning mb-1 d-flex align-items-center gap-2"><span class="material-symbols-outlined">menu_book</span> Central de Documentação</h4>
-                <div class="text-light opacity-75 small">Visão arquitetural, stack e guias em formato web.</div>
-            </div>
-            <div class="d-flex flex-wrap gap-2 align-items-center">
-                <span class="badge bg-secondary">{nomeDocumento}</span>
-                <a href="/documentacao" class="aed-btn aed-btn-amber btn-sm"><span class="material-symbols-outlined">refresh</span> Atualizar</a>
-            </div>
+    <div class="doc-grid">
+        <!-- Sumário agrupado (sticky) -->
+        <aside class="doc-nav aed-card card-tech">
+            <span class="aed-eyebrow aed-eyebrow-teal">Sumário</span>
+            <nav class="doc-nav-list" aria-label="Navegação da documentação">
+                <a href="#visao-geral" class="doc-nav-item"><span class="material-symbols-outlined">lightbulb</span> Visão Geral</a>
+                <a href="#funcionalidades" class="doc-nav-item"><span class="material-symbols-outlined">apps</span> Funcionalidades</a>
+                <div class="doc-nav-group">Diagramas</div>
+                <a href="#pipeline" class="doc-nav-item"><span class="material-symbols-outlined">trending_flat</span> Fluxo (Pipeline)</a>
+                <a href="#arquitetura" class="doc-nav-item"><span class="material-symbols-outlined">deployed_code</span> Arquitetura</a>
+                <a href="#vlsm" class="doc-nav-item"><span class="material-symbols-outlined">account_tree</span> Fluxo VLSM/WAN</a>
+                <a href="#topologia" class="doc-nav-item"><span class="material-symbols-outlined">hub</span> Topologia WAN</a>
+                <div class="doc-nav-group">Operação</div>
+                <a href="#execucao" class="doc-nav-item"><span class="material-symbols-outlined">terminal</span> Execução (Docker)</a>
+                <a href="#api" class="doc-nav-item"><span class="material-symbols-outlined">api</span> API REST</a>
+                <a href="#observabilidade" class="doc-nav-item"><span class="material-symbols-outlined">monitoring</span> Observabilidade</a>
+            </nav>
+        </aside>
+
+        <div class="doc-content">
+            <!-- 1. Hero -->
+            <header class="aed-card card-tech doc-hero">
+                <span class="aed-eyebrow aed-eyebrow-teal">Central de Documentação</span>
+                <h1 class="doc-hero-title">Framework de Redes — Análise Didática Avançada</h1>
+                <p class="doc-hero-sub">
+                    Referência técnica: arquitetura, pipeline de análise, fluxos VLSM/WAN, telemetria e
+                    observabilidade. Java 25 · Quarkus · monólito modular.
+                </p>
+                <div class="doc-chips">
+                    <span class="doc-chip chip-java">Java 25</span>
+                    <span class="doc-chip chip-quarkus">Quarkus</span>
+                    <span class="doc-chip chip-rest">REST API</span>
+                    <span class="doc-chip chip-docker">Docker</span>
+                </div>
+            </header>
+
+            <!-- 2. Visão Geral + Funcionalidades -->
+            <section id="visao-geral" class="aed-card card-tech doc-section">
+                <h2 class="doc-h2"><span class="material-symbols-outlined ico-teal">lightbulb</span> Visão Geral</h2>
+                <p class="doc-p">
+                    Ferramenta didática para estudantes de Redes e Cyber Defense: calcula, valida e explica
+                    <strong>IPv4/IPv6</strong>, CIDR, máscaras, wildcard e <strong>VLSM</strong>, com catálogos
+                    interativos de Portas e Protocolos e um módulo de Resolução de Problemas (VLSM + WAN) que
+                    exporta scripts para o <strong>Cisco Packet Tracer</strong>. Migrado de Python/Flask para
+                    Java 25 + Quarkus como um monólito modular (domínios autocontidos, prontos para microserviços).
+                </p>
+            </section>
+
+            <section id="funcionalidades" class="aed-card card-tech doc-section">
+                <h2 class="doc-h2"><span class="material-symbols-outlined ico-indigo">apps</span> Funcionalidades</h2>
+                <div class="doc-features">
+                    <div class="doc-feature">
+                        <span class="material-symbols-outlined ico-teal">calculate</span>
+                        <h3>Cálculo IPv4/IPv6</h3>
+                        <p>Rede, broadcast, hosts úteis, máscara, wildcard e classe — com explicação didática.</p>
+                    </div>
+                    <div class="doc-feature">
+                        <span class="material-symbols-outlined ico-blue">grid_view</span>
+                        <h3>Decomposição de bits</h3>
+                        <p>Bitwise AND octeto a octeto e régua de sub-redes de 32 bits.</p>
+                    </div>
+                    <div class="doc-feature">
+                        <span class="material-symbols-outlined ico-indigo">account_tree</span>
+                        <h3>VLSM + WAN</h3>
+                        <p>Alocação por demanda, links WAN /30, EIGRP/OSPF e topologia.</p>
+                    </div>
+                    <div class="doc-feature">
+                        <span class="material-symbols-outlined ico-amber">settings_ethernet</span>
+                        <h3>Catálogo de Portas</h3>
+                        <p>TCP/UDP com risco, categoria e alternativa segura.</p>
+                    </div>
+                    <div class="doc-feature">
+                        <span class="material-symbols-outlined ico-teal">lan</span>
+                        <h3>Catálogo de Protocolos</h3>
+                        <p>Camada, criptografia e troubleshooting de roteamento.</p>
+                    </div>
+                    <div class="doc-feature">
+                        <span class="material-symbols-outlined ico-green">terminal</span>
+                        <h3>Cisco CLI / Packet Tracer</h3>
+                        <p>Exportação de scripts e laboratório pronto para importar.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Pipeline (horizontal) -->
+            <section id="pipeline" class="aed-card card-tech doc-section">
+                <h2 class="doc-h2"><span class="material-symbols-outlined ico-teal">trending_flat</span> Fluxo de Trabalho (Pipeline)</h2>
+                <p class="doc-p">Do endereço de entrada ao script Cisco e à exportação.</p>
+                <div class="diagram-scroll">
+                    <div class="flow-h">
+                        <div class="node node-accent">
+                            <span class="material-symbols-outlined">input</span>
+                            <strong>Entrada</strong><em>IP / CIDR</em>
+                        </div>
+                        <span class="flow-arrow material-symbols-outlined">chevron_right</span>
+                        <div class="node">
+                            <span class="material-symbols-outlined">verified</span>
+                            <strong>Validação</strong><em>RFC 1918</em>
+                        </div>
+                        <span class="flow-arrow material-symbols-outlined">chevron_right</span>
+                        <div class="node">
+                            <span class="material-symbols-outlined">calculate</span>
+                            <strong>Cálculo</strong><em>bitwise AND</em>
+                        </div>
+                        <span class="flow-arrow material-symbols-outlined">chevron_right</span>
+                        <div class="node">
+                            <span class="material-symbols-outlined">account_tree</span>
+                            <strong>VLSM / WAN</strong><em>alocação</em>
+                        </div>
+                        <span class="flow-arrow material-symbols-outlined">chevron_right</span>
+                        <div class="node node-accent">
+                            <span class="material-symbols-outlined">output</span>
+                            <strong>Saída</strong><em>CLI + PDF/JSON</em>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. Arquitetura (camadas) -->
+            <section id="arquitetura" class="aed-card card-tech doc-section">
+                <h2 class="doc-h2"><span class="material-symbols-outlined ico-indigo">deployed_code</span> Arquitetura</h2>
+                <p class="doc-p">Monólito modular em camadas (DDD-lite / hexagonal).</p>
+                <div class="arch-stack">
+                    <div class="arch-layer layer-teal">
+                        <div class="arch-head"><span class="material-symbols-outlined">web</span> Frontend · Web UI (Qute)</div>
+                        <div class="arch-pills"><code>/analise</code><code>/portas</code><code>/protocolos</code><code>/resolucao-problemas</code><code>/telemetria</code><code>/trafego</code></div>
+                    </div>
+                    <div class="arch-layer layer-blue">
+                        <div class="arch-head"><span class="material-symbols-outlined">api</span> API REST · Quarkus (JAX-RS)</div>
+                        <div class="arch-pills"><code>AnaliseDidaticaResource</code><code>ResolucaoProblemasResource</code><code>TelemetriaResource</code><code>TrafegoResource</code></div>
+                    </div>
+                    <div class="arch-layer layer-indigo">
+                        <div class="arch-head"><span class="material-symbols-outlined">deployed_code</span> Serviços de Domínio</div>
+                        <div class="arch-pills"><code>Ipv4Kernel</code><code>VlsmService</code><code>GeoLookupService</code><code>TrafegoDecoderService</code><code>PortasCatalog</code></div>
+                    </div>
+                    <div class="arch-layer layer-amber">
+                        <div class="arch-head"><span class="material-symbols-outlined">monitoring</span> Observabilidade & Segurança</div>
+                        <div class="arch-pills"><code>TelemetriaStore (OTLP/JSON)</code><code>AdminApiKeyFilter</code><code>CsrfFilter</code><code>RateLimitFilter</code></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. Fluxo VLSM/WAN (vertical) -->
+            <section id="vlsm" class="aed-card card-tech doc-section">
+                <h2 class="doc-h2"><span class="material-symbols-outlined ico-teal">account_tree</span> Fluxo de Resolução VLSM/WAN</h2>
+                <div class="flow-v">
+                    <div class="vstep vstep-accent"><span class="vnum">1</span><div><strong>Coletar demandas</strong><em>hosts por localidade</em></div></div>
+                    <span class="vflow-arrow material-symbols-outlined">arrow_downward</span>
+                    <div class="vstep"><span class="vnum">2</span><div><strong>Ordenar maior → menor</strong><em>evita fragmentação</em></div></div>
+                    <span class="vflow-arrow material-symbols-outlined">arrow_downward</span>
+                    <div class="vstep"><span class="vnum">3</span><div><strong>Calcular prefixo</strong><em><code>2^(32-p) − 2 ≥ hosts</code></em></div></div>
+                    <span class="vflow-arrow material-symbols-outlined">arrow_downward</span>
+                    <div class="vstep"><span class="vnum">4</span><div><strong>Alocar bloco contíguo</strong><em>sem sobreposição</em></div></div>
+                    <span class="vflow-arrow material-symbols-outlined">arrow_downward</span>
+                    <div class="vstep vstep-accent"><span class="vnum">5</span><div><strong>Links WAN /30 + Cisco CLI</strong><em>EIGRP/OSPF · Packet Tracer</em></div></div>
+                </div>
+            </section>
+
+            <!-- 6. Topologia WAN (hub-spoke) -->
+            <section id="topologia" class="aed-card card-tech doc-section">
+                <h2 class="doc-h2"><span class="material-symbols-outlined ico-teal">hub</span> Topologia WAN (Estrela)</h2>
+                <div class="topo">
+                    <div class="topo-hub node node-accent">
+                        <span class="material-symbols-outlined">router</span>
+                        <strong>MATRIZ (Hub)</strong><em>172.19.0.0/22 · R2911</em>
+                    </div>
+                    <div class="topo-trunk"></div>
+                    <div class="topo-spokes">
+                        <div class="node">
+                            <span class="material-symbols-outlined">lan</span>
+                            <strong>Filial I</strong><em>172.19.4.0/24</em>
+                            <span class="topo-wan">WAN .1/30</span>
+                        </div>
+                        <div class="node">
+                            <span class="material-symbols-outlined">lan</span>
+                            <strong>Filial II</strong><em>172.19.5.0/25</em>
+                            <span class="topo-wan">WAN .5/30</span>
+                        </div>
+                        <div class="node">
+                            <span class="material-symbols-outlined">shield</span>
+                            <strong>NOC / SOC</strong><em>172.19.6.0/26</em>
+                            <span class="topo-wan">WAN .9/30</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 7. Execução (Docker) -->
+            <section id="execucao" class="aed-card card-tech doc-section">
+                <h2 class="doc-h2"><span class="material-symbols-outlined ico-blue">terminal</span> Execução (Docker)</h2>
+                <p class="doc-p">Subida em produção (VPS) com um comando.</p>
+                <div class="code-window">
+                    <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-a"></span><span class="dot dot-g"></span><span class="code-name">deploy.sh</span></div>
+                    <pre class="code-body"><code>git pull origin main
+docker compose up -d --build
+docker compose ps
+docker compose logs --tail=20 -f</code></pre>
+                </div>
+            </section>
+
+            <!-- 8. API REST -->
+            <section id="api" class="aed-card card-tech doc-section">
+                <h2 class="doc-h2"><span class="material-symbols-outlined ico-indigo">api</span> Endpoints da API REST</h2>
+                <div class="table-responsive">
+                    <table class="doc-endpoints">
+                        <thead>
+                        <tr><th>Método</th><th>Rota</th><th>Descrição</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr><td><span class="verb verb-get">GET</span></td><td><code>/analise</code></td><td>Análise didática IPv4/IPv6 (CIDR, máscara, wildcard, IPv6…)</td></tr>
+                        <tr><td><span class="verb verb-get">GET</span></td><td><code>/api/informacoes/geo?ip=</code></td><td>Geolocalização de IP em JSON (MaxMind + fallback)</td></tr>
+                        <tr><td><span class="verb verb-post">POST</span></td><td><code>/resolucao-problemas</code></td><td>Calcula o cenário VLSM/WAN e gera os exports</td></tr>
+                        <tr><td><span class="verb verb-post">POST</span></td><td><code>/trafego/api/decodificar</code></td><td>Decodifica um hex dump em camadas Ethernet/IP/TCP/UDP</td></tr>
+                        <tr><td><span class="verb verb-get">GET</span></td><td><code>/telemetria/api/exportar</code></td><td>Telemetria em OpenTelemetry OTLP/JSON</td></tr>
+                        <tr><td><span class="verb verb-get">GET</span></td><td><code>/export/json</code> 🔒</td><td>Exportação da análise (protegida por chave admin)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Observabilidade -->
+            <section id="observabilidade" class="aed-card card-tech doc-section">
+                <h2 class="doc-h2"><span class="material-symbols-outlined ico-amber">monitoring</span> Observabilidade</h2>
+                <p class="doc-p">
+                    Telemetria server-side com <code>request_id</code>/<code>trace_id</code> por requisição, dashboard
+                    em <code>/telemetria</code> e exportação no padrão <strong>OpenTelemetry OTLP/JSON</strong>.
+                </p>
+                <div class="code-window">
+                    <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-a"></span><span class="dot dot-g"></span><span class="code-name">telemetria.sh</span></div>
+                    <pre class="code-body"><code># baixar os logs em OTLP/JSON
+curl -o telemetria.json https://SEU-HOST/telemetria/api/exportar
+
+# exportação protegida (chave admin)
+curl -H "X-Admin-Api-Key: $KEY" https://SEU-HOST/export/json</code></pre>
+                </div>
+            </section>
         </div>
     </div>
-
-    {#if erro}
-    <div class="alert alert-danger">{erro}</div>
-    {#else}
-    <div class="doc-layout aed-doc-layout">
-        <aside class="doc-sidebar aed-doc-sidebar aed-card card-tech p-3">
-            <span class="aed-eyebrow">Sumário</span>
-            <div class="small text-secondary fw-semibold mb-2">NAVEGAÇÃO</div>
-            {#if secoes.isEmpty}
-            <div class="small text-secondary">Sem títulos mapeados.</div>
-            {#else}
-            {#for secao in secoes}
-            <a href="#{secao.id}" class="doc-toc-link doc-toc-nivel-{secao.nivel}">{secao.titulo}</a>
-            {/for}
-            {/if}
-        </aside>
-        <section class="doc-content-wrap card-tech p-3">
-            <article class="markdown-doc">{conteudoHtml}</article>
-        </section>
-    </div>
-    {/if}
 </div>
 {/content}
 {#extraScripts}
-<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 <script src="/web/js/documentacao.js?v=20260710"></script>
 {/extraScripts}
 {/include}
