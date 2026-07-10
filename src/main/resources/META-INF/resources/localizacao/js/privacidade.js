@@ -145,15 +145,18 @@
 
     function atualizarGlobo(geo) {
         var wrap = $("priv-globe-wrap");
+        var hero = $("priv-hero");
         if (!wrap) return;
         var lat = geo && geo.latitude != null ? geo.latitude : (geo && geo.lat);
         var lon = geo && geo.longitude != null ? geo.longitude : (geo && geo.lon);
         var ok = geo && geo.ok && geo.reservado !== true && lat != null && lon != null;
         if (!ok) {
             wrap.classList.add("d-none");
+            if (hero) hero.classList.remove("has-globe");
             return;
         }
         wrap.classList.remove("d-none");
+        if (hero) hero.classList.add("has-globe");
         var cap = $("priv-globe-cap");
         if (cap) {
             cap.innerHTML = bandeiraHtml(geo.pais_codigo || geo.codigo_pais, geo.pais_bandeira) +
