@@ -3,12 +3,6 @@
 > **Versão Java/Quarkus** (`framework-net-java-quarkus`) — Java 25 + Quarkus 3.37.
 > Migração do projeto original Python/Flask. Esta documentação é renderizada dentro da própria aplicação em `/documentacao`.
 
-[![Java](https://img.shields.io/badge/Java-25-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
-[![Quarkus](https://img.shields.io/badge/Quarkus-3.37-4695EB?logo=quarkus&logoColor=white)](https://quarkus.io/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-[![Status](https://img.shields.io/badge/Status-Ativo-2ea043)](#)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-
 <p align="center">
   <img src="/icone.png?v=20260709d" alt="Framework de Redes — Análise Didática Avançada" width="420" />
 </p>

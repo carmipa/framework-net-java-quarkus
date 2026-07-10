@@ -41,7 +41,7 @@
             </div>
         </article>
         <article class="aed-kpi-card">
-            <div class="aed-kpi-icon amber"><span class="material-symbols-outlined">http</span></div>
+            <div class="aed-kpi-icon amber"><span class="material-symbols-outlined">sync_alt</span></div>
             <div>
                 <div class="aed-kpi-label">HTTP OK / Erro</div>
                 <div class="aed-kpi-value" id="t-http-ratio" style="font-size:1.25rem;">0 / 0</div>
@@ -59,17 +59,17 @@
     <div class="aed-charts-grid">
         <div class="aed-card card-tech p-3">
             <span class="aed-eyebrow aed-eyebrow-indigo">Análise</span>
-            <h6 class="text-secondary text-uppercase small mb-2">Eventos por módulo</h6>
+            <h6 class="text-secondary text-uppercase small mb-2 d-flex align-items-center gap-2"><span class="material-symbols-outlined">bar_chart</span> Eventos por módulo</h6>
             <canvas id="chart-modulos" height="200"></canvas>
         </div>
         <div class="aed-card card-tech p-3">
             <span class="aed-eyebrow">HTTP</span>
-            <h6 class="text-secondary text-uppercase small mb-2">Métodos HTTP</h6>
+            <h6 class="text-secondary text-uppercase small mb-2 d-flex align-items-center gap-2"><span class="material-symbols-outlined">donut_small</span> Métodos HTTP</h6>
             <canvas id="chart-niveis" height="200"></canvas>
         </div>
         <div class="aed-card card-tech p-3">
             <span class="aed-eyebrow aed-eyebrow-amber">Tempo real</span>
-            <h6 class="text-secondary text-uppercase small mb-2">Requisições/minuto</h6>
+            <h6 class="text-secondary text-uppercase small mb-2 d-flex align-items-center gap-2"><span class="material-symbols-outlined">timeline</span> Requisições/minuto</h6>
             <canvas id="chart-atividade" height="200"></canvas>
         </div>
     </div>
@@ -78,7 +78,7 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
             <div>
                 <span class="aed-eyebrow">Console</span>
-                <h3 class="h6 mb-0">Console ao vivo</h3>
+                <h3 class="h6 mb-0 d-flex align-items-center gap-2"><span class="material-symbols-outlined">terminal</span> Console ao vivo</h3>
             </div>
             <div class="d-flex gap-2">
                 <button type="button" class="aed-btn aed-btn-neutral btn-sm btn-toggle-console" data-target="console-telemetria">
@@ -96,7 +96,7 @@
 
     <div class="aed-card card-tech p-3">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-            <h6 class="mb-0">Histórico de eventos</h6>
+            <h6 class="mb-0 d-flex align-items-center gap-2"><span class="material-symbols-outlined">history</span> Histórico de eventos</h6>
             <input type="search" class="form-control form-control-sm telemetry-search" id="t-table-search" placeholder="Buscar evento, módulo ou mensagem..." style="max-width:280px;">
         </div>
         <p class="telemetry-table-count small text-secondary" id="t-table-count">0 eventos</p>
