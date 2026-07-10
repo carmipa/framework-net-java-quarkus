@@ -163,8 +163,24 @@
             });
     }
 
+    // O mapa vive numa sub-aba; ao ficar visível o Leaflet precisa recalcular o tamanho,
+    // senão renderiza os tiles só num canto (container tinha 0px quando estava oculto).
+    function observarAba() {
+        var el = document.getElementById("loc-map");
+        var painel = el && el.closest ? el.closest(".tab-panel") : null;
+        if (!painel || !w.MutationObserver) {
+            return;
+        }
+        new MutationObserver(function () {
+            if (painel.classList.contains("active") && map) {
+                setTimeout(function () { map.invalidateSize(); }, 60);
+            }
+        }).observe(painel, { attributes: true, attributeFilter: ["class"] });
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         initMap();
+        observarAba();
         var formCep = document.getElementById("form-loc-cep");
         if (formCep) {
             formCep.addEventListener("submit", buscarCep);
@@ -175,5 +191,5 @@
         }
     });
 
-    w.LocMap = { setMarker: setMarker };
+    w.LocMap = { setMarker: setMarker, invalidate: function () { if (map) map.invalidateSize(); } };
 })(window);
