@@ -21,16 +21,24 @@
     <div class="aed-card card-tech p-4 shadow" data-aed-tabs data-active-tab="aovivo">
         <span class="aed-eyebrow">Ferramenta</span>
         <div class="aed-mode-grid tab-nav mb-3" role="tablist">
-            <button type="button" class="aed-mode-btn tab-trigger active" data-tab="aovivo" role="tab">
+            <button type="button" class="aed-mode-btn tab-trigger active" data-tab="aovivo" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Ao vivo: painel simulado de tráfego (protocolos, throughput, top hosts e redes abertas)">
                 <span class="material-symbols-outlined">sensors</span><span>Ao vivo</span>
             </button>
-            <button type="button" class="aed-mode-btn tab-trigger" data-tab="decodificador" role="tab">
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="decodificador" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Decodificador: cole um hex dump e veja os cabeçalhos Ethernet/IP/TCP/UDP/ICMP campo a campo">
                 <span class="material-symbols-outlined">memory</span><span>Decodificador</span>
             </button>
-            <button type="button" class="aed-mode-btn tab-trigger" data-tab="encapsulamento" role="tab">
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="encapsulamento" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Encapsulamento: veja uma mensagem ser embrulhada camada a camada (Aplicação → Enlace)">
                 <span class="material-symbols-outlined">layers</span><span>Encapsulamento</span>
             </button>
-            <button type="button" class="aed-mode-btn tab-trigger" data-tab="handshake" role="tab">
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="handshake" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Handshake TCP: passo a passo do 3-way handshake, troca de dados e encerramento (4-way)">
                 <span class="material-symbols-outlined">handshake</span><span>Handshake TCP</span>
             </button>
         </div>

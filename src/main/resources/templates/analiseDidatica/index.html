@@ -20,25 +20,39 @@
     <div class="card-tech p-4 shadow analise-didatica-wrap aed-card" data-active-tab="{activeTabPre}">
         <span class="aed-eyebrow">Modo de análise</span>
         <div class="aed-mode-grid tab-nav mb-3" role="tablist">
-            <button type="button" class="aed-mode-btn tab-trigger" data-tab="cidr" role="tab">
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="cidr" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="CIDR: calcule rede, broadcast, faixa de hosts e máscara a partir de um IPv4 + prefixo">
                 <span class="material-symbols-outlined">calculate</span><span>CIDR</span>
             </button>
-            <button type="button" class="aed-mode-btn tab-trigger" data-tab="mask" role="tab">
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="mask" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Máscara: converta máscara decimal ↔ CIDR e visualize os bits de rede/host">
                 <span class="material-symbols-outlined">straighten</span><span>Máscara</span>
             </button>
-            <button type="button" class="aed-mode-btn tab-trigger" data-tab="wildcard" role="tab">
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="wildcard" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Wildcard: calcule/valide a máscara curinga usada em ACL, OSPF e EIGRP">
                 <span class="material-symbols-outlined">grid_view</span><span>Wildcard</span>
             </button>
-            <button type="button" class="aed-mode-btn tab-trigger" data-tab="autoip" role="tab">
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="autoip" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Auto CIDR: descubra automaticamente o melhor prefixo para um endereço IPv4">
                 <span class="material-symbols-outlined">auto_fix_high</span><span>Auto CIDR</span>
             </button>
-            <button type="button" class="aed-mode-btn tab-trigger" data-tab="dominio" role="tab">
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="dominio" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Domínio: resolva um domínio/hostname para IP e analise a rede resultante">
                 <span class="material-symbols-outlined">language</span><span>Domínio</span>
             </button>
-            <button type="button" class="aed-mode-btn tab-trigger" data-tab="ipv6" role="tab">
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="ipv6" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="IPv6: expanda, comprima e analise endereços IPv6">
                 <span class="material-symbols-outlined">public</span><span>IPv6</span>
             </button>
-            <button type="button" class="aed-mode-btn tab-trigger" data-tab="comparador" role="tab">
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="comparador" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Comparador: compare o mesmo IP sob dois prefixos CIDR lado a lado">
                 <span class="material-symbols-outlined">compare_arrows</span><span>Comparador</span>
             </button>
         </div>
@@ -52,16 +66,24 @@
         <div class="tab-panel" data-tab-panel="comparador">{#include analiseDidatica/partials/tab_comparador.html /}</div>
 
         <div class="aed-action-row action-buttons mt-3">
-            <a href="/export/json" class="aed-btn aed-btn-json" target="_blank" rel="noopener">
+            <a href="/export/json" class="aed-btn aed-btn-json" target="_blank" rel="noopener"
+               data-bs-toggle="tooltip" data-bs-placement="top"
+               title="Baixe o resultado da análise em formato JSON (requer login admin)">
                 <span class="material-symbols-outlined">download</span> Exportar JSON
             </a>
-            <a href="/export/pdf" class="aed-btn aed-btn-pdf">
+            <a href="/export/pdf" class="aed-btn aed-btn-pdf"
+               data-bs-toggle="tooltip" data-bs-placement="top"
+               title="Gere um PDF com o resultado da análise (requer login admin)">
                 <span class="material-symbols-outlined">picture_as_pdf</span> Exportar PDF
             </a>
-            <button type="button" class="aed-btn aed-btn-neutral" id="btn-copiar-resultado">
+            <button type="button" class="aed-btn aed-btn-neutral" id="btn-copiar-resultado"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Copie o resultado em texto para a área de transferência">
                 <span class="material-symbols-outlined">content_copy</span> Copiar resultado
             </button>
-            <a id="btn-limpar-tela" href="/analise?tab={activeTabPre}" class="aed-btn aed-btn-danger">
+            <a id="btn-limpar-tela" href="/analise?tab={activeTabPre}" class="aed-btn aed-btn-danger"
+               data-bs-toggle="tooltip" data-bs-placement="top"
+               title="Limpe os resultados e recomece a análise nesta aba">
                 <span class="material-symbols-outlined">delete_sweep</span> Limpar Tela
             </a>
         </div>
@@ -178,8 +200,8 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/analiseDidatica/js/geo_report.js"></script>
-<script src="/analiseDidatica/js/analise_widgets.js"></script>
-<script src="/analiseDidatica/js/analise.js"></script>
+<script src="/analiseDidatica/js/geo_report.js?v=20260710"></script>
+<script src="/analiseDidatica/js/analise_widgets.js?v=20260710"></script>
+<script src="/analiseDidatica/js/analise.js?v=20260710"></script>
 {/extraScripts}
 {/include}

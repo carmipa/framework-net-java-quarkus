@@ -294,16 +294,42 @@
                 await navigator.clipboard.writeText(JSON.stringify({ ...row.dataset }, null, 2));
             }
             if (detailsBtn && detailsModal) {
-                const label = row.dataset.porta || row.dataset.protocolo || "";
-                const title = row.dataset.servico || row.dataset.nome || "";
-                detailsTitle.textContent = `${label} - ${title}`;
-                detailsBody.innerHTML = `
-                    <p><strong>Categoria:</strong> ${row.dataset.categoria || row.dataset.camada || ""}</p>
-                    <p><strong>Transporte:</strong> ${row.dataset.transporte || "—"}</p>
-                    <p><strong>Risco:</strong> ${row.dataset.risco || row.dataset.nivel || ""}</p>
-                    <p><strong>Recomendação:</strong> ${row.dataset.recomendacao || ""}</p>
-                    <p><strong>Alternativa segura:</strong> ${row.dataset.alternativa || ""}</p>
-                `;
+                const d = row.dataset;
+                if (catalogModo === "protocolos") {
+                    // Catálogo de protocolos: campos de roteamento (não de porta)
+                    detailsTitle.textContent = d.nome || "Protocolo";
+                    const linha = (rotulo, valor) => (valor ? `<p><strong>${rotulo}:</strong> ${valor}</p>` : "");
+                    detailsBody.innerHTML = [
+                        linha("Camada", d.camada),
+                        linha("IGP/EGP", d.alcance ? d.alcance.toUpperCase() : ""),
+                        linha("Transporte", d.transporte),
+                        linha("Porta comum", d.porta),
+                        linha("Seguro", d.seguro),
+                        linha("Nível", d.nivel),
+                        linha("Função", d.funcao),
+                        linha("Algoritmo", d.algoritmo),
+                        linha("Métrica", d.metrica),
+                        linha("Distância administrativa", d.ad),
+                        linha("Convergência", d.convergencia),
+                        linha("ECMP", d.ecmp),
+                        linha("Dica didática", d.dica),
+                        d.sintaxe ? `<p><strong>Sintaxe base:</strong> <code>${d.sintaxe}</code></p>` : "",
+                        linha("Problemas comuns", d.problemas),
+                        linha("Mitigações", d.mitigacoes),
+                    ].join("") || "<p class=\"text-secondary\">Sem detalhes adicionais.</p>";
+                } else {
+                    // Catálogo de portas
+                    const label = d.porta || d.protocolo || "";
+                    const title = d.servico || d.nome || "";
+                    detailsTitle.textContent = `${label} - ${title}`;
+                    detailsBody.innerHTML = `
+                        <p><strong>Categoria:</strong> ${d.categoria || d.camada || ""}</p>
+                        <p><strong>Transporte:</strong> ${d.transporte || "—"}</p>
+                        <p><strong>Risco:</strong> ${d.risco || d.nivel || ""}</p>
+                        <p><strong>Recomendação:</strong> ${d.recomendacao || ""}</p>
+                        <p><strong>Alternativa segura:</strong> ${d.alternativa || ""}</p>
+                    `;
+                }
                 detailsModal.show();
             }
         });

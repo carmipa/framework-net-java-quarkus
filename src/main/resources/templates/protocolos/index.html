@@ -81,11 +81,11 @@
             <div class="row g-2 align-items-end mb-3">
                 <div class="col-lg-3">
                     <label class="form-label small text-secondary d-flex align-items-center gap-1">Busca geral</label>
-                    <input type="text" class="form-control bg-dark text-light border-secondary" data-grid-search="protocolos" placeholder="Protocolo, IGP, EGP, camada...">
+                    <input type="text" class="form-control bg-dark text-light border-secondary" data-grid-search="protocolos" placeholder="Protocolo, IGP, EGP, camada..." data-bs-toggle="tooltip" data-bs-placement="top" title="Busca geral: digite protocolo, camada, IGP/EGP, transporte ou função.">
                 </div>
                 <div class="col-lg-2">
                     <label class="form-label small text-secondary">Categoria</label>
-                    <select class="form-select bg-dark text-light border-secondary" data-grid-context="protocolos">
+                    <select class="form-select bg-dark text-light border-secondary" data-grid-context="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Filtra por categoria: protocolos de roteamento ou outros.">
                         <option value="all">Todas</option>
                         <option value="roteamento">Roteamento</option>
                         <option value="outros">Outros</option>
@@ -93,7 +93,7 @@
                 </div>
                 <div class="col-lg-2">
                     <label class="form-label small text-secondary">Camada</label>
-                    <select class="form-select bg-dark text-light border-secondary" data-grid-category="protocolos">
+                    <select class="form-select bg-dark text-light border-secondary" data-grid-category="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Filtra pela camada do modelo (aplicação, transporte, rede, enlace).">
                         <option value="all">Todas</option>
                         <option value="aplicação">Aplicação</option>
                         <option value="transporte">Transporte</option>
@@ -105,7 +105,7 @@
                 </div>
                 <div class="col-lg-1">
                     <label class="form-label small text-secondary">Transporte</label>
-                    <select class="form-select bg-dark text-light border-secondary" data-grid-transport="protocolos">
+                    <select class="form-select bg-dark text-light border-secondary" data-grid-transport="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Filtra pelo protocolo de transporte (TCP, UDP, ICMP ou N/A).">
                         <option value="all">Todos</option>
                         <option value="tcp">TCP</option>
                         <option value="udp">UDP</option>
@@ -115,7 +115,7 @@
                 </div>
                 <div class="col-lg-1">
                     <label class="form-label small text-secondary">Nível</label>
-                    <select class="form-select bg-dark text-light border-secondary" data-grid-risk="protocolos">
+                    <select class="form-select bg-dark text-light border-secondary" data-grid-risk="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Filtra pelo nível didático (crítico, atenção, seguro, didático).">
                         <option value="all">Todos</option>
                         <option value="crítico">Crítico</option>
                         <option value="atenção">Atenção</option>
@@ -124,9 +124,9 @@
                     </select>
                 </div>
                 <div class="col-lg-3 d-flex flex-wrap gap-2 justify-content-lg-end">
-                    <button type="button" class="aed-btn aed-btn-danger btn-sm grid-action-btn" data-grid-clear="protocolos"><span class="material-symbols-outlined">delete_sweep</span> Limpar</button>
-                    <button type="button" class="aed-btn aed-btn-json btn-sm grid-action-btn" data-grid-export-json="protocolos"><span class="material-symbols-outlined">download</span> JSON</button>
-                    <button type="button" class="aed-btn aed-btn-pdf btn-sm grid-action-btn" data-grid-export-pdf="protocolos"><span class="material-symbols-outlined">picture_as_pdf</span> PDF</button>
+                    <button type="button" class="aed-btn aed-btn-danger btn-sm grid-action-btn" data-grid-clear="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Limpa busca, filtros e ordenação da tabela."><span class="material-symbols-outlined">delete_sweep</span> Limpar</button>
+                    <button type="button" class="aed-btn aed-btn-json btn-sm grid-action-btn" data-grid-export-json="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Exporta os protocolos filtrados para arquivo JSON."><span class="material-symbols-outlined">download</span> JSON</button>
+                    <button type="button" class="aed-btn aed-btn-pdf btn-sm grid-action-btn" data-grid-export-pdf="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Gera versão para impressão/PDF com os dados filtrados."><span class="material-symbols-outlined">picture_as_pdf</span> PDF</button>
                 </div>
             </div>
 
@@ -186,8 +186,8 @@
                             <td><span class="badge bg-dark border border-{item.badgeColor} text-{item.badgeColor}">{item.badge}</span></td>
                             <td class="small text-info">{item.funcao}</td>
                             <td class="text-nowrap">
-                                <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-copy="protocolos"><span class="material-symbols-outlined">content_copy</span></button>
-                                <button type="button" class="aed-btn aed-btn-indigo btn-sm" data-grid-details="protocolos">Detalhes</button>
+                                <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-copy="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Copiar os dados deste protocolo."><span class="material-symbols-outlined">content_copy</span></button>
+                                <button type="button" class="aed-btn aed-btn-indigo btn-sm" data-grid-details="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir os detalhes deste protocolo.">Detalhes</button>
                             </td>
                         </tr>
                         {/for}
@@ -254,8 +254,8 @@
                             </div>
                         </dl>
                         <div class="mt-2 pt-2 border-top border-secondary border-opacity-25">
-                            <button type="button" class="aed-btn aed-btn-neutral btn-sm me-1" data-grid-copy="protocolos"><span class="material-symbols-outlined">content_copy</span></button>
-                            <button type="button" class="aed-btn aed-btn-indigo btn-sm" data-grid-details="protocolos">Detalhes</button>
+                            <button type="button" class="aed-btn aed-btn-neutral btn-sm me-1" data-grid-copy="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Copiar os dados deste protocolo."><span class="material-symbols-outlined">content_copy</span></button>
+                            <button type="button" class="aed-btn aed-btn-indigo btn-sm" data-grid-details="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir os detalhes deste protocolo.">Detalhes</button>
                         </div>
                     </div>
                     {/for}
@@ -264,9 +264,9 @@
             <div class="d-flex flex-column align-items-center gap-2 mt-2">
                 <div class="small text-secondary text-center" data-grid-counter="protocolos"></div>
                 <div class="d-flex gap-2 align-items-center justify-content-center">
-                    <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-prev="protocolos"><span class="material-symbols-outlined">chevron_left</span></button>
+                    <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-prev="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Página anterior."><span class="material-symbols-outlined">chevron_left</span></button>
                     <span class="small text-secondary" data-grid-page-label="protocolos"></span>
-                    <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-next="protocolos"><span class="material-symbols-outlined">chevron_right</span></button>
+                    <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-next="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Próxima página."><span class="material-symbols-outlined">chevron_right</span></button>
                 </div>
             </div>
 
@@ -316,11 +316,11 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/web/js/datagrid.js?v=20260703"></script>
+<script src="/web/js/datagrid.js?v=20260710"></script>
 <script>
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => new bootstrap.Tooltip(el));
     document.querySelectorAll('[data-bs-toggle="popover"]').forEach((el) => new bootstrap.Popover(el));
-    initProtocolosGrid("protocolos");
+    initGrid("protocolos");
     document.addEventListener("click", async (ev) => {
         const copyBtn = ev.target.closest("[data-copy-snippet]");
         if (!copyBtn) return;
