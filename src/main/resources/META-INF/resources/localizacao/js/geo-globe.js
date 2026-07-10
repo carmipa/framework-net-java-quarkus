@@ -2,8 +2,8 @@
  * Renderiza um planeta interativo com atmosfera e nuvens e plota o ponto do IP
  * localizado. O painel (geo-panel.js) chama window.GeoGlobe.setLocation(lat, lon, label).
  * Texturas via CDN (three-globe). Se o WebGL falhar, o card volta a uma coluna. */
-import * as THREE from "three";
-import Globe from "globe.gl";
+import * as THREE from "https://esm.sh/three@0.170.0";
+import Globe from "https://esm.sh/globe.gl@2.34.4";
 
 (function () {
     "use strict";
