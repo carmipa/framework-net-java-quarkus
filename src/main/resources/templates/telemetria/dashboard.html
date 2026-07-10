@@ -1,7 +1,7 @@
 {#include shared/base.html}
 {#title}Telemetria | Framework de Redes A&D{/title}
 {#extraHead}
-<link rel="stylesheet" href="/telemetria/css/dashboard.css?v=20260703">
+<link rel="stylesheet" href="/telemetria/css/dashboard.css?v=20260710">
 {/extraHead}
 {#content}
 <div class="container py-4 telemetry-page aed-page">
@@ -27,14 +27,14 @@
 
     <div class="aed-kpi-grid">
         <article class="aed-kpi-card">
-            <div class="aed-kpi-icon teal"><span class="material-symbols-outlined">analytics</span></div>
+            <div class="aed-kpi-icon blue"><span class="material-symbols-outlined">database</span></div>
             <div>
                 <div class="aed-kpi-label">Total de eventos</div>
                 <div class="aed-kpi-value" id="t-total-eventos">0</div>
             </div>
         </article>
         <article class="aed-kpi-card">
-            <div class="aed-kpi-icon indigo"><span class="material-symbols-outlined">hub</span></div>
+            <div class="aed-kpi-icon teal"><span class="material-symbols-outlined">hub</span></div>
             <div>
                 <div class="aed-kpi-label">Módulos ativos</div>
                 <div class="aed-kpi-value" id="t-modulos">0</div>
@@ -127,6 +127,6 @@
 {/content}
 {#extraScripts}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="/telemetria/js/dashboard.js?v=20260703b"></script>
+<script src="/telemetria/js/dashboard.js?v=20260710"></script>
 {/extraScripts}
 {/include}

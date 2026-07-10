@@ -8,8 +8,8 @@
     let chartAtividade;
     let timerAutoRefresh;
 
-    const CORES_MODULO = ['#f0b429', '#58a6ff', '#3fb950', '#d29922', '#f85149', '#a371f7', '#39d353', '#ff7b72'];
-    const CORES_NIVEL = { INFO: '#58a6ff', WARN: '#d29922', ERROR: '#f85149', DEBUG: '#8b949e' };
+    const CORES_MODULO = ['#f59e0b', '#60a5fa', '#34d399', '#818cf8', '#f43f5e', '#2dd4bf'];
+    const CORES_NIVEL = { INFO: '#60a5fa', WARN: '#f59e0b', ERROR: '#f43f5e', DEBUG: '#8b97ad' };
 
     function configurarTemaChart() {
         if (typeof Chart === 'undefined') return;
@@ -73,7 +73,8 @@
                     label: 'Eventos',
                     data: valoresMod,
                     backgroundColor: labelsMod.map((_, i) => CORES_MODULO[i % CORES_MODULO.length]),
-                    borderRadius: 4
+                    borderRadius: 6,
+                    barPercentage: 0.6
                 }]
             },
             options: {
@@ -92,13 +93,13 @@
                 datasets: [{
                     data: Object.values(niveis),
                     backgroundColor: labelsNiv.map(n => CORES_NIVEL[n] || '#8b97ad'),
-                    borderColor: '#0a0e16',
-                    borderWidth: 2
+                    borderColor: '#0c121c',
+                    borderWidth: 3
                 }]
             },
             options: {
                 responsive: true,
-                cutout: '62%',
+                cutout: '70%',
                 plugins: {
                     legend: { position: 'bottom' },
                     tooltip: { usePointStyle: true }
@@ -130,11 +131,11 @@
                 datasets: [{
                     label: 'Eventos/min',
                     data: valoresAtv,
-                    borderColor: '#f0b429',
-                    backgroundColor: 'rgba(240,180,41,0.15)',
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245,158,11,0.12)',
                     fill: true,
-                    tension: 0.3,
-                    pointRadius: 3
+                    tension: 0.4,
+                    pointRadius: 0
                 }]
             },
             options: {
@@ -148,11 +149,37 @@
     function atualizarConsole(linhas) {
         const el = document.getElementById('console-telemetria');
         if (!el) return;
+        el.textContent = '';
         if (!linhas || linhas.length === 0) {
             el.textContent = 'Nenhuma saída registrada ainda.';
             return;
         }
-        el.textContent = linhas.join('\n');
+        const frag = document.createDocumentFragment();
+        const re = /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s+\[(\w+)\]\s+([\s\S]*)$/;
+        linhas.forEach((linha) => {
+            const div = document.createElement('div');
+            const m = re.exec(String(linha));
+            if (m) {
+                const nivel = m[2].toLowerCase();
+                const ts = document.createElement('span');
+                ts.className = 'cl-ts';
+                ts.textContent = m[1] + ' ';
+                const lvl = document.createElement('span');
+                lvl.className = 'cl-lvl ' + (nivel === 'warn' || nivel === 'warning' ? 'warn' : nivel === 'error' ? 'error' : 'info');
+                lvl.textContent = '[' + m[2] + '] ';
+                const msg = document.createElement('span');
+                msg.className = 'cl-msg';
+                msg.textContent = m[3];
+                div.appendChild(ts);
+                div.appendChild(lvl);
+                div.appendChild(msg);
+            } else {
+                div.className = 'cl-msg';
+                div.textContent = String(linha);
+            }
+            frag.appendChild(div);
+        });
+        el.appendChild(frag);
         el.scrollTop = el.scrollHeight;
     }
 
@@ -165,6 +192,13 @@
         });
     }
 
+    function badgeNivel(level) {
+        const l = (level || 'INFO').toUpperCase();
+        if (l === 'ERROR') return 'error';
+        if (l === 'WARN' || l === 'WARNING') return 'warn';
+        return 'info';
+    }
+
     function renderizarTabela() {
         const filtrados = filtrarHistorico();
         const totalPaginas = Math.max(1, Math.ceil(filtrados.length / ITENS_POR_PAGINA));
@@ -175,24 +209,31 @@
         const count = document.getElementById('t-table-count');
         const info = document.getElementById('t-page-info');
 
-        if (count) count.textContent = filtrados.length + ' evento(s)';
+        if (count) {
+            count.textContent = filtrados.length === 0
+                ? '0 evento(s)'
+                : filtrados.length + ' evento(s) · exibindo ' + (inicio + 1) + '-' + (inicio + pagina.length);
+        }
         if (info) info.textContent = 'Página ' + paginaAtual + ' de ' + totalPaginas;
 
         if (!tbody) return;
         if (pagina.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-muted">Nenhum evento encontrado.</td></tr>';
+            const msg = historicoCompleto.length === 0 ? 'Nenhum evento registrado.' : 'Nenhum evento encontrado.';
+            tbody.innerHTML = '<tr><td colspan="6" class="tele-empty">' + msg + '</td></tr>';
             return;
         }
-        tbody.innerHTML = pagina.map(e => `
+        tbody.innerHTML = pagina.map(e => {
+            const ok = (e.status || 'ok').toLowerCase() === 'ok';
+            return `
             <tr>
-                <td>${esc(formatarHorario(e.timestamp))}</td>
-                <td class="${nivelClasse(e.level)}">${esc(e.level || '--')}</td>
+                <td class="col-hora">${esc(formatarHorario(e.timestamp))}</td>
+                <td><span class="tele-badge ${badgeNivel(e.level)}">${esc((e.level || 'INFO').toUpperCase())}</span></td>
                 <td>${esc(e.modulo || '--')}</td>
-                <td>${esc(e.evento || '--')}</td>
-                <td>${esc(e.status || '--')}</td>
-                <td>${esc(e.message || '')}</td>
-            </tr>
-        `).join('');
+                <td class="col-evento">${esc(e.evento || '--')}</td>
+                <td><span class="tele-status"><span class="tele-dot ${ok ? '' : 'err'}"></span>${esc(e.status || 'ok')}</span></td>
+                <td class="col-msg" title="">${esc(e.message || '')}</td>
+            </tr>`;
+        }).join('');
     }
 
     async function carregarDashboard() {

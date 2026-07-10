@@ -1,192 +1,179 @@
+/* Telemetria — alinhado ao design system dark (tokens do spec). */
+
 .telemetry-page {
-    width: var(--layout-max, 96%);
     max-width: 100%;
-    margin-left: auto;
-    margin-right: auto;
+    margin-inline: auto;
 }
 
-.telemetry-shell {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.telemetry-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-}
-
-.section-kicker {
-    display: block;
-    font-size: 0.72rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #8b949e;
-}
-
-.telemetry-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.telemetry-overview-grid {
+/* ---- KPIs ---- */
+.aed-kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(14.062%, 1fr));
-    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: 0.9rem;
+    margin-bottom: 1rem;
 }
 
-.telemetry-metric-card {
-    padding: 1rem 1.1rem;
+.aed-kpi-card {
     display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 1.1rem 1.2rem;
+    border: 1px solid var(--aed-border, rgba(255, 255, 255, 0.07));
+    border-radius: 1rem;
+    background: linear-gradient(180deg, #0f1622, #0a0e16);
 }
 
-.metric-eyebrow {
-    font-size: 0.72rem;
+.aed-kpi-icon {
+    flex-shrink: 0;
+    width: 2.4rem;
+    height: 2.4rem;
+    display: grid;
+    place-items: center;
+    border-radius: 0.7rem;
+}
+
+.aed-kpi-icon .material-symbols-outlined { font-size: 1.3rem; }
+.aed-kpi-icon.blue { background: rgba(96, 165, 250, 0.14); color: #60a5fa; }
+.aed-kpi-icon.teal { background: rgba(45, 212, 191, 0.14); color: #2dd4bf; }
+.aed-kpi-icon.indigo { background: rgba(129, 140, 248, 0.14); color: #818cf8; }
+.aed-kpi-icon.amber { background: rgba(245, 158, 11, 0.14); color: #f59e0b; }
+.aed-kpi-icon.rose { background: rgba(244, 63, 94, 0.14); color: #f43f5e; }
+
+.aed-kpi-label {
+    font-size: 0.68rem;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #8b949e;
+    letter-spacing: 0.05em;
+    color: #7d8aa1;
 }
 
-.telemetry-metric-card strong {
-    font-size: 1.6rem;
-    color: #f0b429;
+.aed-kpi-value {
+    font-family: var(--aed-font-display, "Space Grotesk", sans-serif);
+    font-size: 1.7rem;
     line-height: 1.1;
+    color: var(--aed-text, #eef2f8);
 }
 
-.console-card {
-    padding: 1rem 1.1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+/* ---- Gráficos ---- */
+.aed-charts-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr 1.2fr;
+    gap: 1.25rem;
+    margin-bottom: 1rem;
 }
 
-.console-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
+.aed-charts-grid .aed-card { min-width: 0; }
+.aed-charts-grid canvas { max-height: 14rem; }
 
-.console-header h3 {
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #8b949e;
-    margin: 0;
-}
+/* ---- Console ao vivo ---- */
+.console-card { display: flex; flex-direction: column; gap: 0.6rem; }
 
-.console-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.btn-clear-console,
 .btn-toggle-console,
-.btn-copy-console {
-    background-color: transparent;
-    border: var(--border-thin, 0.1%) solid #30363d;
-    padding: 0.312% 0.781%;
-    border-radius: 0.312%;
-    color: #c9d1d9;
-    font-family: Consolas, monospace;
-    font-size: 0.75rem;
-    cursor: pointer;
-}
+.btn-copy-console,
+.btn-clear-console { display: inline-flex; align-items: center; }
 
-.btn-clear-console:hover,
-.btn-toggle-console:hover,
-.btn-copy-console:hover {
-    color: #f0b429;
-    border-color: #f0b429;
-    background-color: rgba(240, 180, 41, 0.08);
-}
-
-.telemetry-shell {
-    min-height: 60%;
-}
-
+.aed-console,
 .console-body {
-    background-color: #0d1117;
-    border-radius: var(--radius-md, 0.47%);
-    padding: 1.094%;
-    font-family: Consolas, monospace;
-    font-size: 0.78rem;
-    line-height: 1.5;
-    color: #c9d1d9;
-    border: var(--border-thin, 0.1%) solid #30363d;
-    height: 32%;
-    min-height: 18%;
-    max-height: 70%;
+    background: #04060c;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 0.7rem;
+    padding: 0.9rem 1rem;
+    font-family: var(--aed-font-mono, "JetBrains Mono", monospace);
+    font-size: 0.72rem;
+    line-height: 1.85;
+    color: var(--aed-text-secondary, #8b97ad);
+    max-height: 21rem;
     overflow-y: auto;
-    resize: vertical;
     margin: 0;
     white-space: pre-wrap;
     word-break: break-word;
 }
 
-.console-body.expanded {
-    height: 52%;
-    min-height: 28%;
+.console-body.expanded { max-height: 40rem; }
+
+/* Linhas coloridas do console (montadas no JS) */
+.cl-ts { color: var(--aed-text-faint, #5b6679); }
+.cl-lvl { color: var(--aed-teal, #2dd4bf); font-weight: 600; }
+.cl-lvl.warn { color: #f59e0b; }
+.cl-lvl.error { color: #f43f5e; }
+.cl-msg { color: var(--aed-text-secondary, #8b97ad); }
+
+.telemetry-path {
+    font-family: var(--aed-font-mono, "JetBrains Mono", monospace);
+    color: var(--aed-text-faint, #5b6679);
+    font-size: 0.72rem;
 }
 
+/* ---- Histórico de eventos ---- */
 .telemetry-search {
-    max-width: 25.0%;
-    background-color: #0d1117;
-    border-color: #30363d;
-    color: #c9d1d9;
+    max-width: 18rem;
+    background: #0a0e16;
+    border: 1px solid var(--aed-border, rgba(255, 255, 255, 0.1));
+    color: var(--aed-text, #eef2f8);
 }
 
-.telemetry-table-count {
-    font-size: 0.76rem;
-    color: #8b949e;
-}
+.telemetry-table-count { font-size: 0.76rem; color: var(--aed-text-secondary, #8b97ad); }
+
+.telemetry-table { font-size: 0.8rem; }
 
 .telemetry-table thead th {
-    background-color: #21262d;
-    border-color: #30363d;
-    font-size: 0.75rem;
+    position: sticky;
+    top: 0;
+    background: #0c1018;
+    border-color: var(--aed-border, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--aed-text-faint, #5b6679);
+    font-size: 0.7rem;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
 }
 
 .telemetry-table td {
-    font-size: 0.78rem;
-    vertical-align: top;
+    vertical-align: middle;
+    border-color: var(--aed-border, rgba(255, 255, 255, 0.05)) !important;
 }
 
-.telemetry-pagination {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    font-size: 0.8rem;
-    color: #8b949e;
+.telemetry-table td.mono,
+.telemetry-table td.col-hora,
+.telemetry-table td.col-evento,
+.telemetry-table td.col-msg {
+    font-family: var(--aed-font-mono, "JetBrains Mono", monospace);
+    font-size: 0.76rem;
 }
 
-.level-info { color: #58a6ff; }
-.level-warn { color: #d29922; }
-.level-error { color: #f85149; }
-.level-debug { color: #8b949e; }
-
-.telemetry-path {
-    font-family: Consolas, monospace;
+.telemetry-table td.col-msg {
+    max-width: 22rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--aed-text-secondary, #8b97ad);
 }
 
-.console-body::-webkit-scrollbar {
-    width: 0.625%;
+.tele-badge {
+    display: inline-block;
+    padding: 0.05rem 0.5rem;
+    border-radius: 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 600;
 }
 
-.console-body::-webkit-scrollbar-thumb {
-    background: #30363d;
-    border-radius: 0.312%;
+.tele-badge.info { color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.4); background: rgba(96, 165, 250, 0.1); }
+.tele-badge.warn { color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.1); }
+.tele-badge.error { color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.4); background: rgba(244, 63, 94, 0.1); }
+
+.tele-status { display: inline-flex; align-items: center; gap: 0.35rem; }
+.tele-dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #34d399; }
+.tele-dot.err { background: #f43f5e; }
+
+.telemetry-pagination { color: var(--aed-text-secondary, #8b97ad); font-size: 0.82rem; }
+
+.tele-empty {
+    text-align: center;
+    color: var(--aed-text-faint, #5b6679);
+    padding: 1.5rem;
+}
+
+.aed-console::-webkit-scrollbar { width: 0.5rem; }
+.aed-console::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 1rem; }
+
+@media (max-width: 60em) {
+    .aed-charts-grid { grid-template-columns: 1fr; }
 }
