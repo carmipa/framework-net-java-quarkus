@@ -21,11 +21,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Estado do tráfego ao vivo. Dois modos:
- * <ul>
- *   <li><b>demo</b>: simulação evoluída no servidor (VPS-safe, para ver o dashboard sem agente);</li>
- *   <li><b>agente</b>: dados reais enviados por um agente local (pcap4j + Wi-Fi/BT) via {@link #ingerir}.</li>
- * </ul>
+ * Estado do tráfego ao vivo em <b>modo demo</b>: uma simulação didática evoluída no servidor
+ * (VPS-safe), que reproduz como um analisador de tráfego apresenta protocolos, throughput,
+ * top hosts e redes Wi-Fi/Bluetooth — sem depender de captura real na máquina do usuário.
  */
 @ApplicationScoped
 public class TrafegoAoVivoService {
@@ -46,16 +44,6 @@ public class TrafegoAoVivoService {
     private final Map<String, Long> demoProto = new LinkedHashMap<>();
     private final Map<String, Long> demoHosts = new LinkedHashMap<>();
     private long demoBytesTick;
-
-    // ---- estado do modo agente (real) ----
-    private volatile long agenteUltimoIngest;
-    private final AtomicLong agenteTotal = new AtomicLong();
-    private final Deque<PacoteResumo> agentePacotes = new ArrayDeque<>();
-    private final Map<String, Long> agenteProto = new LinkedHashMap<>();
-    private final Map<String, Long> agenteHosts = new LinkedHashMap<>();
-    private final Deque<PontoTempo> agenteSerie = new ArrayDeque<>();
-    private volatile List<RedeWifi> agenteWifi = List.of();
-    private volatile List<DispositivoBluetooth> agenteBt = List.of();
 
     /** Avança um "tick" da simulação e devolve o snapshot demo. */
     public SnapshotAoVivo snapshotDemo() {
@@ -82,83 +70,6 @@ public class TrafegoAoVivoService {
                     wifi, bluetoothDemo(),
                     (int) wifi.stream().filter(RedeWifi::aberta).count(),
                     HMS.format(Instant.now()));
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    /** Snapshot do modo agente (dados reais). Vazio até o agente enviar algo. */
-    public SnapshotAoVivo snapshotAgente() {
-        lock.lock();
-        try {
-            boolean conectado = agenteUltimoIngest > 0
-                    && (System.currentTimeMillis() - agenteUltimoIngest) < 10_000;
-            long ppsAtual = agenteSerie.isEmpty() ? 0 : agenteSerie.peekLast().valor();
-            return new SnapshotAoVivo(
-                    "agente", conectado, agenteTotal.get(), ppsAtual, 0.0,
-                    new LinkedHashMap<>(agenteProto),
-                    new ArrayList<>(agenteSerie),
-                    topHosts(agenteHosts),
-                    new ArrayList<>(agentePacotes),
-                    agenteWifi, agenteBt,
-                    (int) agenteWifi.stream().filter(RedeWifi::aberta).count(),
-                    HMS.format(Instant.now()));
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    /** Ingestão de dados reais vindos do agente local. */
-    @SuppressWarnings("unchecked")
-    public void ingerir(Map<String, Object> payload) {
-        if (payload == null) {
-            return;
-        }
-        lock.lock();
-        try {
-            agenteUltimoIngest = System.currentTimeMillis();
-            long noTick = 0;
-            Object pacotes = payload.get("pacotes");
-            if (pacotes instanceof List<?> lista) {
-                for (Object item : lista) {
-                    if (item instanceof Map<?, ?> mapa) {
-                        PacoteResumo p = mapToPacote((Map<String, Object>) mapa, agenteTotal.incrementAndGet());
-                        agentePacotes.addFirst(p);
-                        while (agentePacotes.size() > MAX_PACOTES) {
-                            agentePacotes.removeLast();
-                        }
-                        agenteProto.merge(p.protocolo(), 1L, Long::sum);
-                        if (p.origem() != null) {
-                            agenteHosts.merge(p.origem(), 1L, Long::sum);
-                        }
-                        noTick++;
-                    }
-                }
-            }
-            agenteSerie.addLast(new PontoTempo(HMS.format(Instant.now()), noTick));
-            while (agenteSerie.size() > MAX_SERIE) {
-                agenteSerie.removeFirst();
-            }
-            Object wifi = payload.get("wifi");
-            if (wifi instanceof List<?> lista) {
-                List<RedeWifi> out = new ArrayList<>();
-                for (Object item : lista) {
-                    if (item instanceof Map<?, ?> mapa) {
-                        out.add(mapToWifi((Map<String, Object>) mapa));
-                    }
-                }
-                agenteWifi = out;
-            }
-            Object bt = payload.get("bluetooth");
-            if (bt instanceof List<?> lista) {
-                List<DispositivoBluetooth> out = new ArrayList<>();
-                for (Object item : lista) {
-                    if (item instanceof Map<?, ?> mapa) {
-                        out.add(mapToBt((Map<String, Object>) mapa));
-                    }
-                }
-                agenteBt = out;
-            }
         } finally {
             lock.unlock();
         }
@@ -280,47 +191,5 @@ public class TrafegoAoVivoService {
 
     private static double arredondar(double v) {
         return Math.round(v * 10.0) / 10.0;
-    }
-
-    private static PacoteResumo mapToPacote(Map<String, Object> m, long seq) {
-        return new PacoteResumo(seq,
-                str(m.getOrDefault("timestamp", HMS.format(Instant.now()))),
-                str(m.getOrDefault("protocolo", "?")),
-                str(m.get("origem")), str(m.get("destino")),
-                intOrNull(m.get("portaOrigem")), intOrNull(m.get("portaDestino")),
-                intOrZero(m.get("tamanho")), str(m.getOrDefault("info", "")));
-    }
-
-    private static RedeWifi mapToWifi(Map<String, Object> m) {
-        String seg = str(m.getOrDefault("seguranca", ""));
-        boolean aberta = m.get("aberta") instanceof Boolean b ? b
-                : seg.isBlank() || seg.equalsIgnoreCase("Aberta") || seg.equalsIgnoreCase("Open");
-        return new RedeWifi(str(m.get("ssid")), str(m.getOrDefault("bssid", "")),
-                seg.isBlank() ? "Aberta" : seg, intOrZero(m.get("sinal")), aberta);
-    }
-
-    private static DispositivoBluetooth mapToBt(Map<String, Object> m) {
-        return new DispositivoBluetooth(str(m.get("nome")), str(m.getOrDefault("endereco", "")),
-                str(m.getOrDefault("tipo", "")), m.get("pareado") instanceof Boolean b && b);
-    }
-
-    private static String str(Object o) {
-        return o == null ? null : String.valueOf(o);
-    }
-
-    private static Integer intOrNull(Object o) {
-        if (o instanceof Number n) {
-            return n.intValue();
-        }
-        try {
-            return o == null ? null : Integer.valueOf(String.valueOf(o).trim());
-        } catch (NumberFormatException e) {
-            return null;
-        }
-    }
-
-    private static int intOrZero(Object o) {
-        Integer v = intOrNull(o);
-        return v == null ? 0 : v;
     }
 }

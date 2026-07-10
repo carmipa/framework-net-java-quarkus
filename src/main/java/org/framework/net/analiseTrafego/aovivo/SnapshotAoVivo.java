@@ -6,12 +6,11 @@ import java.util.Map;
 /**
  * Snapshot do tráfego ao vivo (consumido pelo dashboard via polling).
  *
- * <p>Alimentado pelo modo <b>demo</b> (simulação no servidor) ou pelo <b>agente local</b>
- * (que envia pacotes/Wi-Fi/Bluetooth da máquina do usuário para o app no VPS).
+ * <p>Alimentado pelo modo <b>demo</b>: uma simulação didática evoluída no servidor (VPS-safe).
  */
 public record SnapshotAoVivo(
-        String modo,                       // "demo" | "agente"
-        boolean agenteConectado,
+        String modo,                       // "demo"
+        boolean agenteConectado,           // sempre true no modo demo
         long totalPacotes,
         long pacotesPorSegundo,
         double throughputKbps,

@@ -33,19 +33,4 @@ class TrafegoAoVivoServiceTest {
         boolean temAberta = s.wifi().stream().anyMatch(SnapshotAoVivo.RedeWifi::aberta);
         assertTrue(temAberta);
     }
-
-    @Test
-    void ingestaoDoAgenteAtualizaSnapshotReal() {
-        service.ingerir(Map.of(
-                "pacotes", List.of(Map.of(
-                        "protocolo", "TCP", "origem", "192.168.0.5", "destino", "8.8.8.8",
-                        "portaOrigem", 51000, "portaDestino", 443, "tamanho", 120, "info", "ACK")),
-                "wifi", List.of(Map.of("ssid", "TEST_OPEN", "seguranca", "Aberta", "sinal", -50))));
-        SnapshotAoVivo s = service.snapshotAgente();
-        assertEquals("agente", s.modo());
-        assertTrue(s.agenteConectado());
-        assertEquals(1L, s.totalPacotes());
-        assertTrue(s.porProtocolo().getOrDefault("TCP", 0L) >= 1);
-        assertEquals(1, s.redesAbertas());
-    }
 }

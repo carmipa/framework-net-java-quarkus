@@ -17,26 +17,19 @@
     </div>
 
     <div class="aed-card card-tech loc-nota mb-4" role="note">
-        <span class="material-symbols-outlined" aria-hidden="true">dns</span>
+        <span class="material-symbols-outlined" aria-hidden="true">info</span>
         <div>
-            <strong>Como funciona (app em VPS).</strong>
-            O servidor não enxerga a sua máquina — a captura real vem de um <strong>agente local</strong>
-            (Python/Scapy + Npcap) que envia os dados ao painel via API REST. Sem o agente, use o <strong>modo demo</strong>
-            (simulação) para conhecer o dashboard.
-            <div class="mt-3">
-                <a href="/downloads/agente_local.py" download="agente_local.py" class="aed-btn aed-btn-indigo btn-sm">
-                    <span class="material-symbols-outlined" aria-hidden="true">download</span> Baixar Agente Local (.py)
-                </a>
-            </div>
+            <strong>Simulação didática.</strong>
+            Um navegador ou servidor não captura o tráfego real da sua máquina — isso exige libpcap/Npcap
+            com privilégios (Wireshark/tcpdump). Aqui o dashboard usa uma <strong>simulação</strong> fiel
+            (protocolos, throughput, top hosts e alerta de redes Wi-Fi abertas) para você entender como
+            um analisador de tráfego apresenta os dados. Para decompor um pacote real, use o
+            <strong>decodificador</strong> logo abaixo.
         </div>
     </div>
 
     <div class="aed-card card-tech trafego-live mb-4">
         <div class="trafego-live-bar">
-            <div class="btn-group" role="group" aria-label="Fonte de dados">
-                <button type="button" class="aed-btn aed-btn-teal btn-sm" id="live-modo-demo">Demo</button>
-                <button type="button" class="aed-btn aed-btn-neutral btn-sm" id="live-modo-agente">Agente</button>
-            </div>
             <button type="button" class="aed-btn aed-btn-teal btn-sm" id="live-start">
                 <span class="material-symbols-outlined" aria-hidden="true">play_arrow</span> Iniciar
             </button>
@@ -156,7 +149,7 @@
 {/content}
 {#extraScripts}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="/trafego/js/trafego-aovivo.js?v=20260710"></script>
+<script src="/trafego/js/trafego-aovivo.js?v=20260710b"></script>
 <script src="/trafego/js/trafego.js?v=20260709"></script>
 {/extraScripts}
 {/include}
