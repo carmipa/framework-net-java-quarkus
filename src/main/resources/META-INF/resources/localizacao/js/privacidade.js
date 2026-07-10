@@ -108,6 +108,38 @@
             '<div class="v"' + (mono ? '' : ' style="font-family:inherit;"') + '>' + esc(v || "—") + "</div></div>";
     }
 
+    function bandeiraHtml(cc, emoji) {
+        var iso = String(cc || "").replace(/\s+/g, "").toUpperCase();
+        if (/^[A-Z]{2}$/.test(iso)) {
+            return '<img src="https://flagcdn.com/w80/' + iso.toLowerCase() + '.png" width="46" height="34" class="priv-flag" alt="' + esc(iso) + '" loading="lazy">';
+        }
+        return '<span class="priv-flag-emoji">' + esc(emoji || "🌐") + "</span>";
+    }
+
+    function secaoLocalizacao(geo) {
+        var head = '<h6 class="priv-sec"><span class="material-symbols-outlined">flag</span> Sua localização (pelo IP)</h6>';
+        var temGeo = geo && geo.ok && geo.reservado !== true && (geo.pais || geo.pais_codigo || geo.codigo_pais);
+        if (!temGeo) {
+            return head + '<p class="small text-secondary mb-0">Indisponível para este IP (reservado / rede local, ou a consulta externa falhou). ' +
+                'Em produção, atrás do proxy, aqui aparece o país real.</p>';
+        }
+        var cc = geo.pais_codigo || geo.codigo_pais || "";
+        var coords = (geo.latitude != null && geo.longitude != null) ? (geo.latitude + ", " + geo.longitude) : "—";
+        return head +
+            '<div class="priv-local">' +
+            '<div class="priv-local-flag">' + bandeiraHtml(cc, geo.pais_bandeira) +
+            '<div><div class="priv-local-pais">' + esc(geo.pais || "—") + "</div>" +
+            (cc ? '<div class="priv-local-cc">' + esc(cc) + "</div>" : "") + "</div></div>" +
+            '<div class="loc-result-grid priv-local-grid">' +
+            item("Estado / Região", geo.regiao) +
+            item("Cidade", geo.cidade) +
+            item("Fuso horário", geo.timezone) +
+            item("Coordenadas", coords, true) +
+            item("ISP (Provedor)", geo.isp) +
+            item("IP público", geo.ip, true) +
+            "</div></div>";
+    }
+
     function render(dados) {
         var root = $("priv-resultado");
         if (!root) return;
@@ -145,6 +177,9 @@
             (alertas.length ? '<ul class="priv-alertas">' + alertas.map(function (a) { return "<li>" + a + "</li>"; }).join("") + "</ul>"
                 : '<div class="small text-secondary">O que dava pra medir não revelou divergência de IP nem IP local aberto.</div>') +
             "</div></div>";
+
+        // Localização pelo IP (bandeira + país) — repetido de propósito p/ documentar aqui também
+        html += secaoLocalizacao(geo);
 
         // IP público (as visões)
         html += '<h6 class="priv-sec"><span class="material-symbols-outlined">public</span> Seu IP público (três visões)</h6>' +

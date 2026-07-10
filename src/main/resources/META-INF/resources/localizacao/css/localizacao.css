@@ -237,6 +237,49 @@
 .priv-cand.priv-warn { border-left-color: #f59e0b; }
 .priv-cand.priv-risk { border-left-color: #f43f5e; }
 
+/* Localização pelo IP (bandeira + país) dentro do card de vazamento */
+.priv-local {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem 1.4rem;
+    align-items: center;
+}
+
+.priv-local-flag {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    flex-shrink: 0;
+}
+
+.priv-flag {
+    border-radius: 0.25rem;
+    border: 1px solid var(--aed-border, rgba(255, 255, 255, 0.15));
+    object-fit: cover;
+}
+
+.priv-flag-emoji { font-size: 2rem; line-height: 1; }
+
+.priv-local-pais {
+    font-family: var(--aed-font-display, "Space Grotesk", sans-serif);
+    font-size: 1.25rem;
+    color: var(--aed-text, #eef2f8);
+    line-height: 1.1;
+}
+
+.priv-local-cc {
+    display: inline-block;
+    margin-top: 0.2rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--aed-text-faint, #5b6679);
+    border: 1px solid var(--aed-border, rgba(255, 255, 255, 0.15));
+    border-radius: 0.3rem;
+    padding: 0 0.35rem;
+}
+
+.priv-local-grid { flex: 1 1 20rem; margin: 0; }
+
 .loc-map {
     /* Altura fluida: adapta a celular/tablet/desktop pela altura do viewport. */
     height: clamp(16rem, 55vh, 34rem);
