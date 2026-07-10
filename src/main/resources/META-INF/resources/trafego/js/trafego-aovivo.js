@@ -140,7 +140,7 @@
 
         var st = $("live-status");
         if (modo === "agente" && !d.agenteConectado) {
-            st.textContent = "aguardando agente… (nenhum dado recebido)";
+            st.textContent = "aguardando o agente local… execute o agente .py (baixe acima); nenhum dado recebido ainda.";
             st.className = "small text-warning";
         } else {
             st.textContent = "ao vivo · " + modo + " · atualizado " + d.atualizadoEm;
@@ -150,10 +150,26 @@
 
     function tick() {
         fetch("/trafego/api/aovivo?modo=" + modo, { headers: { Accept: "application/json" } })
-            .then(function (r) { return r.json(); })
+            .then(function (r) {
+                if (!r.ok) {
+                    return r.json().catch(function () { return {}; }).then(function (body) {
+                        var e = new Error("http"); e.status = r.status; e.body = body; throw e;
+                    });
+                }
+                return r.json();
+            })
             .then(render)
-            .catch(function () {
-                var st = $("live-status"); if (st) { st.textContent = "erro ao consultar"; st.className = "small text-danger"; }
+            .catch(function (err) {
+                var st = $("live-status"); if (!st) return;
+                if (err && err.status === 401) {
+                    stop(); // encerra o polling primeiro (ele reseta o status)…
+                    st.innerHTML = "🔒 Modo agente exige login de administrador — " +
+                        "faça login em <a href=\"/admin/login\">/admin/login</a> e tente novamente.";
+                    st.className = "small text-warning"; // …e então mostramos a mensagem final.
+                } else {
+                    st.textContent = "erro ao consultar o servidor.";
+                    st.className = "small text-danger";
+                }
             });
     }
 
@@ -177,6 +193,18 @@
         modo = m;
         $("live-modo-demo").className = "aed-btn btn-sm " + (m === "demo" ? "aed-btn-teal" : "aed-btn-neutral");
         $("live-modo-agente").className = "aed-btn btn-sm " + (m === "agente" ? "aed-btn-teal" : "aed-btn-neutral");
+        // Feedback imediato ao trocar de modo, mesmo com a captura parada.
+        var st = $("live-status");
+        if (!timer && st) {
+            if (m === "agente") {
+                st.innerHTML = "Modo agente (dados reais): baixe e execute o <strong>agente local</strong> acima, " +
+                    "depois clique <strong>Iniciar</strong>. Na VPS, exige login de administrador.";
+                st.className = "small text-warning";
+            } else {
+                st.textContent = "Modo demo (simulação). Clique Iniciar.";
+                st.className = "small text-secondary";
+            }
+        }
         if (timer) tick();
     }
 
