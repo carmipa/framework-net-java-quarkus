@@ -83,12 +83,26 @@ Suíte em JUnit 5 + RestAssured, em `src/test/java`.
 
 ## Docker (VPS)
 
-```powershell
+Crie um `.env` persistente na VPS a partir de `.env.example` e gere `ADMIN_API_KEY`/`CSRF_SECRET` apenas uma vez:
+
+```bash
+cp .env.example .env
+sed -i "s/troque-por-um-valor-gerado-com-openssl-rand-hex-32/$(openssl rand -hex 32)/1" .env
+sed -i "s/troque-por-um-valor-gerado-com-openssl-rand-hex-32/$(openssl rand -hex 32)/1" .env
 docker compose -f docker-compose.yml up -d --build
+docker compose ps
+docker compose logs --tail=20 -f
+```
+
+Ou use o script de deploy da VPS, que faz `git pull`, cria/reaproveita `.env`, reconstrói a imagem, espera o healthcheck e mostra os logs:
+
+```bash
+chmod +x scripts/deploy.sh
+scripts/deploy.sh
 ```
 
 Perfil `prod`: proxy reverso habilitado, dados persistentes em `/deployments/data`.
-**Obrigatório** definir `ADMIN_API_KEY` e `CSRF_SECRET` (veja `.env.example`).
+**Obrigatório** definir `ADMIN_API_KEY` e `CSRF_SECRET` (veja `.env.example`). Esses valores devem ficar no `.env` da VPS; não regenere a cada deploy.
 
 ## Configuração
 

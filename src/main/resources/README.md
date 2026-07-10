@@ -396,10 +396,29 @@ As chaves são definidas em `application.properties` (dev) e `application-prod.p
 ### Variáveis de ambiente (deploy Docker)
 
 - `HTTP_PORT` (padrão `8080`) — porta publicada no host;
-- `ADMIN_API_KEY` — **obrigatória** em prod;
-- `CSRF_SECRET` — **obrigatória** em prod;
+- `ADMIN_API_KEY` — **obrigatória** em prod; gere uma vez e mantenha no `.env` da VPS;
+- `CSRF_SECRET` — **obrigatória** em prod; gere uma vez e mantenha no `.env` da VPS;
 - `GEO_DB_HOST_PATH` — caminho do `GeoLite2-City.mmdb` no host (opcional);
 - `QUARKUS_PROFILE=prod`.
+
+Comandos seguros de deploy na VPS:
+
+```bash
+cd /opt/framework-net-java-quarkus
+git pull origin main
+test -f .env || cp .env.example .env
+docker compose up -d --build
+docker compose ps
+docker compose logs --tail=20 -f
+```
+
+Deploy automatizado:
+
+```bash
+cd /opt/framework-net-java-quarkus
+chmod +x scripts/deploy.sh
+scripts/deploy.sh
+```
 
 ---
 
