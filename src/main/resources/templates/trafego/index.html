@@ -3,6 +3,7 @@
 {#extraHead}
 <link rel="stylesheet" href="/trafego/css/trafego.css?v=20260710">
 <link rel="stylesheet" href="/simuladores/css/encapsulamento.css?v=20260710">
+<link rel="stylesheet" href="/simuladores/css/handshake.css?v=20260710">
 {/extraHead}
 {#content}
 <div class="container py-5">
@@ -29,11 +30,15 @@
             <button type="button" class="aed-mode-btn tab-trigger" data-tab="encapsulamento" role="tab">
                 <span class="material-symbols-outlined">layers</span><span>Encapsulamento</span>
             </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="handshake" role="tab">
+                <span class="material-symbols-outlined">handshake</span><span>Handshake TCP</span>
+            </button>
         </div>
 
         <div class="tab-panel active" data-tab-panel="aovivo">{#include trafego/partials/tab_aovivo.html /}</div>
         <div class="tab-panel" data-tab-panel="decodificador">{#include trafego/partials/tab_decodificador.html /}</div>
         <div class="tab-panel" data-tab-panel="encapsulamento">{#include trafego/partials/tab_encapsulamento.html /}</div>
+        <div class="tab-panel" data-tab-panel="handshake">{#include trafego/partials/tab_handshake.html /}</div>
     </div>
 </div>
 {/content}
@@ -43,5 +48,6 @@
 <script src="/trafego/js/trafego-aovivo.js?v=20260710b"></script>
 <script src="/trafego/js/trafego.js?v=20260709"></script>
 <script src="/simuladores/js/encapsulamento.js?v=20260710"></script>
+<script src="/simuladores/js/handshake.js?v=20260710"></script>
 {/extraScripts}
 {/include}
