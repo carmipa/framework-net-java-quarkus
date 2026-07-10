@@ -1,0 +1,80 @@
+{#include shared/base.html} 
+{#title}Framework de Redes | Ferramentas de Diagnóstico{/title}
+{#extraHead}
+<link rel="stylesheet" href="/ferramentasDiagnostico/css/diagnostico.css" />
+{/extraHead} 
+{#content}
+
+<div class="container py-4">
+    {#include shared/main_menu.html activeMainMenu=activeMainMenu /}
+    
+    <header class="mb-4">
+        <h1 class="aed-title">
+            <span class="material-symbols-outlined aed-title-icon" aria-hidden="true">troubleshoot</span>
+            Ferramentas de Diagnóstico
+        </h1>
+        <p class="aed-subtitle">
+            Simulador didático de PING e resolução DNS (dig). Digite um domínio ou endereço IP válido para iniciar a simulação.
+        </p>
+    </header>
+
+    <div class="row g-4">
+        <!-- PING -->
+        <div class="col-md-6">
+            <div class="aed-card h-100">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="d-flex align-items-center gap-2 mb-0 text-white" style="color: var(--aed-teal) !important;">
+                        <span class="material-symbols-outlined">radar</span>
+                        Simulador de Ping (ICMP)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="formPing" onsubmit="event.preventDefault(); executarPing();">
+                        <div class="mb-3">
+                            <label for="pingHost" class="form-label text-secondary">Host ou Domínio (ex: 8.8.8.8, google.com)</label>
+                            <input type="text" class="aed-input form-control" id="pingHost" name="host" placeholder="192.168.1.1" required>
+                        </div>
+                        <button type="submit" class="aed-btn aed-btn-execute w-100" id="btnPing">
+                            Disparar Ping Simulado
+                        </button>
+                    </form>
+                    <div class="terminal mt-3 d-none" id="pingTerminal">
+                        <pre><code id="pingResult"></code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DNS -->
+        <div class="col-md-6">
+            <div class="aed-card h-100">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="d-flex align-items-center gap-2 mb-0 text-white" style="color: var(--aed-indigo) !important;">
+                        <span class="material-symbols-outlined">dns</span>
+                        Consulta DNS (dig)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="formDns" onsubmit="event.preventDefault(); executarDns();">
+                        <div class="mb-3">
+                            <label for="dnsDominio" class="form-label text-secondary">Domínio para Resolução (ex: fiap.com.br)</label>
+                            <input type="text" class="aed-input form-control" id="dnsDominio" name="dominio" placeholder="exemplo.com.br" required>
+                        </div>
+                        <button type="submit" class="aed-btn aed-btn-indigo w-100" id="btnDns">
+                            Resolver Nome Simulado
+                        </button>
+                    </form>
+                    <div class="terminal mt-3 d-none" id="dnsTerminal">
+                        <pre><code id="dnsResult"></code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{/content}
+{#extraScripts}
+<script src="/ferramentasDiagnostico/js/diagnostico.js"></script>
+{/extraScripts}
+{/include}

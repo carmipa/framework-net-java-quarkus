@@ -51,6 +51,18 @@
             <span class="material-symbols-outlined" aria-hidden="true">travel_explore</span>
             <span>Tráfego</span>
         </a>
+        <a href="/diagnostico"
+           class="aed-nav-link {#if activeMainMenu == 'diagnostico'}is-active{/if}"
+           title="Simulador de ferramentas de diagnóstico (PING e DNS)">
+            <span class="material-symbols-outlined" aria-hidden="true">troubleshoot</span>
+            <span>Diagnóstico</span>
+        </a>
+        <a href="/seguranca"
+           class="aed-nav-link {#if activeMainMenu == 'seguranca'}is-active{/if}"
+           title="Testador de regras de Firewall / ACL">
+            <span class="material-symbols-outlined" aria-hidden="true">security</span>
+            <span>Segurança (ACL)</span>
+        </a>
         <a href="/telemetria"
            class="aed-nav-link {#if activeMainMenu == 'telemetria'}is-active{/if}"
            title="Dashboard de telemetria e console ao vivo">
