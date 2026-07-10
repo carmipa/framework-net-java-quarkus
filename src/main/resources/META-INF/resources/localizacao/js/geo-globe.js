@@ -2,8 +2,8 @@
  * Renderiza um planeta interativo com atmosfera e nuvens e plota o ponto do IP
  * localizado. O painel (geo-panel.js) chama window.GeoGlobe.setLocation(lat, lon, label).
  * Texturas via CDN (three-globe). Se o WebGL falhar, o card volta a uma coluna. */
-import * as THREE from "https://esm.sh/three@0.170.0";
-import Globe from "https://esm.sh/globe.gl@2.34.4";
+import * as THREE from "three";
+import Globe from "globe.gl";
 
 (function () {
     "use strict";
@@ -83,7 +83,7 @@ import Globe from "https://esm.sh/globe.gl@2.34.4";
         else window.addEventListener("resize", resize);
 
         ready = true;
-        globe.pointOfView({ lat: -14, lng: -52, altitude: 2.2 }, 0); // Brasil, enquanto não há ponto
+        globe.pointOfView({ lat: -14, lng: -52, altitude: 1.9 }, 0); // Brasil, enquanto não há ponto
         if (window.__geoPendingLoc) apply(window.__geoPendingLoc);
     }
 
@@ -94,7 +94,7 @@ import Globe from "https://esm.sh/globe.gl@2.34.4";
         if (!isFinite(lat) || !isFinite(lon)) return;
         var data = [{ lat: lat, lng: lon, label: loc.label || "" }];
         globe.pointsData(data).ringsData(data);
-        globe.pointOfView({ lat: lat, lng: lon, altitude: 1.7 }, 1500);
+        globe.pointOfView({ lat: lat, lng: lon, altitude: 1.5 }, 1500);
     }
 
     window.GeoGlobe = {

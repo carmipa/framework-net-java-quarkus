@@ -2,7 +2,18 @@
 {#title}Framework de Redes A&D | Localização{/title}
 {#extraHead}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="/localizacao/css/localizacao.css?v=20260710">
+<link rel="stylesheet" href="/localizacao/css/localizacao.css?v=20260710b">
+{|
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://esm.sh/three@0.185.1",
+    "three/": "https://esm.sh/three@0.185.1/",
+    "globe.gl": "https://esm.sh/globe.gl@2.34.4?external=three&deps=three@0.185.1"
+  }
+}
+</script>
+|}
 {/extraHead}
 {#content}
 <div class="container py-5">
@@ -165,6 +176,6 @@
 <script src="/analiseDidatica/js/geo_report.js?v=20260709"></script>
 <script src="/localizacao/js/localizacao.js?v=20260709"></script>
 <script src="/localizacao/js/geo-panel.js?v=20260710"></script>
-<script type="module" src="/localizacao/js/geo-globe.js?v=20260710b"></script>
+<script type="module" src="/localizacao/js/geo-globe.js?v=20260710c"></script>
 {/extraScripts}
 {/include}

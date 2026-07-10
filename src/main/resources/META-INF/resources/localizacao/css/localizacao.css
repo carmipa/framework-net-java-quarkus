@@ -114,8 +114,9 @@
     color: var(--aed-risk-critical, #f43f5e);
 }
 
-/* Layout dividido do resultado GeoIP: relatório à esquerda, globo 3D à direita. */
-.geo-split {
+/* Layout dividido do resultado GeoIP: relatório à esquerda, globo 3D à direita.
+   Especificidade de ID para vencer #geo-sucesso:not(.d-none){display:flow-root} em app.css. */
+#geo-sucesso.geo-split {
     display: grid;
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
     gap: 1rem;
@@ -123,14 +124,14 @@
 }
 
 @media (max-width: 62em) {
-    .geo-split {
+    #geo-sucesso.geo-split {
         grid-template-columns: 1fr;
     }
 }
 
 .geo-globe-wrap {
     position: relative;
-    min-height: 22rem;
+    min-height: 26rem;
     border-radius: var(--aed-radius-card, 0.75rem);
     overflow: hidden;
     background: radial-gradient(circle at 50% 38%, #0b1b33 0%, #07101f 55%, #04070e 100%);
