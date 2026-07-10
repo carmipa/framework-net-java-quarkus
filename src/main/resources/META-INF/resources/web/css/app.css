@@ -975,3 +975,6 @@ html {
             height: auto !important;
             overflow: hidden;
         }
+
+/* Reduz margens laterais para evitar quebra de menus */
+@media (min-width: 992px) { .container { max-width: 98% !important; } }

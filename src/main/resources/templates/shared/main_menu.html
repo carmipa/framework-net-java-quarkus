@@ -1,13 +1,15 @@
 <nav class="aed-topnav" aria-label="Menu principal">
-    <a href="/" class="aed-brand">
-        <span class="aed-brand-logo" aria-hidden="true">
-            <img src="/icone.png?v=20260709d" alt="" loading="lazy">
-        </span>
-        <div class="aed-brand-text">
-            <span class="aed-brand-kicker">Menu principal</span>
-            <span class="aed-brand-title">Framework de Redes</span>
-        </div>
-    </a>
+    <div style="flex: 1; display: flex;">
+        <a href="/" class="aed-brand">
+            <span class="aed-brand-logo" aria-hidden="true">
+                <img src="/icone.png?v=20260709d" alt="" loading="lazy">
+            </span>
+            <div class="aed-brand-text">
+                <span class="aed-brand-kicker">Menu principal</span>
+                <span class="aed-brand-title">Framework de Redes</span>
+            </div>
+        </a>
+    </div>
     <div class="aed-nav-tabs">
         <a href="/"
            class="aed-nav-link {#if activeMainMenu == 'home'}is-active{/if}"
@@ -78,7 +80,7 @@
     </div>
 
     <!-- Seletor de Idiomas (Tradução Frontend) -->
-    <div class="aed-lang-selector" style="margin-left: auto; display: flex; align-items: center; gap: 4px; padding-right: 1rem;">
+    <div class="aed-lang-selector" style="flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 4px;">
         <button onclick="aedTranslate('pt')" class="aed-btn btn-sm" style="padding: 2px 6px; font-size: 1rem; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;" title="Português">🇧🇷</button>
         <button onclick="aedTranslate('en')" class="aed-btn btn-sm" style="padding: 2px 6px; font-size: 1rem; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;" title="English">🇺🇸</button>
         <button onclick="aedTranslate('es')" class="aed-btn btn-sm" style="padding: 2px 6px; font-size: 1rem; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;" title="Español">🇪🇸</button>
