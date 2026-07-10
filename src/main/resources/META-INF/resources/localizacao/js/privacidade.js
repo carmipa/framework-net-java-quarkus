@@ -116,7 +116,7 @@
         return '<span class="priv-flag-emoji">' + esc(emoji || "🌐") + "</span>";
     }
 
-    function secaoLocalizacao(geo) {
+    function secaoLocalizacao(geo, viaWebrtc) {
         var head = '<h6 class="priv-sec"><span class="material-symbols-outlined">flag</span> Sua localização (pelo IP)</h6>';
         var temGeo = geo && geo.ok && geo.reservado !== true && (geo.pais || geo.pais_codigo || geo.codigo_pais);
         if (!temGeo) {
@@ -125,7 +125,10 @@
         }
         var cc = geo.pais_codigo || geo.codigo_pais || "";
         var coords = (geo.latitude != null && geo.longitude != null) ? (geo.latitude + ", " + geo.longitude) : "—";
-        return head +
+        var nota = viaWebrtc
+            ? '<p class="small text-secondary mb-2" style="margin-top:-0.2rem;">Localizado pelo <strong>IP público detectado via WebRTC</strong> — o servidor via um IP reservado/local (ex.: localhost).</p>'
+            : "";
+        return head + nota +
             '<div class="priv-local">' +
             '<div class="priv-local-flag">' + bandeiraHtml(cc, geo.pais_bandeira) +
             '<div><div class="priv-local-pais">' + esc(geo.pais || "—") + "</div>" +
@@ -138,6 +141,27 @@
             item("ISP (Provedor)", geo.isp) +
             item("IP público", geo.ip, true) +
             "</div></div>";
+    }
+
+    function atualizarGlobo(geo) {
+        var wrap = $("priv-globe-wrap");
+        if (!wrap) return;
+        var lat = geo && geo.latitude != null ? geo.latitude : (geo && geo.lat);
+        var lon = geo && geo.longitude != null ? geo.longitude : (geo && geo.lon);
+        var ok = geo && geo.ok && geo.reservado !== true && lat != null && lon != null;
+        if (!ok) {
+            wrap.classList.add("d-none");
+            return;
+        }
+        wrap.classList.remove("d-none");
+        var cap = $("priv-globe-cap");
+        if (cap) {
+            cap.innerHTML = bandeiraHtml(geo.pais_codigo || geo.codigo_pais, geo.pais_bandeira) +
+                "<span>" + esc(geo.pais || "") + (geo.cidade ? " · " + esc(geo.cidade) : "") + "</span>";
+        }
+        if (w.PrivGlobe) {
+            w.PrivGlobe.setLocation(lat, lon, (geo.ip || "") + (geo.cidade ? " · " + geo.cidade : ""));
+        }
     }
 
     function render(dados) {
@@ -179,7 +203,7 @@
             "</div></div>";
 
         // Localização pelo IP (bandeira + país) — repetido de propósito p/ documentar aqui também
-        html += secaoLocalizacao(geo);
+        html += secaoLocalizacao(geo, dados.fallbackWebrtc);
 
         // IP público (as visões)
         html += '<h6 class="priv-sec"><span class="material-symbols-outlined">public</span> Seu IP público (três visões)</h6>' +
@@ -232,6 +256,14 @@
         root.classList.remove("d-none");
     }
 
+    function ipPublicoWebRTC(webrtc) {
+        if (!webrtc || !webrtc.candidatos) return null;
+        var pubs = webrtc.candidatos.filter(function (c) { return c.classe.grupo === "publico"; });
+        var v4 = pubs.filter(function (c) { return /^[0-9.]+$/.test(c.addr); });
+        var escolhido = v4.length ? v4[0].addr : (pubs.length ? pubs[0].addr : null);
+        return escolhido ? escolhido.replace(/[\[\]]/g, "") : null;
+    }
+
     function rodar() {
         var btn = $("btn-priv-testar");
         var status = $("priv-status");
@@ -243,7 +275,22 @@
             buscarJson("/api/informacoes/geo"),
             coletarWebRTC(2500)
         ]).then(function (res) {
-            render({ inspecao: res[0], geo: res[1], webrtc: res[2], fingerprint: fingerprint() });
+            var inspecao = res[0];
+            var geo = res[1] || {};
+            var webrtc = res[2];
+            // Se o servidor vê um IP reservado (ex.: localhost), geolocaliza o IP público
+            // que o WebRTC revelou — assim o globo aponta o lugar real mesmo em dev.
+            var pubIp = ipPublicoWebRTC(webrtc);
+            var semGeo = !geo.ok || geo.reservado === true || geo.latitude == null;
+            var proximo = (semGeo && pubIp)
+                ? buscarJson("/api/informacoes/geo?ip=" + encodeURIComponent(pubIp))
+                : Promise.resolve(null);
+            return proximo.then(function (geoPub) {
+                var usouFallback = !!(geoPub && geoPub.ok && geoPub.reservado !== true);
+                var geoLocal = usouFallback ? geoPub : geo;
+                render({ inspecao: inspecao, geo: geoLocal, webrtc: webrtc, fingerprint: fingerprint(), fallbackWebrtc: usouFallback });
+                atualizarGlobo(geoLocal);
+            });
         }).catch(function (e) {
             var root = $("priv-resultado");
             if (root) { root.classList.remove("d-none"); root.innerHTML = '<div class="alert alert-secondary mb-0">Falha ao rodar o teste: ' + esc(e) + "</div>"; }

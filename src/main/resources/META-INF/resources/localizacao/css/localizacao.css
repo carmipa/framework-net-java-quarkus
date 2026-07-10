@@ -280,6 +280,37 @@
 
 .priv-local-grid { flex: 1 1 20rem; margin: 0; }
 
+/* Globo 3D da aba Vazamento/Privacidade */
+.priv-globe-wrap {
+    position: relative;
+    height: 24rem;
+    border-radius: var(--aed-radius-card, 0.75rem);
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 38%, #0b1b33 0%, #07101f 55%, #04070e 100%);
+    border: 1px solid var(--aed-border, rgba(255, 255, 255, 0.08));
+}
+
+#priv-globe { position: absolute; inset: 0; }
+#priv-globe canvas { display: block; cursor: grab; }
+
+.priv-globe-cap {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0.5rem 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #cfe0f2;
+    background: linear-gradient(180deg, rgba(4, 7, 14, 0), rgba(4, 7, 14, 0.85));
+    pointer-events: none;
+}
+
+.priv-globe-cap .priv-flag { width: 24px; height: 18px; }
+.priv-globe-cap .priv-flag-emoji { font-size: 1.2rem; }
+
 .loc-map {
     /* Altura fluida: adapta a celular/tablet/desktop pela altura do viewport. */
     height: clamp(16rem, 55vh, 34rem);
