@@ -15,7 +15,14 @@
     position: sticky;
     top: 1rem;
     max-height: calc(100vh - 2rem);
-    overflow: auto;
+    overflow-y: auto;
+    scrollbar-width: none; /* Oculta no Firefox */
+    -ms-overflow-style: none; /* Oculta no IE/Edge antigo */
+}
+
+/* Oculta no Chrome, Safari e Edge moderno */
+.doc-sidebar::-webkit-scrollbar {
+    display: none;
 }
 
 .doc-toc-link {
