@@ -1,7 +1,7 @@
 {#include shared/base.html}
 {#title}Telemetria | Framework de Redes A&D{/title}
 {#extraHead}
-<link rel="stylesheet" href="/telemetria/css/dashboard.css?v=20260710">
+<link rel="stylesheet" href="/telemetria/css/dashboard.css?v=20260710b">
 {/extraHead}
 {#content}
 <div class="container py-4 telemetry-page aed-page">
@@ -12,9 +12,30 @@
             <div>
                 <span class="aed-eyebrow">Observabilidade</span>
                 <h2 class="mb-1" style="font-family:var(--aed-font-display);">Telemetria do Framework</h2>
-                <p class="text-secondary small mb-0">Eventos, métricas HTTP, gráficos e console em tempo real.</p>
+                <p class="text-secondary small mb-0">Saúde HTTP, latência (percentis), endpoints e console em tempo real.</p>
             </div>
-            <div class="d-flex flex-wrap gap-2">
+            <div class="tele-controls d-flex flex-wrap align-items-end gap-2">
+                <label class="tele-field">
+                    <span>Período</span>
+                    <select id="t-periodo" class="form-select form-select-sm">
+                        <option value="15">Últimos 15 min</option>
+                        <option value="60" selected>Última hora</option>
+                        <option value="360">Últimas 6 h</option>
+                        <option value="1440">Últimas 24 h</option>
+                        <option value="10080">Últimos 7 dias</option>
+                        <option value="0">Tudo</option>
+                    </select>
+                </label>
+                <label class="tele-field">
+                    <span>Autoatualização</span>
+                    <select id="t-autorefresh" class="form-select form-select-sm">
+                        <option value="0">Desativada</option>
+                        <option value="5000">5 s</option>
+                        <option value="10000" selected>10 s</option>
+                        <option value="30000">30 s</option>
+                        <option value="60000">1 min</option>
+                    </select>
+                </label>
                 <button type="button" class="aed-btn aed-btn-neutral" id="btn-refresh-telemetria">
                     <span class="material-symbols-outlined">refresh</span> Atualizar
                 </button>
@@ -23,54 +44,113 @@
                 </a>
             </div>
         </div>
+        <p class="small text-secondary mb-0 mt-2 tele-updated">
+            <span class="material-symbols-outlined">schedule</span>
+            Última atualização: <strong id="t-atualizado">--</strong>
+            <span class="tele-updated-sep">·</span>
+            <span id="t-periodo-label">janela: última hora</span>
+        </p>
     </div>
 
-    <div class="aed-kpi-grid">
+    <div class="aed-kpi-grid tele-kpi-6">
+        <article class="aed-kpi-card">
+            <div class="aed-kpi-icon blue"><span class="material-symbols-outlined">swap_vert</span></div>
+            <div>
+                <div class="aed-kpi-label">Requisições</div>
+                <div class="aed-kpi-value" id="t-http-total">0</div>
+            </div>
+        </article>
+        <article class="aed-kpi-card">
+            <div class="aed-kpi-icon teal"><span class="material-symbols-outlined">check_circle</span></div>
+            <div>
+                <div class="aed-kpi-label">Taxa de sucesso</div>
+                <div class="aed-kpi-value" id="t-taxa-sucesso">--%</div>
+            </div>
+        </article>
+        <article class="aed-kpi-card">
+            <div class="aed-kpi-icon amber"><span class="material-symbols-outlined">warning</span></div>
+            <div>
+                <div class="aed-kpi-label">Erros 4xx (cliente)</div>
+                <div class="aed-kpi-value" id="t-http-4xx">0</div>
+            </div>
+        </article>
+        <article class="aed-kpi-card">
+            <div class="aed-kpi-icon rose"><span class="material-symbols-outlined">dangerous</span></div>
+            <div>
+                <div class="aed-kpi-label">Erros 5xx (servidor)</div>
+                <div class="aed-kpi-value" id="t-http-5xx">0</div>
+            </div>
+        </article>
+        <article class="aed-kpi-card">
+            <div class="aed-kpi-icon indigo"><span class="material-symbols-outlined">speed</span></div>
+            <div>
+                <div class="aed-kpi-label">Latência P95</div>
+                <div class="aed-kpi-value" id="t-p95" style="font-size:1.35rem;">-- ms</div>
+                <div class="aed-kpi-sub" id="t-latencia-sub">P50 -- · P99 --</div>
+            </div>
+        </article>
         <article class="aed-kpi-card">
             <div class="aed-kpi-icon blue"><span class="material-symbols-outlined">database</span></div>
             <div>
                 <div class="aed-kpi-label">Total de eventos</div>
                 <div class="aed-kpi-value" id="t-total-eventos">0</div>
-            </div>
-        </article>
-        <article class="aed-kpi-card">
-            <div class="aed-kpi-icon teal"><span class="material-symbols-outlined">hub</span></div>
-            <div>
-                <div class="aed-kpi-label">Módulos ativos</div>
-                <div class="aed-kpi-value" id="t-modulos">0</div>
-            </div>
-        </article>
-        <article class="aed-kpi-card">
-            <div class="aed-kpi-icon amber"><span class="material-symbols-outlined">sync_alt</span></div>
-            <div>
-                <div class="aed-kpi-label">HTTP OK / Erro</div>
-                <div class="aed-kpi-value" id="t-http-ratio" style="font-size:1.25rem;">0 / 0</div>
-            </div>
-        </article>
-        <article class="aed-kpi-card">
-            <div class="aed-kpi-icon rose"><span class="material-symbols-outlined">speed</span></div>
-            <div>
-                <div class="aed-kpi-label">Latência média</div>
-                <div class="aed-kpi-value" id="t-latencia" style="font-size:1.25rem;">-- ms</div>
+                <div class="aed-kpi-sub" id="t-modulos-sub">0 módulos</div>
             </div>
         </article>
     </div>
 
-    <div class="aed-charts-grid">
+    <div class="tele-grid-2 mb-1">
         <div class="aed-card card-tech p-3">
-            <span class="aed-eyebrow aed-eyebrow-indigo">Análise</span>
-            <h6 class="text-secondary text-uppercase small mb-2 d-flex align-items-center gap-2"><span class="material-symbols-outlined">bar_chart</span> Eventos por módulo</h6>
-            <canvas id="chart-modulos" height="200"></canvas>
+            <span class="aed-eyebrow aed-eyebrow-amber">Tempo real</span>
+            <h6 class="tele-chart-title"><span class="material-symbols-outlined">timeline</span> Requisições e erros ao longo do tempo</h6>
+            <canvas id="chart-atividade" height="150"></canvas>
         </div>
         <div class="aed-card card-tech p-3">
             <span class="aed-eyebrow">HTTP</span>
-            <h6 class="text-secondary text-uppercase small mb-2 d-flex align-items-center gap-2"><span class="material-symbols-outlined">donut_small</span> Métodos HTTP</h6>
-            <canvas id="chart-niveis" height="200"></canvas>
+            <h6 class="tele-chart-title"><span class="material-symbols-outlined">donut_small</span> Status HTTP por classe</h6>
+            <canvas id="chart-status" height="150"></canvas>
+        </div>
+    </div>
+
+    <div class="tele-grid-2 mb-3">
+        <div class="aed-card card-tech p-3">
+            <span class="aed-eyebrow aed-eyebrow-indigo">Análise</span>
+            <h6 class="tele-chart-title"><span class="material-symbols-outlined">bar_chart</span> Requisições por módulo</h6>
+            <canvas id="chart-modulos" height="170"></canvas>
         </div>
         <div class="aed-card card-tech p-3">
-            <span class="aed-eyebrow aed-eyebrow-amber">Tempo real</span>
-            <h6 class="text-secondary text-uppercase small mb-2 d-flex align-items-center gap-2"><span class="material-symbols-outlined">timeline</span> Requisições/minuto</h6>
-            <canvas id="chart-atividade" height="200"></canvas>
+            <span class="aed-eyebrow">Latência</span>
+            <h6 class="tele-chart-title"><span class="material-symbols-outlined">query_stats</span> Latência por percentil (ms)</h6>
+            <canvas id="chart-latencia" height="170"></canvas>
+        </div>
+    </div>
+
+    <div class="tele-grid-2 mb-3">
+        <div class="aed-card card-tech p-3">
+            <h6 class="tele-chart-title"><span class="material-symbols-outlined">hourglass_bottom</span> Endpoints mais lentos (P95)</h6>
+            <div class="table-responsive">
+                <table class="table table-dark table-sm telemetry-table tele-endpoints mb-0">
+                    <thead>
+                    <tr><th>Método</th><th>Endpoint</th><th class="num">Chamadas</th><th class="num">P95</th><th class="num">Erros</th></tr>
+                    </thead>
+                    <tbody id="t-top-lentos">
+                    <tr><td colspan="5" class="tele-empty">Sem dados no período.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="aed-card card-tech p-3">
+            <h6 class="tele-chart-title"><span class="material-symbols-outlined">error</span> Endpoints com mais erros</h6>
+            <div class="table-responsive">
+                <table class="table table-dark table-sm telemetry-table tele-endpoints mb-0">
+                    <thead>
+                    <tr><th>Método</th><th>Endpoint</th><th class="num">4xx</th><th class="num">5xx</th><th class="num">Chamadas</th></tr>
+                    </thead>
+                    <tbody id="t-top-erros">
+                    <tr><td colspan="5" class="tele-empty">Nenhum erro no período.</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -80,9 +160,16 @@
                 <span class="aed-eyebrow">Console</span>
                 <h3 class="h6 mb-0 d-flex align-items-center gap-2"><span class="material-symbols-outlined">terminal</span> Console ao vivo</h3>
             </div>
-            <div class="d-flex gap-2">
-                <button type="button" class="aed-btn aed-btn-neutral btn-sm btn-toggle-console" data-target="console-telemetria" aria-label="Expandir/recolher o console" data-bs-toggle="tooltip" data-bs-placement="top" title="Expandir ou recolher o console ao vivo">
-                    <span class="material-symbols-outlined">unfold_more</span>
+            <div class="tele-console-tools d-flex flex-wrap gap-2 align-items-center">
+                <select id="t-console-nivel" class="form-select form-select-sm" aria-label="Filtrar por nível">
+                    <option value="">Todos os níveis</option>
+                    <option value="INFO">INFO</option>
+                    <option value="WARN">WARN</option>
+                    <option value="ERROR">ERROR</option>
+                </select>
+                <input type="search" id="t-console-busca" class="form-control form-control-sm telemetry-search" placeholder="Filtrar console..." style="max-width:200px;">
+                <button type="button" class="aed-btn aed-btn-neutral btn-sm" id="t-console-pausar" data-bs-toggle="tooltip" data-bs-placement="top" title="Pausar/retomar rolagem automática">
+                    <span class="material-symbols-outlined">pause</span>
                 </button>
                 <button type="button" class="aed-btn aed-btn-neutral btn-sm btn-copy-console" data-target="console-telemetria" aria-label="Copiar o console" data-bs-toggle="tooltip" data-bs-placement="top" title="Copiar o conteúdo do console">
                     <span class="material-symbols-outlined">content_copy</span>
@@ -107,13 +194,15 @@
                     <th>Horário</th>
                     <th>Nível</th>
                     <th>Módulo</th>
-                    <th>Evento</th>
+                    <th>Método</th>
+                    <th>Endpoint</th>
                     <th>Status</th>
+                    <th class="num">Duração</th>
                     <th>Mensagem</th>
                 </tr>
                 </thead>
                 <tbody id="t-table-body">
-                <tr><td colspan="6" class="text-secondary">Carregando...</td></tr>
+                <tr><td colspan="8" class="text-secondary">Carregando...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -127,6 +216,6 @@
 {/content}
 {#extraScripts}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="/telemetria/js/dashboard.js?v=20260710"></script>
+<script src="/telemetria/js/dashboard.js?v=20260710b"></script>
 {/extraScripts}
 {/include}

@@ -50,9 +50,9 @@ public class TelemetriaResource {
     @Path("/api/dashboard")
     @Produces(MediaType.APPLICATION_JSON)
     public TelemetriaDashboard dadosDashboard(
-            @QueryParam("limit") @DefaultValue("200") int limit,
-            @QueryParam("console") @DefaultValue("200") int console) {
-        return dashboardService.montar(limit, console);
+            @QueryParam("janela") @DefaultValue("60") int janela,
+            @QueryParam("console") @DefaultValue("250") int console) {
+        return dashboardService.montar(console, janela);
     }
 
     @GET

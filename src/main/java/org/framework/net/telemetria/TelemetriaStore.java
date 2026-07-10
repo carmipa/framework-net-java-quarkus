@@ -143,6 +143,20 @@ public class TelemetriaStore {
         }
     }
 
+    public int maxEventos() {
+        return maxEvents;
+    }
+
+    /** Cópia dos eventos em memória (mais recentes primeiro), até {@code maxEvents}. */
+    public List<TelemetriaEvent> snapshotEventos() {
+        lock.lock();
+        try {
+            return new ArrayList<>(eventos);
+        } finally {
+            lock.unlock();
+        }
+    }
+
     public Path arquivoCompartilhado() {
         return pastaLogs().resolve(ARQUIVO_COMPARTILHADO);
     }

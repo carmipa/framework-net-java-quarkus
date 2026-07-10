@@ -177,3 +177,118 @@
 @media (max-width: 60em) {
     .aed-charts-grid { grid-template-columns: 1fr; }
 }
+
+/* ---- Controles do cabeçalho (período / autoatualização) ---- */
+.tele-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #7d8aa1;
+}
+
+.tele-controls .form-select {
+    background: #0a0e16;
+    border: 1px solid var(--aed-border, rgba(255, 255, 255, 0.12));
+    color: var(--aed-text, #eef2f8);
+    min-width: 8.5rem;
+}
+
+.tele-updated {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--aed-text-faint, #5b6679);
+}
+
+.tele-updated .material-symbols-outlined { font-size: 1rem; }
+.tele-updated strong { color: var(--aed-text-secondary, #8b97ad); font-weight: 600; }
+.tele-updated-sep { opacity: 0.5; }
+
+/* ---- KPIs (6 colunas + sublabel + estado ruim) ---- */
+.tele-kpi-6 { grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); }
+
+.aed-kpi-sub {
+    font-size: 0.66rem;
+    color: var(--aed-text-faint, #5b6679);
+    font-family: var(--aed-font-mono, "JetBrains Mono", monospace);
+    margin-top: 0.15rem;
+}
+
+.aed-kpi-value.kpi-bad,
+.kpi-bad { color: #f43f5e !important; }
+
+/* ---- Grids de 2 colunas (gráficos e tabelas) ---- */
+.tele-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+}
+
+.tele-grid-2 .aed-card { min-width: 0; }
+.tele-grid-2 canvas { max-height: 15rem; }
+
+.tele-chart-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--aed-text-secondary, #8b97ad);
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+    margin: 0.3rem 0 0.7rem;
+}
+
+.tele-chart-title .material-symbols-outlined { font-size: 1.1rem; }
+
+@media (max-width: 62em) {
+    .tele-grid-2 { grid-template-columns: 1fr; }
+}
+
+/* ---- Tabelas de endpoints ---- */
+.tele-endpoints { font-size: 0.76rem; }
+.tele-endpoints th.num, .tele-endpoints td.num { text-align: right; white-space: nowrap; }
+.telemetry-table td.mono, .tele-endpoints td.mono { font-family: var(--aed-font-mono, "JetBrains Mono", monospace); }
+
+.tele-endpoints td.col-endpoint,
+.telemetry-table td.col-endpoint {
+    max-width: 15rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--aed-font-mono, "JetBrains Mono", monospace);
+    color: var(--aed-text-secondary, #8b97ad);
+}
+
+.txt-err { color: #f43f5e; font-weight: 600; }
+.txt-warn { color: #f59e0b; font-weight: 600; }
+
+/* ---- Badge de método HTTP ---- */
+.tele-metodo {
+    display: inline-block;
+    padding: 0.02rem 0.4rem;
+    border-radius: 0.35rem;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #8b97ad;
+}
+
+.tele-metodo.m-get { color: #34d399; border-color: rgba(52, 211, 153, 0.4); }
+.tele-metodo.m-post { color: #60a5fa; border-color: rgba(96, 165, 250, 0.4); }
+.tele-metodo.m-put { color: #f59e0b; border-color: rgba(245, 158, 11, 0.4); }
+.tele-metodo.m-delete { color: #f43f5e; border-color: rgba(244, 63, 94, 0.4); }
+
+/* ---- Ferramentas do console ---- */
+.tele-console-tools .form-select,
+.tele-console-tools .form-control {
+    background: #0a0e16;
+    border: 1px solid var(--aed-border, rgba(255, 255, 255, 0.12));
+    color: var(--aed-text, #eef2f8);
+}
+
+.tele-console-tools .form-select { min-width: 9rem; }
+#t-console-pausar.active { color: #f59e0b; border-color: rgba(245, 158, 11, 0.5); }
