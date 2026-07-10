@@ -1,21 +1,16 @@
+/* Documentação: scroll-spy do sumário agrupado (sem Mermaid — diagramas são HTML/CSS dark). */
 (function () {
     "use strict";
 
-    function initMermaid() {
-        if (typeof mermaid === "undefined") return;
-        mermaid.initialize({ startOnLoad: true, securityLevel: "strict", theme: "dark" });
-        mermaid.run({ querySelector: ".markdown-doc .mermaid" });
-    }
-
     function initScrollSpy() {
-        const links = Array.from(document.querySelectorAll(".doc-sidebar a[href^='#']"));
+        const links = Array.from(document.querySelectorAll(".doc-nav a[href^='#']"));
         const sections = links
             .map((link) => document.querySelector(link.getAttribute("href")))
             .filter(Boolean);
         if (!links.length || !sections.length) return;
 
         const sync = () => {
-            const threshold = window.scrollY + 140;
+            const threshold = window.scrollY + 160;
             let activeId = sections[0].id;
             sections.forEach((sec) => {
                 if (sec.offsetTop <= threshold) activeId = sec.id;
@@ -35,14 +30,9 @@
         sync();
     }
 
-    function boot() {
-        initMermaid();
-        initScrollSpy();
-    }
-
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", boot);
+        document.addEventListener("DOMContentLoaded", initScrollSpy);
     } else {
-        boot();
+        initScrollSpy();
     }
 })();
