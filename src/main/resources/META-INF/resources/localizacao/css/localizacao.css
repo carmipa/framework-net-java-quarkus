@@ -280,10 +280,30 @@
 
 .priv-local-grid { flex: 1 1 20rem; margin: 0; }
 
+/* Split do "hero" da aba Vazamento: veredito+localização à esquerda, globo à direita */
+.priv-split {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.priv-split.has-globe {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+}
+
+@media (max-width: 62em) {
+    .priv-split.has-globe {
+        grid-template-columns: 1fr;
+    }
+}
+
+.priv-hero-info { min-width: 0; }
+
 /* Globo 3D da aba Vazamento/Privacidade */
 .priv-globe-wrap {
     position: relative;
-    height: 24rem;
+    min-height: 24rem;
     border-radius: var(--aed-radius-card, 0.75rem);
     overflow: hidden;
     background: radial-gradient(circle at 50% 38%, #0b1b33 0%, #07101f 55%, #04070e 100%);
