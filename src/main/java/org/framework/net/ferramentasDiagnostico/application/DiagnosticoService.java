@@ -53,8 +53,11 @@ public class DiagnosticoService {
         if (host.length() > 255) {
             throw new DiagnosticoException("Host inválido ou muito longo.");
         }
-        if (host.contains(" ") || host.contains(";") || host.contains("&") || host.contains("|")) {
-            throw new DiagnosticoException("Caracteres inválidos detectados. Apenas hosts e IPs são permitidos.");
+        // Bloqueia injeção de comando (; & |) E caracteres de HTML/script (defesa em profundidade).
+        for (char c : new char[]{' ', ';', '&', '|', '<', '>', '"', '\'', '`', '$', '\n', '\r'}) {
+            if (host.indexOf(c) >= 0) {
+                throw new DiagnosticoException("Caracteres inválidos detectados. Apenas hosts e IPs são permitidos.");
+            }
         }
     }
     

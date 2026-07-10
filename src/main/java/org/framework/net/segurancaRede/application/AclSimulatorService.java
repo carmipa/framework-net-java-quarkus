@@ -13,10 +13,10 @@ public class AclSimulatorService {
     @Inject
     TelemetriaLogger telemetriaLogger;
 
-    public String testarPacote(String regra, String ipOrigem, String ipDestino, int portaDestino) {
+    public String testarPacote(String regra, String ipOrigem, String ipDestino, String portaDestinoRaw) {
         return telemetriaLogger.medir("seguranca", "teste_acl", () -> {
-            validarEntradas(regra, ipOrigem, ipDestino, portaDestino);
-            
+            int portaDestino = validarEntradas(regra, ipOrigem, ipDestino, portaDestinoRaw);
+
             // Simulação simples de parser de ACL
             // Exemplo de regra esperada: permit tcp 192.168.1.0 0.0.0.255 eq 80
             String regraLower = regra.toLowerCase();
@@ -46,10 +46,37 @@ public class AclSimulatorService {
         });
     }
 
-    private void validarEntradas(String regra, String ipOrigem, String ipDestino, int portaDestino) {
-        if (regra == null || regra.trim().isEmpty()) throw new SegurancaException("Regra ACL não informada.");
-        if (ipOrigem == null || ipOrigem.trim().isEmpty()) throw new SegurancaException("IP de Origem não informado.");
-        if (ipDestino == null || ipDestino.trim().isEmpty()) throw new SegurancaException("IP de Destino não informado.");
-        if (portaDestino <= 0 || portaDestino > 65535) throw new SegurancaException("Porta de destino inválida.");
+    private int validarEntradas(String regra, String ipOrigem, String ipDestino, String portaDestinoRaw) {
+        exigir(regra, "Regra ACL não informada.");
+        exigir(ipOrigem, "IP de Origem não informado.");
+        exigir(ipDestino, "IP de Destino não informado.");
+        if (regra.length() > 200 || ipOrigem.length() > 45 || ipDestino.length() > 45) {
+            throw new SegurancaException("Entrada muito longa.");
+        }
+        // Defesa em profundidade: rejeita caracteres de HTML/scripts nos campos.
+        if (contemPerigoso(regra) || contemPerigoso(ipOrigem) || contemPerigoso(ipDestino)) {
+            throw new SegurancaException("Caracteres inválidos detectados nas entradas.");
+        }
+        int porta;
+        try {
+            porta = Integer.parseInt(portaDestinoRaw == null ? "" : portaDestinoRaw.trim());
+        } catch (NumberFormatException ex) {
+            throw new SegurancaException("Porta de destino inválida (informe um número).");
+        }
+        if (porta <= 0 || porta > 65535) {
+            throw new SegurancaException("Porta de destino fora do intervalo (1–65535).");
+        }
+        return porta;
+    }
+
+    private static void exigir(String valor, String mensagem) {
+        if (valor == null || valor.trim().isEmpty()) {
+            throw new SegurancaException(mensagem);
+        }
+    }
+
+    private static boolean contemPerigoso(String valor) {
+        return valor.indexOf('<') >= 0 || valor.indexOf('>') >= 0
+                || valor.indexOf('"') >= 0 || valor.indexOf('\'') >= 0 || valor.indexOf('`') >= 0;
     }
 }

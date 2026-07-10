@@ -18,8 +18,7 @@ function testarPacote() {
         fetch('/seguranca/api/testar', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'CSRF-Token': getCsrfToken()
+                'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: new URLSearchParams({ 
                 regra: regra,

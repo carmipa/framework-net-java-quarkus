@@ -22,8 +22,9 @@ except ImportError:
 # Substitua pela URL da sua VPS (ou localhost se testando local)
 API_URL = "http://localhost:8080/trafego/api/ingest"
 
-# O token deve bater com a variável de ambiente: framework.trafego.ingest-token 
-TOKEN = "minha-chave-secreta" 
+# COLE AQUI o token definido no servidor (env TRAFEGO_INGEST_TOKEN / framework.trafego.ingest-token).
+# NUNCA versione um token real neste arquivo público — este é apenas um placeholder.
+TOKEN = "COLE_AQUI_SEU_TOKEN_DE_INGESTAO"
 # ==============================================================================
 
 pacotes_buffer = []

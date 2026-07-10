@@ -16,8 +16,7 @@ function executarPing() {
         fetch('/diagnostico/api/ping', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'CSRF-Token': getCsrfToken()
+                'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: new URLSearchParams({ host: host })
         })
@@ -57,8 +56,7 @@ function executarDns() {
         fetch('/diagnostico/api/dns', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'CSRF-Token': getCsrfToken()
+                'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: new URLSearchParams({ dominio: dominio })
         })

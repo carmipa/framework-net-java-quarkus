@@ -38,8 +38,8 @@ public class SegurancaRedeResource {
             @FormParam("regra") String regra,
             @FormParam("ipOrigem") String ipOrigem,
             @FormParam("ipDestino") String ipDestino,
-            @FormParam("portaDestino") int portaDestino) {
-        
+            @FormParam("portaDestino") String portaDestino) {
+
         String resultado = aclSimulatorService.testarPacote(regra, ipOrigem, ipDestino, portaDestino);
         return Response.ok(Map.of("data", resultado)).build();
     }
