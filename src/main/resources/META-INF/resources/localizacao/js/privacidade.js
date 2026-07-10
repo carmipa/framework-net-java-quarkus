@@ -198,18 +198,21 @@
         else if (alertas.length === 1) { nivel = "warn"; texto = "Atenção — um ponto de exposição"; }
         else { nivel = "ok"; texto = "Sem vazamentos óbvios neste navegador"; }
 
-        var html = '<div class="priv-verdict priv-' + nivel + '">' +
+        var verdictHtml = '<div class="priv-verdict priv-' + nivel + '">' +
             '<span class="material-symbols-outlined">' + (nivel === "ok" ? "verified_user" : nivel === "warn" ? "shield" : "gpp_bad") + '</span>' +
             '<div><strong>' + esc(texto) + '</strong>' +
             (alertas.length ? '<ul class="priv-alertas">' + alertas.map(function (a) { return "<li>" + a + "</li>"; }).join("") + "</ul>"
                 : '<div class="small text-secondary">O que dava pra medir não revelou divergência de IP nem IP local aberto.</div>') +
             "</div></div>";
 
-        // Localização pelo IP (bandeira + país) — repetido de propósito p/ documentar aqui também
-        html += secaoLocalizacao(geo, dados.fallbackWebrtc);
+        // Coluna esquerda do "hero" (fica AO LADO do globo): veredito + localização com bandeira.
+        var info = $("priv-hero-info");
+        var hero = $("priv-hero");
+        if (info) info.innerHTML = verdictHtml + secaoLocalizacao(geo, dados.fallbackWebrtc);
+        if (hero) hero.classList.remove("d-none");
 
-        // IP público (as visões)
-        html += '<h6 class="priv-sec"><span class="material-symbols-outlined">public</span> Seu IP público (três visões)</h6>' +
+        // Detalhes em largura total, abaixo do globo.
+        var det = '<h6 class="priv-sec"><span class="material-symbols-outlined">public</span> Seu IP público (três visões)</h6>' +
             '<div class="loc-result-grid">' +
             item("Servidor vê (IP real)", ipServidor, true) +
             item("ip-api vê", ipPublico, true) +
@@ -217,21 +220,19 @@
             item("Proxy/VPN pelo provedor", proxyFlag ? "sim" : "não") +
             "</div>";
 
-        // WebRTC
-        html += '<h6 class="priv-sec"><span class="material-symbols-outlined">lan</span> Candidatos WebRTC</h6>';
+        det += '<h6 class="priv-sec"><span class="material-symbols-outlined">lan</span> Candidatos WebRTC</h6>';
         if (!rtc.suportado) {
-            html += '<p class="small text-secondary mb-0">WebRTC não suportado ou bloqueado neste navegador (bom para privacidade).</p>';
+            det += '<p class="small text-secondary mb-0">WebRTC não suportado ou bloqueado neste navegador (bom para privacidade).</p>';
         } else if (!rtc.candidatos.length) {
-            html += '<p class="small text-secondary mb-0">Nenhum candidato exposto — navegador protegendo os IPs (mDNS/hardening).</p>';
+            det += '<p class="small text-secondary mb-0">Nenhum candidato exposto — navegador protegendo os IPs (mDNS/hardening).</p>';
         } else {
-            html += '<div class="priv-cands">' + rtc.candidatos.map(function (c) {
+            det += '<div class="priv-cands">' + rtc.candidatos.map(function (c) {
                 return '<div class="priv-cand priv-' + c.classe.cor + '"><code>' + esc(c.addr) + '</code>' +
                     '<span>' + esc(c.classe.rotulo) + "</span></div>";
             }).join("") + "</div>";
         }
 
-        // Cabeçalhos de proxy
-        html += '<h6 class="priv-sec"><span class="material-symbols-outlined">dns</span> Cadeia de cabeçalhos (como o servidor resolveu o IP)</h6>' +
+        det += '<h6 class="priv-sec"><span class="material-symbols-outlined">dns</span> Cadeia de cabeçalhos (como o servidor resolveu o IP)</h6>' +
             '<div class="loc-result-grid">' +
             item("IP da conexão", insp.ipConexao, true) +
             item("X-Forwarded-For", insp.xForwardedFor, true) +
@@ -241,8 +242,7 @@
             item("Accept-Language", insp.acceptLanguage) +
             "</div>";
 
-        // Fingerprint
-        html += '<h6 class="priv-sec"><span class="material-symbols-outlined">fingerprint</span> Fingerprint do navegador (identifica mesmo sem o IP)</h6>' +
+        det += '<h6 class="priv-sec"><span class="material-symbols-outlined">fingerprint</span> Fingerprint do navegador (identifica mesmo sem o IP)</h6>' +
             '<div class="loc-result-grid">' +
             item("Fuso horário", fp.timezone) +
             item("Idiomas", fp.idiomas) +
@@ -255,7 +255,7 @@
             item("User-Agent", fp.userAgent) +
             "</div>";
 
-        root.innerHTML = html;
+        root.innerHTML = det;
         root.classList.remove("d-none");
     }
 
