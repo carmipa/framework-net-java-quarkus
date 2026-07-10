@@ -59,8 +59,11 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Análise Didática | `/analise` | GET/POST | CIDR, máscara, wildcard, auto-CIDR, domínio, IPv6, comparador (parâmetro `?tab=`) |
 | Localização | `/localizacao` | GET | Localização por IP e por CEP no mapa |
 | Localização (API) | `/localizacao/api/ip`, `/localizacao/api/cep` | GET | JSON: geolocalização por IP / endereço por CEP (ViaCEP + OSM) |
-| Tráfego | `/trafego` | GET | Decodificador didático de pacotes (hex dump) |
+| Tráfego | `/trafego` | GET | Sub-abas: painel ao vivo (simulação), decodificador (hex), encapsulamento e handshake TCP |
 | Tráfego (API) | `/trafego/api/decodificar` | POST | JSON: camadas Ethernet/IP/TCP/UDP/ICMP decodificadas |
+| Tráfego (API) | `/trafego/api/aovivo` | GET | JSON: snapshot do painel ao vivo (simulação demo) |
+| Simuladores (API) | `/simuladores/api/encapsular` | POST | JSON: encapsulamento camada a camada (App→Enlace) |
+| Simuladores (API) | `/simuladores/api/handshake` | GET | JSON: sequência do handshake TCP (`?dados=&encerramento=`) |
 | GeoIP | `/informacoes` | GET | Página de geolocalização (`?ip=`) |
 | GeoIP (API) | `/api/informacoes/geo` | GET | JSON de geolocalização (`?ip=`) |
 | Referência de máscaras | `/mascara-referencia` | GET | Tabela JSON de máscaras/prefixos |
@@ -135,7 +138,7 @@ Nome | Rede base | Hosts1 | Hosts2
 Estilo arquitetural: **monólito modular** (*modular monolith*) em **Java 25 + Quarkus**, migrado do projeto original em Python/Flask. A aplicação é implantada como **um único artefato** (Quarkus fast-jar), mas o código é organizado por **domínios autocontidos** (*bounded contexts*) — cada módulo funciona como um "microserviço interno", com fronteiras claras e baixo acoplamento, pronto para ser extraído para um serviço independente caso o projeto evolua nesse sentido.
 
 - **Runtime único**: endpoints **JAX-RS** (`quarkus-rest`) e views em **Qute** (`quarkus-rest-qute`) sobre `quarkus-vertx-http`.
-- **Módulos de domínio**: `analiseDidatica`, `portas`, `protocolos`, `resolucaoProblemas`.
+- **Módulos de domínio**: `analiseDidatica`, `portas`, `protocolos`, `resolucaoProblemas`, `localizacao`, `analiseTrafego`, `ferramentasDiagnostico`, `segurancaRede`, `simuladores` (encapsulamento e handshake TCP — computação pura, VPS-safe).
 - **Módulos transversais**: `security` (CSRF, rate limit, chave admin), `telemetria` (observabilidade), `web` (documentação, login, ícone) e `shared` (sanitização e utilitários de entrada).
 
 ### Camadas por módulo (organização DDD-lite / hexagonal)
