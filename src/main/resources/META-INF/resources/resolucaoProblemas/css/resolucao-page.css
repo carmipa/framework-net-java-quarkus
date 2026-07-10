@@ -4,14 +4,14 @@
 
 .problem-box {
     background: #161b22;
-    border: var(--border-thin, 0.1%) solid #30363d;
-    border-radius: 0.781%;
+    border: 1px solid #30363d;
+    border-radius: 0.75rem;
 }
 
 .problem-box pre {
     background: #0d1117;
-    border: var(--border-thin, 0.1%) solid #30363d;
-    border-radius: 0.625%;
+    border: 1px solid #30363d;
+    border-radius: 0.6rem;
     padding: 0.8rem;
     color: #c9d1d9;
     white-space: pre-wrap;
@@ -22,8 +22,8 @@
 
 .topology-wrap {
     background: #0f1724;
-    border: var(--border-thin, 0.1%) solid #30363d;
-    border-radius: 0.625%;
+    border: 1px solid #30363d;
+    border-radius: 0.6rem;
     padding: 0.8rem;
 }
 
@@ -98,7 +98,7 @@
     align-items: center;
     gap: 0.3rem;
     border-radius: 999px;
-    border: var(--border-thin, 0.1%) solid #30363d;
+    border: 1px solid #30363d;
     padding: 0.25rem 0.65rem;
     font-size: 0.74rem;
     font-weight: 700;
@@ -127,9 +127,9 @@
 }
 
 .scenario-network-hero {
-    border: var(--border-thin, 0.1%) solid #30363d;
-    border-left: var(--border-accent, 0.31%) solid #1f6feb;
-    border-radius: 0.781%;
+    border: 1px solid #30363d;
+    border-left: 3px solid #1f6feb;
+    border-radius: 0.75rem;
     background: linear-gradient(135deg, #0f1724 0%, #13233a 100%);
     padding: 0.85rem;
 }
@@ -148,14 +148,14 @@
 }
 
 .topology-card {
-    border-left: var(--border-accent, 0.31%) solid #1f6feb;
+    border-left: 3px solid #1f6feb;
     background: #0f1724;
-    border-radius: 0.625%;
+    border-radius: 0.6rem;
     padding: 0.6rem;
 }
 
 .cli-box {
-    border-left: var(--border-accent, 0.31%) solid #d29922;
+    border-left: 3px solid #d29922;
 }
 
 .cli-box pre {
@@ -214,7 +214,7 @@
         padding-right: 0.75rem !important;
     }
     .problem-box {
-        border-radius: 0.625%;
+        border-radius: 0.6rem;
     }
     .problem-title {
         font-size: 0.98rem;
@@ -243,8 +243,8 @@
         justify-content: center;
     }
     #locations-container .location-row {
-        border: var(--border-thin, 0.1%) solid #30363d;
-        border-radius: 0.625%;
+        border: 1px solid #30363d;
+        border-radius: 0.6rem;
         padding: 0.55rem;
         margin-bottom: 0.55rem !important;
     }

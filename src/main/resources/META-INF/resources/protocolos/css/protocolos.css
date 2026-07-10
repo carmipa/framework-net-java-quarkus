@@ -26,9 +26,9 @@
 
 .comm-summary {
     background: #0f1724;
-    border: var(--border-thin, 0.1%) solid #30363d;
-    border-left: 0.312% solid #1f6feb;
-    border-radius: 0.625%;
+    border: 1px solid #30363d;
+    border-left: 3px solid #1f6feb;
+    border-radius: 0.6rem;
     padding: 0.55rem 0.7rem;
     font-size: 0.82rem;
 }
