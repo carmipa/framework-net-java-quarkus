@@ -113,11 +113,19 @@
             elMsg.textContent = j.mensagem || j.erro || "Indisponível.";
         }
 
-        // Plota no mapa compartilhado quando houver coordenadas públicas.
+        // Plota no mapa compartilhado e no globo 3D quando houver coordenadas públicas.
         var lat = j.latitude != null ? j.latitude : j.lat;
         var lon = j.longitude != null ? j.longitude : j.lon;
+        var label = (j.ip || "") + (j.cidade ? " · " + j.cidade : "");
         if (w.LocMap && lat != null && lon != null) {
-            w.LocMap.setMarker(lat, lon, (j.ip || "") + (j.cidade ? " · " + j.cidade : ""));
+            w.LocMap.setMarker(lat, lon, label);
+        }
+        if (lat != null && lon != null) {
+            if (w.GeoGlobe) {
+                w.GeoGlobe.setLocation(lat, lon, label);
+            } else {
+                w.__geoPendingLoc = { lat: lat, lon: lon, label: label }; // globo ainda carregando
+            }
         }
     }
 

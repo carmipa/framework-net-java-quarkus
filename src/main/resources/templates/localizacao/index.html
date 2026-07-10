@@ -2,7 +2,18 @@
 {#title}Framework de Redes A&D | Localização{/title}
 {#extraHead}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="/localizacao/css/localizacao.css?v=20260709">
+<link rel="stylesheet" href="/localizacao/css/localizacao.css?v=20260710">
+{|
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://esm.sh/three@0.170.0",
+    "three/": "https://esm.sh/three@0.170.0/",
+    "globe.gl": "https://esm.sh/globe.gl@2.34.4?external=three"
+  }
+}
+</script>
+|}
 {/extraHead}
 {#content}
 <div class="container py-5">
@@ -73,8 +84,14 @@
             <span id="geo-loading" class="spinner-border spinner-border-sm text-warning ms-2 d-none" role="status" aria-hidden="true"></span>
         </p>
 
-        <div id="geo-sucesso" class="d-none">
+        <div id="geo-sucesso" class="d-none geo-split">
             <div id="geo-report-root" class="geo-report-root"></div>
+            <div class="geo-globe-wrap" aria-hidden="true">
+                <div id="geo-globe"></div>
+                <div class="geo-globe-cap">
+                    <span class="material-symbols-outlined">public</span> Localização aproximada do IP no globo
+                </div>
+            </div>
         </div>
 
         <div id="geo-falha" class="alert alert-secondary mb-0 mt-2 d-none" role="alert">
@@ -158,6 +175,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/analiseDidatica/js/geo_report.js?v=20260709"></script>
 <script src="/localizacao/js/localizacao.js?v=20260709"></script>
-<script src="/localizacao/js/geo-panel.js?v=20260709"></script>
+<script src="/localizacao/js/geo-panel.js?v=20260710"></script>
+<script type="module" src="/localizacao/js/geo-globe.js?v=20260710"></script>
 {/extraScripts}
 {/include}

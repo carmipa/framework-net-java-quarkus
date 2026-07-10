@@ -114,6 +114,59 @@
     color: var(--aed-risk-critical, #f43f5e);
 }
 
+/* Layout dividido do resultado GeoIP: relatório à esquerda, globo 3D à direita. */
+.geo-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: stretch;
+}
+
+@media (max-width: 62em) {
+    .geo-split {
+        grid-template-columns: 1fr;
+    }
+}
+
+.geo-globe-wrap {
+    position: relative;
+    min-height: 22rem;
+    border-radius: var(--aed-radius-card, 0.75rem);
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 38%, #0b1b33 0%, #07101f 55%, #04070e 100%);
+    border: 1px solid var(--aed-border, rgba(255, 255, 255, 0.08));
+    margin-top: 1rem;
+}
+
+#geo-globe {
+    position: absolute;
+    inset: 0;
+}
+
+#geo-globe canvas {
+    display: block;
+    cursor: grab;
+}
+
+.geo-globe-cap {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0.4rem 0.7rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    color: #8fb4d8;
+    background: linear-gradient(180deg, rgba(4, 7, 14, 0), rgba(4, 7, 14, 0.85));
+    pointer-events: none;
+}
+
+.geo-globe-cap .material-symbols-outlined {
+    font-size: 1rem;
+}
+
 .loc-map {
     /* Altura fluida: adapta a celular/tablet/desktop pela altura do viewport. */
     height: clamp(16rem, 55vh, 34rem);
