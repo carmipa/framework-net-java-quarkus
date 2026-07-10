@@ -1,0 +1,43 @@
+<div class="aed-card card-tech loc-nota mb-4" role="note">
+    <span class="material-symbols-outlined" aria-hidden="true">info</span>
+    <div>
+        <strong>Análise offline.</strong>
+        Cole um <strong>hex dump</strong> de um quadro/pacote e veja os cabeçalhos
+        Ethernet / IP / TCP / UDP / ICMP decompostos e explicados campo a campo.
+        (No Wireshark: botão direito → <em>Copy → as Hex Stream</em>.)
+    </div>
+</div>
+
+<form id="form-trafego" class="trafego-form" autocomplete="off" onsubmit="return false;">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+        <label class="form-label small text-secondary mb-0" for="trafego-hex">Hex dump do pacote</label>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <label class="small text-secondary mb-0" for="trafego-camada">Camada inicial</label>
+            <select id="trafego-camada" class="form-select form-select-sm bg-dark text-light border-secondary" style="width:auto;">
+                <option value="auto" selected>Auto</option>
+                <option value="ethernet">Ethernet</option>
+                <option value="ipv4">IPv4</option>
+                <option value="ipv6">IPv6</option>
+                <option value="arp">ARP</option>
+                <option value="tcp">TCP</option>
+                <option value="udp">UDP</option>
+                <option value="icmp">ICMP</option>
+            </select>
+        </div>
+    </div>
+    <textarea id="trafego-hex" class="form-control bg-dark text-light border-secondary trafego-hex"
+              rows="5" placeholder="ex.: 4500 003c 1c46 4000 4006 ..."></textarea>
+    <div class="d-flex flex-wrap gap-2 mt-3">
+        <button type="submit" class="aed-btn aed-btn-teal">
+            <span class="material-symbols-outlined" aria-hidden="true">memory</span> Decodificar
+        </button>
+        <button type="button" id="trafego-exemplo" class="aed-btn aed-btn-neutral">
+            <span class="material-symbols-outlined" aria-hidden="true">science</span> Carregar exemplo (IPv4/TCP SYN)
+        </button>
+        <button type="button" id="trafego-limpar" class="aed-btn aed-btn-danger">
+            <span class="material-symbols-outlined" aria-hidden="true">delete_sweep</span> Limpar
+        </button>
+    </div>
+</form>
+
+<div id="trafego-resultado" class="trafego-resultado d-none" aria-live="polite"></div>

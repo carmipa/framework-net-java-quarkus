@@ -40,9 +40,9 @@
             <label for="wild_mask_input" class="form-label small text-secondary mb-1">Máscara decimal</label>
             <input id="wild_mask_input" type="text" class="form-control input-ipv4 bg-dark text-light border-secondary" value="255.255.255.0" autocomplete="off" spellcheck="false">
         </div>
-        <div class="col-12 col-lg-5">
+        <div class="col-12 col-lg-3">
             <label for="wild_wildcard_input" class="form-label small text-secondary mb-1">Wildcard</label>
-            <input id="wild_wildcard_input" type="text" class="form-control input-ipv4 bg-dark text-light border-secondary" value="0.0.0.255" autocomplete="off" spellcheck="false">
+            <input id="wild_wildcard_input" type="text" class="form-control input-ipv4 bg-dark text-light border-secondary" value="0.0.0.255" autocomplete="off" spellcheck="false" data-bs-toggle="false" title="">
         </div>
         <div class="col-12 col-lg-2 d-grid">
             <button type="button" id="wild_swap_btn" class="aed-btn aed-btn-amber btn-sm w-100"><span class="material-symbols-outlined">swap_horiz</span> Trocar</button>
@@ -53,28 +53,28 @@
     <h6 class="text-info mb-2 d-flex align-items-center gap-2"><span class="material-symbols-outlined">lightbulb</span> Exemplos práticos (ACL / OSPF / EIGRP)</h6>
     <div class="row g-3">
         <div class="col-12 col-lg-4">
-            <div class="border border-secondary rounded p-2 h-100">
+            <div class="border border-secondary rounded p-2 h-100 d-flex flex-column">
                 <div class="small fw-bold text-warning mb-1">ACL (rede /24)</div>
-                <pre class="small bg-dark border border-secondary rounded p-2 mb-2 text-light">access-list 101 permit ip 192.168.1.0 0.0.0.255 any</pre>
-                <button type="button" class="btn btn-sm btn-info fw-bold text-dark w-100 copy-cli-model"
+                <pre class="small bg-dark border border-secondary rounded p-2 mb-2 text-light flex-grow-1">access-list 101 permit ip 192.168.1.0 0.0.0.255 any</pre>
+                <button type="button" class="btn btn-sm btn-info fw-bold text-dark w-100 copy-cli-model mt-auto"
                         data-copy-text="access-list 101 permit ip 192.168.1.0 0.0.0.255 any"><span class="material-symbols-outlined align-middle" style="font-size:1rem;">content_copy</span> Copiar ACL</button>
             </div>
         </div>
         <div class="col-12 col-lg-4">
-            <div class="border border-secondary rounded p-2 h-100">
+            <div class="border border-secondary rounded p-2 h-100 d-flex flex-column">
                 <div class="small fw-bold text-warning mb-1">OSPF (área 0)</div>
-                <pre class="small bg-dark border border-secondary rounded p-2 mb-2 text-light">router ospf 1
+                <pre class="small bg-dark border border-secondary rounded p-2 mb-2 text-light flex-grow-1">router ospf 1
  network 10.0.0.0 0.0.0.255 area 0</pre>
-                <button type="button" class="btn btn-sm btn-info fw-bold text-dark w-100 copy-cli-model"
+                <button type="button" class="btn btn-sm btn-info fw-bold text-dark w-100 copy-cli-model mt-auto"
                         data-copy-text="router ospf 1&#10; network 10.0.0.0 0.0.0.255 area 0"><span class="material-symbols-outlined align-middle" style="font-size:1rem;">content_copy</span> Copiar OSPF</button>
             </div>
         </div>
         <div class="col-12 col-lg-4">
-            <div class="border border-secondary rounded p-2 h-100">
+            <div class="border border-secondary rounded p-2 h-100 d-flex flex-column">
                 <div class="small fw-bold text-warning mb-1">EIGRP (AS 100)</div>
-                <pre class="small bg-dark border border-secondary rounded p-2 mb-2 text-light">router eigrp 100
+                <pre class="small bg-dark border border-secondary rounded p-2 mb-2 text-light flex-grow-1">router eigrp 100
  network 172.16.0.0 0.0.255.255</pre>
-                <button type="button" class="btn btn-sm btn-info fw-bold text-dark w-100 copy-cli-model"
+                <button type="button" class="btn btn-sm btn-info fw-bold text-dark w-100 copy-cli-model mt-auto"
                         data-copy-text="router eigrp 100&#10; network 172.16.0.0 0.0.255.255"><span class="material-symbols-outlined align-middle" style="font-size:1rem;">content_copy</span> Copiar EIGRP</button>
             </div>
         </div>
