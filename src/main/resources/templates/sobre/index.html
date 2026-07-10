@@ -1,0 +1,105 @@
+{#include shared/base.html}
+{#title}Framework de Redes A&D | Sobre{/title}
+{#extraHead}
+<link rel="stylesheet" href="/sobre/css/sobre.css?v=20260710">
+{/extraHead}
+{#content}
+<div class="container py-5">
+    {#include shared/main_menu.html activeMainMenu='sobre' /}
+
+    <div class="text-center mb-4">
+        <span class="aed-eyebrow aed-eyebrow-teal">Sobre</span>
+        <h2 class="mb-2" style="font-family:var(--aed-font-display);">Sobre o projeto e o autor</h2>
+        <p class="text-secondary small mx-auto" style="max-width:44rem;">
+            Framework didático de redes — migração da versão Python/Flask para Java 25 + Quarkus, com módulos de
+            análise IPv4/IPv6, VLSM, portas/protocolos, GeoIP, tráfego, diagnóstico, ACL e telemetria.
+        </p>
+    </div>
+
+    <!-- Autor -->
+    <div class="aed-card card-tech p-4 shadow mb-4 sobre-hero">
+        <div class="sobre-photo">
+            <img src="/sobre/img/paulo.jpg"
+                 onerror="this.onerror=null;this.src='https://github.com/carmipa.png';"
+                 alt="Paulo André Carminati" width="200" height="200" loading="lazy">
+        </div>
+        <div class="sobre-info">
+            <span class="aed-eyebrow aed-eyebrow-amber">Autor</span>
+            <h3 class="sobre-nome">Paulo André Carminati</h3>
+            <p class="sobre-role">Estudante de Cyber Segurança · FIAP 2026 — Desenvolvedor Full-Stack</p>
+            <ul class="sobre-formacao">
+                <li><span class="material-symbols-outlined">school</span> FIAP — Defesa Cibernética / Cyber Segurança</li>
+                <li><span class="material-symbols-outlined">badge</span> RM570877 · Turma 1-TDCPV · 2026</li>
+                <li><span class="material-symbols-outlined">code</span> Java, Python, redes e segurança</li>
+            </ul>
+            <div class="sobre-contact">
+                <a class="aed-btn aed-btn-neutral" href="https://github.com/carmipa" target="_blank" rel="noopener noreferrer">
+                    <span class="material-symbols-outlined">code</span> GitHub
+                </a>
+                <a class="aed-btn aed-btn-teal" href="https://www.linkedin.com/in/paulo-andr%C3%A9-carminati-47712340/" target="_blank" rel="noopener noreferrer">
+                    <span class="material-symbols-outlined">person</span> LinkedIn
+                </a>
+                <a class="aed-btn aed-btn-amber" href="https://github.com/carmipa/framework-net-java-quarkus" target="_blank" rel="noopener noreferrer">
+                    <span class="material-symbols-outlined">deployed_code</span> Repositório do projeto
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tecnologias -->
+    <div class="text-center mb-3">
+        <span class="aed-eyebrow aed-eyebrow-indigo">Stack</span>
+        <h4 class="mb-0" style="font-family:var(--aed-font-display);">Tecnologias usadas no projeto</h4>
+    </div>
+
+    <div class="sobre-tech-grid">
+        <div class="aed-card card-tech p-3 sobre-tech-cat">
+            <h6 class="sobre-cat-title"><span class="material-symbols-outlined">dns</span> Backend</h6>
+            <div class="sobre-chips">
+                <span class="sobre-chip">Java 25</span>
+                <span class="sobre-chip">Quarkus 3.37</span>
+                <span class="sobre-chip">Gradle</span>
+                <span class="sobre-chip">Qute Templates</span>
+                <span class="sobre-chip">RESTEasy Reactive</span>
+                <span class="sobre-chip">ipaddress (seancfoley)</span>
+                <span class="sobre-chip">MaxMind GeoIP2</span>
+                <span class="sobre-chip">Jackson</span>
+            </div>
+        </div>
+
+        <div class="aed-card card-tech p-3 sobre-tech-cat">
+            <h6 class="sobre-cat-title"><span class="material-symbols-outlined">web</span> Frontend</h6>
+            <div class="sobre-chips">
+                <span class="sobre-chip">HTML5 · CSS3 · JS (ES)</span>
+                <span class="sobre-chip">Bootstrap 5</span>
+                <span class="sobre-chip">Chart.js</span>
+                <span class="sobre-chip">Leaflet · OpenStreetMap</span>
+                <span class="sobre-chip">Globe.gl · Three.js (WebGL)</span>
+                <span class="sobre-chip">WebRTC</span>
+                <span class="sobre-chip">Material Symbols</span>
+                <span class="sobre-chip">Google Translate (i18n)</span>
+            </div>
+        </div>
+
+        <div class="aed-card card-tech p-3 sobre-tech-cat">
+            <h6 class="sobre-cat-title"><span class="material-symbols-outlined">deployed_code</span> Infra &amp; DevOps</h6>
+            <div class="sobre-chips">
+                <span class="sobre-chip">Docker · Compose</span>
+                <span class="sobre-chip">Nginx Proxy Manager</span>
+                <span class="sobre-chip">VPS Linux</span>
+                <span class="sobre-chip">Git · GitHub</span>
+            </div>
+        </div>
+
+        <div class="aed-card card-tech p-3 sobre-tech-cat">
+            <h6 class="sobre-cat-title"><span class="material-symbols-outlined">verified</span> Qualidade</h6>
+            <div class="sobre-chips">
+                <span class="sobre-chip">JUnit 5</span>
+                <span class="sobre-chip">REST Assured</span>
+                <span class="sobre-chip">Playwright</span>
+            </div>
+        </div>
+    </div>
+</div>
+{/content}
+{/include}
