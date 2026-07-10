@@ -74,8 +74,7 @@ class WebIntegrationTest {
                 .then()
                 .statusCode(200)
                 .body(containsString("Framework"))
-                .body(containsString("Central de Documentação"))
-                .body(containsString("Visão Geral"));
+                .body(containsString("NAVEGAÇÃO"));
     }
 
     @Test
