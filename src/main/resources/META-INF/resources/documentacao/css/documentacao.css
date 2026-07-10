@@ -6,7 +6,7 @@
 
 .doc-layout {
     display: grid;
-    grid-template-columns: 15rem minmax(0, 1fr);
+    grid-template-columns: 18rem minmax(0, 1fr);
     gap: 1.1rem;
     align-items: start;
 }
@@ -25,21 +25,51 @@
     display: none;
 }
 
+.doc-toc-group {
+    color: var(--aed-text-faint, #5b6679);
+    font-family: var(--aed-font-display, "Space Grotesk", sans-serif);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    margin: 0.9rem 0 0.35rem;
+    text-transform: uppercase;
+}
+
 .doc-toc-link {
-    display: block;
+    align-items: center;
     color: var(--aed-text-secondary, #8b97ad);
+    display: flex;
+    gap: 0.55rem;
+    min-height: 2.35rem;
     text-decoration: none;
-    padding: 0.35rem 0.6rem;
-    border-radius: 0.5rem;
-    margin-bottom: 0.1rem;
-    font-size: 0.88rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 0.55rem;
+    margin-bottom: 0.16rem;
+    font-size: 0.9rem;
     border: 1px solid transparent;
     transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
+.doc-toc-icon {
+    color: var(--aed-text-faint, #5b6679);
+    flex: 0 0 auto;
+    font-size: 1.12rem;
+}
+
+.doc-toc-group-sumario .doc-toc-icon { color: var(--aed-teal, #2dd4bf); }
+.doc-toc-group-modulos .doc-toc-icon { color: var(--aed-risk-didactic, #60a5fa); }
+.doc-toc-group-diagramas .doc-toc-icon { color: #a5b4fc; }
+.doc-toc-group-operacao .doc-toc-icon { color: var(--aed-risk-attention, #f59e0b); }
+.doc-toc-group-projeto .doc-toc-icon { color: #c4b5fd; }
+
 .doc-toc-link:hover {
     background: rgba(255, 255, 255, 0.04);
     color: var(--aed-text, #eef2f8);
+}
+
+.doc-toc-link:hover .doc-toc-icon,
+.doc-toc-link.active .doc-toc-icon {
+    color: var(--aed-teal, #2dd4bf);
 }
 
 .doc-toc-link.active {
@@ -49,13 +79,41 @@
     font-weight: 600;
 }
 
-.doc-toc-nivel-1 { padding-left: 0.6rem; }
-.doc-toc-nivel-2 { padding-left: 1.4rem; }
-.doc-toc-nivel-3 { padding-left: 2.2rem; font-size: 0.82rem; }
-.doc-toc-nivel-4 { padding-left: 3rem; font-size: 0.82rem; }
+.doc-toc-nivel-1 { padding-left: 0.65rem; }
+.doc-toc-nivel-2 {
+    font-size: 0.84rem;
+    min-height: 2.15rem;
+    padding-left: 1.15rem;
+}
 
 .doc-content-wrap {
     min-width: 0;
+}
+
+.doc-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    justify-content: center;
+}
+
+.doc-meta-pill {
+    align-items: center;
+    background: var(--aed-teal-dim, rgba(45, 212, 191, 0.12));
+    border: 1px solid rgba(45, 212, 191, 0.28);
+    border-radius: 999px;
+    color: var(--aed-teal, #2dd4bf);
+    display: inline-flex;
+    font-family: var(--aed-font-display, "Space Grotesk", sans-serif);
+    font-size: 0.82rem;
+    font-weight: 700;
+    gap: 0.4rem;
+    padding: 0.38rem 0.68rem;
+}
+
+.doc-meta-pill .material-symbols-outlined {
+    font-size: 1rem;
 }
 
 /* ---- Markdown renderizado ---- */
@@ -128,13 +186,18 @@
 }
 
 /* Tabelas dark */
+.markdown-doc .table-responsive {
+    border: 1px solid var(--aed-border, rgba(255, 255, 255, 0.08));
+    border-radius: 0.7rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+}
+
 .markdown-doc table {
     width: 100%;
     border-collapse: collapse;
-    margin: 1rem 0;
     font-size: 0.88rem;
-    display: block;
-    overflow-x: auto;
+    margin: 0;
 }
 
 .markdown-doc th,
@@ -145,7 +208,7 @@
 }
 
 .markdown-doc thead th {
-    background: #0c1018;
+    background: var(--aed-card-bottom, #0a0e16);
     color: var(--aed-text-faint, #5b6679);
     text-transform: uppercase;
     font-size: 0.72rem;

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.not;
 
 @QuarkusTest
 class WebIntegrationTest {
@@ -74,7 +75,13 @@ class WebIntegrationTest {
                 .then()
                 .statusCode(200)
                 .body(containsString("Framework"))
-                .body(containsString("NAVEGAÇÃO"));
+                .body(containsString("NAVEGAÇÃO"))
+                .body(containsString("doc-meta-pill"))
+                .body(containsString("doc-toc-group"))
+                .body(containsString("lightbulb"))
+                .body(containsString("<table>"))
+                .body(containsString("<blockquote>"))
+                .body(not(containsString("shields.io")));
     }
 
     @Test
