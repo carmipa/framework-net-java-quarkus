@@ -162,6 +162,40 @@ body.aed-app .aed-page {
     box-shadow: 0 4px 20px rgba(45, 212, 191, 0.25);
 }
 
+/* Seletor de idiomas (bandeiras). Sem o fundo branco padrão do <button>. */
+.aed-lang-selector {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.aed-lang-btn {
+    padding: 3px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--aed-border);
+    border-radius: 6px;
+    cursor: pointer;
+    line-height: 0;
+    display: inline-flex;
+    transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+
+.aed-lang-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--aed-teal, #2dd4bf);
+    transform: translateY(-1px);
+}
+
+.aed-lang-btn img {
+    display: block;
+    width: 26px;
+    height: 20px;
+    border-radius: 3px;
+    object-fit: cover;
+}
+
 .aed-nav-link.is-active .material-symbols-outlined {
     font-variation-settings: "FILL" 1;
 }

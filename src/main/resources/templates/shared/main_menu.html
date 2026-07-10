@@ -79,10 +79,17 @@
         </a>
     </div>
 
-    <!-- Seletor de Idiomas (Tradução Frontend) -->
-    <div class="aed-lang-selector" style="flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 4px;">
-        <button onclick="aedTranslate('pt')" class="aed-btn btn-sm" style="padding: 2px 6px; font-size: 1rem; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;" title="Português">🇧🇷</button>
-        <button onclick="aedTranslate('en')" class="aed-btn btn-sm" style="padding: 2px 6px; font-size: 1rem; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;" title="English">🇺🇸</button>
-        <button onclick="aedTranslate('es')" class="aed-btn btn-sm" style="padding: 2px 6px; font-size: 1rem; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;" title="Español">🇪🇸</button>
+    <!-- Seletor de Idiomas (Tradução Frontend) — imagens de bandeira (flagcdn),
+         pois emoji de bandeira não renderiza no Windows (aparece "BR"/"US"/"ES"). -->
+    <div class="aed-lang-selector">
+        <button type="button" onclick="aedTranslate('pt')" class="aed-lang-btn" title="Português (Brasil)" aria-label="Traduzir para Português">
+            <img src="https://flagcdn.com/w40/br.png" width="26" height="20" alt="PT" loading="lazy">
+        </button>
+        <button type="button" onclick="aedTranslate('en')" class="aed-lang-btn" title="English (US)" aria-label="Translate to English">
+            <img src="https://flagcdn.com/w40/us.png" width="26" height="20" alt="EN" loading="lazy">
+        </button>
+        <button type="button" onclick="aedTranslate('es')" class="aed-lang-btn" title="Español" aria-label="Traducir al Español">
+            <img src="https://flagcdn.com/w40/es.png" width="26" height="20" alt="ES" loading="lazy">
+        </button>
     </div>
 </nav>
