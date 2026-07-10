@@ -66,6 +66,45 @@ public class LocalizacaoResource {
         return Response.ok(localizacaoService.localizarPorCoordenadas(lat, lon)).build();
     }
 
+    /**
+     * Inspeção da própria requisição (autoteste de privacidade): mostra a cadeia de cabeçalhos
+     * de proxy e qual IP foi escolhido como "real". Não persiste nada.
+     */
+    @GET
+    @Path("/api/inspecao")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response inspecao(@Context HttpHeaders headers, @Context HttpServerRequest request) {
+        java.util.Map<String, Object> out = new java.util.LinkedHashMap<>();
+        String ipConexao = (request != null && request.remoteAddress() != null)
+                ? request.remoteAddress().host() : null;
+        String xff = headers.getHeaderString("X-Forwarded-For");
+        String realIp = headers.getHeaderString("X-Real-IP");
+
+        java.util.List<String> cadeia = new java.util.ArrayList<>();
+        if (xff != null && !xff.isBlank()) {
+            for (String parte : xff.split(",")) {
+                String p = parte.strip();
+                if (!p.isEmpty()) {
+                    cadeia.add(p);
+                }
+            }
+        }
+
+        boolean atrasProxy = (xff != null && !xff.isBlank()) || (realIp != null && !realIp.isBlank());
+        out.put("ipReal", clienteIp(headers, request));
+        out.put("ipConexao", ipConexao);
+        out.put("xForwardedFor", xff);
+        out.put("xForwardedForChain", cadeia);
+        out.put("xRealIp", realIp);
+        out.put("cfConnectingIp", headers.getHeaderString("CF-Connecting-IP"));
+        out.put("forwarded", headers.getHeaderString("Forwarded"));
+        out.put("via", headers.getHeaderString("Via"));
+        out.put("userAgent", headers.getHeaderString("User-Agent"));
+        out.put("acceptLanguage", headers.getHeaderString("Accept-Language"));
+        out.put("atrasDeProxy", atrasProxy);
+        return Response.ok(out).build();
+    }
+
     private static String clienteIp(HttpHeaders headers, HttpServerRequest request) {
         String xff = headers.getHeaderString("X-Forwarded-For");
         if (xff != null && !xff.isBlank()) {

@@ -168,6 +168,75 @@
     font-size: 1rem;
 }
 
+/* ---- Autoteste de vazamento de IP / privacidade ---- */
+.priv-verdict {
+    display: flex;
+    gap: 0.8rem;
+    align-items: flex-start;
+    padding: 0.9rem 1.1rem;
+    border-radius: var(--aed-radius-card, 0.75rem);
+    border: 1px solid var(--aed-border, rgba(255, 255, 255, 0.1));
+    margin-bottom: 1rem;
+}
+
+.priv-verdict .material-symbols-outlined { font-size: 1.6rem; flex-shrink: 0; }
+.priv-verdict.priv-ok { background: rgba(45, 212, 191, 0.08); border-color: rgba(45, 212, 191, 0.35); }
+.priv-verdict.priv-ok .material-symbols-outlined { color: #2dd4bf; }
+.priv-verdict.priv-warn { background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.35); }
+.priv-verdict.priv-warn .material-symbols-outlined { color: #f59e0b; }
+.priv-verdict.priv-risk { background: rgba(244, 63, 94, 0.08); border-color: rgba(244, 63, 94, 0.4); }
+.priv-verdict.priv-risk .material-symbols-outlined { color: #f43f5e; }
+
+.priv-alertas {
+    margin: 0.4rem 0 0;
+    padding-left: 1.1rem;
+    font-size: 0.85rem;
+    color: var(--aed-text-secondary, #8b97ad);
+}
+
+.priv-alertas code,
+.priv-cand code {
+    font-family: var(--aed-font-mono, "JetBrains Mono", monospace);
+    color: var(--aed-text, #eef2f8);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 0 0.25rem;
+    border-radius: 0.25rem;
+}
+
+.priv-sec {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+    color: var(--aed-text-faint, #5b6679);
+    margin: 1.1rem 0 0.5rem;
+    border-bottom: 1px solid var(--aed-border, rgba(255, 255, 255, 0.07));
+    padding-bottom: 0.3rem;
+}
+
+.priv-sec .material-symbols-outlined { font-size: 1.05rem; }
+
+.priv-cands { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.priv-cand {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 3px solid var(--aed-border, rgba(255, 255, 255, 0.12));
+    font-size: 0.82rem;
+}
+
+.priv-cand span { color: var(--aed-text-secondary, #8b97ad); }
+.priv-cand.priv-ok { border-left-color: #2dd4bf; }
+.priv-cand.priv-warn { border-left-color: #f59e0b; }
+.priv-cand.priv-risk { border-left-color: #f43f5e; }
+
 .loc-map {
     /* Altura fluida: adapta a celular/tablet/desktop pela altura do viewport. */
     height: clamp(16rem, 55vh, 34rem);

@@ -99,6 +99,26 @@
         </div>
     </div>
 
+    <!-- Autoteste de vazamento de IP / privacidade -->
+    <div class="aed-card card-tech p-4 shadow border-start border-info border-3 mb-4" id="privacidade-card">
+        <span class="aed-eyebrow aed-eyebrow-teal">Privacidade · autoteste</span>
+        <h5 class="text-info mb-2 d-flex align-items-center gap-2">
+            <span class="material-symbols-outlined">shield_person</span> Teste de vazamento de IP (o que o SEU navegador revela)
+        </h5>
+        <p class="small text-secondary mb-3">
+            Roda inteiramente <strong>no seu navegador</strong>. Cruza o IP que o servidor enxerga, o IP público
+            (ip-api), os candidatos <strong>WebRTC/STUN</strong> e o <strong>fingerprint</strong> do navegador para mostrar
+            o quanto você está exposto — mesmo atrás de VPN/proxy. Nada é enviado a terceiros nem armazenado.
+        </p>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <button type="button" class="aed-btn aed-btn-teal" id="btn-priv-testar">
+                <span class="material-symbols-outlined" aria-hidden="true">radar</span> Rodar teste de vazamento
+            </button>
+            <span id="priv-status" class="small text-secondary d-none"></span>
+        </div>
+        <div id="priv-resultado" class="priv-resultado d-none mt-3" aria-live="polite"></div>
+    </div>
+
     <!-- Endereço por CEP (ViaCEP + geocoding OSM) -->
     <form id="form-loc-cep" class="aed-card card-tech loc-cep-form mb-4" autocomplete="off" onsubmit="return false;">
         <span class="aed-eyebrow aed-eyebrow-indigo">Por CEP</span>
@@ -176,6 +196,7 @@
 <script src="/analiseDidatica/js/geo_report.js?v=20260709"></script>
 <script src="/localizacao/js/localizacao.js?v=20260709"></script>
 <script src="/localizacao/js/geo-panel.js?v=20260710"></script>
+<script src="/localizacao/js/privacidade.js?v=20260710"></script>
 <script type="module" src="/localizacao/js/geo-globe.js?v=20260710c"></script>
 {/extraScripts}
 {/include}
