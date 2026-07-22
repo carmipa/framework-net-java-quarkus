@@ -210,6 +210,16 @@ body.aed-app .aed-card {
     box-shadow: none !important;
 }
 
+/* O Bootstrap calcula o padding de .card-body/.card-header a partir de variáveis
+   declaradas em .card — classe que estes cards não usam (só .aed-card). Sem elas
+   o padding colapsa para zero e o conteúdo cola nas bordas. */
+body.aed-app .aed-card {
+    --bs-card-spacer-y: 1rem;
+    --bs-card-spacer-x: 1.25rem;
+    --bs-card-cap-padding-y: 1rem;
+    --bs-card-cap-padding-x: 1.25rem;
+}
+
 body.aed-app .header-tech {
     background: transparent;
     border: none;
