@@ -8,43 +8,48 @@
     </div>
 </div>
 
-<form id="form-encap" class="encap-form" autocomplete="off" onsubmit="return false;">
+<form id="form-encap" class="encap-form" autocomplete="off"
+      hx-post="/simuladores/api/encapsular"
+      hx-target="#encap-resultado"
+      hx-swap="innerHTML"
+      hx-disabled-elt="find button[type='submit']">
     <div class="row g-3">
         <div class="col-12">
             <label class="form-label small text-secondary mb-1" for="encap-msg">Mensagem da aplicação</label>
-            <input type="text" id="encap-msg" class="form-control bg-dark text-light border-secondary"
+            <input type="text" id="encap-msg" name="mensagem" class="form-control bg-dark text-light border-secondary"
                    maxlength="512" value="GET / HTTP/1.1" placeholder="ex.: GET / HTTP/1.1">
         </div>
         <div class="col-6 col-md-3">
             <label class="form-label small text-secondary mb-1" for="encap-transporte">Transporte</label>
-            <select id="encap-transporte" class="form-select bg-dark text-light border-secondary">
+            <select id="encap-transporte" name="transporte" class="form-select bg-dark text-light border-secondary">
                 <option value="TCP" selected>TCP</option>
                 <option value="UDP">UDP</option>
             </select>
         </div>
         <div class="col-6 col-md-3">
             <label class="form-label small text-secondary mb-1" for="encap-porta-origem">Porta origem</label>
-            <input type="text" id="encap-porta-origem" class="form-control bg-dark text-light border-secondary"
+            <input type="text" id="encap-porta-origem" name="portaOrigem" class="form-control bg-dark text-light border-secondary"
                    inputmode="numeric" value="51000" placeholder="51000">
         </div>
         <div class="col-6 col-md-3">
             <label class="form-label small text-secondary mb-1" for="encap-porta-destino">Porta destino</label>
-            <input type="text" id="encap-porta-destino" class="form-control bg-dark text-light border-secondary"
+            <input type="text" id="encap-porta-destino" name="portaDestino" class="form-control bg-dark text-light border-secondary"
                    inputmode="numeric" value="80" placeholder="80">
         </div>
         <div class="col-6 col-md-3">
             <label class="form-label small text-secondary mb-1" for="encap-ip-origem">IP origem</label>
-            <input type="text" id="encap-ip-origem" class="form-control bg-dark text-light border-secondary"
+            <input type="text" id="encap-ip-origem" name="ipOrigem" class="form-control bg-dark text-light border-secondary"
                    value="192.168.0.10" placeholder="192.168.0.10">
         </div>
         <div class="col-12 col-md-3">
             <label class="form-label small text-secondary mb-1" for="encap-ip-destino">IP destino</label>
-            <input type="text" id="encap-ip-destino" class="form-control bg-dark text-light border-secondary"
+            <input type="text" id="encap-ip-destino" name="ipDestino" class="form-control bg-dark text-light border-secondary"
                    value="142.250.79.14" placeholder="142.250.79.14">
         </div>
     </div>
     <div class="d-flex flex-wrap gap-2 mt-3">
         <button type="submit" class="aed-btn aed-btn-teal">
+            <span class="spinner-border spinner-border-sm htmx-indicator" role="status" aria-hidden="true"></span>
             <span class="material-symbols-outlined" aria-hidden="true">layers</span> Encapsular
         </button>
         <button type="button" id="encap-exemplo-dns" class="aed-btn aed-btn-neutral">
@@ -56,5 +61,4 @@
     </div>
 </form>
 
-<div id="encap-erro" class="encap-erro d-none" role="alert"></div>
-<div id="encap-resultado" class="encap-resultado d-none" aria-live="polite"></div>
+<div id="encap-resultado" aria-live="polite"></div>

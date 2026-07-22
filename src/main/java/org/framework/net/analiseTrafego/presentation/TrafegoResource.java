@@ -39,24 +39,33 @@ public class TrafegoResource {
     @io.quarkus.qute.Location("trafego/index.html")
     Template index;
 
+    @Inject
+    @io.quarkus.qute.Location("trafego/partials/resultado_decodificacao.html")
+    Template decodificacaoFragmento;
+
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance pagina() {
         return index.data("activeMainMenu", "trafego");
     }
 
+    /**
+     * Decodifica o hex dump e devolve as camadas já renderizadas como fragmento,
+     * que o htmx troca no painel de resultado. Hex inválido também volta como
+     * fragmento (com o aviso), e não como erro HTTP.
+     */
     @POST
     @Path("/api/decodificar")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Produces(MediaType.APPLICATION_JSON)
-    public ResultadoDecodificacao decodificar(
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance decodificar(
             @FormParam("hex") String hex,
             @FormParam("camada") @DefaultValue("auto") String camada) {
         ResultadoDecodificacao resultado = decoderService.decodificar(hex, camada);
         telemetriaLogger.logEvent(resultado.ok() ? "info" : "warn", "analiseTrafego", "decode_packet",
                 resultado.ok() ? "ok" : "error",
                 Map.of("bytes", resultado.totalBytes(), "camadas", resultado.camadas().size()));
-        return resultado;
+        return decodificacaoFragmento.data("resultado", resultado);
     }
 
     /** Snapshot do tráfego ao vivo (simulação didática, VPS-safe). */

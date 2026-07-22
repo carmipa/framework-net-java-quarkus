@@ -5,8 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.CoreMatchers.not;
 
 @QuarkusTest
 class TrafegoHttpTest {
@@ -23,7 +22,9 @@ class TrafegoHttpTest {
                 .then()
                 .statusCode(200)
                 .body(containsString("Decodificador"))
-                .body(containsString("trafego-hex"));
+                .body(containsString("trafego-hex"))
+                .body(containsString("hx-post=\"/trafego/api/decodificar\""))
+                .body(containsString("hx-target=\"#trafego-resultado\""));
     }
 
     @Test
@@ -35,19 +36,23 @@ class TrafegoHttpTest {
                 .when().post("/trafego/api/decodificar")
                 .then()
                 .statusCode(200)
-                .body("ok", equalTo(true))
-                .body("totalBytes", equalTo(54))
-                .body("camadas.nome", hasItem("IPv4"));
+                .contentType(containsString("text/html"))
+                .body(containsString("54 bytes decodificados"))
+                .body(containsString("IPv4"))
+                .body(containsString("trafego-camada"))
+                .body(not(containsString("<!DOCTYPE html>")));
     }
 
     @Test
-    void hexInvalidoRetornaOkFalse() {
+    void hexInvalidoVoltaComoFragmentoDeAviso() {
         given()
                 .contentType("application/x-www-form-urlencoded")
                 .formParam("hex", "isto não é hex")
                 .when().post("/trafego/api/decodificar")
                 .then()
                 .statusCode(200)
-                .body("ok", equalTo(false));
+                .contentType(containsString("text/html"))
+                .body(containsString("trafego-erro"))
+                .body(containsString("Não foi possível decodificar"));
     }
 }

@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
+import org.framework.net.shared.HtmxRespostas;
 import org.framework.net.telemetria.TelemetriaLogger;
 import org.framework.net.telemetria.exception.TelemetriaExceptionSupport;
 
@@ -30,13 +31,8 @@ public class SegurancaExceptionMapper implements ExceptionMapper<SegurancaExcept
         TelemetriaExceptionSupport.registrar(
                 telemetriaLogger, "seguranca", "domain_exception", requestContext, exception);
 
-        // Requisição vinda do htmx recebe o erro como fragmento renderizado;
-        // os demais clientes continuam recebendo texto puro.
-        if (requestContext != null && requestContext.getHeaderString("HX-Request") != null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(erroFragmento.data("mensagem", exception.getMessage()))
-                    .type(MediaType.TEXT_HTML)
-                    .build();
+        if (HtmxRespostas.veioDoHtmx(requestContext)) {
+            return HtmxRespostas.erro(erroFragmento, exception.getMessage());
         }
 
         return Response.status(Response.Status.BAD_REQUEST)

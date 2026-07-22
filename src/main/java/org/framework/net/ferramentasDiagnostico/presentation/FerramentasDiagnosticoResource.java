@@ -10,9 +10,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import org.framework.net.ferramentasDiagnostico.application.DiagnosticoService;
-import java.util.Map;
 
 @Path("/diagnostico")
 public class FerramentasDiagnosticoResource {
@@ -24,27 +22,31 @@ public class FerramentasDiagnosticoResource {
     @io.quarkus.qute.Location("ferramentasDiagnostico/index.html")
     Template index;
 
+    @Inject
+    @io.quarkus.qute.Location("ferramentasDiagnostico/partials/terminal.html")
+    Template terminalFragmento;
+
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance paginaInicial() {
         return index.data("activeMainMenu", "diagnostico");
     }
 
+    /** Devolve a saída do ping simulado como fragmento de terminal, trocado pelo htmx. */
     @POST
     @Path("/api/ping")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response executarPing(@FormParam("host") String host) {
-        String resultado = diagnosticoService.executarPingSimulado(host);
-        return Response.ok(Map.of("data", resultado)).build();
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance executarPing(@FormParam("host") String host) {
+        return terminalFragmento.data("saida", diagnosticoService.executarPingSimulado(host));
     }
 
+    /** Devolve a saída do dig simulado como fragmento de terminal, trocado pelo htmx. */
     @POST
     @Path("/api/dns")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response executarDns(@FormParam("dominio") String dominio) {
-        String resultado = diagnosticoService.executarDnsSimulado(dominio);
-        return Response.ok(Map.of("data", resultado)).build();
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance executarDns(@FormParam("dominio") String dominio) {
+        return terminalFragmento.data("saida", diagnosticoService.executarDnsSimulado(dominio));
     }
 }
