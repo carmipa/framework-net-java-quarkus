@@ -24,6 +24,13 @@ services:
     volumes:
       - framework-net-data:/deployments/data
       # - ${GEO_DB_HOST_PATH:-./data/geo/GeoLite2-City.mmdb}:/deployments/data/geo/GeoLite2-City.mmdb:ro
+    # Teto de memória do container (cgroup). SEM isto a JVM enxerga a RAM inteira da VPS
+    # e dimensiona o heap por essa fração — causa raiz do consumo alto observado em produção.
+    # A JVM lê este limite e aplica -XX:MaxRAMPercentage (ver JAVA_OPTS_APPEND no Dockerfile).
+    # memswap_limit igual a mem_limit desabilita swap: evita crescer em disco mascarando o problema.
+    mem_limit: ${MEM_LIMIT:-768m}
+    memswap_limit: ${MEM_LIMIT:-768m}
+    mem_reservation: 256m
     restart: unless-stopped
     networks:
       - nginx-proxy-network

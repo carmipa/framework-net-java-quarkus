@@ -31,6 +31,9 @@ public class DnsResolver {
     @Inject
     TelemetriaLogger telemetriaLogger;
 
+    /** Teto de entradas do cache DNS. Impede crescimento ilimitado dirigido por entrada externa. */
+    private static final int MAX_CACHE = 1_000;
+
     private final Map<String, CacheEntry> cache = new ConcurrentHashMap<>();
     private final ExecutorService executor = Executors.newFixedThreadPool(2);
 
@@ -47,8 +50,38 @@ public class DnsResolver {
                 Map.of("status", "miss", "hostname", h));
         NetworkAddressGuard.rejectBlockedHostname(h);
         String ip = resolverLive(h);
-        cache.put(h, new CacheEntry(ip, now + dnsConfig.cacheTtlSeconds()));
+        guardarCache(h, ip, now);
         return ip;
+    }
+
+    /**
+     * Grava a resolução no cache aplicando teto de tamanho e expurgo de entradas vencidas.
+     *
+     * <p><b>Propósito de negócio:</b> o cache DNS existe para evitar reconsultar o mesmo domínio
+     * a cada análise didática. Sem limite, porém, cada hostname distinto consultado por um
+     * usuário (ou crawler) virava uma entrada permanente em heap — vazamento dirigido por
+     * entrada externa, um dos fatores do consumo de memória em produção.
+     *
+     * <p><b>Invariantes do domínio:</b> o cache nunca ultrapassa {@link #MAX_CACHE} entradas;
+     * entradas expiradas (TTL de {@link DnsConfig#cacheTtlSeconds()}) são removidas antes de
+     * qualquer descarte por lotação, de modo que o TTL continua sendo a política primária.
+     *
+     * <p><b>Comportamento em caso de falha:</b> não lança. Se mesmo após o expurgo o cache
+     * seguir cheio (todas as entradas válidas), o cache é limpo por completo — degrada para
+     * cache-miss na próxima consulta, jamais para consumo ilimitado de memória.
+     *
+     * @param hostname hostname já normalizado
+     * @param ip       endereço resolvido
+     * @param nowSec   instante corrente em segundos (epoch)
+     */
+    private void guardarCache(String hostname, String ip, long nowSec) {
+        if (cache.size() >= MAX_CACHE) {
+            cache.entrySet().removeIf(e -> e.getValue().expiresAt <= nowSec);
+            if (cache.size() >= MAX_CACHE) {
+                cache.clear();
+            }
+        }
+        cache.put(hostname, new CacheEntry(ip, nowSec + dnsConfig.cacheTtlSeconds()));
     }
 
     private String resolverLive(String hostname) {

@@ -30,6 +30,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GeoLookupService {
 
     private static final Logger LOG = Logger.getLogger(GeoLookupService.class);
+    /** Teto de entradas do cache geo. Impede crescimento ilimitado dirigido pelo IP do visitante. */
+    private static final int MAX_CACHE = 1_000;
     private static final Set<String> ALTO = Set.of("CN", "RU", "KP", "IR", "BY", "SY", "CU");
     private static final Set<String> MEDIO = Set.of("VE", "NG", "GH", "PK", "BD", "TR", "RO", "UA", "VN", "ID", "TH", "IN", "BR");
     private static final Map<String, String> NOMES_PT = Map.ofEntries(
@@ -512,9 +514,36 @@ public class GeoLookupService {
         return enriquecerRespostaGeo(copy);
     }
 
+    /**
+     * Grava o resultado de geolocalização no cache com teto de tamanho e expurgo de vencidos.
+     *
+     * <p><b>Propósito de negócio:</b> evita reconsultar MaxMind/ip-api para o mesmo IP dentro do
+     * TTL. Como a chave é o IP do visitante (entrada externa não controlada) e cada valor é um
+     * mapa de ~25 campos, um cache sem teto crescia indefinidamente em heap — causa direta de
+     * consumo de memória em produção na VPS.
+     *
+     * <p><b>Invariantes do domínio:</b> o cache nunca ultrapassa {@link #MAX_CACHE} entradas;
+     * entradas vencidas são removidas antes de qualquer descarte por lotação, preservando o TTL
+     * de {@link GeoConfig#cacheTtlSeconds()} como política primária. TTL {@code <= 0} desliga o
+     * cache por completo.
+     *
+     * <p><b>Comportamento em caso de falha:</b> não lança. Se após o expurgo o cache continuar
+     * cheio (todas as entradas ainda válidas), é limpo integralmente — degrada para cache-miss,
+     * nunca para crescimento ilimitado.
+     *
+     * @param ip      IP normalizado usado como chave
+     * @param payload resposta de geolocalização a memorizar
+     */
     private void cacheSet(String ip, Map<String, Object> payload) {
         if (geoConfig.cacheTtlSeconds() <= 0) {
             return;
+        }
+        if (cache.size() >= MAX_CACHE) {
+            long agora = System.currentTimeMillis();
+            cache.entrySet().removeIf(e -> e.getValue().expiresAt < agora);
+            if (cache.size() >= MAX_CACHE) {
+                cache.clear();
+            }
         }
         Map<String, Object> store = new LinkedHashMap<>(payload);
         store.remove("cache");

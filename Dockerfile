@@ -17,7 +17,7 @@ FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24
 ENV LANGUAGE='pt_BR:pt' \
     HOME=/deployments/data \
     QUARKUS_PROFILE=prod \
-    JAVA_OPTS_APPEND="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Duser.home=/deployments/data" \
+    JAVA_OPTS_APPEND="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Duser.home=/deployments/data -XX:MaxRAMPercentage=65 -XX:+UseSerialGC -XX:MaxMetaspaceSize=192m -XX:+ExitOnOutOfMemoryError" \
     JAVA_APP_JAR="/deployments/quarkus-run.jar"
 
 USER root
