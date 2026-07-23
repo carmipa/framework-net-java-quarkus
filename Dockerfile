@@ -14,10 +14,14 @@ RUN ./gradlew build -x test --no-daemon -Dquarkus.package.jar.type=fast-jar -Dqu
 
 FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24
 
+# Atenção ao JAVA_OPTS_APPEND abaixo: NÃO acrescentar um coletor de lixo aqui.
+# O run-java.sh da imagem base já passa -XX:+UseParallelGC; uma segunda flag de GC faz a
+# JVM abortar no boot com "Multiple garbage collectors selected" (container em crash-loop).
+# Para trocar o coletor é preciso desligar o do entrypoint, não empilhar outra flag.
 ENV LANGUAGE='pt_BR:pt' \
     HOME=/deployments/data \
     QUARKUS_PROFILE=prod \
-    JAVA_OPTS_APPEND="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Duser.home=/deployments/data -XX:MaxRAMPercentage=65 -XX:+UseSerialGC -XX:MaxMetaspaceSize=192m -XX:+ExitOnOutOfMemoryError" \
+    JAVA_OPTS_APPEND="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Duser.home=/deployments/data -XX:MaxRAMPercentage=65 -XX:MaxMetaspaceSize=192m -XX:+ExitOnOutOfMemoryError" \
     JAVA_APP_JAR="/deployments/quarkus-run.jar"
 
 USER root
