@@ -70,13 +70,17 @@ public class TelemetriaResource {
         return Map.of("status", "ok");
     }
 
+    /**
+     * Propósito de negócio: entrega um retrato OTLP atualizado para compartilhamento e análise externa.
+     * Invariantes do domínio: materializa todos os eventos da janela corrente imediatamente antes da leitura.
+     * Comportamento em caso de falha: propaga {@link IOException} para a camada HTTP, sem entregar um arquivo
+     * antigo como se fosse a exportação atual.
+     */
     @GET
     @Path("/api/exportar")
     public Response exportar() throws IOException {
         var arquivo = store.arquivoCompartilhado();
-        if (!Files.exists(arquivo)) {
-            store.flush();
-        }
+        store.flush();
         byte[] conteudo = Files.readAllBytes(arquivo);
         return Response.ok(conteudo)
                 .type(MediaType.APPLICATION_JSON)

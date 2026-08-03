@@ -43,6 +43,6 @@ EXPOSE 8080
 USER 185
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
-    CMD curl -fsS http://127.0.0.1:8080/ > /dev/null || exit 1
+    CMD curl -fsS http://127.0.0.1:8080/health > /dev/null || exit 1
 
 ENTRYPOINT ["/opt/jboss/container/java/run/run-java.sh"]

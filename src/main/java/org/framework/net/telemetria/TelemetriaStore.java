@@ -32,6 +32,7 @@ public class TelemetriaStore {
     private static final Logger LOG = Logger.getLogger(TelemetriaStore.class);
     private static final String ARQUIVO_COMPARTILHADO = "telemetria_compartilhada.json";
     private static final String ARQUIVO_EVENTOS = "framework-net-eventos.jsonl";
+    private static final String ARQUIVO_EVENTOS_ANTERIOR = "framework-net-eventos.jsonl.1";
 
     private final ReentrantLock lock = new ReentrantLock();
     private final Deque<TelemetriaEvent> eventos = new ArrayDeque<>();
@@ -43,6 +44,9 @@ public class TelemetriaStore {
 
     @ConfigProperty(name = "framework.telemetry.max-events", defaultValue = "5000")
     int maxEvents;
+
+    @ConfigProperty(name = "framework.telemetry.jsonl-max-bytes", defaultValue = "10485760")
+    long jsonlMaxBytes;
 
     @ConfigProperty(name = "framework.telemetry.enabled", defaultValue = "true")
     boolean enabled;
@@ -84,6 +88,13 @@ public class TelemetriaStore {
         }
     }
 
+    /**
+     * Propósito de negócio: registra um evento operacional para o painel e para a trilha incremental.
+     * Invariantes do domínio: mantém no máximo {@code maxEvents} em memória e nunca reconstrói o OTLP
+     * completo no caminho crítico de cada evento.
+     * Comportamento em caso de falha: preserva a aplicação em execução e registra um aviso quando a
+     * persistência incremental não puder ser concluída.
+     */
     public void registrar(TelemetriaEvent evento) {
         if (!enabled || evento == null) {
             return;
@@ -95,7 +106,6 @@ public class TelemetriaStore {
                 eventos.removeLast();
             }
             appendJsonl(evento);
-            persistirCanonico();
         } catch (IOException ex) {
             LOG.warnf(ex, "Falha ao persistir evento de telemetria %s", evento.evento());
         } finally {
@@ -103,6 +113,12 @@ public class TelemetriaStore {
         }
     }
 
+    /**
+     * Propósito de negócio: materializa sob demanda o retrato OTLP compartilhável dos eventos atuais.
+     * Invariantes do domínio: a escrita é serializada e representa somente a janela limitada em memória.
+     * Comportamento em caso de falha: mantém o último arquivo íntegro e registra um aviso, sem interromper
+     * o atendimento da aplicação.
+     */
     public void flush() {
         if (!enabled) {
             return;
@@ -212,14 +228,36 @@ public class TelemetriaStore {
         Files.move(temporario, destino, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
     }
 
-    /** Stream NDJSON: um {@code LogRecord} OTLP por linha. */
+    /**
+     * Propósito de negócio: mantém uma trilha NDJSON incremental dos eventos para diagnóstico operacional.
+     * Invariantes do domínio: grava um {@code LogRecord} por linha e limita o arquivo ativo por rotação.
+     * Comportamento em caso de falha: propaga {@link IOException} ao registrador, que preserva a aplicação
+     * e emite um aviso no log principal.
+     */
     private void appendJsonl(TelemetriaEvent evento) throws IOException {
         garantirPasta();
         Path arquivo = pastaLogs().resolve(ARQUIVO_EVENTOS);
-        String linha = compactMapper.writeValueAsString(TelemetriaOtlpMapper.toLogRecord(evento));
-        Files.writeString(arquivo, linha + System.lineSeparator(),
+        byte[] linha = (compactMapper.writeValueAsString(TelemetriaOtlpMapper.toLogRecord(evento))
+                + System.lineSeparator()).getBytes(StandardCharsets.UTF_8);
+        rotacionarJsonlSeNecessario(arquivo, linha.length);
+        Files.write(arquivo, linha,
                 java.nio.file.StandardOpenOption.CREATE,
                 java.nio.file.StandardOpenOption.APPEND);
+    }
+
+    /**
+     * Propósito de negócio: impede crescimento ilimitado da trilha incremental no volume persistente.
+     * Invariantes do domínio: conserva somente o arquivo ativo e uma geração anterior, usando no mínimo
+     * 1 KiB como limite defensivo.
+     * Comportamento em caso de falha: propaga {@link IOException} sem remover o arquivo ativo existente.
+     */
+    private void rotacionarJsonlSeNecessario(Path arquivo, int proximaLinhaBytes) throws IOException {
+        long limiteEfetivo = Math.max(1024L, jsonlMaxBytes);
+        if (!Files.exists(arquivo) || Files.size(arquivo) + proximaLinhaBytes <= limiteEfetivo) {
+            return;
+        }
+        Path anterior = pastaLogs().resolve(ARQUIVO_EVENTOS_ANTERIOR);
+        Files.move(arquivo, anterior, StandardCopyOption.REPLACE_EXISTING);
     }
 
     private void garantirPasta() throws IOException {

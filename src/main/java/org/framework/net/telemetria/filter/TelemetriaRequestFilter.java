@@ -18,22 +18,38 @@ import java.io.IOException;
 @Priority(Priorities.AUTHENTICATION)
 public class TelemetriaRequestFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
+    private static final String HEALTH_PATH = "/health";
+
     @Inject
     TelemetriaContext telemetriaContext;
 
     @Inject
     TelemetriaLogger telemetriaLogger;
 
+    /**
+     * Propósito de negócio: inicia a correlação de uma requisição funcional atendida pela aplicação.
+     * Invariantes do domínio: o healthcheck operacional nunca entra na telemetria funcional nem provoca I/O.
+     * Comportamento em caso de falha: propaga a falha de filtro ao runtime JAX-RS e não cria contexto parcial
+     * para o endpoint de saúde.
+     */
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         String requestId = requestContext.getHeaderString("X-Request-Id");
         String method = requestContext.getMethod();
         String path = requestContext.getUriInfo().getRequestUri().getPath();
+        if (HEALTH_PATH.equals(path)) {
+            return;
+        }
         TelemetriaRequestContext ctx = telemetriaContext.iniciarRequisicao(requestId, method, path);
         requestContext.setProperty(TelemetriaContext.REQUEST_CONTEXT_PROPERTY, ctx);
         requestContext.setProperty("requestId", ctx.requestId());
     }
 
+    /**
+     * Propósito de negócio: conclui a correlação e registra o resultado HTTP de uma requisição funcional.
+     * Invariantes do domínio: somente requisições com contexto iniciado são registradas, excluindo o healthcheck.
+     * Comportamento em caso de falha: sempre limpa o contexto da thread para impedir vazamento entre requisições.
+     */
     @Override
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
         try {

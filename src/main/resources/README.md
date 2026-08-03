@@ -379,6 +379,7 @@ As chaves são definidas em `application.properties` (dev) e `application-prod.p
 | `framework.telemetry.enabled` | `true` | Habilita coleta |
 | `framework.telemetry.dashboard-enabled` | `true` | Habilita a página `/telemetria` |
 | `framework.telemetry.max-events` | `5000` | Eventos em buffer |
+| `framework.telemetry.jsonl-max-bytes` | `10485760` | Limite do JSONL ativo antes de manter uma única geração anterior |
 
 ### Segurança
 
