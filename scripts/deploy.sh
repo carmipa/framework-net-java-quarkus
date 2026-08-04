@@ -139,7 +139,11 @@ echo
 echo "Deploy concluído."
 echo "Porta local: 127.0.0.1:$(get_env_value HTTP_PORT)"
 if [ "$SHOW_ADMIN_KEY" = "1" ]; then
-  echo "ADMIN_API_KEY: $(get_env_value ADMIN_API_KEY)"
+  # A chave NÃO é impressa na saída padrão: o deploy costuma rodar em CI, em
+  # tmux ou com log redirecionado, e o segredo ficaria gravado em texto claro
+  # num histórico que ninguém rotaciona. Quem precisa dela lê do arquivo.
+  echo "ADMIN_API_KEY gravada em $ENV_FILE (permissão 600)."
+  echo "Para lê-la:  sudo grep '^ADMIN_API_KEY=' $ENV_FILE | cut -d= -f2-"
 else
-  echo "ADMIN_API_KEY já existe em $ENV_FILE. Use --show-admin-key se precisar exibir."
+  echo "ADMIN_API_KEY já existe em $ENV_FILE. Use --show-admin-key para ver como obtê-la."
 fi

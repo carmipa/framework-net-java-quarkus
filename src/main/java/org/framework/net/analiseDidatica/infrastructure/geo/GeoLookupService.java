@@ -102,13 +102,18 @@ public class GeoLookupService {
         }
 
         try {
+            String entradaOriginal = normalized;
             InetAddress addr = InetAddress.getByName(normalized);
             normalized = addr.getHostAddress();
             if (addr.isLoopbackAddress() || addr.isSiteLocalAddress() || addr.isLinkLocalAddress()
                     || addr.isMulticastAddress() || addr.isAnyLocalAddress()) {
                 String msg = "Endereço local ou privado (RFC 1918, loopback, etc.) — "
                         + "não há geolocalização pública para este IP.";
-                Map<String, Object> priv = erroBase("private_or_local", msg, normalized);
+                // Devolve o que o usuário digitou, NUNCA o endereço resolvido: ecoar o
+                // resultado da resolução transformava este endpoint em oráculo de DNS —
+                // consultar "framework-net-java" respondia 172.22.0.2 e permitia mapear
+                // a rede Docker interna por tentativa de nome de container.
+                Map<String, Object> priv = erroBase("private_or_local", msg, entradaOriginal);
                 priv.put("reservado", true);
                 priv.put("valido", true);
                 priv.put("tipo", addr.getAddress().length == 4 ? "IPv4" : "IPv6");

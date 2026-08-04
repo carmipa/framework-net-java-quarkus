@@ -13,8 +13,21 @@ public class AdminApiKeyService {
     public static final String HEADER_NAME = "X-Admin-Api-Key";
     public static final String COOKIE_NAME = "ADMIN_API_KEY";
 
+    /**
+     * Prefixos que exigem chave administrativa.
+     *
+     * <p><b>Por que {@code /telemetria} inteiro:</b> não existe subconjunto seguro.
+     * Verificado em produção em 2026-08-03 — {@code /api/resumo},
+     * {@code /api/dashboard} e {@code /api/console} devolvem as mensagens de
+     * evento cruas, que contêm o IP do visitante; {@code /api/exportar} entrega o
+     * NDJSON completo (347 KB, com IPv4 e IPv6 reais); {@code /api/pasta} e
+     * {@code /api/dashboard} revelam caminhos absolutos do servidor; e
+     * {@code /api/console/limpar} é destrutivo. Proteger só parte deixaria o
+     * mesmo dado saindo por outra porta.</p>
+     */
     private static final List<String> PROTECTED_PREFIXES = List.of(
-            "/export"
+            "/export",
+            "/telemetria"
     );
 
     @ConfigProperty(name = "framework.security.admin-api-key", defaultValue = "")

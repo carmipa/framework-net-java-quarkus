@@ -11,13 +11,28 @@ import static org.hamcrest.CoreMatchers.containsString;
 @TestProfile(AdminSecurityTestProfile.class)
 class AdminApiKeyHttpTest {
 
+    /**
+     * Regressão: a telemetria era pública e vazava o IP real do visitante.
+     *
+     * <p>Verificado em produção em 2026-08-03: {@code GET /telemetria/api/exportar}
+     * devolvia 347 KB sem autenticação, contendo o IPv4 e os dois IPv6 do usuário.
+     * {@code /api/resumo}, {@code /api/dashboard} e {@code /api/console} carregavam
+     * o mesmo dado nas mensagens de evento.</p>
+     */
     @Test
-    void telemetriaPublicaSemChaveRetorna200() {
-        given()
-                .header("Accept", "application/json")
-                .when().get("/telemetria/api/resumo")
-                .then()
-                .statusCode(200);
+    void telemetriaSemChaveRetorna401() {
+        for (String rota : new String[]{
+                "/telemetria/api/resumo",
+                "/telemetria/api/dashboard",
+                "/telemetria/api/console",
+                "/telemetria/api/exportar",
+                "/telemetria/api/pasta"}) {
+            given()
+                    .header("Accept", "application/json")
+                    .when().get(rota)
+                    .then()
+                    .statusCode(401);
+        }
     }
 
     @Test
