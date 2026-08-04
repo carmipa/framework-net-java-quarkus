@@ -23,18 +23,20 @@ Aplicação didática para análise de redes IPv4/IPv6, com foco em ensino, labo
 
 ## 📚 Sumário
 
-- Visão geral
-- Módulos e rotas
-- Funcionalidades (Análise Didática, Calculadora de Sub-redes e VLANs, Portas/Protocolos, Resolução VLSM+WAN)
-- Arquitetura (geral, VLSM, telemetria, shared, exceções, deploy Docker)
-- Requisitos
-- Execução local e Docker
-- Variáveis de configuração
-- Segurança
-- Telemetria e observabilidade (correlação, OTLP/JSON, dataset público)
-- Estrutura de pastas
-- Testes (incluindo os testes de arquitetura e de cobertura de menu)
-- Roadmap
+| # | Seção | O que responde |
+|---|-------|----------------|
+| 1 | Visão geral | para que serve e a quem atende |
+| 2 | Módulos e rotas | tabela completa de endpoints, métodos e proteção |
+| 3 | Funcionalidades | Análise Didática · **Calculadora de Sub-redes e VLANs** · Portas/Protocolos · Resolução VLSM+WAN |
+| 4 | Arquitetura | 9 diagramas: fluxo geral, **Calculadora**, **camadas de proteção**, **cache em 2 níveis**, VLSM, telemetria, shared, exceções, deploy |
+| 5 | Requisitos | Java, Gradle, Docker |
+| 6 | Execução | local (`quarkusDev`) e VPS (`deploy.sh`) |
+| 7 | Configuração | todas as `framework.*` e as `quarkus.*` relevantes |
+| 8 | Segurança | CSRF, chave admin, rate limit, CSP/SRI, fail-closed de segredos |
+| 9 | Telemetria | correlação por `traceId`, OTLP/JSON e **dataset público sanitizado** |
+| 10 | Estrutura de pastas | onde mora cada coisa |
+| 11 | Testes | incluindo os que guardam **regras** (arquitetura, cobertura de menu, CSP) |
+| 12 | Roadmap | o que falta |
 
 ---
 
@@ -212,12 +214,15 @@ flowchart LR
     F2 --> F3[AdminApiKeyFilter]
     F3 --> F4[RateLimitFilter]
     F4 --> R1[analiseDidatica · presentation]
+    F4 --> R5[calculadora · presentation]
     F4 --> R2[resolucaoProblemas · presentation]
     F4 --> R3[portas · protocolos · presentation]
     F4 --> R4[telemetria · web · presentation]
     R1 --> A1[application HomeAnaliseService · ModoService]
     A1 --> D1[domain Ipv4Kernel]
     A1 --> I1[infrastructure DNS · GeoIP · Historico]
+    R5 --> A5[application Divisao · Vlan · Agregacao]
+    A5 --> D5[domain SubnetKernel]
     R2 --> A2[VlsmService]
     A2 --> A2a[normalization · planning · routing · export]
     R3 --> A3[PortasService · ProtocolosService]
@@ -355,6 +360,82 @@ flowchart LR
 | **Env obrigatórias (prod)** | `ADMIN_API_KEY`, `CSRF_SECRET`, `QUARKUS_PROFILE=prod` |
 | **Rede (VPS)** | `nginx-proxy-network` (externa) + bind `127.0.0.1:${HTTP_PORT}:8080` |
 | **Dev Docker** | `docker-compose.dev.yml` — dados em `./docker-data`, porta padrão `8081` |
+
+---
+
+### Calculadora de Sub-redes e VLANs — fluxo
+
+Dois pontos de entrada, **um** serviço: a aba em `/analise` e a página `/calculadora`
+chamam o mesmo endpoint e recebem o mesmo fragmento Qute renderizado no servidor.
+
+```mermaid
+flowchart LR
+    ABA["/analise · aba Calculadora"] -->|hx-post| EP
+    PAG["/calculadora · 4 abas"] -->|hx-post| EP
+    EP[CalculadoraResource] --> DIV[DivisaoService]
+    EP --> VLA[VlanService]
+    EP --> AGR[AgregacaoService]
+    EP --> EXP[CalculadoraExportService]
+    DIV --> K[SubnetKernel · aritmetica 32 bits]
+    VLA --> K
+    AGR --> K
+    DIV --> FR[fragmento Qute]
+    VLA --> FR
+    AGR --> FR
+    EXP --> CSV[CSV do plano exibido]
+    K -.erro de entrada.-> EXC[CalculadoraException]
+    EXC --> MAP[CalculadoraExceptionMapper]
+    MAP -->|HX-Request| ERRHTML[erro.html · 400]
+    MAP -->|demais clientes| ERRTXT[texto puro · 400]
+```
+
+Tetos de renderização (`framework.calculadora.*`) ficam entre o serviço e o
+fragmento: o total matemático é sempre calculado, mas a listagem é truncada e o
+truncamento é declarado na tela.
+
+### Camadas de proteção da requisição
+
+Cada filtro assume que o anterior falhou. A ordem importa: a telemetria abre a
+correlação antes de tudo, e o rate limit fecha a fila antes de o recurso ser tocado.
+
+```mermaid
+flowchart TB
+    REQ[Requisicao] --> H{rota = /health?}
+    H -->|sim| SONDA[HealthResource · sem telemetria]
+    H -->|nao| T[TelemetriaRequestFilter · abre traceId]
+    T --> C{metodo mutante?}
+    C -->|sim| CSRF[CsrfRequestFilter · HMAC double-submit]
+    C -->|nao| ADM
+    CSRF --> ADM{rota protegida?}
+    ADM -->|/export · /telemetria| KEY[AdminApiKeyFilter]
+    ADM -->|publica| RL
+    KEY -->|sem chave| L401[401 ou redirect /admin/login]
+    KEY -->|chave valida| RL[RateLimitFilter]
+    RL -->|chave = remoteAddress| REC[Resource]
+    RL -->|estourou| L429[429]
+    REC --> SAN[shared · sanitizers e guards]
+    SAN --> APP[application]
+```
+
+No boot, `SegredosObrigatoriosVerificador` recusa iniciar em produção sem
+`ADMIN_API_KEY`/`CSRF_SECRET` — antes, a variável ausente desligava a proteção em
+silêncio.
+
+### Cache de APIs externas em dois níveis
+
+```mermaid
+flowchart LR
+    S[GeoLookupService · NominatimGeocoder] --> L1{L1 em memoria}
+    L1 -->|hit| OK[resposta]
+    L1 -->|miss| L2{L2 Redis · fnet:*}
+    L2 -->|hit| REP[repovoa L1] --> OK
+    L2 -->|miss ou indisponivel| ORI[API externa]
+    ORI --> GRAVA[grava L1 + L2 com mesmo TTL] --> OK
+```
+
+O L2 existe porque o L1 morre a cada deploy e as origens têm limite —
+`ip-api.com` corta em 45 req/min. Redis indisponível faz o L2 se comportar como
+miss permanente: volta ao comportamento de antes, sem quebrar nada.
 
 ---
 
