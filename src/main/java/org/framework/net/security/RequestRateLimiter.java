@@ -21,9 +21,6 @@ public class RequestRateLimiter {
     @ConfigProperty(name = "framework.security.rate-limit-heavy-per-minute", defaultValue = "30")
     int heavyLimitPerMinute;
 
-    @ConfigProperty(name = "quarkus.http.proxy.proxy-address-forwarding", defaultValue = "false")
-    boolean proxyAddressForwarding;
-
     @Inject
     CurrentVertxRequest currentVertxRequest;
 
@@ -57,17 +54,25 @@ public class RequestRateLimiter {
         buckets.entrySet().removeIf(e -> e.getValue().windowMinute < current - 2);
     }
 
+    /**
+     * Identifica o cliente para efeito de limite de taxa.
+     *
+     * <p><b>Propósito de negócio:</b> é a chave do balde. Se o cliente conseguir
+     * escolhê-la, o limite deixa de existir.</p>
+     *
+     * <p><b>Invariantes do domínio:</b> o endereço vem <b>sempre</b> de
+     * {@code request().remoteAddress()}, resolvido pelo próprio Quarkus. Ler
+     * {@code X-Forwarded-For} aqui era bypass total: qualquer requisição podia
+     * mandar um valor inventado e ganhar um balde novo a cada chamada — inclusive
+     * para força bruta da chave administrativa. Quem decide se o cabeçalho é
+     * confiável é {@code quarkus.http.proxy.trusted-proxies}, que restringe a
+     * substituição à rede do proxy reverso; fora dela o endereço real prevalece.</p>
+     *
+     * <p><b>Comportamento em caso de falha:</b> sem endereço disponível devolve
+     * {@code "anonymous"}, o que agrupa os casos indeterminados num balde único —
+     * mais restritivo, nunca mais permissivo.</p>
+     */
     private String clientKey(ContainerRequestContext ctx) {
-        if (proxyAddressForwarding) {
-            String xff = ctx.getHeaderString("X-Forwarded-For");
-            if (xff != null && !xff.isBlank()) {
-                return xff.split(",")[0].strip();
-            }
-            String realIp = ctx.getHeaderString("X-Real-IP");
-            if (realIp != null && !realIp.isBlank()) {
-                return realIp.strip();
-            }
-        }
         try {
             if (currentVertxRequest != null && currentVertxRequest.getCurrent() != null
                     && currentVertxRequest.getCurrent().request() != null

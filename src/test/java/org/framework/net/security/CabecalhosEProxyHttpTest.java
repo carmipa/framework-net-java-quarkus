@@ -1,0 +1,95 @@
+package org.framework.net.security;
+
+import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.not;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
+/**
+ * Cabeçalhos de segurança e identificação de cliente no rate limit.
+ *
+ * <p><b>Propósito de negócio:</b> duas salvaguadas que falham em silêncio. Um
+ * cabeçalho que some de uma resposta não quebra nada visível, e um rate limit
+ * cuja chave o cliente escolhe continua respondendo 200 enquanto não limita
+ * ninguém.</p>
+ *
+ * <p><b>Invariantes do domínio:</b> toda resposta HTML carrega o conjunto de
+ * cabeçalhos de segurança; o CSP restringe as origens externas realmente usadas
+ * pelo projeto; e o código do rate limiter não lê cabeçalho de encaminhamento —
+ * quem decide se ele é confiável é a configuração de proxies do Quarkus.</p>
+ */
+@QuarkusTest
+@DisplayName("Segurança: cabeçalhos e chave do rate limit")
+class CabecalhosEProxyHttpTest {
+
+    @Test
+    void respostaTrazOsCabecalhosDeSeguranca() {
+        given()
+                .when().get("/calculadora")
+                .then()
+                .statusCode(200)
+                .header("X-Content-Type-Options", "nosniff")
+                .header("X-Frame-Options", "SAMEORIGIN")
+                .header("Referrer-Policy", containsString("strict-origin"))
+                .header("Permissions-Policy", containsString("geolocation=(self)"))
+                .header("Content-Security-Policy", containsString("default-src 'self'"));
+    }
+
+    @Test
+    @DisplayName("o CSP cobre as origens externas que o projeto realmente usa")
+    void cspCobreAsOrigensDoProjeto() {
+        var csp = given().when().get("/").then().statusCode(200)
+                .extract().header("Content-Security-Policy");
+
+        // Quebrar qualquer uma destas some com um recurso da tela sem erro no servidor.
+        for (String origem : new String[]{
+                "https://cdn.jsdelivr.net",          // Bootstrap, mermaid
+                "https://unpkg.com",                 // Leaflet
+                "https://fonts.googleapis.com",      // Material Symbols
+                "https://fonts.gstatic.com",         // arquivos das fontes
+                "https://flagcdn.com",               // bandeiras do seletor de idioma
+                "tile.openstreetmap.org",            // tiles do mapa
+                "https://translate.google.com"}) {   // widget de tradução
+            org.junit.jupiter.api.Assertions.assertTrue(csp.contains(origem),
+                    "CSP sem a origem " + origem + ": o recurso vai parar de carregar.\nCSP: " + csp);
+        }
+
+        // Trava as diretivas que independem de origem externa.
+        org.junit.jupiter.api.Assertions.assertTrue(csp.contains("object-src 'none'"), csp);
+        org.junit.jupiter.api.Assertions.assertTrue(csp.contains("frame-ancestors 'self'"), csp);
+        org.junit.jupiter.api.Assertions.assertTrue(csp.contains("base-uri 'self'"), csp);
+    }
+
+    @Test
+    @DisplayName("regressão: o rate limiter não pode ler cabeçalho de encaminhamento")
+    void rateLimiterNaoLeCabecalhoDeEncaminhamento() throws Exception {
+        // Antes, clientKey() lia X-Forwarded-For direto do request: bastava variar o
+        // cabeçalho para ganhar um balde novo a cada chamada — bypass total, inclusive
+        // para forca bruta da chave administrativa. Quem decide se o cabeçalho vale é
+        // quarkus.http.proxy.trusted-proxies, não o código do limitador.
+        var fonte = java.nio.file.Path.of(
+                "src/main/java/org/framework/net/security/RequestRateLimiter.java");
+        org.junit.jupiter.api.Assumptions.assumeTrue(java.nio.file.Files.isRegularFile(fonte));
+        String codigo = java.nio.file.Files.readString(fonte);
+
+        assertFalse(codigo.contains("getHeaderString(\"X-Forwarded-For\")"),
+                "RequestRateLimiter voltou a confiar em X-Forwarded-For do cliente");
+        assertFalse(codigo.contains("getHeaderString(\"X-Real-IP\")"),
+                "RequestRateLimiter voltou a confiar em X-Real-IP do cliente");
+    }
+
+    @Test
+    @DisplayName("o Bootstrap de CDN carrega com Subresource Integrity")
+    void bibliotecasDeCdnTemIntegrity() {
+        given()
+                .when().get("/")
+                .then()
+                .statusCode(200)
+                .body(containsString("integrity=\"sha384-"))
+                .body(not(containsString("cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css\" rel=\"stylesheet\">")));
+    }
+}
