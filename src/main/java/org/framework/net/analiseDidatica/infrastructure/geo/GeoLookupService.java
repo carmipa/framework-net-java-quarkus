@@ -86,6 +86,9 @@ public class GeoLookupService {
     @Inject
     TelemetriaLogger telemetriaLogger;
 
+    @Inject
+    org.framework.net.shared.CacheDistribuido cacheDistribuido;
+
     private final Map<String, CacheEntry> cache = new ConcurrentHashMap<>();
     private volatile DatabaseReader databaseReader;
     private volatile boolean readerInitialized;
@@ -509,14 +512,35 @@ public class GeoLookupService {
         return out;
     }
 
+    @SuppressWarnings("unchecked")
     private Map<String, Object> cacheGet(String ip) {
         CacheEntry entry = cache.get(ip);
-        if (entry == null || entry.expiresAt < System.currentTimeMillis()) {
-            return null;
+        if (entry != null && entry.expiresAt >= System.currentTimeMillis()) {
+            Map<String, Object> copy = new LinkedHashMap<>(entry.payload);
+            copy.put("cache", "hit");
+            return enriquecerRespostaGeo(copy);
         }
-        Map<String, Object> copy = new LinkedHashMap<>(entry.payload);
-        copy.put("cache", "hit");
-        return enriquecerRespostaGeo(copy);
+
+        // L2: sobrevive a deploy. Sem isto, todo reinício zera o cache e a aplicação
+        // volta a bater no ip-api, que corta em 45 requisições por minuto.
+        if (geoConfig.cacheTtlSeconds() > 0) {
+            var bruto = cacheDistribuido.obter("geo", ip);
+            if (bruto.isPresent()) {
+                try {
+                    Map<String, Object> payload = objectMapper.readValue(bruto.get(), Map.class);
+                    // Repovoa o L1 para que as próximas leituras nem toquem no Redis.
+                    cache.put(ip, new CacheEntry(
+                            System.currentTimeMillis() + geoConfig.cacheTtlSeconds() * 1000L, payload));
+                    Map<String, Object> copy = new LinkedHashMap<>(payload);
+                    copy.put("cache", "hit");
+                    return enriquecerRespostaGeo(copy);
+                } catch (Exception ex) {
+                    // Valor ilegível no L2 é tratado como ausência: segue para a origem.
+                    LOG.debugf("Cache distribuido devolveu payload invalido para %s", ip);
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -555,6 +579,16 @@ public class GeoLookupService {
         cache.put(ip, new CacheEntry(
                 System.currentTimeMillis() + geoConfig.cacheTtlSeconds() * 1000L,
                 store));
+
+        // L2 com o MESMO TTL do L1: o cache distribuído não pode sobreviver ao
+        // que a política de expiração já considera vencido.
+        try {
+            cacheDistribuido.guardar("geo", ip, objectMapper.writeValueAsString(store),
+                    java.time.Duration.ofSeconds(geoConfig.cacheTtlSeconds()));
+        } catch (Exception ex) {
+            // Falha de serialização não pode derrubar a consulta que já deu certo.
+            LOG.debugf("Nao foi possivel gravar %s no cache distribuido", ip);
+        }
     }
 
     private static boolean codigoPaisInvalido(String cc) {

@@ -42,6 +42,12 @@ public class NominatimGeocoder {
     @ConfigProperty(name = "framework.localizacao.http-timeout-seconds", defaultValue = "5")
     int timeoutSeconds;
 
+    @ConfigProperty(name = "framework.localizacao.cache-ttl-seconds", defaultValue = "86400")
+    int cacheTtlSeconds;
+
+    @Inject
+    org.framework.net.shared.CacheDistribuido cacheDistribuido;
+
     @Inject
     ObjectMapper objectMapper;
 
@@ -57,6 +63,12 @@ public class NominatimGeocoder {
         Map<String, Object> cached = cache.get(chave);
         if (cached != null) {
             return Optional.of(new LinkedHashMap<>(cached));
+        }
+        // L2: o Nominatim pede ~1 req/s por política de uso, e endereço é dado
+        // estático. Perder o cache a cada deploy só gera tráfego desnecessário lá.
+        Optional<Map<String, Object>> doL2 = lerDoCacheDistribuido(chave);
+        if (doL2.isPresent()) {
+            return doL2;
         }
         try {
             String uri = nominatimUrl + "?format=jsonv2&limit=1&addressdetails=0&countrycodes=br&q="
@@ -160,6 +172,37 @@ public class NominatimGeocoder {
             cache.clear();
         }
         cache.put(chave, new LinkedHashMap<>(value));
+        try {
+            cacheDistribuido.guardar("nominatim", chave, objectMapper.writeValueAsString(value),
+                    Duration.ofSeconds(Math.max(1, cacheTtlSeconds)));
+        } catch (Exception ex) {
+            // Cache é otimização: falhar aqui não pode invalidar a resposta já obtida.
+            LOG.debugf("Nao foi possivel gravar %s no cache distribuido", chave);
+        }
+    }
+
+    /**
+     * Lê do cache distribuído e repovoa o cache em memória.
+     *
+     * <p><b>Comportamento em caso de falha:</b> valor ausente, ilegível ou Redis
+     * indisponível devolvem {@link Optional#empty()} — o chamador segue para o
+     * Nominatim como se não houvesse L2.</p>
+     */
+    @SuppressWarnings("unchecked")
+    private Optional<Map<String, Object>> lerDoCacheDistribuido(String chave) {
+        var bruto = cacheDistribuido.obter("nominatim", chave);
+        if (bruto.isEmpty()) {
+            return Optional.empty();
+        }
+        try {
+            Map<String, Object> valor = objectMapper.readValue(bruto.get(), Map.class);
+            if (cache.size() < MAX_CACHE) {
+                cache.put(chave, new LinkedHashMap<>(valor));
+            }
+            return Optional.of(new LinkedHashMap<>(valor));
+        } catch (Exception ex) {
+            return Optional.empty();
+        }
     }
 
     private HttpClient client() {
