@@ -7,9 +7,10 @@
   <img src="/icone.png?v=20260709d" alt="Framework de Redes — Análise Didática Avançada" width="420" />
 </p>
 
-Aplicação didática para análise de redes IPv4/IPv6, com foco em ensino, laboratório e revisão técnica. Originalmente escrita em **Python/Flask**, foi **migrada para Java 25 + Quarkus** e reorganizada como um **monólito modular** (*modular monolith*): um único artefato de implantação com domínios autocontidos, prontos para evoluir para microserviços. Reúne seis módulos:
+Aplicação didática para análise de redes IPv4/IPv6, com foco em ensino, laboratório e revisão técnica. Originalmente escrita em **Python/Flask**, foi **migrada para Java 25 + Quarkus** e reorganizada como um **monólito modular** (*modular monolith*): um único artefato de implantação com domínios autocontidos, prontos para evoluir para microserviços. Reúne sete módulos:
 
 - **Análise Didática** — CIDR, máscara, wildcard, auto-CIDR, domínio (DNS), IPv6, comparador e GeoIP.
+- **Calculadora de Sub-redes e VLANs** — divisão de blocos (FLSM), plano de VLANs com script Cisco, sumarização de rotas e faixa de IPs para CIDR.
 - **Portas** — catálogo interativo de portas TCP/UDP.
 - **Protocolos** — catálogo de protocolos + troubleshooting de roteamento.
 - **Resolução de Problemas (VLSM + WAN)** — planejamento VLSM dinâmico, topologia WAN, CLI Cisco e exportação para laboratório.
@@ -24,15 +25,15 @@ Aplicação didática para análise de redes IPv4/IPv6, com foco em ensino, labo
 
 - Visão geral
 - Módulos e rotas
-- Funcionalidades
+- Funcionalidades (Análise Didática, Calculadora de Sub-redes e VLANs, Portas/Protocolos, Resolução VLSM+WAN)
 - Arquitetura (geral, VLSM, telemetria, shared, exceções, deploy Docker)
 - Requisitos
 - Execução local e Docker
 - Variáveis de configuração
 - Segurança
-- Telemetria e observabilidade
+- Telemetria e observabilidade (correlação, OTLP/JSON, dataset público)
 - Estrutura de pastas
-- Testes
+- Testes (incluindo os testes de arquitetura e de cobertura de menu)
 - Roadmap
 
 ---
@@ -56,7 +57,12 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Módulo | Rota | Método | Descrição |
 |--------|------|--------|-----------|
 | Início | `/` | GET | Página inicial (landing) com atalhos para os módulos |
-| Análise Didática | `/analise` | GET/POST | CIDR, máscara, wildcard, auto-CIDR, domínio, IPv6, comparador (parâmetro `?tab=`) |
+| Análise Didática | `/analise` | GET/POST | CIDR, máscara, wildcard, auto-CIDR, domínio, IPv6, comparador, calculadora (parâmetro `?tab=`) |
+| Calculadora | `/calculadora` | GET | Divisão de blocos, plano de VLANs, sumarização e faixa→CIDR (parâmetro `?aba=`) |
+| Calculadora (API) | `/calculadora/api/dividir` | POST | Fragmento HTML: sub-redes de um bloco + matriz de capacidade |
+| Calculadora (API) | `/calculadora/api/vlan`, `/calculadora/api/vlan-id` | POST | Fragmento HTML: plano de VLANs com CLI Cisco / parecer sobre um VLAN ID |
+| Calculadora (API) | `/calculadora/api/sumarizar`, `/calculadora/api/comparar`, `/calculadora/api/faixa` | POST | Fragmento HTML: rota resumo, relação entre blocos, faixa em CIDR |
+| Calculadora (export) | `/calculadora/export/divisao.csv`, `/calculadora/export/vlan.csv` | GET | CSV do plano exibido |
 | Localização | `/localizacao` | GET | Localização por IP e por CEP no mapa |
 | Localização (API) | `/localizacao/api/ip`, `/localizacao/api/cep` | GET | JSON: geolocalização por IP / endereço por CEP (ViaCEP + OSM) |
 | Tráfego | `/trafego` | GET | Sub-abas: painel ao vivo (simulação), decodificador (hex), encapsulamento e handshake TCP |
@@ -73,6 +79,8 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Telemetria | `/telemetria` | GET | Dashboard de eventos e console |
 | Telemetria (API) | `/telemetria/api/*` | GET/POST | `resumo`, `dashboard`, `console`, `console/limpar`, `exportar`, `pasta` |
 | Documentação | `/documentacao` | GET | Este README renderizado |
+| Sobre | `/sobre` | GET | O projeto, o autor e as tecnologias |
+| Sonda de saúde | `/health` | GET | JSON `{"status":"UP"}` para o healthcheck do container; **não** registrada na telemetria |
 | Histórico (API) | `/history` | GET | Lista o histórico em JSON |
 | Histórico catálogo | `/history/catalog` | POST | Registra consulta de portas/protocolos |
 | Exportação análise | `/export/json`, `/export/pdf` | GET | 🔒 Protegido por chave administrativa |
@@ -92,17 +100,59 @@ Selecionável via `?tab=` (ou pelas abas da interface):
 - `autoip` — inferência didática de CIDR pelo IP;
 - `dominio` — hostname/URL → DNS → análise;
 - `ipv6` — visão básica com resumo técnico;
-- `comparador` — comparação lado a lado entre dois prefixos.
+- `comparador` — comparação lado a lado entre dois prefixos;
+- `calculadora` — divisão rápida de um bloco em sub-redes, servida pelo módulo Calculadora via htmx.
 
 Recursos de apoio: geolocalização (`/informacoes`), tabela de referência de máscaras (`/mascara-referencia`), histórico paginado e exportações (`/export/json`, `/export/pdf`).
 
-### Módulo 2 — Portas (`/portas`) e Protocolos (`/protocolos`)
+### Módulo 2 — Calculadora de Sub-redes e VLANs (`/calculadora`)
+
+Ferramenta de bolso para plano de endereçamento — complementa o Módulo 4 (VLSM), que
+resolve o **cenário** completo com WAN e roteamento. Aqui a resposta é imediata, em
+sub-redes de tamanho fixo (**FLSM**). Quatro abas, selecionáveis via `?aba=`:
+
+**`dividir` — divisão de blocos.** Responde a pergunta clássica: *um `/21`, quantas
+redes cabem?* Três critérios de entrada:
+
+| Critério | Entrada | Exemplo |
+|----------|---------|---------|
+| Por prefixo alvo | prefixo desejado | `192.168.0.0/21` → `/24` = **8 sub-redes** de 254 hosts |
+| Por nº de sub-redes | quantas você precisa | pedir 6 entrega 8 (potências de 2), com a sobra declarada |
+| Por hosts | hosts por sub-rede | 500 hosts → `/23` (reserva rede e broadcast: 502 endereços) |
+
+Acompanha a **matriz de capacidade**, que responde todos os prefixos de uma vez
+(`/22`→2, `/24`→8, `/26`→32, `/30`→512), e exportação em CSV.
+
+**`vlan` — plano de VLANs.** Gera o mapa VLAN ↔ sub-rede com gateway (SVI), faixa
+DHCP e wildcard para ACL, mais o script Cisco pronto (`vlan`/`name`, portas de acesso,
+tronco 802.1Q com `switchport trunk allowed vlan`, SVI **e** router-on-a-stick,
+`ip dhcp pool`). Duas estratégias de mapeamento: **sequencial** (blocos consecutivos)
+ou **VLAN ID no 3º octeto** (VLAN 10 → `192.168.10.0/24`, a convenção de prova; exige
+bloco base `/16` e `/24` por VLAN). Inclui **validador de VLAN ID** com as faixas do
+padrão: 0 e 4095 reservados pelo 802.1Q, 1 default, 2–1001 normal range, 1002–1005
+reservadas pela Cisco (FDDI/Token Ring) e 1006–4094 extended range.
+
+**`agregar` — sumarização e comparação.** Calcula a **rota resumo** (menor prefixo que
+cobre todas as redes informadas) com os comandos de `area range` (OSPF),
+`ip summary-address` (EIGRP), rota estática e ACL — declarando quanto espaço extra a
+agregação arrasta. E compara dois blocos: iguais, contido ou disjuntos, com os
+endereços em comum.
+
+**`faixa` — faixa de IPs para CIDR.** Converte "de `10.0.0.5` até `10.0.3.200`" na
+menor lista de blocos CIDR que cobre **exatamente** a faixa, com a ACL equivalente.
+
+> **Tetos de renderização.** Um `/8` dividido em `/30` são 4.194.304 sub-redes. A tela
+> lista no máximo `framework.calculadora.max-linhas` (padrão 512), mas o total
+> matemático real continua sendo exibido, com aviso explícito de truncamento — listagem
+> truncada nunca é apresentada como plano completo.
+
+### Módulo 3 — Portas (`/portas`) e Protocolos (`/protocolos`)
 
 - catálogo didático com filtros;
 - resumo IGP/EGP e bloco **Troubleshooting rápido (roteamento)** na página de protocolos;
 - registro opcional das consultas no histórico via `/history/catalog`.
 
-### Módulo 3 — Resolução de Problemas (VLSM + WAN) (`/resolucao-problemas`)
+### Módulo 4 — Resolução de Problemas (VLSM + WAN) (`/resolucao-problemas`)
 
 - entrada dinâmica com N localidades (nome + **quantidade de hosts** — o sistema calcula o CIDR pela fórmula `2^H ≥ N+2` → prefixo `32−H`);
 - **obrigatório:** IP/rede base e localidades; **opcional:** CIDR da base (inferência classful se vazio), AS EIGRP (padrão `71`), processo OSPF (padrão `1`);
@@ -138,7 +188,7 @@ Nome | Rede base | Hosts1 | Hosts2
 Estilo arquitetural: **monólito modular** (*modular monolith*) em **Java 25 + Quarkus**, migrado do projeto original em Python/Flask. A aplicação é implantada como **um único artefato** (Quarkus fast-jar), mas o código é organizado por **domínios autocontidos** (*bounded contexts*) — cada módulo funciona como um "microserviço interno", com fronteiras claras e baixo acoplamento, pronto para ser extraído para um serviço independente caso o projeto evolua nesse sentido.
 
 - **Runtime único**: endpoints **JAX-RS** (`quarkus-rest`) e views em **Qute** (`quarkus-rest-qute`) sobre `quarkus-vertx-http`.
-- **Módulos de domínio**: `analiseDidatica`, `portas`, `protocolos`, `resolucaoProblemas`, `localizacao`, `analiseTrafego`, `ferramentasDiagnostico`, `segurancaRede`, `simuladores` (encapsulamento e handshake TCP — computação pura, VPS-safe).
+- **Módulos de domínio**: `analiseDidatica`, `calculadora`, `portas`, `protocolos`, `resolucaoProblemas`, `localizacao`, `analiseTrafego`, `ferramentasDiagnostico`, `segurancaRede`, `simuladores` (encapsulamento e handshake TCP — computação pura, VPS-safe).
 - **Módulos transversais**: `security` (CSRF, rate limit, chave admin), `telemetria` (observabilidade), `web` (documentação, login, ícone) e `shared` (sanitização e utilitários de entrada).
 
 ### Camadas por módulo (organização DDD-lite / hexagonal)
@@ -300,7 +350,7 @@ flowchart LR
 | Etapa | Detalhe |
 |-------|---------|
 | **Build** | `eclipse-temurin:25-jdk-noble` → `./gradlew build -x test` com `-Dquarkus.package.jar.type=fast-jar -Dquarkus.profile=prod` |
-| **Runtime** | `registry.access.redhat.com/ubi9/openjdk-25-runtime` — usuário `185`, healthcheck em `/` |
+| **Runtime** | `registry.access.redhat.com/ubi9/openjdk-25-runtime` — usuário `185`, healthcheck em `/health` |
 | **Volume** | `framework-net-data:/deployments/data` — logs, GeoIP e dados da aplicação |
 | **Env obrigatórias (prod)** | `ADMIN_API_KEY`, `CSRF_SECRET`, `QUARKUS_PROFILE=prod` |
 | **Rede (VPS)** | `nginx-proxy-network` (externa) + bind `127.0.0.1:${HTTP_PORT}:8080` |
@@ -363,6 +413,9 @@ As chaves são definidas em `application.properties` (dev) e `application-prod.p
 | `quarkus.http.port` | `8080` | Porta HTTP |
 | `quarkus.http.host` | `0.0.0.0` | Host de bind |
 | `framework.app.max-history` | `60` | Tamanho máximo do histórico |
+| `framework.calculadora.max-linhas` | `512` | Sub-redes **renderizadas** por divisão. O total real continua sendo calculado e exibido — o teto evita travar o navegador (um `/8` em `/30` são 4.194.304) |
+| `framework.calculadora.max-vlans` | `256` | VLANs geradas por plano |
+| `framework.calculadora.max-redes-agregacao` | `64` | Redes aceitas por sumarização |
 | `framework.app.comparador-cidr-padrao-a` | `20` | CIDR padrão do comparador (A) |
 | `framework.app.comparador-cidr-padrao-b` | `24` | CIDR padrão do comparador (B) |
 | `framework.dns.cache-ttl-seconds` | `180` | TTL do cache DNS |
@@ -446,7 +499,22 @@ Implementado:
 - eventos estruturados (`TelemetriaLogger.logEvent` / `logException`);
 - buffer em memória + arquivo compartilhado (`TelemetriaStore`);
 - console ao vivo e exportação JSON (`/telemetria/api/exportar`);
-- logs em console e arquivo com rotação (`quarkus.log.file.*`).
+- logs em console e arquivo com rotação (`quarkus.log.file.*`);
+- a sonda `/health` do container **não** é registrada — antes o healthcheck consultava
+  `/` a cada 30 s (~2.880 acessos/dia) e era indistinguível de visitas reais.
+
+### Correlação dos eventos de negócio
+
+Serviços de aplicação chamam `TelemetriaLogger.medir()` sem ter o
+`ContainerRequestContext` do JAX-RS em mãos. A correlação é então **resgatada do MDC**
+da própria thread da requisição (`TelemetriaContext.contextoDoMdc()`), de modo que todo
+evento nascido dentro de um request carrega `traceId` e `requestId`.
+
+Isso importa porque um único incidente rende mais de um evento — a operação de negócio
+que falhou, a exceção mapeada e o acesso HTTP. **Agrupe por `traceId`** para contar
+incidentes em vez de linhas. Eventos nascidos fora de requisição (`app_start`, tarefas
+de fundo) seguem sem correlação, e isso é o valor honesto: correlação fabricada seria
+pior que correlação ausente.
 
 ### Formato de compartilhamento: OpenTelemetry OTLP/JSON
 
@@ -464,6 +532,47 @@ Mapeamento (`TelemetriaOtlpMapper`): `timeUnixNano`/`intValue` como *string* (in
 
 Coleta recomendada em produção: `docker logs` / `compose logs` e agregador central (ELK, Loki, Datadog, Splunk, SIEM) — o OTLP/JSON pode ser reenviado a um OpenTelemetry Collector.
 
+### Dataset público (sanitização)
+
+A telemetria é artefato temporário destinado a virar **dataset público**. Entre o
+arquivo cru e o repositório existe uma etapa obrigatória de sanitização, executada
+na VPS por dois scripts sem dependências externas:
+
+```bash
+./scripts/exportar-dataset.sh            # extrai do container, sanitiza, gera dataset/AAAA-MM-DD/
+```
+
+| Script | Papel |
+|--------|-------|
+| `scripts/exportar-dataset.sh` | Extrai o NDJSON do container, garante o sal no `.env` e chama o sanitizador |
+| `scripts/sanitizar_telemetria.py` | Sanitiza, audita e gera `eventos.jsonl` + `README.md` + `schema.json` + `estatisticas.json` (Python 3, só stdlib) |
+
+**A distinção que sustenta as regras: identidade × conteúdo didático.** O mesmo campo
+`framework.field.ip` guarda tanto o endereço que o servidor observou (identidade)
+quanto o que o usuário digitou no formulário de GeoIP (exercício). O nome do campo não
+distingue — **o valor sim**: IPv4 roteável ou IPv6 é identidade e vira hash; faixa
+privada, loopback, documentação e resolvedores públicos conhecidos (`8.8.8.8`,
+`1.1.1.1`…) permanecem legíveis. Pseudonimizar conteúdo didático esvaziaria o dataset
+sem proteger ninguém: `baseNetwork=192.19.0.0/16` digitado num exercício de VLSM **é**
+o dado que dá valor ao arquivo.
+
+| Dado | Tratamento |
+|------|------------|
+| IP identificador | `SHA-256(sal + valor)` truncado em 12 hex — estável (conta visitantes únicos), irreversível sem o sal |
+| `lat` / `lon` | **Removidos** — 6 casas decimais são ~10 cm; nem hash nem arredondamento tornam publicável |
+| `body` (texto livre) | **Reconstruído** a partir dos atributos já sanitizados, nunca filtrado por regex — o body repetia os valores (`evento=geo_lookup status=ok ip=…`) |
+| `traceId` / `spanId` / `request_id` | Preservados — aleatórios por requisição, não identificam, e são o que torna o dataset analisável |
+| Estáticos, `/q/*`, `/web/*`, `/telemetria/api*`, `/health` | Descartados como ruído de infraestrutura |
+
+O sal vive no `.env` da VPS, é gerado uma vez e **nunca** entra no dataset; trocá-lo
+quebra a continuidade dos pseudônimos entre datasets já publicados.
+
+Ao final, uma **auditoria bloqueante** varre o arquivo gerado provando que nenhum valor
+de identidade sobreviveu, em qualquer campo — se achar, apaga a saída e falha. IPv4
+roteáveis que restaram (conteúdo de exercício) são listados para conferência humana.
+O script **não** faz `git push`: publicação é irreversível assim que indexada, então é
+decisão humana e não de cron.
+
 ---
 
 ## 🗂️ Estrutura de Pastas
@@ -475,6 +584,7 @@ framework-net-java-quarkus/
 ├── logs/
 ├── src/main/java/org/framework/net/
 │   ├── analiseDidatica/     # application, config, domain/kernel, infrastructure (dns/geo/historico), presentation, support
+│   ├── calculadora/         # application, config, domain, exception, presentation
 │   ├── portas/              # application, domain, exception, presentation
 │   ├── protocolos/          # application, domain, exception, presentation
 │   ├── resolucaoProblemas/  # application (export/importing/normalization/planning/routing), domain (kernel/model), presentation
@@ -505,11 +615,40 @@ Cobertura por área:
 | Área | Exemplos de testes |
 |------|--------------------|
 | Análise Didática | `Ipv4KernelTest`, `AnaliseDidaticaHttpTest`, `AnaliseExportHttpTest`, `HistoricoApiHttpTest`, `GeoLookupServiceTest`, `PdfSimplesServiceTest` |
+| Calculadora | `DivisaoServiceTest`, `VlanServiceTest`, `AgregacaoServiceTest`, `CalculadoraHttpTest` |
+| Saúde | `HealthResourceTest` |
 | Portas / Protocolos | `PortasServiceTest`, `ProtocolosServiceTest` |
 | Resolução VLSM/WAN | `VlsmServiceTest`, `VlsmPlanningServiceTest`, `ResolucaoProblemasHttpTest`, `BulkClassImportServiceTest` |
 | Segurança | `AdminApiKeyServiceTest`, `AdminApiKeyHttpTest`, `CsrfTokenServiceTest` |
-| Telemetria | `TelemetriaLoggerTest`, `TelemetriaHttpTest`, `TelemetriaConsoleBufferTest`, `TelemetryDisabledHttpTest` |
+| Telemetria | `TelemetriaLoggerTest`, `TelemetriaHttpTest`, `TelemetriaConsoleBufferTest`, `TelemetryDisabledHttpTest`, `TelemetriaStoreRotationTest`, `ModuloDePathTest`, `CorrelacaoEventosTest` |
+| Menu e rotas | `MenuRotasHttpTest` |
+| Arquitetura | `ArquiteturaCamadasTest` |
 | Shared / Web | `UserInputSanitizerTest`, `IpCidrInputNormalizerTest`, `NetworkAddressGuardTest`, `WebIntegrationTest`, `DevBrowserLauncherTest` |
+
+### Testes que guardam regras, não só comportamento
+
+Três suítes existem para impedir classes inteiras de regressão, e não para verificar
+um caso de uso:
+
+- **`ArquiteturaCamadasTest`** — lê os imports dos fontes e reprova o build se
+  `domain` passar a conhecer HTTP/Qute/camadas externas, se `application` importar
+  `presentation`, se dois módulos de negócio se acoplarem sem registro explícito, ou
+  se um `@Path` aparecer fora de `presentation`.
+- **`MenuRotasHttpTest`** — abre as 13 rotas do menu, confere que cada uma se marca
+  como ativa e navega para as demais. Conta os itens no HTML renderizado: **item novo
+  no menu sem teste correspondente quebra o build**.
+- **`ModuloDePathTest`** — trava a tabela que atribui cada rota a um módulo no
+  dashboard. Existe porque o `default` do switch apontava para "Análise Didática", e
+  com isso `/calculadora`, `/sobre`, `/admin` e `/simuladores` eram silenciosamente
+  contabilizados no módulo errado — bug que não gera exceção, só número errado.
+
+### Ao criar um módulo novo, atualize também
+
+1. `shared/main_menu.html` **e** `MenuRotasHttpTest` (a contagem de itens é verificada);
+2. `RateLimitFilter.HEAVY_PATHS` — e o `startsWith` do subcaminho, se as APIs forem pesadas;
+3. `TelemetriaDashboardService.moduloDePath` — senão o tráfego é creditado a outro módulo;
+4. `templates/home/index.html` — o bloco do módulo na landing;
+5. este README.
 
 ---
 

@@ -10,7 +10,9 @@
         tabPanels.forEach((panel) => panel.classList.toggle("active", panel.dataset.tabPanel === tabId));
         const btnLimpar = document.getElementById("btn-limpar-tela");
         if (btnLimpar) {
-            btnLimpar.setAttribute("href", "/?tab=" + encodeURIComponent(tabId));
+            // A Análise vive em /analise desde que a landing assumiu "/".
+            // Reescrever para "/?tab=" mandava o "Limpar Tela" para a home.
+            btnLimpar.setAttribute("href", "/analise?tab=" + encodeURIComponent(tabId));
         }
         if (tabId === "geo") {
             initGeoPanel();

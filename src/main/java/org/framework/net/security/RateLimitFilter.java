@@ -20,7 +20,8 @@ public class RateLimitFilter implements ContainerRequestFilter {
             "/analise",
             "/resolucao-problemas",
             "/api/informacoes/geo",
-            "/informacoes"
+            "/informacoes",
+            "/calculadora"
     );
 
     @Inject
@@ -29,8 +30,11 @@ public class RateLimitFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         String path = normalizePath(requestContext.getUriInfo().getPath());
+        // Os cálculos da Calculadora e da Resolução podem gerar centenas de linhas por
+        // requisição, então todo o subcaminho conta como pesado — não só a página.
         boolean heavy = HEAVY_PATHS.contains(path)
-                || ("POST".equals(requestContext.getMethod()) && path.startsWith("/resolucao-problemas"));
+                || ("POST".equals(requestContext.getMethod()) && path.startsWith("/resolucao-problemas"))
+                || path.startsWith("/calculadora/");
         if (!rateLimiter.allow(requestContext, heavy)) {
             requestContext.abortWith(Response.status(429)
                     .type(MediaType.APPLICATION_JSON)

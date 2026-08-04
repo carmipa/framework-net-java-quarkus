@@ -66,7 +66,10 @@ public class TelemetriaLogger {
             });
         }
 
-        TelemetriaRequestContext ctx = requestContext;
+        // Serviços de aplicação chamam logEvent sem o contexto do JAX-RS em mãos.
+        // Nesse caso a correlação é resgatada do MDC da própria thread da requisição,
+        // senão o evento sai órfão e não há como ligá-lo ao request no dataset.
+        TelemetriaRequestContext ctx = requestContext != null ? requestContext : context.contextoDoMdc();
         String message = montarMensagem(evento, status, cleaned);
         context.aplicarEvento(modulo, evento, status);
 
@@ -82,7 +85,9 @@ public class TelemetriaLogger {
                 ctx != null ? ctx.httpMethod() : null,
                 ctx != null ? ctx.httpPath() : null,
                 null,
-                ctx != null ? ctx.elapsedMillis() : null,
+                // Duração só sai do contexto ORIGINAL: o resgatado do MDC nasce agora
+                // e reportaria 0 ms para uma requisição que já está em andamento.
+                requestContext != null ? requestContext.elapsedMillis() : null,
                 message,
                 cleaned
         );

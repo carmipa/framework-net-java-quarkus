@@ -47,3 +47,11 @@ build/test-logs/
 /.quarkus/cli/plugins/
 # TLS Certificates
 .certs/
+
+# Sanitizador de telemetria (Python)
+scripts/__pycache__/
+*.pyc
+
+# Dataset gerado na VPS — sai daqui para o repositório próprio do dataset,
+# nunca versionado junto com a aplicação.
+dataset/

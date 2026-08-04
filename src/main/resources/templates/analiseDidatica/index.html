@@ -1,5 +1,8 @@
 {#include shared/base.html}
 {#title}CyberNet Framework | FIAP - Paulo André{/title}
+{#extraHead}
+<link rel="stylesheet" href="/calculadora/css/calculadora.css?v=20260803" />
+{/extraHead}
 {#content}
 <div class="container py-5">
     {#include shared/main_menu.html activeMainMenu='analise' /}
@@ -55,6 +58,11 @@
                     title="Comparador: compare o mesmo IP sob dois prefixos CIDR lado a lado">
                 <span class="material-symbols-outlined">compare_arrows</span><span>Comparador</span>
             </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="calculadora" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Calculadora: divida um bloco em sub-redes e veja quantas redes cabem (ex.: /21 em /24 = 8)">
+                <span class="material-symbols-outlined">calculate</span><span>Calculadora</span>
+            </button>
         </div>
 
         <div class="tab-panel" data-tab-panel="cidr">{#include analiseDidatica/partials/tab_cidr.html /}</div>
@@ -64,6 +72,7 @@
         <div class="tab-panel" data-tab-panel="dominio">{#include analiseDidatica/partials/tab_dominio.html /}</div>
         <div class="tab-panel" data-tab-panel="ipv6">{#include analiseDidatica/partials/tab_ipv6.html /}</div>
         <div class="tab-panel" data-tab-panel="comparador">{#include analiseDidatica/partials/tab_comparador.html /}</div>
+        <div class="tab-panel" data-tab-panel="calculadora">{#include analiseDidatica/partials/tab_calculadora.html /}</div>
 
         <div class="aed-action-row action-buttons mt-3">
             <a href="/export/json" class="aed-btn aed-btn-json" target="_blank" rel="noopener"

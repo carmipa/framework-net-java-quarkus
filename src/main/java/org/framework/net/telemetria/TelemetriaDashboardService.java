@@ -233,7 +233,24 @@ public class TelemetriaDashboardService {
         return false;
     }
 
-    private static String moduloDePath(String path) {
+    /**
+     * Traduz o caminho HTTP no módulo que aparece no dashboard.
+     *
+     * <p><b>Propósito de negócio:</b> é o que decide a quem pertence cada
+     * requisição no painel "por módulo". Errar aqui não gera exceção nenhuma —
+     * gera número errado, que é pior, porque ninguém desconfia.</p>
+     *
+     * <p><b>Invariantes do domínio:</b> todo primeiro segmento de rota real do
+     * projeto está mapeado explicitamente. O {@code default} devolve
+     * <b>"Outros"</b>, nunca um módulo concreto: antes ele apontava para
+     * "Análise Didática", e com isso {@code /calculadora}, {@code /sobre},
+     * {@code /admin} e {@code /simuladores} inflavam silenciosamente as
+     * estatísticas de um módulo ao qual não pertencem.</p>
+     *
+     * <p><b>Comportamento em caso de falha:</b> caminho nulo, vazio ou raiz
+     * devolve "Início"; segmento desconhecido devolve "Outros". Não lança.</p>
+     */
+    static String moduloDePath(String path) {
         if (path == null || path.isBlank() || path.equals("/")) {
             return "Início";
         }
@@ -241,18 +258,24 @@ public class TelemetriaDashboardService {
         int barra = p.indexOf('/');
         String seg = barra > -1 ? p.substring(0, barra) : p;
         return switch (seg) {
+            // Análise Didática e os resources que nasceram dentro dela.
+            case "analise", "export", "history", "mascara-referencia" -> "Análise Didática";
+            case "calculadora" -> "Calculadora";
             case "localizacao" -> "Localização";
             case "portas" -> "Portas";
             case "protocolos" -> "Protocolos";
             case "resolucao-problemas" -> "Resolução";
             case "trafego" -> "Tráfego";
+            case "simuladores" -> "Simuladores";
             case "diagnostico" -> "Diagnóstico";
             case "seguranca" -> "Segurança ACL";
             case "telemetria" -> "Telemetria";
             case "documentacao" -> "Documentação";
             case "informacoes" -> "GeoIP";
+            case "sobre" -> "Sobre";
+            case "admin", "login", "logout" -> "Admin";
             case "api" -> apiModulo(p);
-            default -> "Análise Didática";
+            default -> "Outros";
         };
     }
 
