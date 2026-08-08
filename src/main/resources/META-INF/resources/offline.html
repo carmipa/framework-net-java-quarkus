@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sem conexão | Framework de Redes</title>
+    <link rel="icon" type="image/png" href="/pwa/icone-192.png">
+    <link rel="stylesheet" href="/web/css/app.css">
+    <link rel="stylesheet" href="/web/css/aed-command-center.css">
+    <link rel="stylesheet" href="/web/css/offline.css">
+</head>
+
+<body class="aed-app">
+    <main class="offline-wrap">
+        <img src="/pwa/icone-192.png" alt="" class="offline-icone" width="96" height="96">
+        <h1 class="offline-titulo">Sem conexão</h1>
+        <p class="offline-texto">
+            O Framework de Redes precisa de internet para calcular, resolver DNS e
+            consultar geolocalização — nada disso roda no seu aparelho.
+        </p>
+        <p class="offline-texto offline-secundario">
+            Assim que a conexão voltar, recarregue a página.
+        </p>
+        <button type="button" class="aed-btn aed-btn-execute" onclick="location.reload()">
+            Tentar de novo
+        </button>
+    </main>
+</body>
+
+</html>
