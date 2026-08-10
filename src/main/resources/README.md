@@ -76,7 +76,9 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | GeoIP (API) | `/api/informacoes/geo` | GET | JSON de geolocalização (`?ip=`) |
 | Referência de máscaras | `/mascara-referencia` | GET | Tabela JSON de máscaras/prefixos |
 | Portas | `/portas` | GET | Catálogo interativo TCP/UDP |
-| Protocolos | `/protocolos` | GET | Catálogo + troubleshooting de roteamento |
+| Protocolos | `/protocolos` | GET | Catálogo + troubleshooting de roteamento (aba Geral) |
+| Protocolos — BGP | `/protocolos/bgp` | GET | Aprofundamento do BGP-4: atributos, seleção de melhor rota, sessão, proteções da borda |
+| Protocolos — SSH | `/protocolos/ssh` | GET | Aprofundamento do SSH: camadas, autenticação, chaves, túneis, hardening |
 | Resolução VLSM | `/resolucao-problemas` | GET/POST | Cenários VLSM/WAN, demos e exportações |
 | Telemetria | `/telemetria` | GET | Dashboard de eventos e console |
 | Telemetria (API) | `/telemetria/api/*` | GET/POST | `resumo`, `dashboard`, `console`, `console/limpar`, `exportar`, `pasta` |
@@ -153,6 +155,40 @@ menor lista de blocos CIDR que cobre **exatamente** a faixa, com a ACL equivalen
 - catálogo didático com filtros;
 - resumo IGP/EGP e bloco **Troubleshooting rápido (roteamento)** na página de protocolos;
 - registro opcional das consultas no histórico via `/history/catalog`.
+
+#### Aprofundamentos por protocolo
+
+O catálogo responde *quais protocolos existem e como se comparam*; ele não responde
+*me explica este protocolo*. Para isso o módulo tem um segundo nível: uma página
+dedicada por protocolo, alcançável pelo sub-menu (**Geral · BGP · SSH**) e pelo botão
+**Aprofundar** na linha correspondente do DataGrid.
+
+| Página | Rota | Conteúdo |
+|---|---|---|
+| BGP-4 | `/protocolos/bgp` | AS/ASN, eBGP × iBGP, atributos de caminho, ordem completa de seleção de melhor rota, máquina de estados da sessão, mensagens e temporizadores, route reflector e confederação, filtros de prefixo, `maximum-prefix`, RPKI/ROV, GTSM, dampening, blackhole RFC 7999, laboratório Cisco e troubleshooting |
+| SSH | `/protocolos/ssh` | Autenticação de host × de usuário, TOFU e `known_hosts`, forward secrecy, as três camadas do SSH-2, métodos de autenticação, tipos de chave (incl. FIDO2), túneis `-L`/`-R`/`-D`/`-J`/`-A`, endurecimento do `sshd_config`, laboratório e troubleshooting |
+
+Como isso é montado:
+
+- **`AprofundamentoProtocolo`** (`protocolos/domain`) é o registro único: slug, rótulo,
+  ícone, template, CSS e os nomes que aquele aprofundamento cobre no catálogo. É ele que
+  gera o sub-menu, a rota e o botão "Aprofundar" — nenhum desses pontos é escrito à mão
+  no template.
+- **Conteúdo em JSON** (`resources/protocolos/<slug>/conteudo.json`), carregado uma vez
+  no boot e **falha fechada**: seção obrigatória vazia impede a aplicação de subir, porque
+  página pela metade em produção passa despercebida.
+- **Uma página, um CSS**: `META-INF/resources/protocolos/<slug>/css/<slug>.css`. O
+  sub-menu, comum às três páginas, fica em `protocolos/css/subnav.css`.
+- **Rotas no mesmo resource** (`ProtocolosResource`), de propósito: o projeto já viu dois
+  `@Path` sob o mesmo prefixo derrubarem uma rota para 404 no módulo de Tráfego.
+- **Telemetria**: cada visita emite `aprofundamento_view` no módulo `protocolos`, com o
+  campo `protocolo`, o que separa "abriu o catálogo" de "abriu o aprofundamento".
+- **Guardas** (`AprofundamentoProtocoloTest`): registro apontando para arquivo inexistente
+  reprova o build; página em disco fora do registro (órfã, no ar e sem link) reprova;
+  nome divergente do catálogo — que faria o botão "Aprofundar" sumir calado — reprova.
+
+Para adicionar o próximo protocolo: um `conteudo.json`, um template, um CSS e uma linha
+no registro.
 
 ### Módulo 4 — Resolução de Problemas (VLSM + WAN) (`/resolucao-problemas`)
 

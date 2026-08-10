@@ -2,10 +2,12 @@
 {#title}CyberNet Framework | Catálogo de Protocolos{/title}
 {#extraHead}
 <link rel="stylesheet" href="/protocolos/css/protocolos.css?v=20260709">
+<link rel="stylesheet" href="/protocolos/css/subnav.css?v=20260810">
 {/extraHead}
 {#content}
 <div class="container py-5">
     {#include shared/main_menu.html activeMainMenu='protocolos' /}
+    {#include protocolos/partials/subnav.html /}
     <div class="text-center mb-4">
         <span class="aed-eyebrow aed-eyebrow-indigo">Catálogo</span>
         <h2 class="mb-2" style="font-family:var(--aed-font-display);">Catálogo de Protocolos de Rede</h2>
@@ -188,6 +190,9 @@
                             <td class="text-nowrap">
                                 <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-copy="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Copiar os dados deste protocolo."><span class="material-symbols-outlined">content_copy</span></button>
                                 <button type="button" class="aed-btn aed-btn-indigo btn-sm" data-grid-details="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir os detalhes deste protocolo.">Detalhes</button>
+                                {#if item.temAprofundamento}
+                                <a href="{item.aprofundamentoRota}" class="aed-btn aed-btn-teal btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir a página de aprofundamento deste protocolo."><span class="material-symbols-outlined">menu_book</span> Aprofundar</a>
+                                {/if}
                             </td>
                         </tr>
                         {/for}
@@ -253,9 +258,12 @@
                                 <dd class="small text-info mb-0">{item.funcao}</dd>
                             </div>
                         </dl>
-                        <div class="mt-2 pt-2 border-top border-secondary border-opacity-25">
-                            <button type="button" class="aed-btn aed-btn-neutral btn-sm me-1" data-grid-copy="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Copiar os dados deste protocolo."><span class="material-symbols-outlined">content_copy</span></button>
+                        <div class="mt-2 pt-2 border-top border-secondary border-opacity-25 d-flex flex-wrap gap-1">
+                            <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-copy="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Copiar os dados deste protocolo."><span class="material-symbols-outlined">content_copy</span></button>
                             <button type="button" class="aed-btn aed-btn-indigo btn-sm" data-grid-details="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir os detalhes deste protocolo.">Detalhes</button>
+                            {#if item.temAprofundamento}
+                            <a href="{item.aprofundamentoRota}" class="aed-btn aed-btn-teal btn-sm"><span class="material-symbols-outlined">menu_book</span> Aprofundar</a>
+                            {/if}
                         </div>
                     </div>
                     {/for}

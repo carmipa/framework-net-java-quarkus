@@ -1,0 +1,25 @@
+{! Sub-menu do módulo Protocolos.
+    Os itens vêm de AprofundamentoProtocolo.disponiveis() — protocolo novo aparece
+    aqui sozinho ao ser registrado, sem edição de template. !}
+<nav class="protocolo-subnav" aria-label="Seções do módulo de Protocolos">
+    <a href="/protocolos"
+       class="protocolo-subnav-item {#if aprofundamentoAtivo == 'geral'}is-active{/if}"
+       {#if aprofundamentoAtivo == 'geral'}aria-current="page"{/if}
+       title="Catálogo comparativo com todos os protocolos">
+        <span class="material-symbols-outlined" aria-hidden="true">table_rows</span>
+        <span>Geral</span>
+    </a>
+    {#for item in aprofundamentos}
+    <a href="{item.rota}"
+       class="protocolo-subnav-item {#if aprofundamentoAtivo == item.slug}is-active{/if}"
+       {#if aprofundamentoAtivo == item.slug}aria-current="page"{/if}
+       title="{item.chamada}">
+        <span class="material-symbols-outlined" aria-hidden="true">{item.icone}</span>
+        <span>{item.rotuloMenu}</span>
+    </a>
+    {/for}
+    <span class="protocolo-subnav-hint">
+        <span class="material-symbols-outlined" aria-hidden="true">menu_book</span>
+        Aprofundamento por protocolo
+    </span>
+</nav>

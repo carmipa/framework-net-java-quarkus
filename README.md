@@ -20,7 +20,9 @@ Cobre análise de IPv4/IPv6, CIDR, máscaras, wildcard, VLSM, topologia WAN, scr
 | Tráfego | `/trafego` | Dashboard de tráfego **ao vivo** (gráficos estilo Wireshark + Wi-Fi/Bluetooth, modo demo) e decodificador didático de pacotes (hex dump → Ethernet/IP/TCP/UDP/ICMP) |
 | GeoIP (página) | `/informacoes` | Página autônoma de geolocalização de IP (MaxMind + fallback) |
 | Portas | `/portas` | Catálogo interativo TCP/UDP |
-| Protocolos | `/protocolos` | Catálogo + troubleshooting de roteamento |
+| Protocolos | `/protocolos` | Catálogo + troubleshooting de roteamento (aba **Geral**) |
+| Protocolos — BGP | `/protocolos/bgp` | Aprofundamento do **BGP-4**: atributos, ordem de seleção de melhor rota, máquina de estados da sessão, route reflector, filtros/`maximum-prefix`/RPKI, lab Cisco e troubleshooting |
+| Protocolos — SSH | `/protocolos/ssh` | Aprofundamento do **SSH**: TOFU e `known_hosts`, camadas do SSH-2, métodos de autenticação, chaves, túneis `-L/-R/-D/-J/-A` e hardening do `sshd_config` |
 | Resolução VLSM | `/resolucao-problemas` | Cenários VLSM/WAN, demos, exports e **ZIP da turma** |
 | Telemetria | `/telemetria` | Dashboard de eventos e console ao vivo |
 | Documentação | `/documentacao` | README técnico renderizado |
@@ -56,7 +58,7 @@ org/framework/net/
 └── web/                 # home (landing) · documentacao · admin login · ícone · filtros
 ```
 
-Os **estáticos** seguem a mesma divisão por módulo dos templates Qute: cada página com estilo próprio tem seu CSS na pasta do módulo (`home/css/`, `portas/css/`, `protocolos/css/`, `telemetria/css/`, `resolucaoProblemas/css/`, `documentacao/css/`), enquanto o **design system compartilhado** (casca, nav, cards, botões, tokens) fica em `web/css/app.css` + `web/css/aed-command-center.css`, carregado por `shared/base.html`.
+Os **estáticos** seguem a mesma divisão por módulo dos templates Qute: cada página com estilo próprio tem seu CSS na pasta do módulo (`home/css/`, `portas/css/`, `protocolos/css/`, `telemetria/css/`, `resolucaoProblemas/css/`, `documentacao/css/`) — e, quando o módulo tem várias páginas, cada uma leva o CSS dela (`protocolos/bgp/css/bgp.css`, `protocolos/ssh/css/ssh.css`), enquanto o **design system compartilhado** (casca, nav, cards, botões, tokens) fica em `web/css/app.css` + `web/css/aed-command-center.css`, carregado por `shared/base.html`.
 
 ## Requisitos
 

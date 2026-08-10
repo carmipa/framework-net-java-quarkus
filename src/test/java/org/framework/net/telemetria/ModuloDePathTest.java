@@ -45,6 +45,11 @@ class ModuloDePathTest {
         assertEquals("Diagnóstico", TelemetriaDashboardService.moduloDePath("/diagnostico/api/ping"));
         assertEquals("Tráfego", TelemetriaDashboardService.moduloDePath("/trafego/api/decodificar"));
         assertEquals("Localização", TelemetriaDashboardService.moduloDePath("/localizacao/api/cep"));
+        // Aprofundamentos por protocolo: são páginas do módulo Protocolos, não
+        // módulos próprios — creditá-las a "bgp"/"ssh" partiria as estatísticas
+        // do módulo em pedaços que ninguém somaria de volta.
+        assertEquals("Protocolos", TelemetriaDashboardService.moduloDePath("/protocolos/bgp"));
+        assertEquals("Protocolos", TelemetriaDashboardService.moduloDePath("/protocolos/ssh"));
     }
 
     @Test

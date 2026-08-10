@@ -14,7 +14,8 @@ const base = process.argv[2] || 'https://frameworknet.carminati.dev.br';
 
 const PAGINAS = [
   '/', '/analise', '/calculadora', '/localizacao', '/documentacao',
-  '/portas', '/protocolos', '/resolucao-problemas', '/trafego',
+  '/portas', '/protocolos', '/protocolos/bgp', '/protocolos/ssh',
+  '/resolucao-problemas', '/trafego',
   '/diagnostico', '/seguranca', '/sobre',
 ];
 

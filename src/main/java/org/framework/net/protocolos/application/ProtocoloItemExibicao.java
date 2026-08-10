@@ -1,11 +1,31 @@
 package org.framework.net.protocolos.application;
 
+import org.framework.net.protocolos.domain.AprofundamentoProtocolo;
 import org.framework.net.protocolos.domain.ProtocoloItem;
 
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Projeção de um protocolo do catálogo para exibição no DataGrid.
+ *
+ * <p><b>Propósito de negócio:</b> normaliza os campos vindos do JSON (nulo vira
+ * texto vazio, alcance ausente vira "N/A") e prepara o texto de busca que o
+ * DataGrid usa no filtro geral. Também informa se aquele protocolo tem página de
+ * aprofundamento — é o que faz a linha do BGP e a do SSH ganharem o botão
+ * "Aprofundar" enquanto as demais não o exibem.</p>
+ *
+ * <p><b>Invariantes do domínio:</b> nenhum campo de texto é nulo depois da
+ * projeção, porque o template renderiza direto e {@code null} viraria a palavra
+ * "null" na tela. {@code aprofundamentoRota} só vem preenchido quando
+ * {@code temAprofundamento} é verdadeiro.</p>
+ *
+ * <p><b>Comportamento em caso de falha:</b> protocolo sem página de
+ * aprofundamento não é erro — devolve {@code temAprofundamento=false} e rota
+ * vazia, e a coluna de ações mostra apenas copiar e detalhes.</p>
+ */
 public record ProtocoloItemExibicao(
         String nome,
         String camada,
@@ -31,7 +51,9 @@ public record ProtocoloItemExibicao(
         String casoUsoReal,
         String diagnosticoComandos,
         String searchText,
-        boolean roteamento) {
+        boolean roteamento,
+        boolean temAprofundamento,
+        String aprofundamentoRota) {
 
     public static ProtocoloItemExibicao from(ProtocoloItem item) {
         String alcance = normalizarOu(item.alcance(), "N/A");
@@ -65,6 +87,9 @@ public record ProtocoloItemExibicao(
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.joining(" "));
 
+        Optional<AprofundamentoProtocolo> aprofundamento =
+                AprofundamentoProtocolo.porNomeDoCatalogo(item.nome());
+
         return new ProtocoloItemExibicao(
                 item.nome(),
                 item.camada(),
@@ -90,7 +115,9 @@ public record ProtocoloItemExibicao(
                 normalizar(item.casoUsoReal()),
                 diagnostico,
                 searchText,
-                "roteamento".equalsIgnoreCase(categoria));
+                "roteamento".equalsIgnoreCase(categoria),
+                aprofundamento.isPresent(),
+                aprofundamento.map(AprofundamentoProtocolo::rota).orElse(""));
     }
 
     private static String normalizar(String valor) {
