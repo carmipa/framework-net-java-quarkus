@@ -23,7 +23,8 @@ Cobre análise de IPv4/IPv6, CIDR, máscaras, wildcard, VLSM, topologia WAN, scr
 | Protocolos | `/protocolos` | Catálogo + troubleshooting de roteamento (aba **Geral**) |
 | Protocolos — BGP | `/protocolos/bgp` | Aprofundamento do **BGP-4**: atributos, ordem de seleção de melhor rota, máquina de estados da sessão, route reflector, filtros/`maximum-prefix`/RPKI, lab Cisco e troubleshooting |
 | Protocolos — SSH | `/protocolos/ssh` | Aprofundamento do **SSH**: TOFU e `known_hosts`, camadas do SSH-2, métodos de autenticação, chaves, túneis `-L/-R/-D/-J/-A` e hardening do `sshd_config` |
-| Resolução VLSM | `/resolucao-problemas` | Cenários VLSM/WAN, demos, exports e **ZIP da turma** |
+| Resolução VLSM | `/resolucao-problemas` | Aba **Projetar**: cenários VLSM/WAN, demos, exports e **ZIP da turma** |
+| Resolução — reversa | `/resolucao-problemas?aba=reversa` | Aba **Engenharia reversa**: cola a configuração Cisco pronta, **acha e corrige os erros com evidência** e reconstrói LANs, enlaces, tabelas e o desenho |
 | Telemetria | `/telemetria` | Dashboard de eventos e console ao vivo |
 | Documentação | `/documentacao` | README técnico renderizado |
 | Administração | `/admin/login` | Autenticação para rotas sensíveis (`/export/*`) |

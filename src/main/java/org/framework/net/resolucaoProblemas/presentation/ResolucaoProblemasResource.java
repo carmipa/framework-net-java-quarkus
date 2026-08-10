@@ -15,10 +15,14 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.framework.net.resolucaoProblemas.application.VlsmService;
 import org.framework.net.resolucaoProblemas.application.export.ExportClassZipService;
+import org.framework.net.resolucaoProblemas.application.export.ExportEngenhariaReversaService;
 import org.framework.net.resolucaoProblemas.application.export.ExportTxtService;
 import org.framework.net.resolucaoProblemas.application.export.ExportZipService;
 import org.framework.net.resolucaoProblemas.application.importing.BulkClassImportService;
 import org.framework.net.resolucaoProblemas.application.normalization.VlsmNormalizationService;
+import org.framework.net.resolucaoProblemas.application.parsing.CenarioExemploReversa;
+import org.framework.net.resolucaoProblemas.application.parsing.EngenhariaReversaService;
+import org.framework.net.resolucaoProblemas.domain.model.CenarioReconstruido;
 import org.framework.net.resolucaoProblemas.domain.model.ClassRosterRow;
 import org.framework.net.resolucaoProblemas.domain.kernel.Ipv4Kernel;
 import org.framework.net.resolucaoProblemas.domain.model.LocationInput;
@@ -54,6 +58,12 @@ public class ResolucaoProblemasResource {
     VlsmService vlsmService;
 
     @Inject
+    EngenhariaReversaService engenhariaReversaService;
+
+    @Inject
+    ExportEngenhariaReversaService exportEngenhariaReversaService;
+
+    @Inject
     ExportTxtService exportTxtService;
 
     @Inject
@@ -81,9 +91,32 @@ public class ResolucaoProblemasResource {
     @io.quarkus.qute.Location("resolucaoProblemas/resolucao_problemas.html")
     Template page;
 
+    /**
+     * Abre a página no modo pedido pela URL.
+     *
+     * <p><b>Propósito de negócio:</b> as duas abas são o mesmo problema em
+     * sentidos opostos — "Projetar" vai do requisito ao plano, "Engenharia
+     * reversa" vai da configuração pronta de volta ao plano. Cada uma tem link
+     * próprio para poder ser compartilhada e testada.</p>
+     *
+     * <p><b>Comportamento em caso de falha:</b> valor desconhecido em
+     * {@code aba} cai na aba "Projetar", que é o comportamento histórico da
+     * rota — nunca em erro.</p>
+     */
     @GET
     @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance get(@QueryParam("demo") String demo) {
+    public TemplateInstance get(@QueryParam("demo") String demo, @QueryParam("aba") String aba) {
+        if ("reversa".equalsIgnoreCase(aba)) {
+            if ("bgp".equalsIgnoreCase(demo)) {
+                String exemplo = CenarioExemploReversa.BGP_TRES_AS;
+                return renderReversa(engenhariaReversaService.interpretar(exemplo), exemplo);
+            }
+            return renderReversa(null, "");
+        }
+        return getProjetar(demo);
+    }
+
+    private TemplateInstance getProjetar(String demo) {
         ResolucaoFormData formData;
         List<LocationInput> locations;
         if ("fiap".equals(demo)) {
@@ -110,6 +143,7 @@ public class ResolucaoProblemasResource {
     @Produces({MediaType.TEXT_HTML, MediaType.TEXT_PLAIN, "application/zip"})
     public Response post(
             @RestForm("action_type") String actionType,
+            @RestForm("config_paste") String configPaste,
             @RestForm("class_roster_paste") String classRosterPaste,
             @RestForm("base_network") String baseNetworkRaw,
             @RestForm("base_network_ip") String baseNetworkIp,
@@ -124,6 +158,11 @@ public class ResolucaoProblemasResource {
             @RestForm("loc_hosts") List<String> locHosts) {
 
         String action = actionType == null ? "calculate" : actionType.strip().toLowerCase(Locale.ROOT);
+
+        if (action.startsWith("reverse")) {
+            return postEngenhariaReversa(action, configPaste);
+        }
+
         String rosterPaste = classRosterPaste == null ? "" : classRosterPaste;
         ResolucaoFormData formData = buildFormData(
                 baseNetworkRaw, baseNetworkIp, baseNetworkCidr, topologyType,
@@ -270,7 +309,84 @@ public class ResolucaoProblemasResource {
                 .data("locations", locations)
                 .data("scenario", scenario)
                 .data("topologyDetailsJson", topologyDetailsJson)
-                .data("classRosterPaste", classRosterPaste == null ? "" : classRosterPaste);
+                .data("classRosterPaste", classRosterPaste == null ? "" : classRosterPaste)
+                .data("abaAtiva", "projetar")
+                .data("cenario", null)
+                .data("configPaste", "");
+    }
+
+    /**
+     * Trata as ações da aba "Engenharia reversa".
+     *
+     * <p><b>Propósito de negócio:</b> "Executar" interpreta o texto colado;
+     * "Limpar" esvazia a área; as duas exportações levam o resultado para fora.
+     * A impressão NÃO passa por aqui — é a janela do navegador, acionada no
+     * cliente, e nunca deve ser confundida com o botão que faz o trabalho.</p>
+     *
+     * <p><b>Invariantes do domínio:</b> a interpretação é sempre refeita a partir
+     * do texto que veio no formulário, inclusive nas exportações. Guardar o
+     * resultado entre requisições criaria uma segunda fonte de verdade que
+     * poderia divergir do que está na tela.</p>
+     *
+     * <p><b>Comportamento em caso de falha:</b> exportação sem nada interpretado
+     * lança {@code ExportacaoException}, traduzida pelo mapper do módulo; erro
+     * inesperado vira log de exceção e devolve a aba com o texto preservado, sem
+     * derrubar a página.</p>
+     */
+    private Response postEngenhariaReversa(String action, String configPaste) {
+        String texto = configPaste == null ? "" : configPaste;
+
+        if ("reverse_limpar".equals(action)) {
+            telemetriaLogger.logEvent("info", "resolucaoProblemas", "engenharia_reversa_limpar",
+                    Map.of("status", "ok"));
+            return Response.ok(renderReversa(null, "").render()).type(MediaType.TEXT_HTML).build();
+        }
+
+        CenarioReconstruido cenario = engenhariaReversaService.interpretar(texto);
+
+        if ("reverse_export_scripts".equals(action)) {
+            return arquivoTexto(exportEngenhariaReversaService.gerarScriptsCorrigidos(cenario),
+                    "scripts_corrigidos.txt");
+        }
+        if ("reverse_export_relatorio".equals(action)) {
+            return arquivoTexto(exportEngenhariaReversaService.gerarRelatorio(cenario),
+                    "relatorio_engenharia_reversa.txt");
+        }
+        return Response.ok(renderReversa(cenario, texto).render()).type(MediaType.TEXT_HTML).build();
+    }
+
+    private Response arquivoTexto(String conteudo, String nomeArquivo) {
+        return Response.ok(conteudo)
+                .type("text/plain; charset=utf-8")
+                .header("Content-Disposition", "attachment; filename=\"" + nomeArquivo + "\"")
+                .build();
+    }
+
+    /**
+     * Renderiza a aba "Engenharia reversa".
+     *
+     * <p><b>Invariantes do domínio:</b> o texto colado volta para a tela tal como
+     * veio — a ferramenta nunca sobrescreve a entrada do usuário; o script
+     * corrigido é material novo, exibido ao lado. Os dados da aba "Projetar" vão
+     * preenchidos com o formulário em branco porque o template é o mesmo e o
+     * bloco de scripts do rodapé referencia {@code topologyDetailsJson}.</p>
+     *
+     * <p><b>Comportamento em caso de falha:</b> {@code cenario} nulo significa
+     * "ainda não executou" e a tela mostra só o formulário — não é erro.</p>
+     */
+    private TemplateInstance renderReversa(CenarioReconstruido cenario, String configPaste) {
+        return page
+                .data("activeMainMenu", "resolucao")
+                .data("erro", null)
+                .data("invalidFields", Set.of())
+                .data("formData", blankFormData())
+                .data("locations", List.of(new LocationInput("", "")))
+                .data("scenario", null)
+                .data("topologyDetailsJson", "{}")
+                .data("classRosterPaste", "")
+                .data("abaAtiva", "reversa")
+                .data("cenario", cenario)
+                .data("configPaste", configPaste == null ? "" : configPaste);
     }
 
     private ResolucaoFormData formFromDemo(VlsmNormalizationService.DemoScenario demo) {

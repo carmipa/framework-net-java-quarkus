@@ -79,7 +79,8 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Protocolos | `/protocolos` | GET | Catálogo + troubleshooting de roteamento (aba Geral) |
 | Protocolos — BGP | `/protocolos/bgp` | GET | Aprofundamento do BGP-4: atributos, seleção de melhor rota, sessão, proteções da borda |
 | Protocolos — SSH | `/protocolos/ssh` | GET | Aprofundamento do SSH: camadas, autenticação, chaves, túneis, hardening |
-| Resolução VLSM | `/resolucao-problemas` | GET/POST | Cenários VLSM/WAN, demos e exportações |
+| Resolução VLSM | `/resolucao-problemas` | GET/POST | Aba **Projetar**: cenários VLSM/WAN, demos e exportações |
+| Resolução — reversa | `/resolucao-problemas?aba=reversa` | GET/POST | Aba **Engenharia reversa**: interpreta configuração Cisco colada, audita, corrige e reconstrói o projeto |
 | Telemetria | `/telemetria` | GET | Dashboard de eventos e console |
 | Telemetria (API) | `/telemetria/api/*` | GET/POST | `resumo`, `dashboard`, `console`, `console/limpar`, `exportar`, `pasta` |
 | Documentação | `/documentacao` | GET | Este README renderizado |
@@ -191,6 +192,59 @@ Para adicionar o próximo protocolo: um `conteudo.json`, um template, um CSS e u
 no registro.
 
 ### Módulo 4 — Resolução de Problemas (VLSM + WAN) (`/resolucao-problemas`)
+
+O módulo tem **duas abas**, que são o mesmo problema em sentidos opostos:
+
+| Aba | Rota | Vai de | Para |
+|---|---|---|---|
+| **Projetar** | `/resolucao-problemas` | requisitos (localidades e hosts) | plano VLSM, WAN, roteamento, scripts |
+| **Engenharia reversa** | `/resolucao-problemas?aba=reversa` | configuração Cisco pronta | erros apontados e corrigidos + o mesmo plano reconstruído |
+
+#### Aba "Engenharia reversa"
+
+O aluno cola a configuração que recebeu — normalmente com erro — e o botão **Executar**
+devolve, na mesma tela: a auditoria linha a linha, os scripts corrigidos, as LANs, os
+enlaces ponto a ponto, as tabelas por roteador e o desenho da topologia. O botão
+**Imprimir** é separado do Executar: um faz o trabalho, o outro só manda a tela para o papel.
+
+**O algoritmo.** As declarações `neighbor <ip> remote-as <as>` formam um sistema
+**sobredeterminado**: cada roteador declara onde o *outro* está. Se SP diz que RJ mora em
+`.2`, então RJ tem de possuir `.2`. Quando não possui, o erro não é apenas detectado — fica
+**localizado**, e a correção sai do próprio texto colado. É isso que separa correção de
+palpite.
+
+Três classes de achado, e a classe decide o que a tela faz:
+
+| Classe | O que acontece |
+|---|---|
+| **Erro corrigido** | corrige e mostra *antes → depois* **com a evidência** que sustenta a correção |
+| **Erro sem correção automática** | aponta e para. Escolher sem evidência seria adivinhar |
+| **Aviso** | não impede o cenário (`no auto-summary` ausente, interface sem `no shutdown`) |
+
+O que o interpretador entende: `hostname`; interfaces (incl. abreviadas e loopback) com
+`ip address`/máscara, `no shutdown`, `clock rate` (identifica o lado DCE), `description`,
+`encapsulation dot1Q`; `router bgp` com `neighbor/remote-as/network mask`; `router ospf`
+com `network + wildcard + area`; `router eigrp`; `router rip`; e `ip route`. A palavra
+`network` é lida pelo **contexto do bloco `router`**, porque tem três gramáticas diferentes.
+
+Invariantes que o código sustenta:
+
+- **nenhuma linha é engolida** — o que o interpretador não usou aparece numa lista com
+  número e motivo; parser silencioso desenha errado com cara de certo;
+- **o texto do usuário nunca é sobrescrito** — o script corrigido é material novo, ao lado;
+- **cada linha alterada sai marcada** com `! CORRIGIDO:` dentro do próprio script, porque
+  configuração corrigida sem marca vira comando aplicado às cegas no equipamento;
+- **o que falta vira pendência, não invenção** — AS declarado como vizinho e não colado é
+  listado com a instrução de colar aquele script;
+- **o resultado não depende da ordem** em que os scripts foram colados (há teste de
+  regressão para isso: dois erros espelhados só se resolvem se a colisão for medida contra
+  o que os outros scripts *corroboram*, não contra o que um roteador meramente declarou).
+
+Caso de referência (é o teste `EngenhariaReversaServiceTest`): três AS em eBGP com
+`ip adress` escrito errado nove vezes, máscara de cinco octetos em três anúncios e duas
+interfaces com o endereço trocado. A ferramenta corrige as catorze ocorrências, e a
+confirmação de que a correção é a certa é que o `clock rate` passa a cair **exatamente uma
+vez por enlace** — três sinais independentes convergindo.
 
 - entrada dinâmica com N localidades (nome + **quantidade de hosts** — o sistema calcula o CIDR pela fórmula `2^H ≥ N+2` → prefixo `32−H`);
 - **obrigatório:** IP/rede base e localidades; **opcional:** CIDR da base (inferência classful se vazio), AS EIGRP (padrão `71`), processo OSPF (padrão `1`);

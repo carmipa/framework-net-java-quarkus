@@ -1,0 +1,122 @@
+package org.framework.net.resolucaoProblemas.application.parsing;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.framework.net.resolucaoProblemas.domain.model.AchadoConfiguracao;
+import org.framework.net.resolucaoProblemas.domain.model.CenarioReconstruido;
+import org.framework.net.resolucaoProblemas.domain.model.CenarioReconstruido.EnlaceReconstruido;
+import org.framework.net.resolucaoProblemas.domain.model.CenarioReconstruido.LanReconstruida;
+import org.framework.net.resolucaoProblemas.domain.model.CenarioReconstruido.Resumo;
+import org.framework.net.resolucaoProblemas.domain.model.CenarioReconstruido.ScriptCorrigido;
+import org.framework.net.resolucaoProblemas.domain.model.CenarioReconstruido.TabelaRoteador;
+import org.framework.net.resolucaoProblemas.domain.model.ConfiguracaoLida;
+import org.framework.net.resolucaoProblemas.domain.model.ConfiguracaoLida.RoteadorLido;
+import org.framework.net.telemetria.TelemetriaLogger;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Caso de uso da aba "Engenharia reversa" do módulo de Resolução de Problemas.
+ *
+ * <p><b>Propósito de negócio:</b> orquestra as três etapas — ler o texto colado,
+ * auditar a coerência entre os scripts e reconstruir o projeto — devolvendo em uma
+ * única chamada o que a tela precisa mostrar. É a inversão da aba "Projetar": lá
+ * se parte de requisitos para produzir configuração; aqui se parte da configuração
+ * para recuperar o projeto e apontar o que está errado nele.</p>
+ *
+ * <p><b>Invariantes do domínio:</b> o texto original do usuário nunca é alterado —
+ * o script corrigido é material novo, ao lado do original. O evento de telemetria
+ * é sempre atribuído ao módulo {@code resolucaoProblemas}, coerente com a
+ * atribuição de rota do dashboard, e carrega as contagens que permitem saber se a
+ * ferramenta está de fato encontrando erro ou só desenhando.</p>
+ *
+ * <p><b>Comportamento em caso de falha:</b> texto vazio devolve um cenário vazio
+ * com {@code cenarioConsistente = false}, sem exceção — cabe à tela dizer que não
+ * havia o que interpretar. Nenhuma etapa lança por conteúdo malformado: defeito de
+ * configuração vira achado, não erro de servidor.</p>
+ */
+@ApplicationScoped
+public class EngenhariaReversaService {
+
+    private static final String MODULO = "resolucaoProblemas";
+    private static final String EVENTO = "engenharia_reversa_parse";
+
+    @Inject
+    CiscoConfigParser parser;
+
+    @Inject
+    AuditoriaConfiguracaoService auditoriaService;
+
+    @Inject
+    ReconstrucaoTopologiaService reconstrucaoService;
+
+    @Inject
+    TelemetriaLogger telemetriaLogger;
+
+    /**
+     * Interpreta a configuração colada e devolve o projeto reconstruído.
+     *
+     * <p><b>Comportamento em caso de falha:</b> entrada nula ou em branco produz
+     * cenário vazio.</p>
+     */
+    public CenarioReconstruido interpretar(String texto) {
+        ConfiguracaoLida lida = parser.analisar(texto);
+        AuditoriaConfiguracaoService.ResultadoAuditoria auditoria = auditoriaService.auditar(lida);
+
+        List<RoteadorLido> roteadores = auditoria.roteadores();
+        List<AchadoConfiguracao> achados = auditoria.achados();
+
+        List<LanReconstruida> lans = reconstrucaoService.montarLans(roteadores);
+        List<EnlaceReconstruido> enlaces = reconstrucaoService.montarEnlaces(roteadores);
+        List<TabelaRoteador> tabelas = reconstrucaoService.montarTabelas(roteadores);
+        List<ScriptCorrigido> scripts = reconstrucaoService.montarScripts(roteadores, achados);
+        String mermaid = reconstrucaoService.montarMermaid(roteadores, enlaces, lans);
+
+        int corrigidos = contar(achados, AchadoConfiguracao.Severidade.ERRO_CORRIGIDO);
+        int semCorrecao = contar(achados, AchadoConfiguracao.Severidade.ERRO_SEM_CORRECAO);
+        int avisos = contar(achados, AchadoConfiguracao.Severidade.AVISO);
+        boolean consistente = !roteadores.isEmpty() && semCorrecao == 0
+                && auditoria.pendencias().isEmpty()
+                && enlaces.stream().allMatch(EnlaceReconstruido::completo);
+
+        Resumo resumo = new Resumo(roteadores.size(), enlaces.size(), lans.size(),
+                corrigidos, semCorrecao, avisos, lida.linhasNaoInterpretadas().size(), consistente);
+
+        registrarTelemetria(lida, resumo, auditoria.pendencias().size());
+
+        return new CenarioReconstruido(roteadores, achados, lida.linhasNaoInterpretadas(),
+                lans, enlaces, tabelas, auditoria.pendencias(), scripts, mermaid, resumo);
+    }
+
+    private int contar(List<AchadoConfiguracao> achados, AchadoConfiguracao.Severidade severidade) {
+        return (int) achados.stream().filter(a -> a.severidade() == severidade).count();
+    }
+
+    /**
+     * Registra a interpretação na telemetria.
+     *
+     * <p><b>Propósito de negócio:</b> as contagens respondem se a aba está sendo
+     * usada para corrigir configuração de verdade ou apenas para desenhar — é o que
+     * decide se vale ampliar o interpretador para mais protocolos.</p>
+     *
+     * <p><b>Comportamento em caso de falha:</b> falha de telemetria é absorvida
+     * pelo logger e nunca derruba a interpretação.</p>
+     */
+    private void registrarTelemetria(ConfiguracaoLida lida, Resumo resumo, int pendencias) {
+        Map<String, Object> campos = new LinkedHashMap<>();
+        campos.put("linhas", lida.totalLinhas());
+        campos.put("roteadores", resumo.roteadores());
+        campos.put("enlaces", resumo.enlaces());
+        campos.put("errosCorrigidos", resumo.errosCorrigidos());
+        campos.put("errosSemCorrecao", resumo.errosSemCorrecao());
+        campos.put("avisos", resumo.avisos());
+        campos.put("naoInterpretadas", resumo.linhasNaoInterpretadas());
+        campos.put("pendencias", pendencias);
+        campos.put("consistente", resumo.cenarioConsistente());
+        String status = resumo.roteadores() == 0 ? "vazio"
+                : resumo.cenarioConsistente() ? "ok" : "com_pendencias";
+        telemetriaLogger.logEvent("info", MODULO, EVENTO, status, campos);
+    }
+}
