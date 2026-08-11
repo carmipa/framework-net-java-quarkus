@@ -52,20 +52,37 @@ require_command openssl
 
 cd "$APP_DIR"
 
-# ---- sal de pseudonimização (gerado uma vez, reutilizado sempre) -------------
+# ---- sal de pseudonimização --------------------------------------------------
+# SUPERADO. O caminho vivo de publicação é o botão "Sincronizar dataset" no painel
+# de Telemetria, que sanitiza com pseudônimo sequencial POR PACOTE e não usa sal
+# nenhum. Este script continua existindo por um motivo só: ele lê o arquivo JSONL
+# inteiro, enquanto o botão recorta a janela corrente.
+#
+# Falha fechada de propósito: sem o sal, ele PARA em vez de gerar um novo. Gerar
+# um sal novo produziria hashes silenciosamente incompatíveis com o snapshot
+# 2026-08-04 já publicado — dois pseudônimos diferentes para a mesma pessoa,
+# dentro do mesmo repositório público, sem nenhum aviso.
 garantir_sal() {
-  touch "$ENV_FILE"
-  chmod 600 "$ENV_FILE" 2>/dev/null || true
-
-  if grep -qE '^TELEMETRIA_DATASET_SALT=.+' "$ENV_FILE"; then
+  if grep -qE '^TELEMETRIA_DATASET_SALT=.+' "$ENV_FILE" 2>/dev/null; then
     return
   fi
 
-  printf 'TELEMETRIA_DATASET_SALT=%s\n' "$(openssl rand -hex 32)" >> "$ENV_FILE"
-  echo "Sal de pseudonimização criado em $ENV_FILE."
-  echo "IMPORTANTE: faça backup do .env. Perder o sal impede correlacionar este"
-  echo "            dataset com os próximos; trocá-lo quebra a continuidade dos"
-  echo "            pseudônimos em datasets já publicados."
+  cat >&2 <<'AVISO'
+ABORTADO: nao existe TELEMETRIA_DATASET_SALT no .env.
+
+Este e o caminho ANTIGO de publicacao e depende de um sal fixo. O sal foi
+removido de proposito quando a sanitizacao passou para dentro da aplicacao, que
+usa pseudonimo por pacote e nao guarda segredo nenhum.
+
+Nao vou gerar um sal novo: isso produziria pseudonimos incompativeis com o
+snapshot ja publicado, sem aviso, no mesmo repositorio publico.
+
+Use o botao "Sincronizar dataset" em /telemetria. Se voce precisa
+especificamente do historico completo do JSONL (que o botao nao cobre), exporte
+TELEMETRIA_DATASET_SALT na sessao antes de rodar e assuma conscientemente a
+divergencia entre os dois modelos de sanitizacao.
+AVISO
+  exit 1
 }
 
 garantir_sal
