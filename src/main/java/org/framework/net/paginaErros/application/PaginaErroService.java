@@ -10,6 +10,7 @@ import org.framework.net.telemetria.TelemetriaRequestContext;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Monta o conteúdo da página de erro e registra o evento.
@@ -20,22 +21,24 @@ import java.util.Map;
  * que o usuário viu ao evento gravado na telemetria; sem ele, "deu erro na tela"
  * é um relato que ninguém consegue investigar.</p>
  *
- * <p><b>Invariantes do domínio:</b> o {@code traceId} exibido é o mesmo que a
- * telemetria registrou para aquela requisição — inventar um identificador só para
- * preencher o campo seria pior que deixá-lo vazio, porque daria a impressão de
- * rastreabilidade que não existe. Quando não há contexto (erro fora do ciclo de
- * requisição), o campo sai como {@code indisponível}, honestamente.</p>
+ * <p><b>Invariantes do domínio:</b> o {@code traceId} exibido é <b>sempre</b> o
+ * mesmo que a telemetria registrou para aquele evento. Há dois caminhos: quando
+ * existe correlação da requisição no MDC, ela é reaproveitada; quando não existe,
+ * um identificador é gerado aqui e vai <b>ao mesmo tempo</b> para a tela e para o
+ * evento. O segundo caminho não é enfeite: em rota inexistente o
+ * {@code TelemetriaRequestFilter} sequer roda (não é {@code @PreMatching}), e o
+ * 404 é justamente o erro mais frequente — deixar o campo como "indisponível" ali
+ * esvaziaria a promessa de rastreio no caso que mais importa.</p>
  *
- * <p><b>Comportamento em caso de falha:</b> nunca lança. Falha ao obter contexto
- * de telemetria degrada para {@code indisponível}; falha ao registrar o evento é
- * absorvida pelo logger. Uma página de erro que quebra ao ser montada deixaria o
- * usuário com a tela branca que ela existe para evitar.</p>
+ * <p><b>Comportamento em caso de falha:</b> nunca lança. Falha ao ler o contexto
+ * degrada para identificador gerado; falha ao registrar o evento é absorvida pelo
+ * logger. Uma página de erro que quebra ao ser montada deixaria o usuário com a
+ * tela branca que ela existe para evitar.</p>
  */
 @ApplicationScoped
 public class PaginaErroService {
 
     private static final String MODULO = "paginaErros";
-    private static final String SEM_TRACE = "indisponível";
 
     @Inject
     TelemetriaContext telemetriaContext;
@@ -60,25 +63,32 @@ public class PaginaErroService {
     }
 
     /**
-     * Recupera o identificador de rastreio da requisição corrente.
+     * Identificador de rastreio a exibir e a registrar.
      *
-     * <p><b>Comportamento em caso de falha:</b> sem contexto disponível devolve
-     * {@code indisponível} em vez de gerar um identificador novo, que não
-     * corresponderia a evento nenhum.</p>
+     * <p><b>Invariantes do domínio:</b> o valor devolvido aqui é o mesmo que
+     * {@link #registrar} grava no evento — é isso que torna o número da tela útil
+     * para quem for investigar. Reaproveita a correlação da requisição quando ela
+     * existe; caso contrário gera uma, com prefixo {@code err-} para deixar claro
+     * na busca que ela nasceu na página de erro e não no filtro de entrada.</p>
+     *
+     * <p><b>Comportamento em caso de falha:</b> qualquer erro ao ler o MDC cai no
+     * identificador gerado — nunca devolve vazio.</p>
      */
     private String resolverTraceId() {
         try {
             TelemetriaRequestContext ctx = telemetriaContext.contextoDoMdc();
-            if (ctx == null) {
-                return SEM_TRACE;
+            if (ctx != null) {
+                if (ctx.traceId() != null && !ctx.traceId().isBlank()) {
+                    return ctx.traceId();
+                }
+                if (ctx.requestId() != null && !ctx.requestId().isBlank()) {
+                    return ctx.requestId();
+                }
             }
-            if (ctx.traceId() != null && !ctx.traceId().isBlank()) {
-                return ctx.traceId();
-            }
-            return ctx.requestId() != null && !ctx.requestId().isBlank() ? ctx.requestId() : SEM_TRACE;
         } catch (RuntimeException ex) {
-            return SEM_TRACE;
+            // Cai para o identificador gerado logo abaixo.
         }
+        return "err-" + UUID.randomUUID().toString().substring(0, 13);
     }
 
     private void registrar(int codigo, String rota, String metodo, String traceId) {

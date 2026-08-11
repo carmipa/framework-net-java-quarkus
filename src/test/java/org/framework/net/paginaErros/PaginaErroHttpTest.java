@@ -202,13 +202,39 @@ class PaginaErroHttpTest {
     @Inject
     PaginaErroService paginaErroService;
 
+    @Inject
+    org.framework.net.telemetria.TelemetriaStore telemetriaStore;
+
     @Test
-    @DisplayName("sem contexto de requisição o trace_id sai como indisponível, não inventado")
-    void semContextoOTraceEHonesto() {
+    @DisplayName("o trace_id da tela é o mesmo registrado na telemetria — inclusive sem contexto")
+    void traceIdDaTelaEOMesmoDoEvento() {
         DadosPaginaErro dados = paginaErroService.montar(500, "/fora-de-requisicao", "GET");
 
         assertNotNull(dados.traceId());
-        assertFalse(dados.traceId().isBlank(),
-                "Campo vazio na tela é pior que dizer que não há identificador.");
+        assertFalse(dados.traceId().isBlank());
+        assertFalse(dados.traceId().contains("indisponível"),
+                "Identificador ausente esvazia o rastreio justamente no caso mais comum.");
+
+        boolean registrado = telemetriaStore.snapshotEventos().stream()
+                .filter(e -> "pagina_erro_exibida".equals(e.evento()))
+                .anyMatch(e -> e.fields() != null && dados.traceId().equals(e.fields().get("traceId")));
+        assertTrue(registrado,
+                "Número na tela que não existe na telemetria é rastreabilidade de fachada.");
+    }
+
+    @Test
+    @DisplayName("regressão: a página 404 nunca mostra trace_id indisponível")
+    void paginaDe404TemTraceUtilizavel() {
+        String corpo = given()
+                .header("Accept", "text/html")
+                .when().get("/rota-sem-trace")
+                .then().statusCode(404)
+                .extract().body().asString();
+
+        assertFalse(corpo.contains("indisponível"),
+                "Em rota inexistente o filtro de telemetria não roda; o identificador precisa "
+                        + "ser gerado, não omitido.");
+        assertTrue(corpo.contains("err-") || corpo.matches("(?s).*tv-id\">[0-9a-fA-F-]{8,}.*"),
+                "A página precisa exibir um identificador utilizável na busca da telemetria.");
     }
 }
