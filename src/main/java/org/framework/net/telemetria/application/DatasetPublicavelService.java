@@ -47,6 +47,9 @@ import java.util.TreeMap;
 @ApplicationScoped
 public class DatasetPublicavelService {
 
+    private static final char LF = '\n';
+    private static final char CR = '\r';
+
     /** Rotas que são ruído de infraestrutura e não descrevem uso do sistema. */
     private static final List<String> PREFIXOS_RUIDO =
             List.of("/q/", "/web/", "/telemetria/api", "/health", "/favicon", "/pwa/", "/sw.js");
@@ -82,6 +85,7 @@ public class DatasetPublicavelService {
         Map<String, Integer> descartes = new LinkedHashMap<>();
         Map<String, Integer> porEvento = new TreeMap<>();
         List<String> linhas = new ArrayList<>();
+        List<Map<String, String>> planos = new ArrayList<>();
         int semCorrelacao = 0;
 
         for (TelemetriaEvent evento : eventos) {
@@ -94,7 +98,11 @@ public class DatasetPublicavelService {
                 continue;
             }
             try {
-                linhas.add(objectMapper.writeValueAsString(registroSanitizado(evento, pseudonimos)));
+                Map<String, Object> registro = registroSanitizado(evento, pseudonimos);
+                linhas.add(objectMapper.writeValueAsString(registro));
+                // O CSV nasce do registro JA SANITIZADO, nunca do evento cru: duas
+                // trilhas separadas divergiriam, e a mais permissiva venceria.
+                planos.add(achatar(registro));
                 porEvento.merge(evento.evento(), 1, Integer::sum);
                 if (evento.traceId() == null || evento.traceId().isBlank()) {
                     semCorrelacao++;
@@ -115,6 +123,7 @@ public class DatasetPublicavelService {
         String base = "dataset/" + data + "/";
         try {
             arquivos.put(base + "eventos.jsonl", ndjson);
+            arquivos.put(base + "eventos.csv", csv(planos));
             arquivos.put(base + "estatisticas.json",
                     objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(estatisticas));
             arquivos.put(base + "schema.json",
@@ -182,6 +191,79 @@ public class DatasetPublicavelService {
             registro.put("traceId", evento.traceId());
         }
         return registro;
+    }
+
+    /**
+     * Versao plana do registro ja sanitizado, para o CSV.
+     *
+     * <p><b>Invariantes do dominio:</b> le o MESMO objeto que virou JSONL. O CSV e
+     * derivado, nao paralelo — se fosse gerado a partir do evento cru, uma das duas
+     * trilhas poderia sanitizar menos que a outra e a mais permissiva venceria.</p>
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, String> achatar(Map<String, Object> registro) {
+        Map<String, String> plano = new LinkedHashMap<>();
+        plano.put("timeUnixNano", String.valueOf(registro.getOrDefault("timeUnixNano", "")));
+        plano.put("severity", String.valueOf(registro.getOrDefault("severityText", "")));
+        plano.put("traceId", String.valueOf(registro.getOrDefault("traceId", "")));
+
+        Object corpo = registro.get("body");
+        if (corpo instanceof Map<?, ?> mapa) {
+            plano.put("body", textoDe(mapa.get("stringValue")));
+        }
+        Object atributos = registro.get("attributes");
+        if (atributos instanceof List<?> lista) {
+            for (Object item : lista) {
+                if (item instanceof Map<?, ?> atributo) {
+                    Object chave = atributo.get("key");
+                    Object valor = atributo.get("value");
+                    if (chave != null && valor instanceof Map<?, ?> v) {
+                        plano.put(String.valueOf(chave), textoDe(v.get("stringValue")));
+                    }
+                }
+            }
+        }
+        return plano;
+    }
+
+    /**
+     * CSV com colunas estaveis.
+     *
+     * <p><b>Invariantes do dominio:</b> as colunas sao fixas e vem da uniao de
+     * todas as chaves encontradas, ordenadas — planilha cujas colunas mudam de
+     * ordem entre snapshots nao serve para comparar nada. Valor com virgula, aspas
+     * ou quebra de linha sai entre aspas: sem isso uma linha desloca as colunas
+     * seguintes e a planilha mostra dado errado com cara de certo.</p>
+     */
+    private String csv(List<Map<String, String>> planos) {
+        java.util.TreeSet<String> colunas = new java.util.TreeSet<>();
+        planos.forEach(p -> colunas.addAll(p.keySet()));
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.join(",", colunas.stream().map(this::campoCsv).toList())).append(LF);
+        for (Map<String, String> plano : planos) {
+            List<String> celulas = new ArrayList<>();
+            for (String coluna : colunas) {
+                celulas.add(campoCsv(plano.getOrDefault(coluna, "")));
+            }
+            sb.append(String.join(",", celulas)).append(LF);
+        }
+        return sb.toString();
+    }
+
+    /** Texto de um valor possivelmente ausente; nunca devolve a palavra "null" na planilha. */
+    private String textoDe(Object valor) {
+        return valor == null ? "" : String.valueOf(valor);
+    }
+
+    private String campoCsv(String valor) {
+        if (valor == null || valor.isEmpty()) {
+            return "";
+        }
+        boolean precisa = valor.indexOf(',') >= 0 || valor.indexOf('"') >= 0
+                || valor.indexOf(LF) >= 0 || valor.indexOf(CR) >= 0;
+        String limpo = valor.replace("\"", "\"\"");
+        return precisa ? "\"" + limpo + "\"" : limpo;
     }
 
     private String montarBody(String evento, String status, Map<String, String> campos) {
@@ -304,7 +386,20 @@ public class DatasetPublicavelService {
 
                 - Registros publicados: **%s**
                 - Visitantes distintos: **%s**
-                - Formato: NDJSON, um OpenTelemetry `LogRecord` por linha.
+
+                ## Arquivos
+
+                | Arquivo | Para que serve |
+                |---|---|
+                | `eventos.jsonl` | **fonte canonica** — NDJSON, um OpenTelemetry `LogRecord` por linha, com os atributos aninhados |
+                | `eventos.csv` | mesma informacao achatada, para abrir em planilha, pandas ou R |
+                | `schema.json` | formato e atributos |
+                | `estatisticas.json` | contagens, descartes e qualidade |
+
+                O CSV e **derivado** do JSONL, gerado a partir dos mesmos registros ja
+                sanitizados — nao e uma segunda extracao. Havendo divergencia entre os
+                dois, o JSONL manda: ele preserva a estrutura aninhada que o achatamento
+                do CSV precisa simplificar.
 
                 ## Sanitização
 
