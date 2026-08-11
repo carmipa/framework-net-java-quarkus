@@ -298,8 +298,10 @@
 .tele-console-tools .form-select { min-width: 9rem; }
 #t-console-pausar.active { color: #f59e0b; border-color: rgba(245, 158, 11, 0.5); }
 
-/* ---------- Menu de exportacao ---------- */
-.tele-export-menu {
+/* ---------- Menu de exportacao ----------
+   Especificidade reforcada (ul.dropdown-menu) porque o Bootstrap define
+   .dropdown-menu com fundo branco; sem isso o menu sai claro no painel escuro. */
+ul.dropdown-menu.tele-export-menu {
     background: linear-gradient(180deg, #111826, #0a0e17);
     border: 1px solid rgba(255, 255, 255, .1);
     border-radius: .75rem;
@@ -307,7 +309,7 @@
     min-width: 15rem;
 }
 
-.tele-export-menu .dropdown-item {
+ul.tele-export-menu .dropdown-item {
     display: flex;
     align-items: center;
     gap: .6rem;
@@ -317,18 +319,18 @@
     font-size: .86rem;
 }
 
-.tele-export-menu .dropdown-item:hover,
-.tele-export-menu .dropdown-item:focus {
+ul.tele-export-menu .dropdown-item:hover,
+ul.tele-export-menu .dropdown-item:focus {
     background: rgba(255, 255, 255, .06);
     color: #eef2f8;
 }
 
-.tele-export-menu .material-symbols-outlined {
+ul.tele-export-menu .material-symbols-outlined {
     font-size: 1.15rem;
     color: #2dd4bf;
 }
 
-.tele-export-menu small {
+ul.tele-export-menu small {
     margin-left: auto;
     color: #5b6679;
     font-size: .7rem;
