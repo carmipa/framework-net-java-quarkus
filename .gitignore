@@ -32,8 +32,20 @@ nb-configuration.xml
 *.orig
 *.rej
 
-# Local environment
+# Local environment e segredos.
+# Regra: tudo que casa com .env* fica FORA do git; so o exemplo entra.
+# O .env da VPS guarda ADMIN_API_KEY, CSRF_SECRET e o client secret do OAuth.
 .env
+.env.*
+!.env.example
+secrets.properties
+application-secret.properties
+application-local.properties
+*.pem
+*.p12
+*.jks
+*.pfx
+*.key
 
 # Dados locais do docker-compose.dev.yml
 docker-data/
