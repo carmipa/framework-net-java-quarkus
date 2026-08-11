@@ -457,10 +457,9 @@
     atualizarEstado();
 
     botao.addEventListener("click", async function () {
-        if (!window.confirm("Publicar um snapshot novo no repositorio PUBLICO?
-
-" +
-                "Publicar nao tem desfazer, e snapshot ja publicado nao pode ser sobrescrito.")) {
+        var aviso = "Publicar um snapshot novo no repositorio PUBLICO?\n\n"
+            + "Publicar nao tem desfazer, e snapshot ja publicado nao pode ser sobrescrito.";
+        if (!window.confirm(aviso)) {
             return;
         }
         var original = botao.innerHTML;
