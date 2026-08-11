@@ -42,7 +42,21 @@
                 <a class="aed-btn aed-btn-json" href="/telemetria/api/exportar" target="_blank" rel="noopener">
                     <span class="material-symbols-outlined">download</span> Exportar JSON
                 </a>
+                {#if datasetConfigurado}
+                <button type="button" class="aed-btn aed-btn-teal" id="btn-sincronizar-dataset"
+                        data-bs-toggle="tooltip" data-bs-placement="top"
+                        title="Gera o dataset sanitizado em memoria e publica no repositorio publico {datasetDestino}. Nada fica guardado no servidor.">
+                    <span class="material-symbols-outlined">cloud_upload</span> Sincronizar dataset
+                </button>
+                {#else}
+                <button type="button" class="aed-btn aed-btn-neutral" disabled
+                        data-bs-toggle="tooltip" data-bs-placement="top"
+                        title="Falta GITHUB_DATASET_TOKEN no .env do servidor.">
+                    <span class="material-symbols-outlined">cloud_off</span> Sincronizar dataset
+                </button>
+                {/if}
             </div>
+            <div id="dataset-resultado" class="mt-3" hidden role="status" aria-live="polite"></div>
         </div>
         <p class="small text-secondary mb-0 mt-2 tele-updated">
             <span class="material-symbols-outlined">schedule</span>
@@ -219,3 +233,4 @@
 <script src="/telemetria/js/dashboard.js?v=20260710b"></script>
 {/extraScripts}
 {/include}
+        

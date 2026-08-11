@@ -43,7 +43,8 @@ public class AdminApiKeyFilter implements ContainerRequestFilter {
     private static final Set<String> ACOES_DE_DONO = Set.of(
             "/telemetria/api/exportar",
             "/telemetria/api/console/limpar",
-            "/telemetria/api/pasta");
+            "/telemetria/api/pasta",
+            "/telemetria/api/dataset/sincronizar");
 
     @Inject
     AdminApiKeyService adminApiKeyService;

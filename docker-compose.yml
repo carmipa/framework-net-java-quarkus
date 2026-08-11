@@ -29,6 +29,9 @@ services:
       GITHUB_OAUTH_CLIENT_SECRET: ${GITHUB_OAUTH_CLIENT_SECRET:-}
       GITHUB_OAUTH_LOGINS_PERMITIDOS: ${GITHUB_OAUTH_LOGINS_PERMITIDOS:-}
       GITHUB_OAUTH_CALLBACK_URL: ${GITHUB_OAUTH_CALLBACK_URL:-}
+      # Sincronizacao do dataset publico. Token fine-grained, um repositorio so.
+      GITHUB_DATASET_TOKEN: ${GITHUB_DATASET_TOKEN:-}
+      GITHUB_DATASET_REPO: ${GITHUB_DATASET_REPO:-carmipa/framework-net-telemetry-dataset}
       # Cache L2 das APIs externas (GeoIP, Nominatim). Sobrevive a deploy.
       QUARKUS_REDIS_HOSTS: redis://framework-net-redis:6379
       FRAMEWORK_CACHE_DISTRIBUIDO_ENABLED: "true"

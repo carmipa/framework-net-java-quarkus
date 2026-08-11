@@ -15,6 +15,8 @@ import org.framework.net.telemetria.TelemetriaDashboard;
 import org.framework.net.telemetria.TelemetriaDashboardService;
 import org.framework.net.telemetria.TelemetriaResumo;
 import org.framework.net.telemetria.TelemetriaStore;
+import org.framework.net.telemetria.application.DatasetPublicavelService;
+import org.framework.net.telemetria.infrastructure.GitHubDatasetPublisher;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,13 +32,22 @@ public class TelemetriaResource {
     TelemetriaDashboardService dashboardService;
 
     @Inject
+    DatasetPublicavelService datasetService;
+
+    @Inject
+    GitHubDatasetPublisher datasetPublisher;
+
+    @Inject
     @io.quarkus.qute.Location("telemetria/dashboard.html")
     Template dashboardTemplate;
 
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance pagina() {
-        return dashboardTemplate.data("activeMainMenu", "telemetria");
+        return dashboardTemplate
+                .data("activeMainMenu", "telemetria")
+                .data("datasetConfigurado", datasetPublisher.configurado())
+                .data("datasetDestino", datasetPublisher.destinoParaExibicao());
     }
 
     @GET
@@ -86,6 +97,53 @@ public class TelemetriaResource {
                 .type(MediaType.APPLICATION_JSON)
                 .header("Content-Disposition", "attachment; filename=\"telemetria_compartilhada.json\"")
                 .build();
+    }
+
+    /**
+     * Sincroniza o dataset sanitizado com o repositorio publico.
+     *
+     * <p><b>Proposito de negocio:</b> publicar sem que nada fique guardado aqui —
+     * o snapshot e gerado em memoria, enviado ao GitHub e descartado. O repositorio
+     * e publico, entao ele passa a ser o unico lugar onde o dataset existe.</p>
+     *
+     * <p><b>Invariantes do dominio:</b> restrito ao dono (o filtro de seguranca
+     * cobra o papel). A geracao falha fechada se a auditoria encontrar
+     * identificador residual, e o envio nao sobrescreve snapshot ja publicado —
+     * a API do GitHub so sobrescreve com o sha da versao atual, que este caminho
+     * jamais envia.</p>
+     *
+     * <p><b>Comportamento em caso de falha:</b> devolve 409 quando o snapshot do
+     * dia ja existe, 422 quando a auditoria reprova o conteudo e 502 quando o
+     * GitHub recusa — sempre com motivo em texto, nunca com detalhe de credencial.</p>
+     */
+    @POST
+    @Path("/api/dataset/sincronizar")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response sincronizarDataset() {
+        DatasetPublicavelService.Pacote pacote;
+        try {
+            pacote = datasetService.gerar();
+        } catch (IllegalStateException auditoriaReprovou) {
+            return Response.status(422).entity(Map.of(
+                    "ok", false, "erro", auditoriaReprovou.getMessage())).build();
+        }
+
+        var resultado = datasetPublisher.publicar(pacote.data(), pacote.arquivos());
+        if (resultado.ok()) {
+            return Response.ok(Map.of(
+                    "ok", true,
+                    "snapshot", resultado.data(),
+                    "registros", pacote.registros(),
+                    "visitantes", pacote.visitantes(),
+                    "arquivos", resultado.arquivos(),
+                    "url", resultado.url(),
+                    "mensagem", resultado.mensagem())).build();
+        }
+        int status = resultado.data().isEmpty() ? 502 : 409;
+        return Response.status(status).entity(Map.of(
+                "ok", false,
+                "registros", pacote.registros(),
+                "erro", resultado.mensagem())).build();
     }
 
     @GET

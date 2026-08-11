@@ -385,3 +385,70 @@
         init();
     }
 })();
+
+/*
+ * Botao "Sincronizar dataset".
+ *
+ * Proposito de negocio: publicar o snapshot sanitizado no repositorio publico
+ * sem que nada fique guardado no servidor. O botao so dispara; quem gera,
+ * audita e envia e o backend - regra de privacidade nao mora em JavaScript.
+ *
+ * Invariantes: confirmacao explicita antes de disparar, porque publicar nao tem
+ * desfazer. O botao e desabilitado durante o envio: clique duplo nao pode virar
+ * duas tentativas de criar o mesmo snapshot.
+ *
+ * Comportamento em caso de falha: mostra o motivo devolvido pelo servidor. 409
+ * significa snapshot do dia ja publicado - e o append-only funcionando, nao um
+ * erro a contornar.
+ */
+(function () {
+    "use strict";
+    var botao = document.getElementById("btn-sincronizar-dataset");
+    var caixa = document.getElementById("dataset-resultado");
+    if (!botao || !caixa) {
+        return;
+    }
+
+    function mostrar(cor, icone, titulo, detalhe, link) {
+        caixa.hidden = false;
+        caixa.className = "aed-card card-tech p-3 mb-3 border border-" + cor + " border-opacity-50";
+        caixa.innerHTML =
+            '<div class="d-flex align-items-start gap-2">' +
+            '<span class="material-symbols-outlined text-' + cor + '">' + icone + '</span>' +
+            '<div><strong class="text-' + cor + '">' + titulo + '</strong>' +
+            '<div class="small text-secondary mt-1">' + detalhe + '</div>' +
+            (link ? '<a class="small" href="' + link + '" target="_blank" rel="noopener">Ver no GitHub</a>' : '') +
+            '</div></div>';
+    }
+
+    botao.addEventListener("click", async function () {
+        if (!window.confirm("Publicar um snapshot novo no repositorio PUBLICO?
+
+" +
+                "Publicar nao tem desfazer, e snapshot ja publicado nao pode ser sobrescrito.")) {
+            return;
+        }
+        var original = botao.innerHTML;
+        botao.disabled = true;
+        botao.innerHTML = '<span class="material-symbols-outlined">progress_activity</span> Publicando...';
+        try {
+            var r = await fetch("/telemetria/api/dataset/sincronizar", { method: "POST" });
+            var d = await r.json();
+            if (r.ok && d.ok) {
+                mostrar("success", "cloud_done", "Snapshot " + d.snapshot + " publicado",
+                    d.registros + " registro(s) de " + d.visitantes + " visitante(s) distinto(s) · " +
+                    d.arquivos.length + " arquivo(s).", d.url);
+            } else if (r.status === 409) {
+                mostrar("warning", "block", "Snapshot do dia ja existe",
+                    d.erro, "");
+            } else {
+                mostrar("danger", "error", "Nao foi possivel publicar", d.erro || ("HTTP " + r.status), "");
+            }
+        } catch (err) {
+            mostrar("danger", "error", "Falha de rede ao publicar", String(err), "");
+        } finally {
+            botao.disabled = false;
+            botao.innerHTML = original;
+        }
+    });
+})();
