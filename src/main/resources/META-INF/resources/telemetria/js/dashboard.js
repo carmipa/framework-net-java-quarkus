@@ -81,7 +81,7 @@
                 }]
             },
             options: {
-                indexAxis: 'y', responsive: true,
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
                     tooltip: { callbacks: { afterBody: (items) => {
@@ -103,7 +103,7 @@
                 datasets: [{ data: stVals, backgroundColor: stKeys.map(k => CORES_STATUS[k]), borderColor: '#0c121c', borderWidth: 3 }]
             },
             options: {
-                responsive: true, cutout: '68%',
+                responsive: true, maintainAspectRatio: false, cutout: '68%',
                 plugins: { legend: { position: 'bottom' } }
             },
             plugins: [{
@@ -135,7 +135,7 @@
                 ]
             },
             options: {
-                responsive: true,
+                responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: true, position: 'bottom' } },
                 scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
             }
@@ -154,7 +154,7 @@
                 }]
             },
             options: {
-                responsive: true,
+                responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: { y: { beginAtZero: true, ticks: { callback: (v) => v + ' ms' } } }
             }
@@ -297,6 +297,11 @@
 
     // ---------- Carga ----------
     async function carregarDashboard() {
+        // Nao recriar os graficos enquanto o mouse le um tooltip: o ciclo
+        // destroi e refaz os canvas, e o tooltip sumiria na mao do usuario.
+        if (window.__telemetriaPausada) {
+            return;
+        }
         try {
             const resp = await fetch('/telemetria/api/dashboard?janela=' + janelaMinutos + '&console=250');
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -518,5 +523,35 @@
             /* imprimir e mais importante que o ajuste do grafico */
         }
         window.print();
+    });
+})();
+
+/*
+ * Pausa a autoatualizacao enquanto o mouse esta sobre um grafico.
+ *
+ * Proposito de negocio: o painel recria os graficos a cada ciclo. Se o ciclo
+ * cair no instante em que o usuario esta lendo um tooltip, o grafico e
+ * destruido e o tooltip some sozinho - o que se parece com "o grafico nao
+ * responde ao mouse".
+ *
+ * Invariantes: pausa apenas a RENDERIZACAO enquanto ha ponteiro sobre a caixa;
+ * o ciclo volta ao sair. Nenhum dado deixa de ser coletado - a telemetria do
+ * servidor continua registrando normalmente.
+ *
+ * Comportamento em caso de falha: sem as caixas na pagina, nao liga nada.
+ */
+(function () {
+    "use strict";
+    var caixas = document.querySelectorAll(".tele-chart-box");
+    if (!caixas.length) {
+        return;
+    }
+    caixas.forEach(function (caixa) {
+        caixa.addEventListener("mouseenter", function () {
+            window.__telemetriaPausada = true;
+        });
+        caixa.addEventListener("mouseleave", function () {
+            window.__telemetriaPausada = false;
+        });
     });
 })();

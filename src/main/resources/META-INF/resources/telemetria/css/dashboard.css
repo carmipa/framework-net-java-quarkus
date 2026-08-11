@@ -62,7 +62,12 @@
 }
 
 .aed-charts-grid .aed-card { min-width: 0; }
-.aed-charts-grid canvas { max-height: 14rem; }
+/* NUNCA limitar o canvas por CSS: o Chart.js dimensiona o elemento e usa essa
+   medida para converter a posicao do mouse em ponto do grafico. Uma regra de
+   altura por fora espreme o desenho sem que a biblioteca saiba, e o hover passa
+   a apontar para o lugar errado - o grafico parece "morto". A altura vai na
+   caixa em volta, com maintainAspectRatio:false no lado do JavaScript. */
+.aed-charts-grid .tele-chart-box { height: 14rem; }
 
 /* ---- Console ao vivo ---- */
 .console-card { display: flex; flex-direction: column; gap: 0.6rem; }
@@ -228,7 +233,7 @@
 }
 
 .tele-grid-2 .aed-card { min-width: 0; }
-.tele-grid-2 canvas { max-height: 15rem; }
+.tele-grid-2 .tele-chart-box { height: 15rem; }
 
 .tele-chart-title {
     display: flex;
@@ -364,9 +369,9 @@
         color: #111 !important;
     }
 
-    canvas {
-        max-width: 100% !important;
-        height: auto !important;
+    .tele-chart-box {
+        height: 12rem !important;
+        break-inside: avoid;
     }
 
     .console-telemetria,
@@ -376,4 +381,21 @@
         background: #fff !important;
         color: #111 !important;
     }
+}
+
+/* Caixa do grafico: quem manda na altura. O canvas preenche 100% dela. */
+.tele-chart-box {
+    position: relative;
+    width: 100%;
+    height: 15rem;
+}
+
+.tele-chart-box canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+@media (max-width: 36em) {
+    .tele-chart-box { height: 13rem; }
 }
