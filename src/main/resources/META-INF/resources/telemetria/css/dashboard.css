@@ -401,3 +401,19 @@ ul.tele-export-menu small {
 @media (max-width: 36em) {
     .tele-chart-box { height: 13rem; }
 }
+
+/* ---------- Menu suspenso escapando do cartao ----------
+   O cartao do cabecalho recorta o que passa da borda, e o menu "Exportar"
+   abre para baixo: o ultimo item ficava cortado. Duas regras resolvem, e as
+   duas sao necessarias - liberar o recorte sem elevar o menu o deixaria
+   atras dos cartoes de KPI que vem logo abaixo. */
+.tele-header-card {
+    overflow: visible;
+    position: relative;
+    z-index: 20;
+}
+
+ul.dropdown-menu.tele-export-menu {
+    z-index: 1080;
+    box-shadow: 0 1.5rem 3rem -1rem rgba(0, 0, 0, .85);
+}
