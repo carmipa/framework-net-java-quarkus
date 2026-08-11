@@ -21,6 +21,14 @@ services:
       QUARKUS_HTTP_PORT: "8080"
       ADMIN_API_KEY: ${ADMIN_API_KEY:?Defina ADMIN_API_KEY no .env ou ambiente}
       CSRF_SECRET: ${CSRF_SECRET:?Defina CSRF_SECRET no .env ou ambiente}
+      # Login da Telemetria pelo GitHub. Opcionais de propósito: sem eles a
+      # aplicação sobe, o botão do GitHub não é oferecido e resta a contingência.
+      # O .env só alimenta a substituição do compose — o que o container enxerga
+      # é exatamente o que estiver listado aqui.
+      GITHUB_OAUTH_CLIENT_ID: ${GITHUB_OAUTH_CLIENT_ID:-}
+      GITHUB_OAUTH_CLIENT_SECRET: ${GITHUB_OAUTH_CLIENT_SECRET:-}
+      GITHUB_OAUTH_LOGINS_PERMITIDOS: ${GITHUB_OAUTH_LOGINS_PERMITIDOS:-}
+      GITHUB_OAUTH_CALLBACK_URL: ${GITHUB_OAUTH_CALLBACK_URL:-}
       # Cache L2 das APIs externas (GeoIP, Nominatim). Sobrevive a deploy.
       QUARKUS_REDIS_HOSTS: redis://framework-net-redis:6379
       FRAMEWORK_CACHE_DISTRIBUIDO_ENABLED: "true"
