@@ -114,7 +114,8 @@
                     <p class="small text-secondary mb-2">Tamanho: {chave.tamanho}</p>
                     <pre class="ssh-codigo" id="ssh-chave-{chave_count}">{chave.comando}</pre>
                     <div class="d-flex justify-content-end">
-                        <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="ssh-chave-{chave_count}">
+                        <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="ssh-chave-{chave_count}"
+                                title="Copiar o comando de geração de chave para a área de transferência">
                             <span class="material-symbols-outlined">content_copy</span> Copiar
                         </button>
                     </div>
@@ -141,7 +142,8 @@
                     <p class="small text-light mb-2">{enc.cenario}</p>
                     <pre class="ssh-codigo" id="ssh-tunel-{enc_count}">{enc.comando}</pre>
                     <div class="d-flex justify-content-end mb-2">
-                        <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="ssh-tunel-{enc_count}">
+                        <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="ssh-tunel-{enc_count}"
+                                title="Copiar o comando de túnel SSH para a área de transferência">
                             <span class="material-symbols-outlined">content_copy</span> Copiar
                         </button>
                     </div>
@@ -195,7 +197,8 @@
                     <p class="small text-secondary mb-2">{lab.cenario}</p>
                     <pre class="ssh-codigo" id="ssh-lab-{lab_count}">{lab.comandos}</pre>
                     <div class="d-flex justify-content-end mb-2">
-                        <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="ssh-lab-{lab_count}">
+                        <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="ssh-lab-{lab_count}"
+                                title="Copiar os comandos do laboratório para a área de transferência">
                             <span class="material-symbols-outlined">content_copy</span> Copiar comandos
                         </button>
                     </div>
@@ -219,7 +222,8 @@
                     <p class="small mb-2"><span class="ssh-rotulo ssh-rotulo-risco">Causa provável</span> {diag.causaProvavel}</p>
                     <pre class="ssh-codigo" id="ssh-diag-{diag_count}">{diag.comando}</pre>
                     <div class="d-flex justify-content-end mb-2">
-                        <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="ssh-diag-{diag_count}">
+                        <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="ssh-diag-{diag_count}"
+                                title="Copiar comando de diagnóstico para a área de transferência">
                             <span class="material-symbols-outlined">content_copy</span> Copiar
                         </button>
                     </div>
@@ -231,7 +235,8 @@
     </section>
 
     <div class="text-center mt-4">
-        <a href="/protocolos" class="aed-btn aed-btn-neutral">
+        <a href="/protocolos" class="aed-btn aed-btn-neutral"
+           title="Retornar à tabela comparativa de protocolos">
             <span class="material-symbols-outlined">arrow_back</span> Voltar ao catálogo de protocolos
         </a>
     </div>

@@ -235,7 +235,8 @@
                     <p class="small text-secondary mb-2">{lab.cenario}</p>
                     <pre class="bgp-codigo" id="bgp-lab-{lab_count}">{lab.comandos}</pre>
                     <div class="d-flex justify-content-end mb-2">
-                        <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="bgp-lab-{lab_count}">
+                        <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="bgp-lab-{lab_count}"
+                                title="Copiar os comandos do laboratório BGP para a área de transferência">
                             <span class="material-symbols-outlined">content_copy</span> Copiar comandos
                         </button>
                     </div>
@@ -263,7 +264,8 @@
                     <p class="small mb-2"><span class="bgp-rotulo bgp-rotulo-risco">Causa provável</span> {diag.causaProvavel}</p>
                     <pre class="bgp-codigo" id="bgp-diag-{diag_count}">{diag.comando}</pre>
                     <div class="d-flex justify-content-end mb-2">
-                        <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="bgp-diag-{diag_count}">
+                        <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="bgp-diag-{diag_count}"
+                                title="Copiar comando de diagnóstico BGP para a área de transferência">
                             <span class="material-symbols-outlined">content_copy</span> Copiar
                         </button>
                     </div>
@@ -275,7 +277,8 @@
     </section>
 
     <div class="text-center mt-4">
-        <a href="/protocolos" class="aed-btn aed-btn-neutral">
+        <a href="/protocolos" class="aed-btn aed-btn-neutral"
+           title="Retornar à tabela comparativa de protocolos">
             <span class="material-symbols-outlined">arrow_back</span> Voltar ao catálogo de protocolos
         </a>
     </div>

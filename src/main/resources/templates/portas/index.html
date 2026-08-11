@@ -106,7 +106,7 @@
                             <th class="sortable" data-sort-key="risco" title="Ordenar por nível de risco">Risco</th>
                             <th title="Ação recomendada para reduzir exposição">Recomendação</th>
                             <th title="Alternativa mais segura para operação">Alternativa segura</th>
-                            <th title="Copiar linha ou abrir detalhes">Ações</th>
+                            <th class="text-center" style="width: 140px;" title="Copiar linha ou abrir detalhes">Ações</th>
                         </tr>
                     </thead>
                     <tbody data-grid-body="portas">
@@ -128,9 +128,11 @@
                             <td><span class="badge bg-dark border border-{item.badgeColor} text-{item.badgeColor}">{item.badge}</span></td>
                             <td class="small text-info">{item.recomendacao}</td>
                             <td class="small text-info">{item.alternativaSegura ?: "-"}</td>
-                            <td class="text-nowrap">
-                                <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-copy="portas" data-bs-toggle="tooltip" data-bs-placement="top" title="Copiar dados desta linha."><span class="material-symbols-outlined">content_copy</span></button>
-                                <button type="button" class="aed-btn aed-btn-indigo btn-sm" data-grid-details="portas" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir detalhes desta porta.">Detalhes</button>
+                            <td class="text-nowrap text-center">
+                                <div class="d-inline-flex align-items-center justify-content-center gap-1">
+                                    <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-copy="portas" data-bs-toggle="tooltip" data-bs-placement="top" title="Copiar dados desta linha."><span class="material-symbols-outlined">content_copy</span></button>
+                                    <button type="button" class="aed-btn aed-btn-indigo btn-sm" data-grid-details="portas" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir detalhes desta porta.">Detalhes</button>
+                                </div>
                             </td>
                         </tr>
                         {/for}
@@ -171,8 +173,8 @@
                                 <dd class="small text-info mb-0">{item.alternativaSegura ?: "—"}</dd>
                             </div>
                         </dl>
-                        <div class="mt-2 pt-2 border-top border-secondary border-opacity-25">
-                            <button type="button" class="aed-btn aed-btn-neutral btn-sm me-1" data-grid-copy="portas" data-bs-toggle="tooltip" title="Copiar linha"><span class="material-symbols-outlined">content_copy</span></button>
+                        <div class="mt-2 pt-2 border-top border-secondary border-opacity-25 d-flex align-items-center gap-2">
+                            <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-copy="portas" data-bs-toggle="tooltip" title="Copiar linha"><span class="material-symbols-outlined">content_copy</span></button>
                             <button type="button" class="aed-btn aed-btn-indigo btn-sm" data-grid-details="portas" data-bs-toggle="tooltip" title="Detalhes">Detalhes</button>
                         </div>
                     </div>

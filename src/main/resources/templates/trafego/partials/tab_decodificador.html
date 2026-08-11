@@ -32,14 +32,17 @@
     <textarea id="trafego-hex" name="hex" class="form-control bg-dark text-light border-secondary trafego-hex"
               rows="5" placeholder="ex.: 4500 003c 1c46 4000 4006 ..."></textarea>
     <div class="d-flex flex-wrap gap-2 mt-3">
-        <button type="submit" class="aed-btn aed-btn-teal">
+        <button type="submit" class="aed-btn aed-btn-teal"
+                title="Decodificar o hex dump do pacote em cabeçalhos campo a campo">
             <span class="spinner-border spinner-border-sm htmx-indicator" role="status" aria-hidden="true"></span>
             <span class="material-symbols-outlined" aria-hidden="true">memory</span> Decodificar
         </button>
-        <button type="button" id="trafego-exemplo" class="aed-btn aed-btn-neutral">
+        <button type="button" id="trafego-exemplo" class="aed-btn aed-btn-neutral"
+                title="Carregar um pacote de exemplo (IPv4/TCP SYN) para teste didático">
             <span class="material-symbols-outlined" aria-hidden="true">science</span> Carregar exemplo (IPv4/TCP SYN)
         </button>
-        <button type="button" id="trafego-limpar" class="aed-btn aed-btn-danger">
+        <button type="button" id="trafego-limpar" class="aed-btn aed-btn-danger"
+                title="Limpar a área de texto do hex dump e os resultados">
             <span class="material-symbols-outlined" aria-hidden="true">delete_sweep</span> Limpar
         </button>
     </div>

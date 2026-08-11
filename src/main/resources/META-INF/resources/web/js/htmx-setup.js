@@ -19,4 +19,11 @@
             event.detail.isError = false;
         }
     });
+
+    // Reinicializa tooltips e popovers em fragmentos HTML injetados dinamicamente via HTMX.
+    document.body.addEventListener("htmx:afterSwap", (event) => {
+        if (w.FieldTooltips && w.FieldTooltips.init) {
+            w.FieldTooltips.init(event.detail.target || document);
+        }
+    });
 })(window);

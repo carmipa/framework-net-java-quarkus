@@ -32,3 +32,8 @@
     padding: 0.55rem 0.7rem;
     font-size: 0.82rem;
 }
+
+.datagrid-table th,
+.datagrid-table td {
+    vertical-align: middle;
+}

@@ -273,3 +273,43 @@ a:hover { color: #eef2f8; }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------- TOOLTIPS (Bootstrap 5) ---------- */
+.tooltip {
+    position: absolute;
+    z-index: 1080;
+    display: block;
+    margin: 0;
+    font-family: var(--f-ui);
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.4;
+    text-align: left;
+    text-decoration: none;
+    text-shadow: none;
+    text-transform: none;
+    letter-spacing: normal;
+    word-break: normal;
+    white-space: normal;
+    word-spacing: normal;
+    line-break: auto;
+    font-size: .8125rem;
+    word-wrap: break-word;
+    opacity: 0;
+    transition: opacity .15s linear;
+    pointer-events: none;
+}
+.tooltip.show { opacity: .98; }
+.tooltip .tooltip-inner {
+    max-width: 280px;
+    padding: .4rem .75rem;
+    color: #f1f5f9;
+    text-align: center;
+    background-color: rgba(10, 14, 23, 0.95);
+    border: 1px solid rgba(255, 255, 255, .15);
+    border-radius: .375rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .6);
+    backdrop-filter: blur(8px);
+}
+.tooltip-arrow { display: none; }
+

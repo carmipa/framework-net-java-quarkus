@@ -144,7 +144,7 @@
                             <th class="sortable" data-sort-key="seguro">Seguro</th>
                             <th class="sortable" data-sort-key="nivel">Nível</th>
                             <th>Função</th>
-                            <th>Ações</th>
+                            <th class="text-center" style="width: 220px;" title="Copiar linha, abrir detalhes ou aprofundar">Ações</th>
                         </tr>
                     </thead>
                     <tbody data-grid-body="protocolos">
@@ -187,12 +187,14 @@
                             <td>{item.seguro}</td>
                             <td><span class="badge bg-dark border border-{item.badgeColor} text-{item.badgeColor}">{item.badge}</span></td>
                             <td class="small text-info">{item.funcao}</td>
-                            <td class="text-nowrap">
-                                <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-copy="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Copiar os dados deste protocolo."><span class="material-symbols-outlined">content_copy</span></button>
-                                <button type="button" class="aed-btn aed-btn-indigo btn-sm" data-grid-details="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir os detalhes deste protocolo.">Detalhes</button>
-                                {#if item.temAprofundamento}
-                                <a href="{item.aprofundamentoRota}" class="aed-btn aed-btn-teal btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir a página de aprofundamento deste protocolo."><span class="material-symbols-outlined">menu_book</span> Aprofundar</a>
-                                {/if}
+                            <td class="text-nowrap text-center">
+                                <div class="d-inline-flex align-items-center justify-content-center gap-1">
+                                    <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-copy="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Copiar os dados deste protocolo."><span class="material-symbols-outlined">content_copy</span></button>
+                                    <button type="button" class="aed-btn aed-btn-indigo btn-sm" data-grid-details="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir os detalhes deste protocolo.">Detalhes</button>
+                                    {#if item.temAprofundamento}
+                                    <a href="{item.aprofundamentoRota}" class="aed-btn aed-btn-teal btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir a página de aprofundamento deste protocolo."><span class="material-symbols-outlined">menu_book</span> Aprofundar</a>
+                                    {/if}
+                                </div>
                             </td>
                         </tr>
                         {/for}

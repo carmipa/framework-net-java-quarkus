@@ -356,8 +356,7 @@ html {
             text-align: right;
         }
         .grid-action-btn {
-            min-width: 7.5%;
-            min-height: 1.9375rem;
+            min-height: 2.375rem;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -942,7 +941,7 @@ html {
             .timeline-bloco { grid-template-columns: 1fr; }
             .comm-counter { text-align: left; margin-top: 0.35rem !important; }
             .grid-action-btn {
-                min-width: 6.562%;
+                min-width: auto;
             }
             .termos-table th, .termos-table td,
             .regua-table th, .regua-table td,

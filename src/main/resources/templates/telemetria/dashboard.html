@@ -36,7 +36,8 @@
                         <option value="60000">1 min</option>
                     </select>
                 </label>
-                <button type="button" class="aed-btn aed-btn-neutral" id="btn-refresh-telemetria">
+                <button type="button" class="aed-btn aed-btn-neutral" id="btn-refresh-telemetria"
+                        title="Recarregar métricas e gráficos de telemetria imediatamente">
                     <span class="material-symbols-outlined">refresh</span> Atualizar
                 </button>
                 <button type="button" class="aed-btn aed-btn-neutral" id="btn-imprimir-telemetria"
@@ -46,7 +47,8 @@
                 </button>
                 <div class="dropdown d-inline-block">
                     <button type="button" class="aed-btn aed-btn-json dropdown-toggle" data-bs-toggle="dropdown"
-                            aria-expanded="false" id="btn-exportar-telemetria">
+                            aria-expanded="false" id="btn-exportar-telemetria"
+                            title="Exportar dados de telemetria em formato JSON, CSV, TXT ou HTML">
                         <span class="material-symbols-outlined">download</span> Exportar
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end tele-export-menu" aria-labelledby="btn-exportar-telemetria">
@@ -218,7 +220,8 @@
                 <button type="button" class="aed-btn aed-btn-neutral btn-sm btn-copy-console" data-target="console-telemetria" aria-label="Copiar o console" data-bs-toggle="tooltip" data-bs-placement="top" title="Copiar o conteúdo do console">
                     <span class="material-symbols-outlined">content_copy</span>
                 </button>
-                <button type="button" class="aed-btn aed-btn-danger btn-sm btn-clear-console" data-target="console-telemetria">Limpar</button>
+                <button type="button" class="aed-btn aed-btn-danger btn-sm btn-clear-console" data-target="console-telemetria"
+                        title="Limpar todas as mensagens exibidas no console ao vivo">Limpar</button>
             </div>
         </div>
         <pre class="aed-console console-body" id="console-telemetria">Aguardando eventos...</pre>
@@ -251,9 +254,11 @@
             </table>
         </div>
         <div class="telemetry-pagination d-flex gap-2 align-items-center justify-content-center mt-2">
-            <button type="button" class="aed-btn aed-btn-neutral btn-sm" id="t-page-prev">Anterior</button>
+            <button type="button" class="aed-btn aed-btn-neutral btn-sm" id="t-page-prev"
+                    title="Página anterior da tabela de eventos de telemetria">Anterior</button>
             <span id="t-page-info" class="small text-secondary">Página 1</span>
-            <button type="button" class="aed-btn aed-btn-neutral btn-sm" id="t-page-next">Próxima</button>
+            <button type="button" class="aed-btn aed-btn-neutral btn-sm" id="t-page-next"
+                    title="Próxima página da tabela de eventos de telemetria">Próxima</button>
         </div>
     </div>
 </div>

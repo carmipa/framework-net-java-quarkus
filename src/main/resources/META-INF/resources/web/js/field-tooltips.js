@@ -64,10 +64,29 @@
     function init(root) {
         const scope = root || document;
         scope.querySelectorAll("input, select, textarea").forEach(ensureTooltip);
+        
+        scope.querySelectorAll("[title]:not([data-bs-toggle])").forEach((el) => {
+            const t = el.getAttribute("title");
+            if (t && t.trim()) {
+                el.setAttribute("data-bs-toggle", "tooltip");
+                if (!el.getAttribute("data-bs-placement")) {
+                    el.setAttribute("data-bs-placement", "top");
+                }
+            }
+        });
+
         if (w.bootstrap && w.bootstrap.Tooltip) {
             scope.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
                 if (!w.bootstrap.Tooltip.getInstance(el)) {
                     new w.bootstrap.Tooltip(el);
+                }
+            });
+        }
+
+        if (w.bootstrap && w.bootstrap.Popover) {
+            scope.querySelectorAll('[data-bs-toggle="popover"]').forEach((el) => {
+                if (!w.bootstrap.Popover.getInstance(el)) {
+                    new w.bootstrap.Popover(el);
                 }
             });
         }
