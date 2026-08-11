@@ -66,16 +66,25 @@ Os **estáticos** seguem a mesma divisão por módulo dos templates Qute: cada p
 
 - JDK **25**
 - Gradle (wrapper incluído)
-- Docker (opcional, para deploy)
+- **Docker** — obrigatório: é assim que o projeto roda, local e em produção
 
 ## Desenvolvimento
 
+O projeto sobe **sempre por Docker**, com a mesma imagem, o mesmo Redis e o mesmo perfil da produção:
+
 ```powershell
-cd D:\PROJETOS-OPEN\framework-net-java-quarkus
-.\gradlew.bat quarkusDev
+.\scripts\subir.ps1              # constrói, sobe, espera o healthcheck e abre o navegador
+.\scripts\subir.ps1 -Porta 8090  # outra porta
+.\scripts\subir.ps1 -Recriar     # reconstrói do zero (--no-cache)
+.\scripts\parar.ps1              # para, preservando os dados
+.\scripts\parar.ps1 -Limpar      # para e apaga volumes (pede confirmação)
 ```
 
-Aplicação em `http://localhost:8080`. Em modo dev o navegador abre automaticamente (`%dev.framework.dev.open-browser=true`).
+Aplicação em `http://localhost:8081`. A Telemetria exige login; em dev o GitHub OAuth fica desligado (a OAuth App tem um único callback registrado, o de produção), então use o **acesso de contingência** com a chave `dev-admin-key-local`.
+
+**Por que não `gradlew quarkusDev`?** Porque ele roda por outro caminho — sem Redis, sem as variáveis do container, com outro perfil — e esconde exatamente os defeitos que só aparecem em produção. Este projeto já pagou duas vezes por isso: a variável do OAuth que não chegava ao container, e a telemetria sem Redis. O script **não** cai para `quarkusDev` quando o Docker está parado; ele avisa e para, de propósito.
+
+Para depuração pontual com hot reload, `.\gradlew.bat quarkusDev` continua existindo — mas sabendo que aquele ambiente **não** é o de produção.
 
 ## Testes
 

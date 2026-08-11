@@ -1,6 +1,12 @@
-# Desenvolvimento / teste local com Docker (sem rede externa do Nginx Proxy Manager).
+# Desenvolvimento / teste local com Docker (sem a rede externa do Nginx Proxy Manager).
 #
-# Uso: docker compose -f docker-compose.dev.yml up --build
+# Uso recomendado:  .\scripts\subir.ps1        (Windows)
+#          ou:      docker compose -f docker-compose.dev.yml up -d --build
+#
+# Espelha a producao de proposito — mesma imagem, mesmo Redis, mesmo perfil.
+# Ambiente de dev que difere do de producao esconde justamente os defeitos que
+# so aparecem la, e este projeto ja pagou por isso (variavel que nao chegava ao
+# container, telemetria sem Redis).
 #
 # Dados persistidos em ./docker-data no host.
 
@@ -16,7 +22,41 @@ services:
     environment:
       QUARKUS_PROFILE: prod
       QUARKUS_HTTP_PORT: "8080"
+      # Segredos de desenvolvimento: valores obvios de dev, nunca os de producao.
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-dev-admin-key-local}
+      CSRF_SECRET: ${CSRF_SECRET:-dev-csrf-secret-local}
+      # Login pelo GitHub fica DESLIGADO em dev: a OAuth App tem um unico
+      # callback registrado, o de producao, e localhost nao casaria com ele.
+      # Sem credencial, a tela oferece so o acesso de contingencia.
+      GITHUB_OAUTH_CLIENT_ID: ${GITHUB_OAUTH_CLIENT_ID:-}
+      GITHUB_OAUTH_CLIENT_SECRET: ${GITHUB_OAUTH_CLIENT_SECRET:-}
+      GITHUB_OAUTH_LOGINS_PERMITIDOS: ${GITHUB_OAUTH_LOGINS_PERMITIDOS:-}
+      GITHUB_DATASET_TOKEN: ${GITHUB_DATASET_TOKEN:-}
+      # Cache L2 e janela de telemetria: mesmo Redis da producao.
+      QUARKUS_REDIS_HOSTS: redis://framework-net-redis-dev:6379
+      FRAMEWORK_CACHE_DISTRIBUIDO_ENABLED: "true"
+    depends_on:
+      - redis
     volumes:
       - ./docker-data:/deployments/data
       # - ${GEO_DB_HOST_PATH:-./docker-data/geo/GeoLite2-City.mmdb}:/deployments/data/geo/GeoLite2-City.mmdb:ro
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/ >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: framework-net-redis-dev
+    # appendonly de proposito: a janela de telemetria no Stream sobrevive ao
+    # restart do container, que e metade do motivo de existir.
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "128mb", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redis-dev-data:/data
+    restart: unless-stopped
+
+volumes:
+  redis-dev-data:

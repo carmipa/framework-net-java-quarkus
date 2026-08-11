@@ -10,6 +10,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.framework.net.telemetria.infrastructure.TelemetriaStreamRedis;
 import org.jboss.logging.Logger;
 
 import java.io.IOException;
@@ -56,6 +57,9 @@ public class TelemetriaStore {
 
     @ConfigProperty(name = "quarkus.application.version", defaultValue = "1.0.0-SNAPSHOT")
     String appVersion;
+
+    @Inject
+    TelemetriaStreamRedis stream;
 
     @Inject
     public TelemetriaStore(ObjectMapper objectMapper) {
@@ -111,6 +115,15 @@ public class TelemetriaStore {
         } finally {
             lock.unlock();
         }
+        // FORA do lock e DEPOIS do arquivo, de proposito: o Stream e camada de
+        // leitura, nao a fonte duravel. Segurar o lock durante I/O de rede
+        // transformaria uma lentidao do Redis em fila em todas as requisicoes.
+        // Ausencia tolerada: o Stream e camada opcional. Fora do CDI (teste
+        // unitario) ou com o recurso desligado, o registro segue igual — a
+        // verdade duravel ja foi para o arquivo acima.
+        if (stream != null) {
+            stream.publicar(evento);
+        }
     }
 
     /**
@@ -165,12 +178,24 @@ public class TelemetriaStore {
 
     /** Cópia dos eventos em memória (mais recentes primeiro), até {@code maxEvents}. */
     public List<TelemetriaEvent> snapshotEventos() {
+        List<TelemetriaEvent> memoria;
         lock.lock();
         try {
-            return new ArrayList<>(eventos);
+            memoria = new ArrayList<>(eventos);
         } finally {
             lock.unlock();
         }
+
+        // Vence quem tiver a janela MAIOR. Todo evento vai para os dois lugares,
+        // entao o Stream e superconjunto da memoria em regime — mas logo depois
+        // de ligar o recurso ele comeca vazio enquanto a memoria ja veio do
+        // arquivo. Comparar tamanho resolve os dois casos sem caso especial e
+        // sem nunca devolver menos do que ja se devolvia.
+        if (stream == null) {
+            return memoria;
+        }
+        List<TelemetriaEvent> doStream = stream.ultimos(maxEvents);
+        return doStream.size() > memoria.size() ? doStream : memoria;
     }
 
     public Path arquivoCompartilhado() {
