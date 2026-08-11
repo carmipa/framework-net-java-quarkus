@@ -21,11 +21,38 @@ public class AdminApiKeyFilter implements ContainerRequestFilter {
 
     private static final Set<String> PUBLIC_ADMIN_PATHS = Set.of("/admin/login", "/admin/logout");
 
+    /**
+     * Caminhos do fluxo de login: precisam ficar abertos, senão o usuário não
+     * consegue nem chegar à tela que o autenticaria.
+     */
+    private static final Set<String> CAMINHOS_DE_LOGIN = Set.of(
+            "/login",
+            "/login/github",
+            "/login/github/callback",
+            "/login/chave",
+            "/login/sair");
+
+    /**
+     * Acoes que alteram estado ou extraem dado: so o dono.
+     *
+     * <p><b>Invariantes do dominio:</b> lista de PERMISSAO por acao, nao por
+     * prefixo. Rota nova de escrita entra aqui explicitamente; esquecer de
+     * inclui-la deixa a acao aberta ao leitor, e por isso existe teste cobrando
+     * cada uma.</p>
+     */
+    private static final Set<String> ACOES_DE_DONO = Set.of(
+            "/telemetria/api/exportar",
+            "/telemetria/api/console/limpar",
+            "/telemetria/api/pasta");
+
     @Inject
     AdminApiKeyService adminApiKeyService;
 
     @Inject
     SensitiveApisService sensitiveApisService;
+
+    @Inject
+    SessaoTelemetriaService sessaoTelemetriaService;
 
     @ConfigProperty(name = "framework.telemetry.dashboard-enabled", defaultValue = "true")
     boolean telemetryDashboardEnabled;
@@ -33,11 +60,15 @@ public class AdminApiKeyFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         String path = normalizePath(requestContext.getUriInfo().getPath());
-        if (PUBLIC_ADMIN_PATHS.contains(path)) {
+        if (PUBLIC_ADMIN_PATHS.contains(path) || CAMINHOS_DE_LOGIN.contains(path)) {
             return;
         }
         if (isTelemetryPathDisabled(path)) {
             abortUnavailable(requestContext);
+            return;
+        }
+        if (path.startsWith("/telemetria")) {
+            exigirSessaoDeTelemetria(requestContext, path);
             return;
         }
         if (!adminApiKeyService.isProtectedPath(path)) {
@@ -71,6 +102,50 @@ public class AdminApiKeyFilter implements ContainerRequestFilter {
                 .type(MediaType.APPLICATION_JSON)
                 .entity("{\"erro\":\"API key administrativa ausente ou inválida. Use o header "
                         + AdminApiKeyService.HEADER_NAME + " ou faça login em /admin/login.\"}")
+                .build());
+    }
+
+    /**
+     * Exige sessão para abrir a Telemetria.
+     *
+     * <p><b>Propósito de negócio:</b> o painel expõe eventos, rotas e endereços de
+     * quem usou o site. Até esta mudança ele ficava <b>aberto</b> em produção: a
+     * regra anterior só pedia chave quando o dashboard estava <em>desligado</em>,
+     * de modo que ligar o recurso desligava a proteção.</p>
+     *
+     * <p><b>Invariantes do domínio:</b> a sessão nasce do login pelo GitHub ou da
+     * contingência; o header {@code X-Admin-Api-Key} continua valendo para
+     * automação, que não tem navegador para completar OAuth. Navegador sem sessão
+     * vai para a tela de login; cliente de máquina recebe 401 em JSON.</p>
+     */
+    private void exigirSessaoDeTelemetria(ContainerRequestContext requestContext, String path) {
+        String cookies = requestContext.getHeaderString("Cookie");
+        if (sessaoTelemetriaService.temSessaoValida(cookies)) {
+            if (!ACOES_DE_DONO.contains(path) || sessaoTelemetriaService.ehDono(cookies)) {
+                return;
+            }
+            // Leitor autenticado ve o painel, mas nao mexe: 403 vira a pagina
+            // "ACESSO BLOQUEADO" quando o cliente e navegador.
+            requestContext.abortWith(Response.status(Response.Status.FORBIDDEN)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity("{\"erro\":\"Esta acao e restrita ao dono da Telemetria.\"}")
+                    .build());
+            return;
+        }
+        // Exigir o header PRESENTE: em ambiente com enforcement desligado, isValid()
+        // aprova qualquer coisa, e uma checagem ingenua abriria a Telemetria inteira.
+        String chave = requestContext.getHeaderString(AdminApiKeyService.HEADER_NAME);
+        if (chave != null && !chave.isBlank() && adminApiKeyService.isValid(chave)) {
+            return;
+        }
+        if (prefersHtml(requestContext)) {
+            requestContext.abortWith(Response.seeOther(URI.create("/login")).build());
+            return;
+        }
+        requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED)
+                .type(MediaType.APPLICATION_JSON)
+                .entity("{\"erro\":\"Telemetria exige autenticação. Abra /login ou envie o header "
+                        + AdminApiKeyService.HEADER_NAME + ".\"}")
                 .build());
     }
 

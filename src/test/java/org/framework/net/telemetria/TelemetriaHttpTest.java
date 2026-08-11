@@ -1,6 +1,8 @@
 package org.framework.net.telemetria;
 
 import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import org.framework.net.security.SessaoTelemetriaService;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
@@ -10,9 +12,20 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 @QuarkusTest
 class TelemetriaHttpTest {
 
+    @Inject
+    SessaoTelemetriaService sessao;
+
+    /** A Telemetria deixou de ser publica; estes testes autenticam como dono. */
+    private String cookieDeDono() {
+        return SessaoTelemetriaService.COOKIE_NAME + "=" + sessao.emitirCookie(
+                "carmipa", SessaoTelemetriaService.ORIGEM_GITHUB,
+                SessaoTelemetriaService.PAPEL_DONO).getValue();
+    }
+
     @Test
     void resumoJson() {
         given()
+                .header("Cookie", cookieDeDono())
                 .when().get("/telemetria/api/resumo")
                 .then()
                 .statusCode(200)
@@ -23,6 +36,7 @@ class TelemetriaHttpTest {
     @Test
     void dashboardJson() {
         given()
+                .header("Cookie", cookieDeDono())
                 .when().get("/telemetria/api/dashboard")
                 .then()
                 .statusCode(200)
@@ -33,6 +47,7 @@ class TelemetriaHttpTest {
     @Test
     void paginaHtml() {
         given()
+                .header("Cookie", cookieDeDono())
                 .when().get("/telemetria")
                 .then()
                 .statusCode(200)
@@ -44,6 +59,7 @@ class TelemetriaHttpTest {
     @Test
     void exportarArquivoCompartilhado() {
         given()
+                .header("Cookie", cookieDeDono())
                 .when().get("/telemetria/api/exportar")
                 .then()
                 .statusCode(200)
@@ -53,6 +69,7 @@ class TelemetriaHttpTest {
     @Test
     void requestIncluiTraceId() {
         given()
+                .header("Cookie", cookieDeDono())
                 .when().get("/documentacao")
                 .then()
                 .statusCode(200)

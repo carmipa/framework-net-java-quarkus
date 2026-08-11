@@ -21,7 +21,9 @@ public class RateLimitFilter implements ContainerRequestFilter {
             "/resolucao-problemas",
             "/api/informacoes/geo",
             "/informacoes",
-            "/calculadora"
+            "/calculadora",
+            // Tentativa em serie contra a chave de contingencia da Telemetria.
+            "/login/chave"
     );
 
     @Inject

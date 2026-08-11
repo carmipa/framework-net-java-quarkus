@@ -1,6 +1,8 @@
 package org.framework.net.web;
 
 import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import org.framework.net.security.SessaoTelemetriaService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -32,6 +34,23 @@ import static org.hamcrest.CoreMatchers.not;
 @DisplayName("Menu principal: todas as rotas abrem e se marcam como ativas")
 class MenuRotasHttpTest {
 
+    @Inject
+    SessaoTelemetriaService sessao;
+
+    /**
+     * Cookie de dono para as rotas protegidas.
+     *
+     * <p>A Telemetria deixou de ser publica: o menu continua levando ate ela, mas
+     * abrir exige sessao. O teste de fumaca do menu autentica para continuar
+     * provando que a PAGINA abre - quem prova que ela fecha sem sessao e o
+     * AcessoTelemetriaHttpTest.</p>
+     */
+    private String cookieDeDono() {
+        return SessaoTelemetriaService.COOKIE_NAME + "=" + sessao.emitirCookie(
+                "carmipa", SessaoTelemetriaService.ORIGEM_GITHUB,
+                SessaoTelemetriaService.PAPEL_DONO).getValue();
+    }
+
     /** Rotas do menu principal, na ordem em que aparecem em shared/main_menu.html. */
     private static final List<String> ROTAS_DO_MENU = List.of(
             "/", "/analise", "/calculadora", "/portas", "/protocolos", "/resolucao-problemas",
@@ -56,6 +75,7 @@ class MenuRotasHttpTest {
     })
     void rotaDoMenuAbreComOMenuERotuloCorreto(String rota, String rotulo) {
         given()
+                .header("Cookie", cookieDeDono())
                 .when().get(rota)
                 .then()
                 .statusCode(200)
@@ -70,7 +90,8 @@ class MenuRotasHttpTest {
             "/localizacao", "/trafego", "/diagnostico", "/seguranca", "/telemetria",
             "/documentacao", "/sobre"})
     void todaPaginaDoMenuNavegaParaAsOutras(String rota) {
-        var resposta = given().when().get(rota).then().statusCode(200);
+        var resposta = given().header("Cookie", cookieDeDono())
+                .when().get(rota).then().statusCode(200);
         for (String destino : ROTAS_DO_MENU) {
             resposta.body(containsString("href=\"" + destino + "\""));
         }
