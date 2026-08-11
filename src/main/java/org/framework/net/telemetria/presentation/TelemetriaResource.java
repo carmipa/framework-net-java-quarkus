@@ -146,6 +146,26 @@ public class TelemetriaResource {
                 "erro", resultado.mensagem())).build();
     }
 
+    /**
+     * O que ja esta publicado no repositorio publico.
+     *
+     * <p><b>Proposito de negocio:</b> permitir que a tela responda "foi
+     * sincronizado?" consultando o repositorio, e nao o log da propria
+     * aplicacao. Somente leitura e sobre repositorio publico, por isso nao e
+     * acao de dono - leitor tambem pode ver o que ja foi publicado.</p>
+     */
+    @GET
+    @Path("/api/dataset/estado")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response estadoDataset() {
+        var estado = datasetPublisher.listarSnapshots();
+        return Response.ok(Map.of(
+                "consultado", estado.consultado(),
+                "snapshots", estado.snapshots(),
+                "destino", datasetPublisher.destinoParaExibicao(),
+                "observacao", estado.observacao())).build();
+    }
+
     @GET
     @Path("/api/pasta")
     @Produces(MediaType.APPLICATION_JSON)

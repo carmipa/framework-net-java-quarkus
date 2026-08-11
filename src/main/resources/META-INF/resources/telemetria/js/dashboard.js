@@ -421,6 +421,36 @@
             '</div></div>';
     }
 
+    /*
+     * Estado permanente: le o que EXISTE no repositorio publico, nao o nosso log.
+     * Alerta de clique some quando a pagina recarrega; isto responde "foi
+     * sincronizado?" a qualquer momento, consultando a fonte de verdade.
+     */
+    async function atualizarEstado() {
+        try {
+            var r = await fetch("/telemetria/api/dataset/estado");
+            var d = await r.json();
+            if (!d.consultado) {
+                mostrar("warning", "help", "Nao foi possivel conferir o repositorio",
+                    d.observacao || "Sem resposta do GitHub.", "");
+                return;
+            }
+            if (!d.snapshots.length) {
+                mostrar("info", "inbox", "Nenhum snapshot publicado ainda",
+                    "Destino: " + d.destino, "");
+                return;
+            }
+            mostrar("info", "inventory_2",
+                d.snapshots.length + " snapshot(s) publicado(s) · ultimo: " + d.snapshots[0],
+                "No repositorio: " + d.snapshots.join(" · "),
+                "https://github.com/carmipa/framework-net-telemetry-dataset/tree/main/dataset");
+        } catch (err) {
+            /* silencio: a ausencia do painel de estado nao pode quebrar a pagina */
+        }
+    }
+
+    atualizarEstado();
+
     botao.addEventListener("click", async function () {
         if (!window.confirm("Publicar um snapshot novo no repositorio PUBLICO?
 
@@ -449,6 +479,9 @@
         } finally {
             botao.disabled = false;
             botao.innerHTML = original;
+            // Reconfere no repositorio: o que vale e o que esta la, nao o que
+            // a resposta do POST disse que aconteceu.
+            setTimeout(atualizarEstado, 2500);
         }
     });
 })();

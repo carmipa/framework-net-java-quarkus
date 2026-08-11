@@ -160,6 +160,59 @@ public class GitHubDatasetPublisher {
         return local;
     }
 
+    /**
+     * Snapshots que EXISTEM hoje no repositorio publico.
+     *
+     * <p><b>Proposito de negocio:</b> responder "foi publicado ou nao?" lendo a
+     * fonte de verdade, e nao o nosso proprio log. Log diz o que tentamos fazer;
+     * o repositorio diz o que de fato esta la. Quando os dois divergem, quem
+     * manda e o repositorio.</p>
+     *
+     * <p><b>Comportamento em caso de falha:</b> lista vazia e o motivo. Nao
+     * distingue "nao ha snapshot" de "nao consegui perguntar" no valor de
+     * retorno: quem chama recebe o campo {@code consultado} para nao confundir
+     * ausencia de dado com ausencia de resposta.</p>
+     */
+    public Estado listarSnapshots() {
+        if (repositorio().isBlank() || !repositorio().contains("/")) {
+            return new Estado(false, List.of(), "Repositorio nao configurado.");
+        }
+        try {
+            HttpRequest.Builder b = HttpRequest.newBuilder(
+                            URI.create(API + "/repos/" + repositorio() + "/contents/dataset?ref=" + branch()))
+                    .timeout(TIMEOUT)
+                    .header("Accept", "application/vnd.github+json")
+                    .header("X-GitHub-Api-Version", "2022-11-28")
+                    .header("User-Agent", "framework-net-java-quarkus")
+                    .GET();
+            // O repositorio e publico: da para consultar sem token. Se houver, usa.
+            if (!token().isBlank()) {
+                b.header("Authorization", "Bearer " + token());
+            }
+            HttpResponse<String> r = cliente().send(b.build(), HttpResponse.BodyHandlers.ofString());
+            if (r.statusCode() == 404) {
+                return new Estado(true, List.of(), "Nenhum snapshot publicado ainda.");
+            }
+            if (r.statusCode() != 200) {
+                return new Estado(false, List.of(), "GitHub respondeu HTTP " + r.statusCode() + ".");
+            }
+            List<String> datas = new ArrayList<>();
+            for (var no : objectMapper.readTree(r.body())) {
+                if ("dir".equals(no.path("type").asText())) {
+                    datas.add(no.path("name").asText());
+                }
+            }
+            datas.sort(java.util.Comparator.reverseOrder());
+            return new Estado(true, datas, "");
+        } catch (Exception ex) {
+            return new Estado(false, List.of(), "Nao foi possivel consultar o repositorio.");
+        }
+    }
+
+    /** O que existe publicado, e se conseguimos mesmo perguntar. */
+    public record Estado(boolean consultado, List<String> snapshots, String observacao) {
+    }
+
     private record Envio(boolean ok, boolean jaExiste, int status) {
     }
 
