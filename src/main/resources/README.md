@@ -81,6 +81,7 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Protocolos — SSH | `/protocolos/ssh` | GET | Aprofundamento do SSH: camadas, autenticação, chaves, túneis, hardening |
 | Resolução VLSM | `/resolucao-problemas` | GET/POST | Aba **Projetar**: cenários VLSM/WAN, demos e exportações |
 | Resolução — reversa | `/resolucao-problemas?aba=reversa` | GET/POST | Aba **Engenharia reversa**: interpreta configuração Cisco colada, audita, corrige e reconstrói o projeto |
+| Páginas de erro | qualquer rota que falhe | — | Página única em `paginaErros/erro.html` servindo os 12 códigos (400…504) |
 | Telemetria | `/telemetria` | GET | Dashboard de eventos e console |
 | Telemetria (API) | `/telemetria/api/*` | GET/POST | `resumo`, `dashboard`, `console`, `console/limpar`, `exportar`, `pasta` |
 | Documentação | `/documentacao` | GET | Este README renderizado |
@@ -190,6 +191,42 @@ Como isso é montado:
 
 Para adicionar o próximo protocolo: um `conteudo.json`, um template, um CSS e uma linha
 no registro.
+
+### Páginas de erro (`org.framework.net.paginaErros`)
+
+Qualquer falha não tratada devolve a página do Framework no lugar da tela padrão do servidor:
+mesmo desenho command-center, texto em português, **`trace_id` real** e atalhos de volta.
+
+**Um template serve os 12 códigos** (400, 401, 403, 404, 405, 409, 422, 429, 500, 502, 503,
+504). O estado vem da classe do `<body>` (`err-404`, `err-500`…), e o CSS deriva dela a cor de
+acento, a aura e a cor da chuva Matrix — não há CSS duplicado por código. Código fora do
+catálogo cai no representante da família (4xx → 400, resto → 500); nunca em tela branca.
+
+| Peça | Onde |
+|---|---|
+| Textos dos 12 estados | `paginaErros/domain/CatalogoErros.java` |
+| Montagem + telemetria | `paginaErros/application/PaginaErroService.java` |
+| Interceptação | `paginaErros/presentation/PaginaErroMapper.java` |
+| Template | `templates/paginaErros/erro.html` |
+| Estáticos | `META-INF/resources/paginaErros/{css,js}` |
+
+Invariantes que o código sustenta:
+
+- **HTML para gente, JSON para máquina.** A página só sai quando o cliente pede `text/html`
+  **e** a rota não é de API. Devolver HTML num `fetch()` quebraria o `response.json()` do
+  frontend com um erro que não diz nada — é o tipo de defeito que só aparece em produção.
+- **Resposta já formatada por outro componente é preservada** (o 429 do `RateLimitFilter`,
+  por exemplo). O mapper não reescreve mensagem que outro componente escolheu dar.
+- **Nada de interno na tela.** Nome de classe, mensagem de exceção e stack não vão para a
+  página pública; o que liga o usuário ao diagnóstico é o `trace_id`, o mesmo registrado na
+  telemetria. Há teste que reprova hint contendo `org.framework` ou nome de exceção.
+- **O `trace_id` é real ou é declarado indisponível** — jamais gerado na hora só para
+  preencher o campo, o que simularia uma rastreabilidade inexistente.
+- **A página de erro não pode gerar erro:** falha ao renderizar o template cai para texto
+  simples com o mesmo status, em vez de recursão.
+- **`noindex`** no `<head>`, para que tela de erro não entre em buscador.
+- Animação Matrix respeita `prefers-reduced-motion` e lê a cor de `--accent` em tempo de
+  execução, acompanhando o estado sem uma linha de cor no JavaScript.
 
 ### Módulo 4 — Resolução de Problemas (VLSM + WAN) (`/resolucao-problemas`)
 

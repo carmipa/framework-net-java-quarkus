@@ -25,6 +25,7 @@ Cobre análise de IPv4/IPv6, CIDR, máscaras, wildcard, VLSM, topologia WAN, scr
 | Protocolos — SSH | `/protocolos/ssh` | Aprofundamento do **SSH**: TOFU e `known_hosts`, camadas do SSH-2, métodos de autenticação, chaves, túneis `-L/-R/-D/-J/-A` e hardening do `sshd_config` |
 | Resolução VLSM | `/resolucao-problemas` | Aba **Projetar**: cenários VLSM/WAN, demos, exports e **ZIP da turma** |
 | Resolução — reversa | `/resolucao-problemas?aba=reversa` | Aba **Engenharia reversa**: cola a configuração Cisco pronta, **acha e corrige os erros com evidência** e reconstrói LANs, enlaces, tabelas e o desenho |
+| Páginas de erro | qualquer rota que falhe | Página única servindo **12 códigos** (400…504) no desenho do app, com `trace_id` real, animação Matrix de pacotes e atalhos de volta |
 | Telemetria | `/telemetria` | Dashboard de eventos e console ao vivo |
 | Documentação | `/documentacao` | README técnico renderizado |
 | Administração | `/admin/login` | Autenticação para rotas sensíveis (`/export/*`) |

@@ -17,6 +17,9 @@ const PAGINAS = [
   '/portas', '/protocolos', '/protocolos/bgp', '/protocolos/ssh',
   '/resolucao-problemas', '/resolucao-problemas?aba=reversa&demo=bgp', '/trafego',
   '/diagnostico', '/seguranca', '/sobre',
+  // Pagina de erro: carrega Google Fonts, bandeiras do flagcdn e o Translate.
+  // E justamente a tela onde ninguem repara se um recurso for bloqueado.
+  '/rota-inexistente-para-verificar-csp',
 ];
 
 const navegador = await chromium.launch();
