@@ -39,9 +39,31 @@
                 <button type="button" class="aed-btn aed-btn-neutral" id="btn-refresh-telemetria">
                     <span class="material-symbols-outlined">refresh</span> Atualizar
                 </button>
-                <a class="aed-btn aed-btn-json" href="/telemetria/api/exportar" target="_blank" rel="noopener">
-                    <span class="material-symbols-outlined">download</span> Exportar JSON
-                </a>
+                <button type="button" class="aed-btn aed-btn-neutral" id="btn-imprimir-telemetria"
+                        data-bs-toggle="tooltip" data-bs-placement="top"
+                        title="Abre a impressao do navegador com o painel: KPIs, graficos e tabelas.">
+                    <span class="material-symbols-outlined">print</span> Imprimir
+                </button>
+                <div class="dropdown d-inline-block">
+                    <button type="button" class="aed-btn aed-btn-json dropdown-toggle" data-bs-toggle="dropdown"
+                            aria-expanded="false" id="btn-exportar-telemetria">
+                        <span class="material-symbols-outlined">download</span> Exportar
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end tele-export-menu" aria-labelledby="btn-exportar-telemetria">
+                        <li><a class="dropdown-item" href="/telemetria/api/exportar?formato=json">
+                            <span class="material-symbols-outlined">data_object</span> JSON
+                            <small>OTLP compartilhavel</small></a></li>
+                        <li><a class="dropdown-item" href="/telemetria/api/exportar?formato=csv">
+                            <span class="material-symbols-outlined">table</span> CSV
+                            <small>abre no Excel</small></a></li>
+                        <li><a class="dropdown-item" href="/telemetria/api/exportar?formato=txt">
+                            <span class="material-symbols-outlined">description</span> TXT
+                            <small>relatorio para leitura</small></a></li>
+                        <li><a class="dropdown-item" href="/telemetria/api/exportar?formato=html">
+                            <span class="material-symbols-outlined">html</span> HTML
+                            <small>tabela pronta para imprimir</small></a></li>
+                    </ul>
+                </div>
                 {#if datasetConfigurado}
                 <button type="button" class="aed-btn aed-btn-teal" id="btn-sincronizar-dataset"
                         data-bs-toggle="tooltip" data-bs-placement="top"

@@ -292,3 +292,88 @@
 
 .tele-console-tools .form-select { min-width: 9rem; }
 #t-console-pausar.active { color: #f59e0b; border-color: rgba(245, 158, 11, 0.5); }
+
+/* ---------- Menu de exportacao ---------- */
+.tele-export-menu {
+    background: linear-gradient(180deg, #111826, #0a0e17);
+    border: 1px solid rgba(255, 255, 255, .1);
+    border-radius: .75rem;
+    padding: .35rem;
+    min-width: 15rem;
+}
+
+.tele-export-menu .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    border-radius: .5rem;
+    padding: .5rem .7rem;
+    color: #c7d0de;
+    font-size: .86rem;
+}
+
+.tele-export-menu .dropdown-item:hover,
+.tele-export-menu .dropdown-item:focus {
+    background: rgba(255, 255, 255, .06);
+    color: #eef2f8;
+}
+
+.tele-export-menu .material-symbols-outlined {
+    font-size: 1.15rem;
+    color: #2dd4bf;
+}
+
+.tele-export-menu small {
+    margin-left: auto;
+    color: #5b6679;
+    font-size: .7rem;
+}
+
+/* ---------- Impressao: so o conteudo, sem casca ----------
+   O botao "Imprimir" leva a TELA para o papel; quem decide o recorte e este
+   bloco, nao o JavaScript. Fundo escuro vira claro: painel dark impresso gasta
+   tinta e sai ilegivel. */
+@media print {
+    .aed-topnav,
+    .aed-lang-selector,
+    .tele-controls,
+    #dataset-resultado,
+    .btn-clear-console,
+    .btn-copy-console,
+    #t-console-pausar {
+        display: none !important;
+    }
+
+    body.aed-app,
+    .telemetry-page {
+        background: #fff !important;
+        color: #111 !important;
+    }
+
+    .aed-card,
+    .card-tech {
+        background: #fff !important;
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+    }
+
+    .aed-kpi-value,
+    .aed-kpi-label,
+    h2, h6, td, th, .small {
+        color: #111 !important;
+    }
+
+    canvas {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+
+    .console-telemetria,
+    #console-telemetria {
+        max-height: none !important;
+        overflow: visible !important;
+        background: #fff !important;
+        color: #111 !important;
+    }
+}

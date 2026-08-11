@@ -16,6 +16,7 @@ import org.framework.net.telemetria.TelemetriaDashboardService;
 import org.framework.net.telemetria.TelemetriaResumo;
 import org.framework.net.telemetria.TelemetriaStore;
 import org.framework.net.telemetria.application.DatasetPublicavelService;
+import org.framework.net.telemetria.application.TelemetriaExportService;
 import org.framework.net.telemetria.infrastructure.GitHubDatasetPublisher;
 
 import java.io.IOException;
@@ -33,6 +34,9 @@ public class TelemetriaResource {
 
     @Inject
     DatasetPublicavelService datasetService;
+
+    @Inject
+    TelemetriaExportService exportService;
 
     @Inject
     GitHubDatasetPublisher datasetPublisher;
@@ -89,13 +93,26 @@ public class TelemetriaResource {
      */
     @GET
     @Path("/api/exportar")
-    public Response exportar() throws IOException {
-        var arquivo = store.arquivoCompartilhado();
-        store.flush();
-        byte[] conteudo = Files.readAllBytes(arquivo);
-        return Response.ok(conteudo)
-                .type(MediaType.APPLICATION_JSON)
-                .header("Content-Disposition", "attachment; filename=\"telemetria_compartilhada.json\"")
+    public Response exportar(@QueryParam("formato") String formatoPedido) throws IOException {
+        var formato = TelemetriaExportService.Formato.de(formatoPedido);
+
+        if (formato == TelemetriaExportService.Formato.JSON) {
+            // JSON continua saindo do arquivo canonico OTLP, que e o formato
+            // compartilhavel e a base do dataset publico.
+            var arquivo = store.arquivoCompartilhado();
+            store.flush();
+            byte[] conteudo = Files.readAllBytes(arquivo);
+            return Response.ok(conteudo)
+                    .type(MediaType.APPLICATION_JSON)
+                    .header("Content-Disposition",
+                            "attachment; filename=\"telemetria_compartilhada.json\"")
+                    .build();
+        }
+
+        return Response.ok(exportService.gerar(formato))
+                .type(formato.tipoMime())
+                .header("Content-Disposition",
+                        "attachment; filename=\"" + exportService.nomeArquivo(formato) + "\"")
                 .build();
     }
 

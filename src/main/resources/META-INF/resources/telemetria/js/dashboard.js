@@ -485,3 +485,38 @@
         }
     });
 })();
+
+/*
+ * Botao "Imprimir" do painel de telemetria.
+ *
+ * Proposito de negocio: levar KPIs, graficos e tabelas para o papel ou PDF sem
+ * passar pelo servidor. Nao se confunde com "Exportar": um manda a TELA para a
+ * impressora, o outro baixa os DADOS em arquivo.
+ *
+ * Invariantes: o recorte do que sai no papel e responsabilidade do @media print
+ * do CSS, nao deste arquivo. Antes de chamar a impressao os graficos sao
+ * redesenhados na largura de impressao - canvas nao reflui sozinho, e sem isso
+ * eles saem cortados ou em branco.
+ *
+ * Comportamento em caso de falha: se o Chart.js nao estiver presente, imprime
+ * assim mesmo, so sem o ajuste dos graficos.
+ */
+(function () {
+    "use strict";
+    var botao = document.getElementById("btn-imprimir-telemetria");
+    if (!botao) {
+        return;
+    }
+    botao.addEventListener("click", function () {
+        try {
+            if (window.Chart && Chart.instances) {
+                Object.keys(Chart.instances).forEach(function (k) {
+                    Chart.instances[k].resize();
+                });
+            }
+        } catch (err) {
+            /* imprimir e mais importante que o ajuste do grafico */
+        }
+        window.print();
+    });
+})();
