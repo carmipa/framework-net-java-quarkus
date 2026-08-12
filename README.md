@@ -80,7 +80,9 @@ O projeto sobe **sempre por Docker**, com a mesma imagem, o mesmo Redis e o mesm
 .\scripts\parar.ps1 -Limpar      # para e apaga volumes (pede confirmação)
 ```
 
-Aplicação em `http://localhost:8081`. A Telemetria exige login; em dev o GitHub OAuth fica desligado (a OAuth App tem um único callback registrado, o de produção), então use o **acesso de contingência** com a chave `dev-admin-key-local`.
+Aplicação em `http://localhost:8081`. Na primeira execução o script gera um `.env` local com `ADMIN_API_KEY` e `CSRF_SECRET` fortes (fora do git) e imprime a chave no final — o compose de dev roda com o perfil `prod`, e nesse perfil a aplicação **recusa iniciar** com segredo de desenvolvimento versionado.
+
+A Telemetria exige login; em dev o GitHub OAuth fica desligado (a OAuth App tem um único callback registrado, o de produção), então use o **acesso de contingência** com a chave que está no `.env` desta máquina.
 
 **Por que não `gradlew quarkusDev`?** Porque ele roda por outro caminho — sem Redis, sem as variáveis do container, com outro perfil — e esconde exatamente os defeitos que só aparecem em produção. Este projeto já pagou duas vezes por isso: a variável do OAuth que não chegava ao container, e a telemetria sem Redis. O script **não** cai para `quarkusDev` quando o Docker está parado; ele avisa e para, de propósito.
 
@@ -93,6 +95,54 @@ Para depuração pontual com hot reload, `.\gradlew.bat quarkusDev` continua exi
 ```
 
 Suíte em JUnit 5 + RestAssured, em `src/test/java`.
+
+### Varredura de UI num navegador real
+
+A suíte prova que o servidor responde. Ela **não** prova que a tela apareceu:
+texto cortado, botão coberto, contraste ilegível, aba que não troca, expressão
+Qute vazando como `{lab_count}`, ícone que virou a palavra `sync_alt` e overflow
+horizontal no celular respondem **200** e só o navegador revela.
+
+```powershell
+node scripts/inventario.mjs     # 1. extrai a lista do CÓDIGO (não de memória)
+node scripts/varredura.mjs      # 2. varre tudo num Chromium real
+```
+
+| Comando | Para quê |
+|---|---|
+| `node scripts/varredura.mjs` | passada completa: páginas, abas, gatilhos, formulários, modais, links e APIs |
+| `node scripts/varredura.mjs --so-paginas` | rápida: só carrega cada tela e mede (pula cliques e envios) |
+| `node scripts/varredura.mjs --vigiar` | **tempo real**: repete em ciclo e mostra só o que apareceu de **novo** e o que foi **resolvido** |
+| `node scripts/varredura.mjs --vigiar --intervalo=30` | mesmo, a cada 30 s |
+| `node scripts/varredura.mjs <url> --permitir-remoto` | varre outra base (produção **exige** a flag, escrita à mão) |
+
+Base remota é recusada sem `--permitir-remoto`, e a `ADMIN_API_KEY` do `.env`
+local **nunca** é enviada para fora desta máquina: a varredura clica em cada
+gatilho e envia cada formulário, e apontar isso para produção sem querer geraria
+tráfego real e telemetria poluída.
+
+`inventario.mjs` lê os `@Path` das resources e os templates Qute (resolvendo os
+`{#include}`) e grava `scripts/inventario.json` — páginas, variantes `?query`,
+APIs, abas, campos, gatilhos, modais e links. A varredura **só percorre essa
+lista**: nada é escolhido de memória, e rota que muda estado (logout, limpar
+console, sincronizar dataset) ou baixa arquivo fica fora da navegação de
+propósito.
+
+Antes de qualquer medição valer, a varredura **injeta um defeito de cada tipo e
+exige que o detector o acuse** — mais um décimo detector calibrado ao contrário
+(botão morto: a assinatura da tela **não** pode mudar). Detector cego devolve
+"nenhum problema" e é indistinguível de sistema sadio; se algum falhar, a
+varredura sai com **código 2 — NÃO VERIFICADO**, que não é aprovação.
+
+Saída: `0` nada encontrado no escopo varrido · `1` há achados · `2` não
+verificou. O relatório fica em `scripts/relatorio-varredura.txt`, com seções
+separadas para **ruído externo** (CDN, Google Fonts, tradutor), **não
+comprovado** (o instrumento não consegue decidir) e **pulados com motivo** (o que
+deliberadamente não foi coberto — impressão, download, GPS, área de
+transferência).
+
+Guardas menores, que continuam valendo: `node scripts/verificar-js.mjs`
+(sintaxe dos `.js`), `verificar-csp.mjs` e `verificar-pwa.mjs`.
 
 ## Docker (VPS)
 

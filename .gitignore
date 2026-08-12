@@ -67,3 +67,9 @@ scripts/__pycache__/
 # Dataset gerado na VPS — sai daqui para o repositório próprio do dataset,
 # nunca versionado junto com a aplicação.
 dataset/
+
+# Saida da varredura de UI: derivada do codigo (inventario) e da execucao
+# (relatorio). Versionar o inventario faria a lista envelhecer em silencio —
+# ele tem de ser reextraido do codigo a cada varredura, nunca lido do git.
+scripts/inventario.json
+scripts/relatorio-varredura.txt
