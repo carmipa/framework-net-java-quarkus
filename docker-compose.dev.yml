@@ -1,7 +1,13 @@
 # Desenvolvimento / teste local com Docker (sem a rede externa do Nginx Proxy Manager).
 #
 # Uso recomendado:  .\scripts\subir.ps1        (Windows)
-#          ou:      docker compose -f docker-compose.dev.yml up -d --build
+#
+# `docker compose -f docker-compose.dev.yml up -d --build` direto SO funciona se
+# ja existir um `.env` com ADMIN_API_KEY e CSRF_SECRET fortes. O perfil aqui e
+# `prod` (de proposito, para espelhar a producao) e nele o
+# SegredosObrigatoriosVerificador RECUSA iniciar com o valor de dev abaixo, que e
+# publico no repositorio — o container morre no boot. O subir.ps1 gera esse .env
+# na primeira execucao; e por isso que ele e o caminho recomendado, nao um atalho.
 #
 # Espelha a producao de proposito — mesma imagem, mesmo Redis, mesmo perfil.
 # Ambiente de dev que difere do de producao esconde justamente os defeitos que

@@ -64,6 +64,44 @@ try {
 }
 Write-Host '  [ok] Docker respondendo' -ForegroundColor Green
 
+# --- 1.5. Segredos locais --------------------------------------------------
+# O compose de dev roda com QUARKUS_PROFILE=prod de proposito (espelhar producao),
+# e o SegredosObrigatoriosVerificador RECUSA iniciar em prod com o valor de dev
+# `dev-admin-key-local`, que e publico no repositorio. Sem este bloco o container
+# morre no boot e este script fica esperando um healthcheck que nunca vem — foi
+# exatamente o que aconteceu numa maquina limpa em 2026-08-11.
+#
+# A saida NAO e afrouxar a guarda nem versionar outro literal (seria o mesmo
+# buraco com outro nome): e gerar segredo forte por maquina num `.env` local, que
+# o .gitignore ja mantem fora do git. Mesmo mecanismo do scripts/deploy.sh.
+$envFile = Join-Path $raiz '.env'
+function New-SegredoForte {
+    $bytes = [byte[]]::new(32)
+    [System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+    return -join ($bytes | ForEach-Object { $_.ToString('x2') })
+}
+if (-not (Test-Path $envFile)) {
+    @(
+        "# Gerado por scripts/subir.ps1 — segredos LOCAIS desta maquina.",
+        "# Fora do git (.gitignore). Nao sao os segredos da VPS.",
+        "ADMIN_API_KEY=$(New-SegredoForte)",
+        "CSRF_SECRET=$(New-SegredoForte)"
+    ) | Set-Content -Path $envFile -Encoding UTF8
+    Write-Host '  [ok] .env local criado com segredos fortes' -ForegroundColor Green
+} else {
+    $conteudo = Get-Content $envFile -Raw
+    $faltando = @()
+    foreach ($chave in @('ADMIN_API_KEY', 'CSRF_SECRET')) {
+        if ($conteudo -notmatch "(?m)^$chave=\S") { $faltando += $chave }
+    }
+    if ($faltando.Count -gt 0) {
+        foreach ($chave in $faltando) { Add-Content $envFile "$chave=$(New-SegredoForte)" }
+        Write-Host "  [ok] .env completado ($($faltando -join ', '))" -ForegroundColor Green
+    } else {
+        Write-Host '  [ok] .env local presente' -ForegroundColor Green
+    }
+}
+
 # --- 2. Subir --------------------------------------------------------------
 if ($Recriar) {
     Write-Host '  [..] Reconstruindo do zero (--no-cache)' -ForegroundColor DarkGray
@@ -104,7 +142,10 @@ Write-Host ''
 docker compose -f $compose ps --format 'table {{.Name}}\t{{.Status}}\t{{.Ports}}'
 Write-Host ''
 Write-Host "  Aplicacao ....... $url" -ForegroundColor Cyan
-Write-Host "  Telemetria ...... ${url}telemetria  (login: contingencia, chave dev-admin-key-local)" -ForegroundColor Cyan
+$chaveLocal = ((Get-Content $envFile | Select-String -Pattern '^ADMIN_API_KEY=(.+)$').Matches.Groups[1].Value)
+Write-Host "  Telemetria ...... ${url}telemetria  (login: contingencia)" -ForegroundColor Cyan
+Write-Host "  Chave local ..... $chaveLocal" -ForegroundColor DarkGray
+Write-Host '                    (esta no .env desta maquina; nao e a da VPS)' -ForegroundColor DarkGray
 Write-Host ''
 Write-Host '  Parar ........... .\scripts\parar.ps1' -ForegroundColor DarkGray
 Write-Host '  Logs ao vivo .... docker compose -f docker-compose.dev.yml logs -f framework-net' -ForegroundColor DarkGray
