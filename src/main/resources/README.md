@@ -694,6 +694,16 @@ scripts/deploy.sh
 - **Rate limiting** — limites por minuto configuráveis (geral e rotas pesadas).
 - **Headers HTTP de segurança** — `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` restritiva.
 - **Sanitização de entrada** — `UserInputSanitizer`, `IpCidrInputNormalizer` e `NetworkAddressGuard` no pacote `shared`.
+- **`robots.txt`** (`META-INF/resources/robots.txt`) — política pública para robôs: buscador
+  legítimo indexa as páginas didáticas; coletor de treinamento de modelo e robô de SEO ficam
+  de fora; nenhum robô entra em `/admin`, `/login`, `/telemetria`, `/history`, `/export`,
+  `/informacoes`, `/health`, `/mascara-referencia` nem nas rotas de API.
+  **Não é controle de acesso** — o arquivo é público e só vale para o robô que escolhe
+  obedecer; quem fecha as rotas é o login pelo GitHub e o `AdminApiKeyFilter`. O que ele
+  evita é custo e ruído: `/informacoes` dispara consulta geográfica externa a cada GET
+  (ip-api, 45 req/min), `/export` gera PDF sob demanda e `/history` expõe o IP de quem
+  consultou. Em produção, veja a nota do próprio arquivo: o nginx do proxy reverso serve um
+  `/robots.txt` compartilhado por match exato e a resposta não chega à aplicação.
 
 ---
 
@@ -835,7 +845,7 @@ Cobertura por área:
 
 ### Testes que guardam regras, não só comportamento
 
-Três suítes existem para impedir classes inteiras de regressão, e não para verificar
+Quatro suítes existem para impedir classes inteiras de regressão, e não para verificar
 um caso de uso:
 
 - **`ArquiteturaCamadasTest`** — lê os imports dos fontes e reprova o build se
@@ -849,6 +859,13 @@ um caso de uso:
   dashboard. Existe porque o `default` do switch apontava para "Análise Didática", e
   com isso `/calculadora`, `/sobre`, `/admin` e `/simuladores` eram silenciosamente
   contabilizados no módulo errado — bug que não gera exceção, só número errado.
+- **`RobotsTxtHttpTest`** — lê o `robots.txt` como um robô lê (grupos, casamento por
+  prefixo) e reprova o build quando um grupo permissivo esquece uma rota fechada, quando
+  uma rota de API **declarada por `@Path` no código** não está bloqueada, ou quando uma
+  página didática é bloqueada por engano. Existe porque o robots.txt **não soma grupos**:
+  o robô obedece só ao bloco mais específico que casa com o nome dele, e o que faltar ali
+  fica liberado em silêncio. A varredura dos fontes falha fechada — nenhuma rota
+  encontrada reprova, em vez de aprovar por cegueira.
 
 ### Ao criar um módulo novo, atualize também
 
@@ -856,7 +873,9 @@ um caso de uso:
 2. `RateLimitFilter.HEAVY_PATHS` — e o `startsWith` do subcaminho, se as APIs forem pesadas;
 3. `TelemetriaDashboardService.moduloDePath` — senão o tráfego é creditado a outro módulo;
 4. `templates/home/index.html` — o bloco do módulo na landing;
-5. este README.
+5. `META-INF/resources/robots.txt` — o prefixo da API nova, **em todos** os grupos
+   permissivos (o `RobotsTxtHttpTest` cobra, mas só depois de o build quebrar);
+6. este README.
 
 ---
 

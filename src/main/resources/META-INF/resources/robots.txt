@@ -1,0 +1,108 @@
+# robots.txt - Framework de Redes | Analise Didatica Avancada
+# https://frameworknet.carminati.dev.br
+#
+# Em uma frase: buscador legitimo indexa as paginas didaticas; coletor de
+# treinamento de modelo e robo de SEO nao entram; nenhum robo entra em rota
+# autenticada, em rota que devolve JSON nem em rota que dispara consulta
+# externa a cada acesso.
+#
+# ISTO NAO E CONTROLE DE ACESSO. O arquivo e publico e so vale para o robo que
+# escolhe obedecer. Quem fecha /telemetria, /admin e /login e o login pelo
+# GitHub e o AdminApiKeyFilter -- nada aqui substitui aquilo. Por isso nenhuma
+# rota que ja nao esteja publica no menu ou na home aparece nesta lista: um
+# robots.txt e um mapa para quem quiser ler.
+#
+# ARMADILHA AO EDITAR: o robots.txt NAO soma grupos. Um robo obedece apenas ao
+# bloco mais especifico que casa com o nome dele. Por isso a lista de Disallow
+# se repete inteira em cada grupo permitido, em vez de ficar so no "*".
+# RobotsTxtHttpTest reprova o build se um grupo esquecer uma rota, e tambem se
+# uma rota /*/api/ nova nascer no codigo sem entrar aqui.
+#
+# Por que cada bloqueio existe:
+#   /admin /login /telemetria   area autenticada (as paginas ja tem meta noindex)
+#   /history                    historico de consultas, com o IP de quem consultou
+#   /export                     gera PDF/JSON sob demanda a cada acesso
+#   /informacoes                cada GET dispara consulta geografica externa
+#                               (ip-api, 45 req/min) e o conteudo e o IP de quem
+#                               visita: nao ha o que indexar, so custo
+#   /diagnostico/api            ping e DNS reais saindo do servidor
+#   /mascara-referencia, .../api, /health    devolvem JSON ou sonda, nao pagina
+#
+# As paginas didaticas ficam abertas de proposito: / /analise /calculadora
+# /portas /protocolos (+/bgp +/ssh) /resolucao-problemas /localizacao /trafego
+# /seguranca /diagnostico /documentacao /sobre.
+#
+# NOTA DE PRODUCAO (medido em 02/09/2026): o nginx do proxy reverso da VPS tem
+# um "location = /robots.txt" em /opt/infra-proxy/data/nginx/custom/server_proxy.conf,
+# incluido no server{} de TODOS os hosts. Match exato ganha do "location /" que
+# faz o proxy_pass, entao enquanto aquele bloco existir a resposta em
+# frameworknet.carminati.dev.br vem do arquivo compartilhado da VPS e ESTE
+# arquivo vale so em desenvolvimento e em qualquer outro deploy.
+
+# --- Buscadores: bem-vindos nas paginas ---
+User-agent: Googlebot
+User-agent: Bingbot
+User-agent: DuckDuckBot
+Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /telemetria
+Disallow: /history
+Disallow: /export
+Disallow: /informacoes
+Disallow: /mascara-referencia
+Disallow: /health
+Disallow: /api
+Disallow: /calculadora/api
+Disallow: /calculadora/export
+Disallow: /diagnostico/api
+Disallow: /localizacao/api
+Disallow: /seguranca/api
+Disallow: /simuladores/api
+Disallow: /trafego/api
+
+# --- Coleta em massa para treinar modelo, e robo de SEO: nao autorizados ---
+# Mesma lista do robots.txt compartilhado da VPS, para que as duas politicas
+# nao divirjam conforme qual arquivo responder.
+User-agent: GPTBot
+User-agent: ChatGPT-User
+User-agent: CCBot
+User-agent: ClaudeBot
+User-agent: anthropic-ai
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: PerplexityBot
+User-agent: Bytespider
+User-agent: Amazonbot
+User-agent: Omgilibot
+User-agent: FacebookBot
+User-agent: Diffbot
+User-agent: ImagesiftBot
+User-agent: AhrefsBot
+User-agent: SemrushBot
+User-agent: MJ12bot
+User-agent: DotBot
+User-agent: PetalBot
+User-agent: DataForSeoBot
+Disallow: /
+
+# --- Demais robos: navegacao liberada, com ritmo e as mesmas rotas fechadas ---
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /telemetria
+Disallow: /history
+Disallow: /export
+Disallow: /informacoes
+Disallow: /mascara-referencia
+Disallow: /health
+Disallow: /api
+Disallow: /calculadora/api
+Disallow: /calculadora/export
+Disallow: /diagnostico/api
+Disallow: /localizacao/api
+Disallow: /seguranca/api
+Disallow: /simuladores/api
+Disallow: /trafego/api
+Crawl-delay: 10
