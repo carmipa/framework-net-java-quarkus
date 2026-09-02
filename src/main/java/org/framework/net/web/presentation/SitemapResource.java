@@ -1,0 +1,119 @@
+package org.framework.net.web.presentation;
+
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Mapa do site para buscadores — o {@code /sitemap.xml}.
+ *
+ * <p><b>Propósito de negócio:</b> o robots.txt diz por onde o robô <i>não</i>
+ * pode passar; o sitemap diz o que existe para ser encontrado. As páginas
+ * didáticas são o produto deste projeto, e várias delas (os aprofundamentos de
+ * protocolo, por exemplo) só são alcançadas por botão dentro de um grid — um
+ * robô que não as encontra não as indexa.</p>
+ *
+ * <p><b>Invariantes do domínio:</b> (1) só entram páginas HTML públicas, nunca
+ * rota autenticada, de API ou fechada no robots.txt — sitemap e robots dizendo
+ * coisas opostas é contradição que o buscador resolve contra o site;
+ * (2) a URL é absoluta e no host canônico do site, senão o Google descarta as
+ * entradas como submissão cruzada — o host vem de {@code framework.site.base-url}
+ * e, na falta dela, da própria requisição; este código <b>não lê cabeçalho de
+ * encaminhamento por conta própria</b>, pela mesma razão que o
+ * {@code RequestRateLimiter} não lê: quem decide se o cabeçalho vale é a
+ * configuração, não o código; (3) não há {@code lastmod} nem
+ * {@code priority} — data de alteração inventada a cada requisição é dado
+ * fabricado, e o Google ignora prioridade.</p>
+ *
+ * <p><b>Por que o host é configurado, e não deduzido:</b> medido em 02/09/2026,
+ * com a configuração do perfil {@code prod} reproduzida em teste — com
+ * {@code allow-forwarded=true} <i>e</i> {@code proxy-address-forwarding=true} o
+ * Vert.x passa a ler <b>só</b> o cabeçalho {@code Forwarded}, e o Nginx da VPS
+ * envia apenas {@code X-Forwarded-Proto} (medido em {@code server_proxy.conf}).
+ * Resultado: o {@code UriInfo} enxerga {@code http://} atrás de um proxy que
+ * fala HTTPS. Confiar nele deixaria o sitemap com esquema errado — que o Google
+ * trata como outro site. Por isso {@code framework.site.base-url} manda quando
+ * está configurado; sem ela, a URL segue a requisição, que é o certo em
+ * desenvolvimento.</p>
+ *
+ * <p><b>Comportamento em caso de falha:</b> não há entrada externa nem I/O; a
+ * lista é estática e o método não lança. Página que deixar de existir vira
+ * entrada morta no sitemap — é o {@code SitemapHttpTest} que impede, exigindo
+ * 200 de cada URL listada.</p>
+ */
+@Path("/sitemap.xml")
+public class SitemapResource {
+
+    /**
+     * Páginas HTML públicas, na ordem em que aparecem no menu.
+     *
+     * <p>Não estão aqui, de propósito: {@code /telemetria} (autenticada),
+     * {@code /informacoes} (dispara consulta geográfica externa a cada acesso),
+     * {@code /admin}, {@code /login}, {@code /history}, {@code /export} e as
+     * rotas de API — todas fechadas no {@code robots.txt}. Os aprofundamentos
+     * {@code /protocolos/bgp} e {@code /protocolos/ssh} estão porque só se chega
+     * a eles por um botão dentro do grid de protocolos.</p>
+     */
+    private static final List<String> PAGINAS_PUBLICAS = List.of(
+            "/",
+            "/analise",
+            "/calculadora",
+            "/portas",
+            "/protocolos",
+            "/protocolos/bgp",
+            "/protocolos/ssh",
+            "/resolucao-problemas",
+            "/localizacao",
+            "/trafego",
+            "/seguranca",
+            "/diagnostico",
+            "/documentacao",
+            "/sobre");
+
+    /**
+     * Host canônico do site, com esquema e sem barra final.
+     *
+     * <p>{@code Optional<String>} e não {@code defaultValue=""}: o SmallRye
+     * recusa valor vazio explícito (SRCFG00040). Ausente em desenvolvimento — aí
+     * a URL segue a requisição.</p>
+     */
+    @ConfigProperty(name = "framework.site.base-url")
+    Optional<String> baseUrlCanonica;
+
+    @GET
+    @Produces("application/xml; charset=UTF-8")
+    public Response sitemap(@Context UriInfo uriInfo) {
+        String base = baseUrlCanonica
+                .filter(valor -> !valor.isBlank())
+                .map(SitemapResource::semBarraFinal)
+                .orElseGet(() -> semBarraFinal(uriInfo.getBaseUri().toString()));
+
+        StringBuilder xml = new StringBuilder(1024);
+        xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        xml.append("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
+        for (String pagina : PAGINAS_PUBLICAS) {
+            xml.append("  <url><loc>")
+                    .append(escapar(base + pagina))
+                    .append("</loc></url>\n");
+        }
+        xml.append("</urlset>\n");
+
+        return Response.ok(xml.toString()).build();
+    }
+
+    private static String semBarraFinal(String uri) {
+        return uri.endsWith("/") ? uri.substring(0, uri.length() - 1) : uri;
+    }
+
+    /** O host vem do runtime; escapar é higiene de XML, não confiança na origem. */
+    private static String escapar(String valor) {
+        return valor.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+}

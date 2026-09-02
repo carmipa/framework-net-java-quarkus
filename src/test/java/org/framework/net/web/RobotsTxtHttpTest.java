@@ -10,9 +10,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -180,58 +178,14 @@ class RobotsTxtHttpTest {
 
     // --- leitura do arquivo -------------------------------------------------
 
+    /** O critério de leitura mora em {@link RobotsTxt}, numa implementação só. */
     private Map<String, List<String>> grupos() {
-        return gruposDe(given().when().get("/robots.txt").then().statusCode(200).extract().asString());
+        return RobotsTxt.grupos(
+                given().when().get("/robots.txt").then().statusCode(200).extract().asString());
     }
 
-    /**
-     * Lê o arquivo como um robô lê: acumula os {@code User-agent:} consecutivos e
-     * anexa a eles as regras que vierem em seguida; um {@code User-agent:} depois
-     * de uma regra abre grupo novo.
-     */
-    private static Map<String, List<String>> gruposDe(String corpo) {
-        Map<String, List<String>> grupos = new LinkedHashMap<>();
-        List<String> agentes = new ArrayList<>();
-        boolean lendoRegras = false;
-
-        for (String bruta : corpo.split("\\R")) {
-            String linha = bruta;
-            int comentario = linha.indexOf(35); // '#'
-            if (comentario >= 0) {
-                linha = linha.substring(0, comentario);
-            }
-            linha = linha.trim();
-            int separador = linha.indexOf(58); // ':'
-            if (linha.isEmpty() || separador < 0) {
-                continue;
-            }
-            String campo = linha.substring(0, separador).trim().toLowerCase(Locale.ROOT);
-            String valor = linha.substring(separador + 1).trim();
-
-            if ("user-agent".equals(campo)) {
-                if (lendoRegras) {
-                    agentes = new ArrayList<>();
-                    lendoRegras = false;
-                }
-                String agente = valor.toLowerCase(Locale.ROOT);
-                agentes.add(agente);
-                grupos.computeIfAbsent(agente, chave -> new ArrayList<>());
-                continue;
-            }
-
-            lendoRegras = true;
-            if ("disallow".equals(campo) && !valor.isEmpty()) {
-                for (String agente : agentes) {
-                    grupos.get(agente).add(valor);
-                }
-            }
-        }
-        return grupos;
-    }
-
-    /** Casamento por prefixo, que é como o robots.txt decide. */
     private static boolean bloqueado(List<String> disallows, String caminho) {
-        return disallows.stream().anyMatch(caminho::startsWith);
+        return RobotsTxt.bloqueado(disallows, caminho);
     }
 
     // --- varredura dos fontes ----------------------------------------------

@@ -106,3 +106,11 @@ Disallow: /seguranca/api
 Disallow: /simuladores/api
 Disallow: /trafego/api
 Crawl-delay: 10
+
+# Mapa do site, servido por SitemapResource: so as paginas didaticas, as mesmas
+# que os grupos acima deixam abertas. A URL e absoluta e canonica de propriedade
+# -- o Sitemap: independe de grupo e vale para o arquivo inteiro.
+# Nao esta no robots.txt compartilhado da VPS de proposito: aquele arquivo responde
+# por tres dominios, e apontar o sitemap de um deles para os outros e submissao
+# cruzada, que o buscador descarta.
+Sitemap: https://frameworknet.carminati.dev.br/sitemap.xml

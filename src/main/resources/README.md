@@ -86,6 +86,8 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Telemetria (API) | `/telemetria/api/*` | GET/POST | `resumo`, `dashboard`, `console`, `console/limpar`, `exportar`, `pasta` |
 | Documentação | `/documentacao` | GET | Este README renderizado |
 | Sobre | `/sobre` | GET | O projeto, o autor e as tecnologias |
+| Robôs de busca | `/robots.txt` | GET | Estático em `META-INF/resources/`. Política pública: páginas didáticas abertas, coletor de IA e robô de SEO fora, rotas caras e de API fechadas |
+| Mapa do site | `/sitemap.xml` | GET | As 14 páginas didáticas, com URL absoluta no host canônico (`framework.site.base-url`) |
 | Sonda de saúde | `/health` | GET | JSON `{"status":"UP"}` para o healthcheck do container; **não** registrada na telemetria |
 | Histórico (API) | `/history` | GET | Lista o histórico em JSON |
 | Histórico catálogo | `/history/catalog` | POST | Registra consulta de portas/protocolos |
@@ -631,6 +633,7 @@ As chaves são definidas em `application.properties` (dev) e `application-prod.p
 | `framework.geo.cache-ttl-seconds` | `300` | TTL do cache GeoIP |
 | `framework.geo.database-path` | `geo/GeoLite2-City.mmdb` | Base MaxMind (opcional) |
 | `framework.dev.open-browser` | `true` (dev) | Abre navegador no `quarkusDev` |
+| `framework.site.base-url` | ausente (dev) · `https://frameworknet.carminati.dev.br` (prod) | Host canônico do `/sitemap.xml`. Ausente, a URL segue a requisição. **Não é deduzida do proxy de propósito**: com `allow-forwarded=true` junto de `proxy-address-forwarding=true` o Vert.x lê só o cabeçalho `Forwarded`, e o Nginx da VPS envia apenas `X-Forwarded-Proto` — o `UriInfo` enxerga `http://` atrás de um proxy que fala HTTPS, e o Google descarta sitemap de esquema divergente |
 
 ### Telemetria
 
@@ -697,7 +700,10 @@ scripts/deploy.sh
 - **`robots.txt`** (`META-INF/resources/robots.txt`) — política pública para robôs: buscador
   legítimo indexa as páginas didáticas; coletor de treinamento de modelo e robô de SEO ficam
   de fora; nenhum robô entra em `/admin`, `/login`, `/telemetria`, `/history`, `/export`,
-  `/informacoes`, `/health`, `/mascara-referencia` nem nas rotas de API.
+  `/informacoes`, `/health`, `/mascara-referencia` nem nas rotas de API. A linha
+  `Sitemap:` aponta para o `/sitemap.xml`, que lista exatamente as páginas que os grupos
+  permissivos deixam abertas — o `SitemapHttpTest` reprova o build se os dois se
+  contradisserem.
   **Não é controle de acesso** — o arquivo é público e só vale para o robô que escolhe
   obedecer; quem fecha as rotas é o login pelo GitHub e o `AdminApiKeyFilter`. O que ele
   evita é custo e ruído: `/informacoes` dispara consulta geográfica externa a cada GET
@@ -845,7 +851,7 @@ Cobertura por área:
 
 ### Testes que guardam regras, não só comportamento
 
-Quatro suítes existem para impedir classes inteiras de regressão, e não para verificar
+Cinco suítes existem para impedir classes inteiras de regressão, e não para verificar
 um caso de uso:
 
 - **`ArquiteturaCamadasTest`** — lê os imports dos fontes e reprova o build se
@@ -866,6 +872,12 @@ um caso de uso:
   o robô obedece só ao bloco mais específico que casa com o nome dele, e o que faltar ali
   fica liberado em silêncio. A varredura dos fontes falha fechada — nenhuma rota
   encontrada reprova, em vez de aprovar por cegueira.
+- **`SitemapHttpTest`** — cruza três artefatos: o menu, o `robots.txt` e o `sitemap.xml`.
+  Reprova quando uma página do menu aberta aos robôs fica de fora do sitemap, quando o
+  sitemap oferece o que o robots fecha (contradição que o buscador resolve **contra** o
+  site) e quando uma URL listada não responde 200. O `SitemapBaseUrlHttpTest` cobre o
+  outro lado: com host canônico configurado, nenhuma entrada pode sair em `http://` nem
+  vazar `localhost`.
 
 ### Ao criar um módulo novo, atualize também
 
@@ -875,7 +887,9 @@ um caso de uso:
 4. `templates/home/index.html` — o bloco do módulo na landing;
 5. `META-INF/resources/robots.txt` — o prefixo da API nova, **em todos** os grupos
    permissivos (o `RobotsTxtHttpTest` cobra, mas só depois de o build quebrar);
-6. este README.
+6. `SitemapResource.PAGINAS_PUBLICAS` — se o módulo tem página no menu (o
+   `SitemapHttpTest` cobra do mesmo jeito);
+7. este README.
 
 ---
 
