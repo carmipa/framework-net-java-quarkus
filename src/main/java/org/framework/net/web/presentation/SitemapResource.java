@@ -32,16 +32,17 @@ import java.util.Optional;
  * {@code priority} — data de alteração inventada a cada requisição é dado
  * fabricado, e o Google ignora prioridade.</p>
  *
- * <p><b>Por que o host é configurado, e não deduzido:</b> medido em 02/09/2026,
- * com a configuração do perfil {@code prod} reproduzida em teste — com
- * {@code allow-forwarded=true} <i>e</i> {@code proxy-address-forwarding=true} o
- * Vert.x passa a ler <b>só</b> o cabeçalho {@code Forwarded}, e o Nginx da VPS
- * envia apenas {@code X-Forwarded-Proto} (medido em {@code server_proxy.conf}).
- * Resultado: o {@code UriInfo} enxerga {@code http://} atrás de um proxy que
- * fala HTTPS. Confiar nele deixaria o sitemap com esquema errado — que o Google
- * trata como outro site. Por isso {@code framework.site.base-url} manda quando
- * está configurado; sem ela, a URL segue a requisição, que é o certo em
- * desenvolvimento.</p>
+ * <p><b>Por que o host é configurado, e não deduzido:</b> um sitemap declara o
+ * <i>endereço canônico</i> das páginas, não o endereço pelo qual alguém pediu o
+ * arquivo — e cabeçalho de requisição é escolha de quem chama. Com
+ * {@code framework.site.base-url} configurada, nenhuma entrada do cliente alcança
+ * a saída; sem ela, a URL segue a requisição, que é o certo em desenvolvimento.
+ * A precaução deixou de ser hipotética em 02/09/2026: o perfil {@code prod}
+ * ligava {@code allow-forwarded} junto de {@code proxy-address-forwarding}, e
+ * nessa combinação o Vert.x lê <b>só</b> o cabeçalho {@code Forwarded} — que o
+ * Nginx do NPM não envia — de modo que o {@code UriInfo} enxergava
+ * {@code http://} atrás de um proxy TLS. A configuração foi corrigida; o host
+ * canônico continua, porque ele não depende de configuração de proxy nenhuma.</p>
  *
  * <p><b>Comportamento em caso de falha:</b> não há entrada externa nem I/O; a
  * lista é estática e o método não lança. Página que deixar de existir vira

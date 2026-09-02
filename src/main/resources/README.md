@@ -633,7 +633,8 @@ As chaves são definidas em `application.properties` (dev) e `application-prod.p
 | `framework.geo.cache-ttl-seconds` | `300` | TTL do cache GeoIP |
 | `framework.geo.database-path` | `geo/GeoLite2-City.mmdb` | Base MaxMind (opcional) |
 | `framework.dev.open-browser` | `true` (dev) | Abre navegador no `quarkusDev` |
-| `framework.site.base-url` | ausente (dev) · `https://frameworknet.carminati.dev.br` (prod) | Host canônico do `/sitemap.xml`. Ausente, a URL segue a requisição. **Não é deduzida do proxy de propósito**: com `allow-forwarded=true` junto de `proxy-address-forwarding=true` o Vert.x lê só o cabeçalho `Forwarded`, e o Nginx da VPS envia apenas `X-Forwarded-Proto` — o `UriInfo` enxerga `http://` atrás de um proxy que fala HTTPS, e o Google descarta sitemap de esquema divergente |
+| `framework.site.base-url` | ausente (dev) · `https://frameworknet.carminati.dev.br` (prod) | Host canônico do `/sitemap.xml`. Ausente, a URL segue a requisição. **Não é deduzida do proxy de propósito**: sitemap declara endereço canônico, e cabeçalho de requisição é escolha de quem chama — o Google descarta sitemap de host ou esquema divergente |
+| `quarkus.http.proxy.allow-forwarded` | `false` (prod) | **Escolhe a língua do encaminhamento, não liga/desliga proteção.** `true` faz o Vert.x ler só o cabeçalho `Forwarded` (RFC 7239) e **ignorar todos os `X-Forwarded-*`** — que é o que o Nginx do NPM manda. Ficou `true` até 02/09/2026, e o efeito era invisível: URL absoluta saindo em `http://` (o redirect de login) e o rate limit vendo o IP do proxy em todo visitante, isto é, 120 req/min para o site inteiro. **Acoplado ao proxy**: o Vert.x usa a **primeira** entrada do `X-Forwarded-For`, então isto só é seguro enquanto o Nginx mandar `X-Forwarded-For $remote_addr` (substitui) em vez de `$proxy_add_x_forwarded_for` (anexa o valor do cliente). `ProxyEncaminhamentoHttpTest` trava os dois lados que dependem do app |
 
 ### Telemetria
 
@@ -851,7 +852,7 @@ Cobertura por área:
 
 ### Testes que guardam regras, não só comportamento
 
-Cinco suítes existem para impedir classes inteiras de regressão, e não para verificar
+Seis suítes existem para impedir classes inteiras de regressão, e não para verificar
 um caso de uso:
 
 - **`ArquiteturaCamadasTest`** — lê os imports dos fontes e reprova o build se
@@ -872,6 +873,13 @@ um caso de uso:
   o robô obedece só ao bloco mais específico que casa com o nome dele, e o que faltar ali
   fica liberado em silêncio. A varredura dos fontes falha fechada — nenhuma rota
   encontrada reprova, em vez de aprovar por cegueira.
+- **`ProxyEncaminhamentoHttpTest`** — reproduz a configuração de proxy do perfil `prod` e
+  prova que a aplicação **ouve** o que o Nginx conta: `X-Forwarded-Proto` decide o esquema
+  das URLs absolutas, e `X-Forwarded-For` decide a chave do rate limit (clientes distintos
+  não compartilham balde, e o mesmo cliente continua limitado — este último é o caso-controle,
+  sem ele um rate limit desligado aprovaria o teste anterior por engano). Existe porque a
+  falha é **invisível**: com `allow-forwarded` ligado junto de `proxy-address-forwarding`, o
+  site responde 200 igual, só que em `http://` e com um balde só para todo mundo.
 - **`SitemapHttpTest`** — cruza três artefatos: o menu, o `robots.txt` e o `sitemap.xml`.
   Reprova quando uma página do menu aberta aos robôs fica de fora do sitemap, quando o
   sitemap oferece o que o robots fecha (contradição que o buscador resolve **contra** o
