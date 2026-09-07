@@ -28,7 +28,7 @@
  *
  * USO:  node scripts/inventario.mjs
  */
-import { readdirSync, statSync, readFileSync, writeFileSync } from 'node:fs';
+import { readdirSync, statSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, relative, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -383,6 +383,25 @@ for (const p of paginas) {
   if (p.template) { porTemplate.set(p.template, p.caminho); }
 }
 
+// Aprofundamentos de protocolo genericos vivem sob UMA rota parametrizada
+// (/protocolos/{slug}), invisivel ao scanner de @Path literais. Sao paginas
+// publicas de verdade — e a fonte unica dos slugs e o registro do dominio, o
+// mesmo que alimenta o sub-menu e o sitemap. Aqui os slugs sao EXTRAIDOS desse
+// codigo (nao escritos de memoria) para que a varredura cubra cada aprofundamento.
+const REGISTRO_APROF = join(RAIZ, 'src/main/java/org/framework/net/protocolos/domain/AprofundamentoProtocolo.java');
+const paginasAprofundamento = [];
+if (existsSync(REGISTRO_APROF)) {
+  const fonteRegistro = readFileSync(REGISTRO_APROF, 'utf8');
+  const slugs = new Set();
+  // generico("slug", ...) e new AprofundamentoProtocolo("slug", ...)
+  for (const m of fonteRegistro.matchAll(/(?:generico|new\s+AprofundamentoProtocolo)\s*\(\s*"([a-z0-9-]+)"/g)) {
+    slugs.add(m[1]);
+  }
+  for (const slug of slugs) { paginasAprofundamento.push('/protocolos/' + slug); }
+} else {
+  avisos.push('inventario: registro de aprofundamentos nao encontrado em ' + REGISTRO_APROF);
+}
+
 const superficie = {};
 for (const [template, rota] of porTemplate) {
   superficie[rota] = { template, ...superficieDoTemplate(templateExpandido(template, new Set(), avisos)) };
@@ -408,7 +427,7 @@ const jsDoSite = arquivos(ESTATICOS, '.js')
 
 const inventario = {
   base: 'http://127.0.0.1:8081',
-  paginas: paginas.map((p) => p.caminho).sort(),
+  paginas: unicos([...paginas.map((p) => p.caminho), ...paginasAprofundamento]).sort(),
   variantes: variantes.sort(),
   apis: rotas.filter((r) => r.tipo === 'api').map((r) => ({ metodo: r.metodo, caminho: r.caminho, origem: r.origem })),
   downloads: unicos(rotas.filter((r) => r.tipo === 'download').map((r) => r.caminho)).sort(),

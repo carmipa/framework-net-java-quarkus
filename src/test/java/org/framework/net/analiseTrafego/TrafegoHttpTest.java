@@ -28,6 +28,19 @@ class TrafegoHttpTest {
     }
 
     @Test
+    void paginaTrafegoTrazAbaDeAnomalias() {
+        given()
+                .when().get("/trafego")
+                .then()
+                .statusCode(200)
+                .body(containsString("data-tab=\"anomalias\""))
+                .body(containsString("data-tab-panel=\"anomalias\""))
+                .body(containsString("Anomalias TCP"))
+                .body(containsString("form-anom"))
+                .body(containsString("/simuladores/js/anomalias.js"));
+    }
+
+    @Test
     void decodificaFrameViaApi() {
         given()
                 .contentType("application/x-www-form-urlencoded")
@@ -41,6 +54,27 @@ class TrafegoHttpTest {
                 .body(containsString("IPv4"))
                 .body(containsString("trafego-camada"))
                 .body(not(containsString("<!DOCTYPE html>")));
+    }
+
+    /** O hex que já vem pré-prencido no campo do Decodificador (com espaços e quebras de linha). */
+    private static final String EXEMPLO_PRE_PREENCHIDO =
+            "aabb ccdd eeff 1122 3344 5566 0800\n"
+                    + "4500 0028 1c46 4000 4006 b1e6 c0a8 0001 c0a8 0002\n"
+                    + "d431 0050 0000 0000 0000 0000 5002 7210 e577 0000";
+
+    @Test
+    void exemploPrePreenchidoDoDecodificadorDecodifica() {
+        // Prova que o valor que o campo já traz (o usuário só clica Decodificar) é válido —
+        // espaços e quebras de linha incluídos.
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("hex", EXEMPLO_PRE_PREENCHIDO)
+                .formParam("camada", "auto")
+                .when().post("/trafego/api/decodificar")
+                .then()
+                .statusCode(200)
+                .body(containsString("54 bytes decodificados"))
+                .body(containsString("IPv4"));
     }
 
     @Test

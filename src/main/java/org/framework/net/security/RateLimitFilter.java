@@ -34,9 +34,14 @@ public class RateLimitFilter implements ContainerRequestFilter {
         String path = normalizePath(requestContext.getUriInfo().getPath());
         // Os cálculos da Calculadora e da Resolução podem gerar centenas de linhas por
         // requisição, então todo o subcaminho conta como pesado — não só a página.
+        // Os POST /api dos simuladores (Diagnóstico, Segurança) também: cada requisição
+        // grava telemetria (custo de I/O), e é entrada de usuário ecoada — limite estrito.
+        boolean postApi = "POST".equals(requestContext.getMethod())
+                && (path.startsWith("/diagnostico/api/") || path.startsWith("/seguranca/api/"));
         boolean heavy = HEAVY_PATHS.contains(path)
                 || ("POST".equals(requestContext.getMethod()) && path.startsWith("/resolucao-problemas"))
-                || path.startsWith("/calculadora/");
+                || path.startsWith("/calculadora/")
+                || postApi;
         if (!rateLimiter.allow(requestContext, heavy)) {
             requestContext.abortWith(Response.status(429)
                     .type(MediaType.APPLICATION_JSON)

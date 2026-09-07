@@ -105,6 +105,35 @@ class PaginaErroHttpTest {
     }
 
     @Test
+    @DisplayName("aprofundamento inexistente cai na página de erro 404 (não em página de outro protocolo)")
+    void aprofundamentoInexistenteDevolveAPagina() {
+        given()
+                .header("Accept", "text/html")
+                .when().get("/protocolos/naoexiste")
+                .then()
+                .statusCode(404)
+                .contentType(containsString("text/html"))
+                .body(containsString("class=\"err-404\""))
+                .body(containsString("/protocolos/naoexiste"))
+                .body(not(containsString("Border Gateway")))
+                .body(not(containsString("Domain Name System")));
+    }
+
+    @Test
+    @DisplayName("regressão: as novas rotas /api dos simuladores continuam em JSON no erro, não na página")
+    void novasApisContinuamEmJson() {
+        for (String rota : List.of("/diagnostico/api/inexistente", "/seguranca/api/inexistente",
+                "/simuladores/api/inexistente")) {
+            given().header("Accept", "text/html")
+                    .when().get(rota)
+                    .then()
+                    .statusCode(404)
+                    .body(not(containsString("<html")))
+                    .body(not(containsString("err-404")));
+        }
+    }
+
+    @Test
     @DisplayName("cliente que não pede text/html recebe JSON, não a página")
     void clienteDeMaquinaRecebeJson() {
         given()

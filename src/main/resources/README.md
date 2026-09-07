@@ -12,7 +12,7 @@ Aplicação didática para análise de redes IPv4/IPv6, com foco em ensino, labo
 - **Análise Didática** — CIDR, máscara, wildcard, auto-CIDR, domínio (DNS), IPv6, comparador e GeoIP.
 - **Calculadora de Sub-redes e VLANs** — divisão de blocos (FLSM), plano de VLANs com script Cisco, sumarização de rotas e faixa de IPs para CIDR.
 - **Portas** — catálogo interativo de portas TCP/UDP.
-- **Protocolos** — catálogo de protocolos + troubleshooting de roteamento.
+- **Protocolos** — catálogo comparativo + troubleshooting de roteamento e **15 aprofundamentos por camada** (Aplicação · Transporte · Rede), cada um com diagrama de arquitetura e decomposição binária do cabeçalho.
 - **Resolução de Problemas (VLSM + WAN)** — planejamento VLSM dinâmico, topologia WAN, CLI Cisco e exportação para laboratório.
 - **Telemetria** — dashboard de eventos e console ao vivo (server-side).
 - **Documentação** — este README renderizado.
@@ -67,18 +67,25 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Calculadora (export) | `/calculadora/export/divisao.csv`, `/calculadora/export/vlan.csv` | GET | CSV do plano exibido |
 | Localização | `/localizacao` | GET | Localização por IP e por CEP no mapa |
 | Localização (API) | `/localizacao/api/ip`, `/localizacao/api/cep` | GET | JSON: geolocalização por IP / endereço por CEP (ViaCEP + OSM) |
-| Tráfego | `/trafego` | GET | Sub-abas: painel ao vivo (simulação), decodificador (hex), encapsulamento e handshake TCP |
+| Tráfego | `/trafego` | GET | Sub-abas: painel ao vivo (simulação), decodificador (hex), encapsulamento, handshake TCP e **anomalias TCP** (SYN flood, sequestro de sequência) |
 | Tráfego (API) | `/trafego/api/decodificar` | POST | JSON: camadas Ethernet/IP/TCP/UDP/ICMP decodificadas |
 | Tráfego (API) | `/trafego/api/aovivo` | GET | JSON: snapshot do painel ao vivo (simulação demo) |
 | Simuladores (API) | `/simuladores/api/encapsular` | POST | JSON: encapsulamento camada a camada (App→Enlace) |
 | Simuladores (API) | `/simuladores/api/handshake` | GET | JSON: sequência do handshake TCP (`?dados=&encerramento=`) |
+| Simuladores (API) | `/simuladores/api/anomalia-tcp` | GET | JSON: cenário de anomalia TCP (`?tipo=syn-flood\|sequence-hijack`) — passos, KPIs e defesas |
+| Diagnóstico | `/diagnostico` | GET | Sub-abas de ferramentas do analista, **resultado dissecado**: Ping, DNS (dig), Traceroute, Ping Sweep, Varredura SYN e DNS Spoofing |
+| Diagnóstico (API) | `/diagnostico/api/{ping,dns,traceroute,ping-sweep,scan,dns-spoofing}` | POST | Fragmento HTML dissecado (KPIs, tabela, legenda, como funciona, o que observar) + saída bruta. Tudo simulado |
+| Segurança | `/seguranca` | GET | Sub-abas: Firewall (ACL) com pacote forjado e **Inspetor TLS/Certificado** |
+| Segurança (API) | `/seguranca/api/testar` | POST | Fragmento HTML: veredito MATCH/DENY da regra ACL |
+| Segurança (API) | `/seguranca/api/tls` | POST | Fragmento HTML: veredito por checagem (nome, validade, cadeia, protocolo, cipher) |
 | GeoIP | `/informacoes` | GET | Página de geolocalização (`?ip=`) |
 | GeoIP (API) | `/api/informacoes/geo` | GET | JSON de geolocalização (`?ip=`) |
 | Referência de máscaras | `/mascara-referencia` | GET | Tabela JSON de máscaras/prefixos |
 | Portas | `/portas` | GET | Catálogo interativo TCP/UDP |
 | Protocolos | `/protocolos` | GET | Catálogo + troubleshooting de roteamento (aba Geral) |
-| Protocolos — BGP | `/protocolos/bgp` | GET | Aprofundamento do BGP-4: atributos, seleção de melhor rota, sessão, proteções da borda |
-| Protocolos — SSH | `/protocolos/ssh` | GET | Aprofundamento do SSH: camadas, autenticação, chaves, túneis, hardening |
+| Protocolos — Aplicação | `/protocolos/{http,dns,ssh,tls,ftp,smtp,telnet}` | GET | Aprofundamentos da camada de Aplicação (HTTP/HTTPS, DNS, SSH, TLS, FTP/TFTP, e-mail, Telnet) |
+| Protocolos — Transporte | `/protocolos/{tcp,udp,handshake}` | GET | Camada de Transporte: TCP, UDP e a seção Handshake (TCP 3-vias, TLS, SSH) |
+| Protocolos — Rede | `/protocolos/{ipv4,ipv6,arp,icmp,bgp}` | GET | Camada de Rede: IPv4, IPv6, ARP, ICMP/ICMPv6 e BGP-4 |
 | Resolução VLSM | `/resolucao-problemas` | GET/POST | Aba **Projetar**: cenários VLSM/WAN, demos e exportações |
 | Resolução — reversa | `/resolucao-problemas?aba=reversa` | GET/POST | Aba **Engenharia reversa**: interpreta configuração Cisco colada, audita, corrige e reconstrói o projeto |
 | Páginas de erro | qualquer rota que falhe | — | Página única em `paginaErros/erro.html` servindo os 12 códigos (400…504) |
@@ -87,7 +94,7 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Documentação | `/documentacao` | GET | Este README renderizado |
 | Sobre | `/sobre` | GET | O projeto, o autor e as tecnologias |
 | Robôs de busca | `/robots.txt` | GET | Estático em `META-INF/resources/`. Política pública: páginas didáticas abertas, coletor de IA e robô de SEO fora, rotas caras e de API fechadas |
-| Mapa do site | `/sitemap.xml` | GET | As 14 páginas didáticas, com URL absoluta no host canônico (`framework.site.base-url`) |
+| Mapa do site | `/sitemap.xml` | GET | As páginas didáticas, incluindo os **15 aprofundamentos por protocolo** derivados do registro (`AprofundamentoProtocolo.disponiveis()`), com URL absoluta no host canônico (`framework.site.base-url`) |
 | Sonda de saúde | `/health` | GET | JSON `{"status":"UP"}` para o healthcheck do container; **não** registrada na telemetria |
 | Histórico (API) | `/history` | GET | Lista o histórico em JSON |
 | Histórico catálogo | `/history/catalog` | POST | Registra consulta de portas/protocolos |
@@ -160,39 +167,67 @@ menor lista de blocos CIDR que cobre **exatamente** a faixa, com a ACL equivalen
 - resumo IGP/EGP e bloco **Troubleshooting rápido (roteamento)** na página de protocolos;
 - registro opcional das consultas no histórico via `/history/catalog`.
 
-#### Aprofundamentos por protocolo
+#### Aprofundamentos por protocolo — organizados por camada
 
 O catálogo responde *quais protocolos existem e como se comparam*; ele não responde
 *me explica este protocolo*. Para isso o módulo tem um segundo nível: uma página
-dedicada por protocolo, alcançável pelo sub-menu (**Geral · BGP · SSH**) e pelo botão
-**Aprofundar** na linha correspondente do DataGrid.
+dedicada por protocolo. A navegação é em **dois níveis** — primeiro a **camada**
+(Geral · Aplicação · Transporte · Rede), depois o **protocolo** daquela camada — e cada
+aprofundamento também é alcançável pelo botão **Aprofundar** na linha do DataGrid.
+
+São **15 aprofundamentos** em três camadas:
+
+| Camada | Protocolos |
+|---|---|
+| Aplicação | HTTP/HTTPS · DNS · SSH · TLS · FTP/TFTP · SMTP/POP3/IMAP · Telnet |
+| Transporte | TCP · UDP · Handshake (o aperto de mão: TCP 3-vias, TLS e SSH) |
+| Rede | IPv4 · IPv6 · ARP · ICMP/ICMPv6 · BGP-4 |
+
+Toda página traz, além do texto: **ícones** em título, ficha, seções e tabelas; um
+**diagrama de arquitetura/fluxo** (Mermaid); e a **decomposição binária do cabeçalho**
+(régua proporcional aos bits + tabela) — por exemplo TCP 20 B (160 bits), UDP 8 B,
+IPv4 20 B, IPv6 40 B, ARP 28 B, ICMP 8 B, DNS 12 B e BGP 19 B.
+
+As quatro páginas **dedicadas** trazem conteúdo mais específico:
 
 | Página | Rota | Conteúdo |
 |---|---|---|
 | BGP-4 | `/protocolos/bgp` | AS/ASN, eBGP × iBGP, atributos de caminho, ordem completa de seleção de melhor rota, máquina de estados da sessão, mensagens e temporizadores, route reflector e confederação, filtros de prefixo, `maximum-prefix`, RPKI/ROV, GTSM, dampening, blackhole RFC 7999, laboratório Cisco e troubleshooting |
 | SSH | `/protocolos/ssh` | Autenticação de host × de usuário, TOFU e `known_hosts`, forward secrecy, as três camadas do SSH-2, métodos de autenticação, tipos de chave (incl. FIDO2), túneis `-L`/`-R`/`-D`/`-J`/`-A`, endurecimento do `sshd_config`, laboratório e troubleshooting |
+| DNS | `/protocolos/dns` | Resolver recursivo × autoritativo, TTL/cache, UDP×TCP 53, tipos de registro (A/AAAA/CNAME/MX/NS/SOA/TXT/PTR/CAA/SRV), ataques (spoofing, cache poisoning/Kaminsky, amplificação, NXDOMAIN hijack, subdomain takeover, tunneling), defesas (DNSSEC, aleatorização de porta + 0x20, DoT/DoH, RRL, CAA), cadeia DNSSEC, laboratório `dig` e troubleshooting |
+| TLS | `/protocolos/tls` | Handshake 1.3 (1-RTT), autenticação por PKI, forward secrecy, SNI, cadeia raiz→intermediária→folha, cipher suites (AEAD × CBC × quebradas), ataques (MITM por CA falsa, stripping, downgrade, Heartbleed, tráfego malicioso sob TLS legítimo), defesas (HSTS, CT, CAA, OCSP stapling, TLS 1.3-only, pinning), laboratório `openssl`/`testssl` e troubleshooting |
 
 Como isso é montado:
 
-- **`AprofundamentoProtocolo`** (`protocolos/domain`) é o registro único: slug, rótulo,
-  ícone, template, CSS e os nomes que aquele aprofundamento cobre no catálogo. É ele que
-  gera o sub-menu, a rota e o botão "Aprofundar" — nenhum desses pontos é escrito à mão
-  no template.
-- **Conteúdo em JSON** (`resources/protocolos/<slug>/conteudo.json`), carregado uma vez
-  no boot e **falha fechada**: seção obrigatória vazia impede a aplicação de subir, porque
+- **`AprofundamentoProtocolo`** (`protocolos/domain`) é o registro único dos 15: slug,
+  rótulo, ícone, **camada**, template, CSS e os nomes que aquele aprofundamento cobre no
+  catálogo. É ele que gera o sub-menu por camada, a rota, o botão "Aprofundar", as
+  entradas do `sitemap.xml` e a cobertura da varredura — nenhum escrito à mão.
+- **Dois modelos de página, conteúdo sempre em JSON**:
+  - **Genérico** (11 protocolos): um único template `protocolos/aprofundamento.html` +
+    um CSS `protocolos/aprofundamento/css/aprofundamento.css`, alimentados por
+    `resources/protocolos/<slug>/conteudo.json` (record `ProtocoloAprofundamento`).
+    Protocolo novo custa **um JSON + uma linha** no registro.
+  - **Dedicado** (BGP, SSH, DNS, TLS): template e CSS próprios, para o conteúdo que foge
+    do molde (seleção de melhor rota do BGP, cadeia DNSSEC, cipher suites do TLS…).
+- **Diagrama e cabeçalho são compartilhados por todas as 15**: os records
+  `DiagramaArquitetura` e `CabecalhoBinario` e os partials `protocolos/partials/diagrama.html`
+  e `cabecalho_bits.html` desenham o mesmo Mermaid e a mesma régua de bits, tanto nas
+  páginas genéricas quanto nas dedicadas.
+- **Falha fechada**: `conteudo.json` sem resumo/conceitos impede a aplicação de subir —
   página pela metade em produção passa despercebida.
-- **Uma página, um CSS**: `META-INF/resources/protocolos/<slug>/css/<slug>.css`. O
-  sub-menu, comum às três páginas, fica em `protocolos/css/subnav.css`.
-- **Rotas no mesmo resource** (`ProtocolosResource`), de propósito: o projeto já viu dois
-  `@Path` sob o mesmo prefixo derrubarem uma rota para 404 no módulo de Tráfego.
+- **Rotas no mesmo resource** (`ProtocolosResource`): as dedicadas têm `@Path` literal
+  (`/protocolos/bgp`…) e as genéricas caem na rota `@Path("/{slug}")`; o JAX-RS prefere o
+  literal, então nunca há ambiguidade — e slug inexistente é 404, não a página de outro.
 - **Telemetria**: cada visita emite `aprofundamento_view` no módulo `protocolos`, com o
   campo `protocolo`, o que separa "abriu o catálogo" de "abriu o aprofundamento".
-- **Guardas** (`AprofundamentoProtocoloTest`): registro apontando para arquivo inexistente
-  reprova o build; página em disco fora do registro (órfã, no ar e sem link) reprova;
-  nome divergente do catálogo — que faria o botão "Aprofundar" sumir calado — reprova.
+- **Guardas** (`AprofundamentoProtocoloTest`, `ProtocolosAprofundamentoHttpTest`): registro
+  apontando para arquivo inexistente reprova o build; página órfã reprova; nome divergente
+  do catálogo reprova; e cada página precisa abrir (200), marcar a aba da sua camada e
+  trazer o conteúdo essencial (incluindo diagrama e régua onde há cabeçalho).
 
-Para adicionar o próximo protocolo: um `conteudo.json`, um template, um CSS e uma linha
-no registro.
+Para adicionar o próximo protocolo genérico: um `conteudo.json` e uma linha no registro
+com a sua camada. Ele entra sozinho no sub-menu, no `sitemap.xml` e na varredura.
 
 ### Páginas de erro (`org.framework.net.paginaErros`)
 

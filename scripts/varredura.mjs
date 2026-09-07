@@ -435,8 +435,14 @@ const criarPagina = async (contexto, tela) => {
 
 /** Liga os ouvintes de erro do navegador a um acumulador da pagina atual. */
 function escutar(pagina, caixa) {
+  // /login/chave e o endpoint de autenticacao: um 401 ali e o mecanismo REJEITANDO
+  // uma chave errada — comportamento correto, esperado durante a sondagem de login
+  // deste proprio instrumento. Nao e defeito do site, entao nao vira achado.
+  const ehRuidoDeAuth = (url) => /\/login\/chave/.test(url || '');
   pagina.on('console', (msg) => {
-    if (msg.type() === 'error') { caixa.console.push(msg.text().slice(0, 160)); }
+    if (msg.type() !== 'error') { return; }
+    if (/Failed to load resource/.test(msg.text()) && ehRuidoDeAuth(msg.location()?.url)) { return; }
+    caixa.console.push(msg.text().slice(0, 160));
   });
   pagina.on('pageerror', (erro) => caixa.js.push(String(erro).split('\n')[0].slice(0, 160)));
   pagina.on('requestfailed', (req) => {
@@ -445,7 +451,9 @@ function escutar(pagina, caixa) {
     caixa.rede.push(`${motivo} ${req.url().slice(0, 100)}`);
   });
   pagina.on('response', (res) => {
-    if (res.status() >= 400) { caixa.http.push(`${res.status()} ${res.url().slice(0, 100)}`); }
+    if (res.status() >= 400 && !ehRuidoDeAuth(res.url())) {
+      caixa.http.push(`${res.status()} ${res.url().slice(0, 100)}`);
+    }
   });
   pagina.on('dialog', async (d) => { caixa.dialogos.push(`${d.type()}: ${d.message().slice(0, 80)}`); await d.dismiss(); });
 }
@@ -679,27 +687,42 @@ async function varrer() {
     // Autenticar por header seria mais simples e esconderia exatamente o defeito
     // que esta varredura encontrou em 2026-08-11: o formulario voltava 403 de
     // CSRF. O caminho do usuario e o caminho que precisa ser medido.
-    const chave = lerChaveLocal();
-    if (chave) {
-      try {
-        await abrir(pagina, BASE + '/login?modo=contingencia');
-        await pagina.fill('#adminKey', chave);
-        await pagina.click('form[action="/login/chave"] button[type=submit]');
-        await pagina.waitForLoadState('load', { timeout: 15000 }).catch(() => { /* recurso externo pendurado */ });
-        await pagina.waitForTimeout(800);
-        const dentro = !/\/login/.test(pagina.url());
-        if (dentro) {
-          log('\n  login de contingencia: ok (telas protegidas serao medidas por dentro)');
-        } else {
-          const motivo = (await pagina.evaluate(() => document.body.innerText)).replace(/\s+/g, ' ').slice(0, 100);
-          achados.push(`LOGIN DE CONTINGENCIA NAO FUNCIONA: POST /login/chave nao autenticou — "${motivo}"`);
-          log('\n  login de contingencia: FALHOU — vira achado, e /telemetria sera medida deslogada');
-        }
-      } catch (e) {
-        achados.push(`LOGIN DE CONTINGENCIA quebrado: ${String(e).split('\n')[0].slice(0, 100)}`);
-      }
+    // Chaves a tentar, em ordem. Em base LOCAL tambem tentamos a chave publica de
+    // desenvolvimento (dev-admin-key-local, literal no application.properties do perfil
+    // dev) — assim a varredura autentica tanto no Docker/subir.ps1 (perfil prod, chave do
+    // .env) quanto no quarkusDev (perfil dev, chave fixa), sem os dois se confundirem.
+    const local = /localhost|127\.0\.0\.1/.test(BASE);
+    const chaves = [];
+    // Em localhost, a chave publica do perfil dev vem primeiro: no quarkusDev ela
+    // autentica de primeira e nem chega a gerar o 401 da tentativa seguinte.
+    if (local) { chaves.push('dev-admin-key-local'); }
+    const chaveEnv = lerChaveLocal();
+    if (chaveEnv) { chaves.push(chaveEnv); }
+    if (chaves.length === 0) {
+      log('\n  sem chave para /telemetria — sera medida como visitante deslogado');
     } else {
-      log('\n  sem .env local — /telemetria sera medida como visitante deslogado');
+      let dentro = false;
+      let ultimoMotivo = '';
+      for (const chave of chaves) {
+        try {
+          await abrir(pagina, BASE + '/login/?modo=contingencia');
+          await pagina.fill('#adminKey', chave);
+          await pagina.click('form[action="/login/chave"] button[type=submit]');
+          await pagina.waitForLoadState('load', { timeout: 15000 }).catch(() => { /* recurso externo pendurado */ });
+          await pagina.waitForTimeout(800);
+          dentro = !/\/login/.test(pagina.url());
+          if (dentro) { break; }
+          ultimoMotivo = (await pagina.evaluate(() => document.body.innerText)).replace(/\s+/g, ' ').slice(0, 100);
+        } catch (e) {
+          ultimoMotivo = String(e).split('\n')[0].slice(0, 100);
+        }
+      }
+      if (dentro) {
+        log('\n  login de contingencia: ok (telas protegidas serao medidas por dentro)');
+      } else {
+        achados.push(`LOGIN DE CONTINGENCIA NAO FUNCIONA: nenhuma chave autenticou — "${ultimoMotivo}"`);
+        log('\n  login de contingencia: FALHOU — vira achado, e /telemetria sera medida deslogada');
+      }
     }
 
     const alvos = [...INV.paginas, ...INV.variantes];

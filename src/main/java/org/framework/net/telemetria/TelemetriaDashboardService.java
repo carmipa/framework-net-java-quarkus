@@ -268,7 +268,7 @@ public class TelemetriaDashboardService {
             case "trafego" -> "Tráfego";
             case "simuladores" -> "Simuladores";
             case "diagnostico" -> "Diagnóstico";
-            case "seguranca" -> "Segurança ACL";
+            case "seguranca" -> "Segurança";
             case "telemetria" -> "Telemetria";
             case "documentacao" -> "Documentação";
             case "informacoes" -> "GeoIP";

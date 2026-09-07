@@ -3,6 +3,7 @@
 {#extraHead}
 <link rel="stylesheet" href="/protocolos/css/subnav.css?v=20260810">
 <link rel="stylesheet" href="/protocolos/bgp/css/bgp.css?v=20260810">
+<link rel="stylesheet" href="/protocolos/aprofundamento/css/aprofundamento.css?v=20260907">
 {/extraHead}
 {#content}
 <div class="container py-5">
@@ -10,21 +11,24 @@
     {#include protocolos/partials/subnav.html /}
 
     <header class="text-center mb-4">
-        <span class="aed-eyebrow aed-eyebrow-indigo">Aprofundamento</span>
+        <div class="aprof-hero-icone" aria-hidden="true"><span class="material-symbols-outlined">hub</span></div>
+        <span class="aed-eyebrow aed-eyebrow-indigo">Aprofundamento · Camada de Rede</span>
         <h2 class="mb-2" style="font-family:var(--aed-font-display);">BGP-4 — Border Gateway Protocol</h2>
         <p class="text-secondary small mx-auto" style="max-width:44rem;">{conteudo.resumo}</p>
         <div class="bgp-ficha" role="list">
-            <span class="bgp-ficha-item" role="listitem"><strong>RFC</strong> 4271</span>
-            <span class="bgp-ficha-item" role="listitem"><strong>Transporte</strong> TCP 179</span>
-            <span class="bgp-ficha-item" role="listitem"><strong>Classe</strong> EGP</span>
-            <span class="bgp-ficha-item" role="listitem"><strong>Algoritmo</strong> Path Vector</span>
-            <span class="bgp-ficha-item" role="listitem"><strong>AD Cisco</strong> 20 eBGP / 200 iBGP</span>
-            <span class="bgp-ficha-item" role="listitem"><strong>Atualização</strong> Incremental, por evento</span>
+            <span class="bgp-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">menu_book</span><strong>RFC</strong> 4271</span>
+            <span class="bgp-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">lan</span><strong>Transporte</strong> TCP 179</span>
+            <span class="bgp-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">category</span><strong>Classe</strong> EGP</span>
+            <span class="bgp-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">route</span><strong>Algoritmo</strong> Path Vector</span>
+            <span class="bgp-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">trending_up</span><strong>AD Cisco</strong> 20 eBGP / 200 iBGP</span>
+            <span class="bgp-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">update</span><strong>Atualização</strong> Incremental, por evento</span>
         </div>
     </header>
 
     <nav class="bgp-indice" aria-label="Índice da página">
         <a href="#conceitos" data-indice-link>Conceitos</a>
+        <a href="#diagrama" data-indice-link>Diagrama</a>
+        <a href="#cabecalho" data-indice-link>Cabeçalho (bits)</a>
         <a href="#atributos" data-indice-link>Atributos</a>
         <a href="#selecao" data-indice-link>Melhor rota</a>
         <a href="#sessao" data-indice-link>Sessão</a>
@@ -51,6 +55,10 @@
             {/for}
         </div>
     </section>
+
+    {#include protocolos/partials/diagrama.html diagrama=conteudo.diagrama /}
+
+    {#include protocolos/partials/cabecalho_bits.html cabecalho=conteudo.cabecalho /}
 
     <section id="atributos" class="bgp-secao">
         <h3 class="bgp-secao-titulo"><span class="material-symbols-outlined">tune</span> Atributos de caminho</h3>
@@ -286,5 +294,7 @@
 {/content}
 {#extraScripts}
 <script src="/protocolos/js/aprofundamento.js?v=20260810"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="/protocolos/aprofundamento/js/aprofundamento-diagrama.js?v=20260907"></script>
 {/extraScripts}
 {/include}

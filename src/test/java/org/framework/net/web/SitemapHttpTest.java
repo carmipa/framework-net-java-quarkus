@@ -1,6 +1,7 @@
 package org.framework.net.web;
 
 import io.quarkus.test.junit.QuarkusTest;
+import org.framework.net.protocolos.domain.AprofundamentoProtocolo;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -130,6 +131,25 @@ class SitemapHttpTest {
         }
 
         assertTrue(quebradas.isEmpty(), () -> String.join("\n  - ", quebradas));
+    }
+
+    @Test
+    @DisplayName("todo aprofundamento de protocolo registrado está no sitemap (guarda anti-regressão)")
+    void aprofundamentosRegistradosEstaoNoSitemap() {
+        List<String> caminhos = caminhosDoSitemap();
+        assertFalse(caminhos.isEmpty(), "O sitemap veio vazio — instrumento cego.");
+
+        List<String> faltando = new ArrayList<>();
+        for (AprofundamentoProtocolo item : AprofundamentoProtocolo.disponiveis()) {
+            if (!caminhos.contains(item.rota())) {
+                faltando.add(item.rota());
+            }
+        }
+
+        assertFalse(AprofundamentoProtocolo.disponiveis().isEmpty(),
+                "Nenhum aprofundamento registrado — instrumento cego, não fonte vazia.");
+        assertTrue(faltando.isEmpty(), () -> "Aprofundamento registrado e fora do sitemap — conteúdo "
+                + "público que o buscador não vai indexar:\n  - " + String.join("\n  - ", faltando));
     }
 
     // --- leitura dos artefatos ----------------------------------------------

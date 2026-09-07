@@ -30,7 +30,16 @@
         </div>
     </div>
     <textarea id="trafego-hex" name="hex" class="form-control bg-dark text-light border-secondary trafego-hex"
-              rows="5" placeholder="ex.: 4500 003c 1c46 4000 4006 ..."></textarea>
+              rows="5" placeholder="ex.: 4500 003c 1c46 4000 4006 ...">aabb ccdd eeff 1122 3344 5566 0800
+4500 0028 1c46 4000 4006 b1e6 c0a8 0001 c0a8 0002
+d431 0050 0000 0000 0000 0000 5002 7210 e577 0000</textarea>
+    <div class="form-text aed-ajuda">
+        <span class="material-symbols-outlined" aria-hidden="true">lightbulb</span>
+        <span>Um <strong>hex dump</strong> é o pacote escrito em hexadecimal (só <code>0-9</code> e <code>a-f</code>).
+        O campo já vem com um <strong>exemplo pronto</strong> (um SYN TCP): é só clicar em <strong>Decodificar</strong>.
+        Cada linha é uma camada — Ethernet, depois IPv4, depois TCP. Deixe a camada inicial em <strong>Auto</strong>
+        que o decodificador descobre sozinho. Use <strong>Limpar</strong> para colar o seu próprio.</span>
+    </div>
     <div class="d-flex flex-wrap gap-2 mt-3">
         <button type="submit" class="aed-btn aed-btn-teal"
                 title="Decodificar o hex dump do pacote em cabeçalhos campo a campo">

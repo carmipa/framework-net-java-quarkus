@@ -11,6 +11,8 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import org.framework.net.segurancaRede.application.AclSimulatorService;
+import org.framework.net.segurancaRede.application.TlsInspectorService;
+import jakarta.ws.rs.DefaultValue;
 
 @Path("/seguranca")
 public class SegurancaRedeResource {
@@ -19,12 +21,19 @@ public class SegurancaRedeResource {
     AclSimulatorService aclSimulatorService;
 
     @Inject
+    TlsInspectorService tlsInspectorService;
+
+    @Inject
     @io.quarkus.qute.Location("segurancaRede/index.html")
     Template index;
 
     @Inject
     @io.quarkus.qute.Location("segurancaRede/partials/resultado.html")
     Template resultadoFragmento;
+
+    @Inject
+    @io.quarkus.qute.Location("segurancaRede/partials/inspecao_tls.html")
+    Template inspecaoTlsFragmento;
 
     @GET
     @Produces(MediaType.TEXT_HTML)
@@ -53,6 +62,26 @@ public class SegurancaRedeResource {
                 .data("origem", ipOrigem)
                 .data("destino", ipDestino)
                 .data("porta", portaDestino);
+    }
+
+    /**
+     * Inspeciona os atributos de uma conexão TLS informados no formulário e
+     * devolve o fragmento com o veredito por checagem, trocado pelo htmx.
+     */
+    @POST
+    @Path("/api/tls")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance inspecionarTls(
+            @FormParam("hostAcessado") String hostAcessado,
+            @FormParam("nomeCertificado") String nomeCertificado,
+            @FormParam("diasParaExpirar") String diasParaExpirar,
+            @FormParam("autoassinado") @DefaultValue("nao") String autoassinado,
+            @FormParam("versaoTls") String versaoTls,
+            @FormParam("cipher") String cipher) {
+        return inspecaoTlsFragmento.data("tls",
+                tlsInspectorService.inspecionar(hostAcessado, nomeCertificado, diasParaExpirar,
+                        autoassinado, versaoTls, cipher));
     }
 
     private static String vereditoDe(String resultado) {

@@ -30,7 +30,7 @@ class ModuloDePathTest {
         assertEquals("Localização", TelemetriaDashboardService.moduloDePath("/localizacao"));
         assertEquals("Tráfego", TelemetriaDashboardService.moduloDePath("/trafego"));
         assertEquals("Diagnóstico", TelemetriaDashboardService.moduloDePath("/diagnostico"));
-        assertEquals("Segurança ACL", TelemetriaDashboardService.moduloDePath("/seguranca"));
+        assertEquals("Segurança", TelemetriaDashboardService.moduloDePath("/seguranca"));
         assertEquals("Telemetria", TelemetriaDashboardService.moduloDePath("/telemetria"));
         assertEquals("Documentação", TelemetriaDashboardService.moduloDePath("/documentacao"));
         assertEquals("Sobre", TelemetriaDashboardService.moduloDePath("/sobre"));
@@ -41,7 +41,8 @@ class ModuloDePathTest {
         assertEquals("Calculadora", TelemetriaDashboardService.moduloDePath("/calculadora/api/dividir"));
         assertEquals("Calculadora", TelemetriaDashboardService.moduloDePath("/calculadora/api/vlan"));
         assertEquals("Calculadora", TelemetriaDashboardService.moduloDePath("/calculadora/export/divisao.csv"));
-        assertEquals("Segurança ACL", TelemetriaDashboardService.moduloDePath("/seguranca/api/testar"));
+        assertEquals("Segurança", TelemetriaDashboardService.moduloDePath("/seguranca/api/testar"));
+        assertEquals("Segurança", TelemetriaDashboardService.moduloDePath("/seguranca/api/tls"));
         assertEquals("Diagnóstico", TelemetriaDashboardService.moduloDePath("/diagnostico/api/ping"));
         assertEquals("Tráfego", TelemetriaDashboardService.moduloDePath("/trafego/api/decodificar"));
         assertEquals("Localização", TelemetriaDashboardService.moduloDePath("/localizacao/api/cep"));
@@ -76,6 +77,7 @@ class ModuloDePathTest {
         assertEquals("Admin", TelemetriaDashboardService.moduloDePath("/admin"));
         assertEquals("Admin", TelemetriaDashboardService.moduloDePath("/login"));
         assertEquals("Simuladores", TelemetriaDashboardService.moduloDePath("/simuladores/api/encapsular"));
+        assertEquals("Simuladores", TelemetriaDashboardService.moduloDePath("/simuladores/api/anomalia-tcp"));
     }
 
     @Test

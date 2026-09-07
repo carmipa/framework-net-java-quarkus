@@ -38,7 +38,9 @@ public record BgpAprofundamento(
         List<Topologia> topologias,
         List<Protecao> protecoes,
         List<Laboratorio> laboratorios,
-        List<Diagnostico> diagnosticos) {
+        List<Diagnostico> diagnosticos,
+        DiagramaArquitetura diagrama,
+        CabecalhoBinario cabecalho) {
 
     /** Bloco conceitual: um cartão de texto com um destaque opcional. */
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)

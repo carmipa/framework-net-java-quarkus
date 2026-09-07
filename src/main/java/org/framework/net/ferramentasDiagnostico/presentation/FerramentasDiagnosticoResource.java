@@ -23,8 +23,8 @@ public class FerramentasDiagnosticoResource {
     Template index;
 
     @Inject
-    @io.quarkus.qute.Location("ferramentasDiagnostico/partials/terminal.html")
-    Template terminalFragmento;
+    @io.quarkus.qute.Location("ferramentasDiagnostico/partials/resultado_didatico.html")
+    Template resultadoFragmento;
 
     @GET
     @Produces(MediaType.TEXT_HTML)
@@ -32,21 +32,57 @@ public class FerramentasDiagnosticoResource {
         return index.data("activeMainMenu", "diagnostico");
     }
 
-    /** Devolve a saída do ping simulado como fragmento de terminal, trocado pelo htmx. */
+    /** Ping simulado, dissecado, como fragmento trocado pelo htmx. */
     @POST
     @Path("/api/ping")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance executarPing(@FormParam("host") String host) {
-        return terminalFragmento.data("saida", diagnosticoService.executarPingSimulado(host));
+        return resultadoFragmento.data("r", diagnosticoService.executarPingSimulado(host));
     }
 
-    /** Devolve a saída do dig simulado como fragmento de terminal, trocado pelo htmx. */
+    /** Resolução DNS (dig) simulada, dissecada, como fragmento trocado pelo htmx. */
     @POST
     @Path("/api/dns")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance executarDns(@FormParam("dominio") String dominio) {
-        return terminalFragmento.data("saida", diagnosticoService.executarDnsSimulado(dominio));
+        return resultadoFragmento.data("r", diagnosticoService.executarDnsSimulado(dominio));
+    }
+
+    /** Traceroute simulado (manipulação de TTL), dissecado. */
+    @POST
+    @Path("/api/traceroute")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance executarTraceroute(@FormParam("host") String host) {
+        return resultadoFragmento.data("r", diagnosticoService.executarTracerouteSimulado(host));
+    }
+
+    /** Ping sweep simulado (descoberta de hosts vivos), dissecado. */
+    @POST
+    @Path("/api/ping-sweep")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance executarPingSweep(@FormParam("rede") String rede) {
+        return resultadoFragmento.data("r", diagnosticoService.executarPingSweepSimulado(rede));
+    }
+
+    /** Varredura de portas SYN stealth simulada, dissecada. */
+    @POST
+    @Path("/api/scan")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance executarScan(@FormParam("host") String host) {
+        return resultadoFragmento.data("r", diagnosticoService.executarScanSimulado(host));
+    }
+
+    /** Simulação didática de DNS spoofing (corrida de respostas), dissecada. */
+    @POST
+    @Path("/api/dns-spoofing")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance executarDnsSpoofing(@FormParam("dominio") String dominio) {
+        return resultadoFragmento.data("r", diagnosticoService.executarDnsSpoofingSimulado(dominio));
     }
 }

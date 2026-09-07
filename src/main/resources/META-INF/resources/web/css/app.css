@@ -398,7 +398,7 @@ html {
         .info-top { font-size: 0.72rem; color: #768390; background: #21262d; padding: 0.125em 0; line-height: 1.2; white-space: nowrap; }
         .val-bin { font-size: 1.32rem; padding: 0.5em 0; font-weight: bold; line-height: 1; }
         .bit-1 { background-color: var(--dyn-bit1); color: white; }
-        .bit-0 { background-color: #161b22; color: #484f58; }
+        .bit-0 { background-color: #161b22; color: #8b949e; }
         .peso-bot { font-size: 0.82rem; color: #58a6ff; padding: 0.25em 0; background: #0d1117; line-height: 1.2; }
         .octeto-label { font-size: 0.9rem; color: #f2cc60; margin-top: 0.5em; font-weight: bold; }
 
@@ -977,3 +977,29 @@ html {
 
 /* Reduz margens laterais para evitar quebra de menus */
 @media (min-width: 992px) { .container { max-width: 98% !important; } }
+
+/* Ajuda de exemplo nos campos (dica com lampada + <code>), compartilhada por
+   Diagnostico, Seguranca e Trafego. Componente unico (invariante 10). */
+.aed-ajuda {
+    /* Bloco com ícone inline (não flex): o texto e os <code> quebram naturalmente,
+       com ou sem <span> ao redor — evita overflow horizontal no celular. */
+    margin-top: 0.35rem;
+    color: var(--aed-text-secondary) !important;
+    font-size: 0.76rem;
+    overflow-wrap: anywhere;
+}
+
+.aed-ajuda .material-symbols-outlined {
+    font-size: 1rem;
+    color: #fcd34d;
+    vertical-align: -0.15rem;
+    margin-right: 0.2rem;
+}
+
+.aed-ajuda code {
+    font-family: var(--aed-font-mono);
+    color: #7dd3fc;
+    background: rgba(56, 189, 248, 0.08);
+    padding: 0 0.25rem;
+    border-radius: 0.25rem;
+}

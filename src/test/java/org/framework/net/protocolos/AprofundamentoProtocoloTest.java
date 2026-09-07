@@ -137,8 +137,8 @@ class AprofundamentoProtocoloTest {
         String catalogo = ler(CATALOGO);
         List<String> ausentes = new ArrayList<>();
         for (AprofundamentoProtocolo item : AprofundamentoProtocolo.disponiveis()) {
-            assertFalse(item.nomesNoCatalogo().isEmpty(),
-                    "O aprofundamento " + item.slug() + " não se liga a nenhuma linha do catálogo.");
+            // nomesNoCatalogo pode ser VAZIO para páginas conceituais (ex.: "handshake"),
+            // alcançáveis pelo sub-menu de camada e não por uma linha do DataGrid.
             for (String nome : item.nomesNoCatalogo()) {
                 if (!catalogo.contains("\"nome\": \"" + nome + "\"")) {
                     ausentes.add(item.slug() + " → \"" + nome + "\" não existe em protocolos/catalogo.json");
@@ -156,7 +156,8 @@ class AprofundamentoProtocoloTest {
         assertTrue(AprofundamentoProtocolo.porSlug("bgp").isPresent());
         assertTrue(AprofundamentoProtocolo.porSlug("BGP").isPresent(), "A URL pode chegar em maiúsculas.");
         assertTrue(AprofundamentoProtocolo.porSlug(" ssh ").isPresent(), "Espaço em volta não pode virar 404.");
-        assertTrue(AprofundamentoProtocolo.porSlug("telnet").isEmpty());
+        assertTrue(AprofundamentoProtocolo.porSlug("http").isPresent(), "Genérico registrado precisa resolver.");
+        assertTrue(AprofundamentoProtocolo.porSlug("snmp").isEmpty(), "Slug sem página não pode resolver.");
         assertTrue(AprofundamentoProtocolo.porSlug(null).isEmpty());
         assertTrue(AprofundamentoProtocolo.porSlug("   ").isEmpty());
     }
@@ -167,7 +168,9 @@ class AprofundamentoProtocoloTest {
         assertEquals("bgp", AprofundamentoProtocolo.porNomeDoCatalogo("BGP-4 / eBGP").orElseThrow().slug());
         assertEquals("bgp", AprofundamentoProtocolo.porNomeDoCatalogo("iBGP").orElseThrow().slug());
         assertEquals("ssh", AprofundamentoProtocolo.porNomeDoCatalogo("SSH").orElseThrow().slug());
-        assertTrue(AprofundamentoProtocolo.porNomeDoCatalogo("TELNET").isEmpty(),
+        assertEquals("http", AprofundamentoProtocolo.porNomeDoCatalogo("HTTP").orElseThrow().slug());
+        assertEquals("telnet", AprofundamentoProtocolo.porNomeDoCatalogo("TELNET").orElseThrow().slug());
+        assertTrue(AprofundamentoProtocolo.porNomeDoCatalogo("SNMP").isEmpty(),
                 "Protocolo sem página não pode oferecer o botão Aprofundar.");
         assertTrue(AprofundamentoProtocolo.porNomeDoCatalogo(null).isEmpty());
         assertTrue(AprofundamentoProtocolo.porNomeDoCatalogo("").isEmpty());

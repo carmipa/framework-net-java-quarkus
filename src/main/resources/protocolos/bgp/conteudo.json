@@ -400,5 +400,34 @@
       "comando": "show ip bgp neighbors 198.51.100.2 | include hold time\nshow bfd neighbors",
       "leitura": "Hold Time é detecção de último recurso. Para queda em subsegundos, use BFD associado ao vizinho; para o interior, next-hop tracking reage por evento em vez de por varredura."
     }
-  ]
+  ],
+  "diagrama": {
+    "titulo": "Estabelecimento da sessão BGP-4 e troca de rotas entre R1 e R2",
+    "definicao": "sequenceDiagram\n    participant R1 as Roteador R1\n    participant R2 as Roteador R2\n    Note over R1,R2: Estado Idle: sessão desativada, aguardando início\n    Note over R1: Estado Connect: R1 inicia a conexão TCP na porta 179\n    R1->>R2: Abertura da conexão TCP (porta 179)\n    R2-->>R1: TCP estabelecido (three-way handshake concluído)\n    Note over R1,R2: Estado OpenSent: cada lado envia sua mensagem OPEN\n    R1->>R2: OPEN (versão, ASN, Hold Time, BGP Identifier)\n    R2->>R1: OPEN (versão, ASN, Hold Time, BGP Identifier)\n    Note over R1,R2: Estado OpenConfirm: parâmetros negociados e aceitos\n    R1->>R2: KEEPALIVE (confirma o OPEN recebido)\n    R2->>R1: KEEPALIVE (confirma o OPEN recebido)\n    Note over R1,R2: Estado Established: sessão BGP ativa e operacional\n    R1->>R2: UPDATE (anuncia prefixos, ex.: 200.10.0.0/16)\n    R2->>R1: UPDATE (anuncia prefixos, ex.: 198.51.100.0/24)\n    Note over R1,R2: Tabelas de roteamento atualizadas em ambos os lados\n    loop A cada intervalo (menor que o Hold Time)\n        R1->>R2: KEEPALIVE (mantém a sessão viva)\n        R2->>R1: KEEPALIVE (mantém a sessão viva)\n    end\n    Note over R1,R2: Se o Hold Time expirar sem KEEPALIVE, envia-se NOTIFICATION e a sessão volta a Idle",
+    "legenda": "Fluxo temporal da máquina de estados do BGP-4 (RFC 4271): partindo de Idle, os roteadores R1 e R2 abrem a conexão TCP na porta 179 (Connect), negociam parâmetros com mensagens OPEN (OpenSent), confirmam com KEEPALIVE (OpenConfirm) e atingem o estado Established. A partir daí trocam prefixos com mensagens UPDATE e mantêm a sessão viva com KEEPALIVE periódicos, sempre enviados antes de o Hold Time expirar; se ele expirar, uma NOTIFICATION derruba a sessão de volta a Idle."
+  },
+  "cabecalho": {
+    "titulo": "Cabeçalho comum da mensagem BGP-4 (19 bytes / 152 bits)",
+    "nota": "Todas as mensagens BGP começam por este cabeçalho fixo. Soma total: 128 + 16 + 8 = 152 bits = 19 bytes. Marker: 128 bits (16 bytes) historicamente usados para sincronização e autenticação, hoje preenchidos com todos os bits em 1. Length: 16 bits com o tamanho total da mensagem em bytes (mínimo 19, máximo 4096), incluindo o próprio cabeçalho. Type: 8 bits que identificam o tipo da mensagem: 1 = OPEN, 2 = UPDATE, 3 = NOTIFICATION, 4 = KEEPALIVE. Todo o conjunto roda sobre TCP na porta 179.",
+    "campos": [
+      {
+        "nome": "Marker",
+        "bits": 128,
+        "descricao": "Campo de sincronização de 16 bytes; na prática todos os bits ficam em 1. Serve para o receptor detectar perda de sincronismo no fluxo TCP.",
+        "cor": "#2563eb"
+      },
+      {
+        "nome": "Length",
+        "bits": 16,
+        "descricao": "Comprimento total da mensagem em bytes, incluindo este cabeçalho. Valor entre 19 e 4096.",
+        "cor": "#7c3aed"
+      },
+      {
+        "nome": "Type",
+        "bits": 8,
+        "descricao": "Tipo da mensagem: 1 = OPEN, 2 = UPDATE, 3 = NOTIFICATION, 4 = KEEPALIVE.",
+        "cor": "#0891b2"
+      }
+    ]
+  }
 }

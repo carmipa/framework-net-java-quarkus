@@ -95,7 +95,7 @@ a:hover { color: #eef2f8; }
 }
 
 .brand-txt { display: flex; flex-direction: column; line-height: 1.05; }
-.brand-kicker { font-size: 9px; font-weight: 600; letter-spacing: .16em; color: var(--tx-5); }
+.brand-kicker { font-size: 9px; font-weight: 600; letter-spacing: .16em; color: var(--tx-3); }
 .brand-name { font-family: var(--f-title); font-weight: 600; font-size: 13.5px; color: var(--tx); }
 .topbar-right { display: flex; align-items: center; gap: 10px; }
 

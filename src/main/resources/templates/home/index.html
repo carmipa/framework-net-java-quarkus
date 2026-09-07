@@ -19,10 +19,11 @@
         Framework de Redes — Análise Didática Avançada
       </h1>
       <p class="home-hero-sub">
-        Ferramenta educacional de análise de redes: IPv4/IPv6, CIDR, máscaras,
-        wildcard, divisão de blocos em sub-redes, plano de VLANs, VLSM, topologia WAN,
-        catálogos de portas e protocolos, GeoIP, simuladores de Firewall (ACL),
-        ferramentas de Diagnóstico (Ping/DNS) e telemetria — tudo em um monólito modular pronto para produção.
+        Ferramenta educacional de análise de redes e cibersegurança: IPv4/IPv6, CIDR, máscaras,
+        wildcard, sub-redes, VLANs, VLSM, topologia WAN, portas e protocolos (com aprofundamentos
+        BGP/SSH/DNS/TLS), GeoIP, Firewall (ACL) e Inspetor TLS, diagnósticos dissecados
+        (ping, traceroute, varredura, DNS spoofing), anomalias TCP e telemetria —
+        tudo em um monólito modular pronto para produção.
       </p>
       <div class="home-hero-chips">
         <span class="home-chip">Bitwise AND</span>
@@ -32,6 +33,9 @@
         <span class="home-chip">VLSM / WAN</span>
         <span class="home-chip">Cisco CLI</span>
         <span class="home-chip">Firewall ACL</span>
+        <span class="home-chip">SYN Flood</span>
+        <span class="home-chip">DNS / DNSSEC</span>
+        <span class="home-chip">TLS 1.3</span>
         <span class="home-chip">OTLP/JSON</span>
       </div>
       <div class="home-hero-actions">
@@ -93,7 +97,8 @@
       <h2 class="home-module-title">Tráfego &amp; Pacotes</h2>
       <p class="home-module-desc">
         Painel ao vivo (simulação), decodificador de pacotes (hex → camadas),
-        simulador de encapsulamento e handshake TCP.
+        encapsulamento, handshake TCP e <strong>anomalias TCP</strong> (SYN flood e
+        sequestro por previsão de sequência).
       </p>
     </a>
     <a href="/portas" class="home-module aed-card card-tech"
@@ -117,7 +122,8 @@
       >
       <h2 class="home-module-title">Protocolos</h2>
       <p class="home-module-desc">
-        Catálogo de protocolos e troubleshooting de roteamento.
+        Catálogo de protocolos, troubleshooting de roteamento e aprofundamentos
+        por protocolo: BGP, SSH, <strong>DNS</strong> e <strong>TLS</strong>.
       </p>
     </a>
     <a href="/resolucao-problemas" class="home-module aed-card card-tech"
@@ -168,7 +174,8 @@
       >
       <h2 class="home-module-title">Diagnóstico</h2>
       <p class="home-module-desc">
-        Ferramentas simuladas de PING (ICMP) e resolução de nomes (DNS / dig).
+        Ferramentas simuladas do analista, com resultado <strong>dissecado</strong>:
+        PING, DNS (dig), traceroute, ping sweep, varredura SYN e DNS spoofing.
       </p>
     </a>
     <a href="/seguranca" class="home-module aed-card card-tech position-relative"
@@ -180,7 +187,8 @@
       >
       <h2 class="home-module-title">Segurança de Rede</h2>
       <p class="home-module-desc">
-        Testador de regras de Firewall (Access Control Lists). Validação de pacotes forjados.
+        Testador de regras de Firewall (ACL) com pacotes forjados e
+        <strong>Inspetor de TLS/Certificado</strong> (nome, validade, cadeia, protocolo e cipher).
       </p>
     </a>
 

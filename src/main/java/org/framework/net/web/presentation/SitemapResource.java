@@ -7,7 +7,9 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.framework.net.protocolos.domain.AprofundamentoProtocolo;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,24 +61,34 @@ public class SitemapResource {
      * {@code /informacoes} (dispara consulta geográfica externa a cada acesso),
      * {@code /admin}, {@code /login}, {@code /history}, {@code /export} e as
      * rotas de API — todas fechadas no {@code robots.txt}. Os aprofundamentos
-     * {@code /protocolos/bgp} e {@code /protocolos/ssh} estão porque só se chega
-     * a eles por um botão dentro do grid de protocolos.</p>
+     * de protocolo ({@code /protocolos/bgp}, {@code /protocolos/http}…) entram
+     * porque só se chega a eles por um botão no grid ou pelo sub-menu por camada,
+     * mas são conteúdo público indexável. Eles NÃO são escritos à mão aqui: vêm
+     * de {@link AprofundamentoProtocolo#disponiveis()}, a mesma fonte que alimenta
+     * o sub-menu, então protocolo novo entra no sitemap sozinho. A guarda
+     * {@code SitemapHttpTest} cruza a lista final com o registro para nenhum
+     * escapar.</p>
      */
-    private static final List<String> PAGINAS_PUBLICAS = List.of(
-            "/",
-            "/analise",
-            "/calculadora",
-            "/portas",
-            "/protocolos",
-            "/protocolos/bgp",
-            "/protocolos/ssh",
-            "/resolucao-problemas",
-            "/localizacao",
-            "/trafego",
-            "/seguranca",
-            "/diagnostico",
-            "/documentacao",
-            "/sobre");
+    private static final List<String> PAGINAS_PUBLICAS = montarPaginasPublicas();
+
+    private static List<String> montarPaginasPublicas() {
+        List<String> paginas = new ArrayList<>();
+        paginas.add("/");
+        paginas.add("/analise");
+        paginas.add("/calculadora");
+        paginas.add("/portas");
+        paginas.add("/protocolos");
+        // Aprofundamentos por protocolo — fonte única, logo após a aba Geral.
+        AprofundamentoProtocolo.disponiveis().forEach(item -> paginas.add(item.rota()));
+        paginas.add("/resolucao-problemas");
+        paginas.add("/localizacao");
+        paginas.add("/trafego");
+        paginas.add("/seguranca");
+        paginas.add("/diagnostico");
+        paginas.add("/documentacao");
+        paginas.add("/sobre");
+        return List.copyOf(paginas);
+    }
 
     /**
      * Host canônico do site, com esquema e sem barra final.

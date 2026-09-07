@@ -22,6 +22,22 @@ public class DevBrowserLauncher {
     private static final Logger LOG = Logger.getLogger(DevBrowserLauncher.class);
     private static final long OPEN_DELAY_MS = 1500L;
 
+    /**
+     * Marca, em propriedade de sistema, que o navegador já foi aberto nesta JVM.
+     *
+     * <p><b>Propósito de negócio:</b> em {@code quarkusDev} o Quarkus recria o
+     * contexto da aplicação a cada live reload, e com ele RE-DISPARA o
+     * {@link StartupEvent}. Sem esta trava, cada arquivo salvo abria uma nova aba
+     * do navegador — uma sessão de edição intensa vira "páginas infinitas". A
+     * conveniência é abrir uma vez ao subir, não a cada reload.</p>
+     *
+     * <p><b>Por que propriedade de sistema, e não campo estático:</b> o hot reload
+     * troca o classloader da aplicação, zerando campos estáticos das classes de
+     * negócio; a propriedade de sistema vive na JVM e sobrevive ao reload, então é
+     * o único lugar onde a marca persiste entre recargas.</p>
+     */
+    private static final String JA_ABRIU = "framework.dev.browser-opened";
+
     @Inject
     FrameworkDevConfig devConfig;
 
@@ -35,6 +51,14 @@ public class DevBrowserLauncher {
         if (!devConfig.openBrowser() || LaunchMode.current() != LaunchMode.DEVELOPMENT) {
             return;
         }
+        // Abre uma única vez por JVM: o StartupEvent re-dispara a cada live reload
+        // e, sem esta trava, cada arquivo salvo abriria uma aba nova. A marca é
+        // gravada de forma síncrona aqui para que o próximo reload já saia cedo,
+        // antes mesmo de agendar o timer.
+        if (System.getProperty(JA_ABRIU) != null) {
+            return;
+        }
+        System.setProperty(JA_ABRIU, "true");
         Config config = ConfigProvider.getConfig();
         int port = resolveHttpPort(config);
         String host = resolveHttpHost(config);

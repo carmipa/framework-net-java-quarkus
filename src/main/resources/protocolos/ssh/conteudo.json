@@ -318,5 +318,28 @@
       "comando": "sudo grep -c 'Failed password' /var/log/auth.log\nsudo fail2ban-client status sshd",
       "leitura": "Com PasswordAuthentication no, as tentativas viram ruído sem risco. O fail2ban reduz o volume de log e a carga; ele não substitui desligar a senha."
     }
-  ]
+  ],
+  "diagrama": {
+    "titulo": "Abertura de conexão SSH (RFC 4253) sobre TCP 22",
+    "definicao": "sequenceDiagram\n    participant C as Cliente SSH\n    participant S as Servidor SSH (porta 22)\n    Note over C,S: 1. Troca de versão (identification string) em texto claro\n    C->>S: SSH-2.0-OpenSSH_cliente\n    S-->>C: SSH-2.0-OpenSSH_servidor\n    Note over C,S: 2. Negociação de algoritmos (KEXINIT)\n    C->>S: SSH_MSG_KEXINIT (algoritmos de troca de chave, cifra, MAC, compressão)\n    S-->>C: SSH_MSG_KEXINIT (listas do servidor)\n    Note over C,S: 3. Troca de chaves Diffie-Hellman (segredo compartilhado)\n    C->>S: SSH_MSG_KEXDH_INIT (e = valor público do cliente)\n    S-->>C: SSH_MSG_KEXDH_REPLY (f, chave pública do host e assinatura)\n    Note over C,S: 4. NEWKEYS: ativa as chaves de sessão derivadas\n    C->>S: SSH_MSG_NEWKEYS\n    S-->>C: SSH_MSG_NEWKEYS\n    Note over C,S: canal cifrado a partir daqui\n    Note over C,S: 5. Autenticação (por chave pública)\n    C->>S: SSH_MSG_SERVICE_REQUEST (ssh-userauth)\n    S-->>C: SSH_MSG_SERVICE_ACCEPT\n    C->>S: SSH_MSG_USERAUTH_REQUEST (usuário, publickey, assinatura)\n    S-->>C: SSH_MSG_USERAUTH_SUCCESS\n    Note over C,S: Sessão autenticada: abre-se o canal e começa a shell/comando",
+    "legenda": "Fluxo de abertura de uma conexão SSH: o cliente e o servidor primeiro anunciam suas versões em texto claro, depois negociam os algoritmos com o KEXINIT, executam a troca de chaves Diffie-Hellman para chegar a um segredo compartilhado sem transmiti-lo, trocam NEWKEYS para ligar a cifra e, daí em diante, todo o tráfego (incluindo a autenticação por chave pública) viaja criptografado."
+  },
+  "cabecalho": {
+    "titulo": "Binary Packet Protocol do SSH (RFC 4253) - campos fixos do cabeçalho",
+    "nota": "São mostrados como campos apenas os dois cabeçalhos de tamanho fixo: Packet length (32 bits) + Padding length (8 bits) = 40 bits = 5 bytes. Logo após esses 5 bytes fixos seguem três partes de tamanho variável, descritas aqui na nota e não desenhadas por não terem largura fixa: (1) Payload - a mensagem real (por exemplo KEXINIT ou USERAUTH_REQUEST), possivelmente comprimida, com tamanho variável; (2) Random padding - bytes aleatórios de enchimento, com pelo menos 4 bytes, escolhidos para que o total (Packet length + o próprio campo Padding length + Payload + padding) seja múltiplo do tamanho de bloco da cifra, escondendo o tamanho real da mensagem; (3) MAC - código de autenticação da mensagem, de tamanho variável conforme o algoritmo negociado (por exemplo 32 bytes no hmac-sha2-256, ou 0 quando o MAC já está embutido numa cifra AEAD como chacha20-poly1305 ou aes-gcm). O campo Packet length conta os bytes de todo o pacote exceto ele próprio e o MAC. Soma dos campos fixos exibidos: 32 + 8 = 40 bits = 5 bytes.",
+    "campos": [
+      {
+        "nome": "Packet length",
+        "bits": 32,
+        "descricao": "Comprimento do pacote em bytes, sem contar este próprio campo e o MAC final. Diz ao receptor quantos bytes ainda faltam ler para completar o pacote.",
+        "cor": "#2563eb"
+      },
+      {
+        "nome": "Padding length",
+        "bits": 8,
+        "descricao": "Quantidade de bytes de enchimento aleatório (Random padding) presentes no pacote. Vale no mínimo 4 e serve para alinhar o pacote ao tamanho de bloco da cifra.",
+        "cor": "#7c3aed"
+      }
+    ]
+  }
 }
