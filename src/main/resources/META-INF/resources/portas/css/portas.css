@@ -37,3 +37,57 @@
 .datagrid-table td {
     vertical-align: middle;
 }
+
+/* --- Régua das 3 faixas de portas (largura proporcional ao tamanho) --- */
+.portas-faixas-titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--aed-font-display);
+    font-size: 1rem;
+    color: var(--aed-teal);
+}
+
+.portas-faixas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    width: 100%;
+}
+
+.portas-faixa {
+    flex-basis: 0;
+    min-width: 8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--faixa-cor, rgba(45, 212, 191, 0.45));
+    border-left: 4px solid var(--faixa-cor, var(--aed-teal));
+    border-radius: 0.4rem;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.portas-faixa-wk {
+    --faixa-cor: #f43f5e;
+}
+
+.portas-faixa-reg {
+    --faixa-cor: #2dd4bf;
+}
+
+.portas-faixa-dyn {
+    --faixa-cor: #38bdf8;
+}
+
+.portas-faixa-nome {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--aed-text);
+}
+
+.portas-faixa-range {
+    font-family: var(--aed-font-mono);
+    font-size: 0.72rem;
+    color: var(--aed-text-faint);
+}

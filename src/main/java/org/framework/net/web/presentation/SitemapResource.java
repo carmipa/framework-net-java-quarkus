@@ -7,6 +7,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.framework.net.portas.domain.PortaAprofundamento;
 import org.framework.net.protocolos.domain.AprofundamentoProtocolo;
 
 import java.util.ArrayList;
@@ -77,6 +78,8 @@ public class SitemapResource {
         paginas.add("/analise");
         paginas.add("/calculadora");
         paginas.add("/portas");
+        // Aprofundamentos de portas (Anatomia + famílias) — fonte única.
+        PortaAprofundamento.disponiveis().forEach(item -> paginas.add(item.rota()));
         paginas.add("/protocolos");
         // Aprofundamentos por protocolo — fonte única, logo após a aba Geral.
         AprofundamentoProtocolo.disponiveis().forEach(item -> paginas.add(item.rota()));

@@ -59,7 +59,12 @@ class ArquiteturaCamadasTest {
      * que qualquer acoplamento NOVO quebre o build.</p>
      */
     private static final Map<String, Set<String>> ACOPLAMENTOS_ACEITOS = Map.of(
-            "localizacao", Set.of("analiseDidatica"));
+            "localizacao", Set.of("analiseDidatica"),
+            // Portas reutiliza o modelo didático de aprofundamento dos Protocolos
+            // (record ProtocoloAprofundamento, records de diagrama/cabeçalho) e cruza
+            // suas 16 portas de serviço conhecido para /protocolos/<slug> via o
+            // registro AprofundamentoProtocolo. A dependência é real e assumida.
+            "portas", Set.of("protocolos"));
 
     /** Tipos de camada que o domínio jamais pode enxergar. */
     private static final Set<String> CAMADAS_PROIBIDAS_NO_DOMINIO =

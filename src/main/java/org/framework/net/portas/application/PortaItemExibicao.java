@@ -11,9 +11,10 @@ public record PortaItemExibicao(
         String recomendacao,
         String badge,
         String badgeColor,
-        String alternativaSegura) {
+        String alternativaSegura,
+        String aprofundamentoRota) {
 
-    public static PortaItemExibicao from(PortaItem item, String alternativaSegura) {
+    public static PortaItemExibicao from(PortaItem item, String alternativaSegura, String aprofundamentoRota) {
         return new PortaItemExibicao(
                 item.porta(),
                 item.protocoloTransporte(),
@@ -23,6 +24,7 @@ public record PortaItemExibicao(
                 item.recomendacao(),
                 item.badge(),
                 item.badgeColor(),
-                alternativaSegura);
+                alternativaSegura,
+                aprofundamentoRota);
     }
 }

@@ -402,6 +402,17 @@ if (existsSync(REGISTRO_APROF)) {
   avisos.push('inventario: registro de aprofundamentos nao encontrado em ' + REGISTRO_APROF);
 }
 
+// Aprofundamentos de PORTAS (Anatomia + familias) — mesma logica, registro proprio.
+const REGISTRO_PORTAS = join(RAIZ, 'src/main/java/org/framework/net/portas/domain/PortaAprofundamento.java');
+if (existsSync(REGISTRO_PORTAS)) {
+  const fonte = readFileSync(REGISTRO_PORTAS, 'utf8');
+  for (const m of fonte.matchAll(/new\s+PortaAprofundamento\s*\(\s*"([a-z0-9-]+)"/g)) {
+    paginasAprofundamento.push('/portas/' + m[1]);
+  }
+} else {
+  avisos.push('inventario: registro de aprofundamentos de portas nao encontrado em ' + REGISTRO_PORTAS);
+}
+
 const superficie = {};
 for (const [template, rota] of porTemplate) {
   superficie[rota] = { template, ...superficieDoTemplate(templateExpandido(template, new Set(), avisos)) };

@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.framework.net.portas.domain.PortaItem;
 import org.framework.net.portas.domain.PortasCatalog;
+import org.framework.net.protocolos.domain.AprofundamentoProtocolo;
 import org.framework.net.telemetria.TelemetriaLogger;
 
 import java.util.List;
@@ -54,12 +55,55 @@ public class PortasService {
     @Inject
     TelemetriaLogger telemetriaLogger;
 
+    /**
+     * Serviço da porta → slug do aprofundamento de protocolo correspondente.
+     *
+     * <p><b>Propósito de negócio:</b> conecta os dois módulos — 16 das 30 portas
+     * correspondem a um protocolo que já tem página dedicada, então a linha ganha
+     * o botão "Aprofundar" apontando para {@code /protocolos/<slug>}. A rota final
+     * NÃO é escrita à mão: vem de {@link AprofundamentoProtocolo#porSlug(String)},
+     * a fonte única, de modo que uma renomeação de rota lá reflete aqui.</p>
+     */
+    private static final Map<String, String> SERVICO_PARA_PROTOCOLO = Map.ofEntries(
+            Map.entry("ftp", "ftp"),
+            Map.entry("tftp", "ftp"),
+            Map.entry("ssh", "ssh"),
+            Map.entry("telnet", "telnet"),
+            Map.entry("smtp", "smtp"),
+            Map.entry("pop3", "smtp"),
+            Map.entry("imap", "smtp"),
+            Map.entry("smtps", "smtp"),
+            Map.entry("submission", "smtp"),
+            Map.entry("imaps", "smtp"),
+            Map.entry("pop3s", "smtp"),
+            Map.entry("dns", "dns"),
+            Map.entry("http", "http"),
+            Map.entry("http alternativo", "http"),
+            Map.entry("https", "tls"),
+            Map.entry("https alternativo", "tls"));
+
     public List<PortaItemExibicao> montarPortasCatalogoExibicao() {
         telemetriaLogger.logEvent("info", "portas", "catalog_load",
                 Map.of("total", portasCatalog.getCatalogo().size()));
         return portasCatalog.getCatalogo().stream()
-                .map(item -> PortaItemExibicao.from(item, alternativaSeguraPorta(item)))
+                .map(item -> PortaItemExibicao.from(item, alternativaSeguraPorta(item), aprofundamentoRota(item)))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Resolve a rota do aprofundamento de protocolo para a linha da porta.
+     *
+     * <p><b>Comportamento em caso de falha:</b> serviço sem protocolo mapeado, ou
+     * slug que não existe mais no registro, devolve {@code null} — a linha
+     * simplesmente não ganha o botão "Aprofundar", nunca um link quebrado.</p>
+     */
+    private String aprofundamentoRota(PortaItem item) {
+        String servico = normalizar(item.servico()).toLowerCase(Locale.ROOT);
+        String slug = SERVICO_PARA_PROTOCOLO.get(servico);
+        if (slug == null) {
+            return null;
+        }
+        return AprofundamentoProtocolo.porSlug(slug).map(AprofundamentoProtocolo::rota).orElse(null);
     }
 
     private String alternativaSeguraPorta(PortaItem item) {

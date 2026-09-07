@@ -11,7 +11,7 @@ Aplicação didática para análise de redes IPv4/IPv6, com foco em ensino, labo
 
 - **Análise Didática** — CIDR, máscara, wildcard, auto-CIDR, domínio (DNS), IPv6, comparador e GeoIP.
 - **Calculadora de Sub-redes e VLANs** — divisão de blocos (FLSM), plano de VLANs com script Cisco, sumarização de rotas e faixa de IPs para CIDR.
-- **Portas** — catálogo interativo de portas TCP/UDP.
+- **Portas** — catálogo interativo TCP/UDP + **7 aprofundamentos** (Anatomia das portas e as famílias Web, E-mail, Acesso remoto, Arquivos, Banco de dados, Infra), com cross-link das portas de serviço conhecido para os aprofundamentos de protocolo.
 - **Protocolos** — catálogo comparativo + troubleshooting de roteamento e **15 aprofundamentos por camada** (Aplicação · Transporte · Rede), cada um com diagrama de arquitetura e decomposição binária do cabeçalho.
 - **Resolução de Problemas (VLSM + WAN)** — planejamento VLSM dinâmico, topologia WAN, CLI Cisco e exportação para laboratório.
 - **Telemetria** — dashboard de eventos e console ao vivo (server-side).
@@ -81,7 +81,8 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | GeoIP | `/informacoes` | GET | Página de geolocalização (`?ip=`) |
 | GeoIP (API) | `/api/informacoes/geo` | GET | JSON de geolocalização (`?ip=`) |
 | Referência de máscaras | `/mascara-referencia` | GET | Tabela JSON de máscaras/prefixos |
-| Portas | `/portas` | GET | Catálogo interativo TCP/UDP |
+| Portas | `/portas` | GET | Catálogo interativo TCP/UDP (com régua das 3 faixas e cross-link para os aprofundamentos de protocolo) |
+| Portas — aprofundamentos | `/portas/{anatomia,web,email,acesso-remoto,arquivos,banco-de-dados,infra}` | GET | Página conceitual (Anatomia: 16 bits, socket, faixas, efêmeras, NAT/PAT) + famílias de serviço, com diagrama e (na Anatomia) a régua binária dos campos de porta |
 | Protocolos | `/protocolos` | GET | Catálogo + troubleshooting de roteamento (aba Geral) |
 | Protocolos — Aplicação | `/protocolos/{http,dns,ssh,tls,ftp,smtp,telnet}` | GET | Aprofundamentos da camada de Aplicação (HTTP/HTTPS, DNS, SSH, TLS, FTP/TFTP, e-mail, Telnet) |
 | Protocolos — Transporte | `/protocolos/{tcp,udp,handshake}` | GET | Camada de Transporte: TCP, UDP e a seção Handshake (TCP 3-vias, TLS, SSH) |
@@ -94,7 +95,7 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Documentação | `/documentacao` | GET | Este README renderizado |
 | Sobre | `/sobre` | GET | O projeto, o autor e as tecnologias |
 | Robôs de busca | `/robots.txt` | GET | Estático em `META-INF/resources/`. Política pública: páginas didáticas abertas, coletor de IA e robô de SEO fora, rotas caras e de API fechadas |
-| Mapa do site | `/sitemap.xml` | GET | As páginas didáticas, incluindo os **15 aprofundamentos por protocolo** derivados do registro (`AprofundamentoProtocolo.disponiveis()`), com URL absoluta no host canônico (`framework.site.base-url`) |
+| Mapa do site | `/sitemap.xml` | GET | As páginas didáticas, incluindo os **15 aprofundamentos por protocolo** e os **7 de portas**, derivados dos registros (`AprofundamentoProtocolo`/`PortaAprofundamento`), com URL absoluta no host canônico (`framework.site.base-url`) |
 | Sonda de saúde | `/health` | GET | JSON `{"status":"UP"}` para o healthcheck do container; **não** registrada na telemetria |
 | Histórico (API) | `/history` | GET | Lista o histórico em JSON |
 | Histórico catálogo | `/history/catalog` | POST | Registra consulta de portas/protocolos |
@@ -166,6 +167,21 @@ menor lista de blocos CIDR que cobre **exatamente** a faixa, com a ACL equivalen
 - catálogo didático com filtros;
 - resumo IGP/EGP e bloco **Troubleshooting rápido (roteamento)** na página de protocolos;
 - registro opcional das consultas no histórico via `/history/catalog`.
+
+#### Aprofundamentos de portas — Anatomia + famílias
+
+O catálogo de portas ganhou o mesmo tratamento dos protocolos: um sub-menu FLAT
+(Geral + famílias) e páginas de aprofundamento. São **7**: **Anatomia das portas**
+(conceitual — porta de 16 bits, socket = IP:porta, as 3 faixas, portas efêmeras e
+NAT/PAT, com a régua binária dos dois campos de porta) e as famílias **Web · E-mail ·
+Acesso remoto · Arquivos · Banco de dados · Infra** (cada uma com diagrama, riscos e
+como proteger). Reaproveitam a mesma infraestrutura dos aprofundamentos de protocolo:
+o record `ProtocoloAprofundamento`, os partials `corpo_aprofundamento.html`,
+`diagrama.html` e `cabecalho_bits.html`, o CSS e o Mermaid — o acoplamento
+`portas -> protocolos` está registrado em `ArquiteturaCamadasTest`. O catálogo ainda
+**cruza** 16 das 30 portas de serviço conhecido (22→SSH, 53→DNS, 443→TLS, 25→SMTP…)
+para o aprofundamento de protocolo correspondente, via
+`AprofundamentoProtocolo.porSlug`. Registro único: `PortaAprofundamento`.
 
 #### Aprofundamentos por protocolo — organizados por camada
 

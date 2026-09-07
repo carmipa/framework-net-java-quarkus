@@ -1,11 +1,13 @@
 {#include shared/base.html}
 {#title}CyberNet Framework | Catálogo de Portas{/title}
 {#extraHead}
-<link rel="stylesheet" href="/portas/css/portas.css?v=20260811d">
+<link rel="stylesheet" href="/protocolos/css/subnav.css?v=20260810">
+<link rel="stylesheet" href="/portas/css/portas.css?v=20260907">
 {/extraHead}
 {#content}
 <div class="container py-5">
     {#include shared/main_menu.html activeMainMenu='portas' /}
+    {#include portas/partials/subnav.html /}
     <div class="text-center mb-4">
         <span class="aed-eyebrow aed-eyebrow-indigo">Catálogo</span>
         <h2 class="mb-2" style="font-family:var(--aed-font-display);">Catálogo de Portas TCP/UDP</h2>
@@ -19,6 +21,27 @@
         <div><span class="aed-stat-num critical" data-stat="critico">—</span><span class="aed-stat-label">Críticas</span></div>
         <div><span class="aed-stat-num attention" data-stat="atencao">—</span><span class="aed-stat-label">Atenção</span></div>
         <div><span class="aed-stat-num safe" data-stat="seguro">—</span><span class="aed-stat-label">Seguras</span></div>
+    </div>
+
+    <div class="card-tech p-3 mb-3 portas-faixas-bloco">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+            <h3 class="portas-faixas-titulo mb-0"><span class="material-symbols-outlined" aria-hidden="true">straighten</span> As três faixas de portas (16 bits)</h3>
+            <a href="/portas/anatomia" class="aed-btn aed-btn-teal btn-sm" title="Entender portas por dentro: 16 bits, socket, portas efêmeras e NAT/PAT">
+                <span class="material-symbols-outlined" aria-hidden="true">menu_book</span> Anatomia das portas
+            </a>
+        </div>
+        <div class="portas-faixas" role="list" aria-label="As três faixas de portas, largura proporcional ao tamanho">
+            <div class="portas-faixa portas-faixa-wk" role="listitem" style="flex-grow: 1024;" title="0 a 1023 — serviços padronizados; abrir exige privilégio no Unix">
+                <span class="portas-faixa-nome">Well-known</span><span class="portas-faixa-range">0–1023</span>
+            </div>
+            <div class="portas-faixa portas-faixa-reg" role="listitem" style="flex-grow: 48128;" title="1024 a 49151 — registradas pela IANA a aplicações">
+                <span class="portas-faixa-nome">Registered</span><span class="portas-faixa-range">1024–49151</span>
+            </div>
+            <div class="portas-faixa portas-faixa-dyn" role="listitem" style="flex-grow: 16384;" title="49152 a 65535 — efêmeras, sorteadas pelo cliente por conexão">
+                <span class="portas-faixa-nome">Dynamic / efêmeras</span><span class="portas-faixa-range">49152–65535</span>
+            </div>
+        </div>
+        <p class="small text-secondary mb-0 mt-2">Um número de 16 bits: <strong class="text-light">65.536</strong> portas possíveis (0–65535), em TCP e UDP separadamente. Largura proporcional ao tamanho de cada faixa.</p>
     </div>
 
     <div class="card-tech p-4 shadow">
@@ -132,6 +155,9 @@
                                 <div class="d-inline-flex align-items-center justify-content-center gap-1">
                                     <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-copy="portas" data-bs-toggle="tooltip" data-bs-placement="top" title="Copiar dados desta linha."><span class="material-symbols-outlined">content_copy</span></button>
                                     <button type="button" class="aed-btn aed-btn-indigo btn-sm" data-grid-details="portas" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir detalhes desta porta.">Detalhes</button>
+                                    {#if item.aprofundamentoRota}
+                                    <a href="{item.aprofundamentoRota}" class="aed-btn aed-btn-teal btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir o aprofundamento do protocolo desta porta"><span class="material-symbols-outlined">menu_book</span></a>
+                                    {/if}
                                 </div>
                             </td>
                         </tr>
@@ -176,6 +202,9 @@
                         <div class="mt-2 pt-2 border-top border-secondary border-opacity-25 d-flex align-items-center gap-2">
                             <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-copy="portas" data-bs-toggle="tooltip" title="Copiar linha"><span class="material-symbols-outlined">content_copy</span></button>
                             <button type="button" class="aed-btn aed-btn-indigo btn-sm" data-grid-details="portas" data-bs-toggle="tooltip" title="Detalhes">Detalhes</button>
+                            {#if item.aprofundamentoRota}
+                            <a href="{item.aprofundamentoRota}" class="aed-btn aed-btn-teal btn-sm" data-bs-toggle="tooltip" title="Aprofundamento do protocolo"><span class="material-symbols-outlined">menu_book</span> Aprofundar</a>
+                            {/if}
                         </div>
                     </div>
                     {/for}
