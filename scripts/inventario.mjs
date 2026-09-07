@@ -413,6 +413,17 @@ if (existsSync(REGISTRO_PORTAS)) {
   avisos.push('inventario: registro de aprofundamentos de portas nao encontrado em ' + REGISTRO_PORTAS);
 }
 
+// Aprofundamentos de CERTIFICADOS (X.509/PKI) — mesma logica, registro proprio.
+const REGISTRO_CERT = join(RAIZ, 'src/main/java/org/framework/net/certificados/domain/CertificadoAprofundamento.java');
+if (existsSync(REGISTRO_CERT)) {
+  const fonte = readFileSync(REGISTRO_CERT, 'utf8');
+  for (const m of fonte.matchAll(/new\s+CertificadoAprofundamento\s*\(\s*"([a-z0-9-]+)"/g)) {
+    paginasAprofundamento.push('/certificados/' + m[1]);
+  }
+} else {
+  avisos.push('inventario: registro de aprofundamentos de certificados nao encontrado em ' + REGISTRO_CERT);
+}
+
 const superficie = {};
 for (const [template, rota] of porTemplate) {
   superficie[rota] = { template, ...superficieDoTemplate(templateExpandido(template, new Set(), avisos)) };

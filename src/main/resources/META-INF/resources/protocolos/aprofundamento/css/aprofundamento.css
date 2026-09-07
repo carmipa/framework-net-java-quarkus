@@ -248,6 +248,15 @@
     color: #fca5a5;
 }
 
+/* O selo de gravidade deve ser um rótulo curto; se vier texto longo, quebra em
+   vez de esticar a página (defesa contra conteúdo fora do padrão). */
+.aprof-ataque .badge {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+    text-align: left;
+}
+
 .aprof-ataque-danger {
     border-color: rgba(244, 63, 94, 0.35) !important;
 }

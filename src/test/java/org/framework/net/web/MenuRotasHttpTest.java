@@ -53,7 +53,7 @@ class MenuRotasHttpTest {
 
     /** Rotas do menu principal, na ordem em que aparecem em shared/main_menu.html. */
     private static final List<String> ROTAS_DO_MENU = List.of(
-            "/", "/analise", "/calculadora", "/portas", "/protocolos", "/resolucao-problemas",
+            "/", "/analise", "/calculadora", "/portas", "/protocolos", "/certificados", "/resolucao-problemas",
             "/localizacao", "/trafego", "/diagnostico", "/seguranca", "/telemetria",
             "/documentacao", "/sobre");
 
@@ -64,6 +64,7 @@ class MenuRotasHttpTest {
             "/calculadora,            Calculadora",
             "/portas,                 Portas",
             "/protocolos,             Protocolos",
+            "/certificados,           Certificados",
             "/resolucao-problemas,    Resolução (VLSM+WAN)",
             "/localizacao,            Localização",
             "/trafego,                Tráfego",
@@ -86,7 +87,7 @@ class MenuRotasHttpTest {
     }
 
     @ParameterizedTest(name = "{0} expõe todos os demais itens do menu")
-    @CsvSource({"/", "/analise", "/calculadora", "/portas", "/protocolos", "/resolucao-problemas",
+    @CsvSource({"/", "/analise", "/calculadora", "/portas", "/protocolos", "/certificados", "/resolucao-problemas",
             "/localizacao", "/trafego", "/diagnostico", "/seguranca", "/telemetria",
             "/documentacao", "/sobre"})
     void todaPaginaDoMenuNavegaParaAsOutras(String rota) {

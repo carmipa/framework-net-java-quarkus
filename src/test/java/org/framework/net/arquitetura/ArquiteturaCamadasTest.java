@@ -64,7 +64,10 @@ class ArquiteturaCamadasTest {
             // (record ProtocoloAprofundamento, records de diagrama/cabeçalho) e cruza
             // suas 16 portas de serviço conhecido para /protocolos/<slug> via o
             // registro AprofundamentoProtocolo. A dependência é real e assumida.
-            "portas", Set.of("protocolos"));
+            "portas", Set.of("protocolos"),
+            // Certificados reutiliza o mesmo modelo didático de aprofundamento
+            // (ProtocoloAprofundamento) e cruza para o protocolo TLS. Dependência assumida.
+            "certificados", Set.of("protocolos"));
 
     /** Tipos de camada que o domínio jamais pode enxergar. */
     private static final Set<String> CAMADAS_PROIBIDAS_NO_DOMINIO =
