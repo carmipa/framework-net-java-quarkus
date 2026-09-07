@@ -7,12 +7,20 @@
   <img src="/icone.png?v=20260709d" alt="Framework de Redes — Análise Didática Avançada" width="420" />
 </p>
 
-Aplicação didática para análise de redes IPv4/IPv6, com foco em ensino, laboratório e revisão técnica. Originalmente escrita em **Python/Flask**, foi **migrada para Java 25 + Quarkus** e reorganizada como um **monólito modular** (*modular monolith*): um único artefato de implantação com domínios autocontidos, prontos para evoluir para microserviços. Reúne sete módulos:
+Aplicação didática para análise de redes IPv4/IPv6, com foco em ensino, laboratório e revisão técnica. Originalmente escrita em **Python/Flask**, foi **migrada para Java 25 + Quarkus** e reorganizada como um **monólito modular** (*modular monolith*): um único artefato de implantação com domínios autocontidos, prontos para evoluir para microserviços. Os módulos são agrupados no menu principal em dois menus suspensos — **Topologia**
+(as referências de rede) e **Operações** (as ferramentas de análise/operação) — além
+dos módulos independentes (Início, Análise, Calculadora, Resolução, Telemetria,
+Documentação, Sobre):
 
 - **Análise Didática** — CIDR, máscara, wildcard, auto-CIDR, domínio (DNS), IPv6, comparador e GeoIP.
 - **Calculadora de Sub-redes e VLANs** — divisão de blocos (FLSM), plano de VLANs com script Cisco, sumarização de rotas e faixa de IPs para CIDR.
-- **Portas** — catálogo interativo TCP/UDP + **7 aprofundamentos** (Anatomia das portas e as famílias Web, E-mail, Acesso remoto, Arquivos, Banco de dados, Infra), com cross-link das portas de serviço conhecido para os aprofundamentos de protocolo.
-- **Protocolos** — catálogo comparativo + troubleshooting de roteamento e **15 aprofundamentos por camada** (Aplicação · Transporte · Rede), cada um com diagrama de arquitetura e decomposição binária do cabeçalho.
+- **Topologia → Portas** — catálogo interativo TCP/UDP + **7 aprofundamentos** (Anatomia das portas e as famílias Web, E-mail, Acesso remoto, Arquivos, Banco de dados, Infra), com cross-link das portas para os aprofundamentos de protocolo.
+- **Topologia → Protocolos** — catálogo comparativo + troubleshooting e **15 aprofundamentos por camada** (Aplicação · Transporte · Rede), cada um com diagrama de arquitetura e decomposição binária do cabeçalho.
+- **Topologia → Certificados** — X.509/PKI: catálogo de 3 tabelas (formatos, campos, tipos) + **8 aprofundamentos** por grupo; a Anatomia traz a régua binária ASN.1/DER.
+- **Topologia → Camadas** — modelo **OSI × TCP/IP**: tabela das 7 camadas (PDU, protocolos, dispositivos) + aprofundamentos (OSI, TCP/IP, encapsulamento, dispositivos).
+- **Topologia → Criptografia** — algoritmos e forças (simétrica, assimétrica, hash, assinatura) + **playground de hash** (WebCrypto) e comparador de força.
+- **Topologia → Wi-Fi** — padrões 802.11 (Wi-Fi 1→7), canais e segurança (WEP→WPA3) + **planejador de canais** 2.4 GHz.
+- **Operações → Localização · Tráfego · Ferramentas · Diagnóstico · Segurança (ACL)** — GeoIP, decodificador/encapsulamento de pacotes, ferramentas CLI (com **construtor de comando**), simuladores de diagnóstico e testador de ACL/TLS.
 - **Resolução de Problemas (VLSM + WAN)** — planejamento VLSM dinâmico, topologia WAN, CLI Cisco e exportação para laboratório.
 - **Telemetria** — dashboard de eventos e console ao vivo (server-side).
 - **Documentação** — este README renderizado.
@@ -87,6 +95,11 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Protocolos — Aplicação | `/protocolos/{http,dns,ssh,tls,ftp,smtp,telnet}` | GET | Aprofundamentos da camada de Aplicação (HTTP/HTTPS, DNS, SSH, TLS, FTP/TFTP, e-mail, Telnet) |
 | Protocolos — Transporte | `/protocolos/{tcp,udp,handshake}` | GET | Camada de Transporte: TCP, UDP e a seção Handshake (TCP 3-vias, TLS, SSH) |
 | Protocolos — Rede | `/protocolos/{ipv4,ipv6,arp,icmp,bgp}` | GET | Camada de Rede: IPv4, IPv6, ARP, ICMP/ICMPv6 e BGP-4 |
+| Certificados | `/certificados` (+ `/certificados/{x509,cadeia,tipos,formatos,ciclo-de-vida,revogacao,usos,ataques}`) | GET | X.509/PKI: catálogo de 3 tabelas (formatos, campos, tipos) + 8 aprofundamentos por grupo; Anatomia com régua binária ASN.1/DER |
+| Camadas | `/camadas` (+ `/camadas/{osi,tcpip,encapsulamento,dispositivos}`) | GET | Modelo OSI × TCP/IP: tabela das 7 camadas (PDU, protocolos, dispositivos) + aprofundamentos |
+| Criptografia | `/criptografia` (+ `/criptografia/{simetrica,assimetrica,hash,troca-de-chaves,assinatura}`) | GET | Algoritmos e forças + **playground de hash** (WebCrypto, client-side) e comparador de força |
+| Wi-Fi | `/wifi` (+ `/wifi/{padroes,canais,seguranca,ataques}`) | GET | Padrões 802.11 (Wi-Fi 1→7) + **planejador de canais** 2.4 GHz (1/6/11) |
+| Ferramentas | `/ferramentas` (+ `/ferramentas/{conectividade,dns-tools,captura,varredura,http-tls,sockets}`) | GET | Ferramentas CLI (ping, dig, tcpdump, nmap, curl, openssl…) + **construtor de comando** |
 | Resolução VLSM | `/resolucao-problemas` | GET/POST | Aba **Projetar**: cenários VLSM/WAN, demos e exportações |
 | Resolução — reversa | `/resolucao-problemas?aba=reversa` | GET/POST | Aba **Engenharia reversa**: interpreta configuração Cisco colada, audita, corrige e reconstrói o projeto |
 | Páginas de erro | qualquer rota que falhe | — | Página única em `paginaErros/erro.html` servindo os 12 códigos (400…504) |
@@ -95,7 +108,7 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Documentação | `/documentacao` | GET | Este README renderizado |
 | Sobre | `/sobre` | GET | O projeto, o autor e as tecnologias |
 | Robôs de busca | `/robots.txt` | GET | Estático em `META-INF/resources/`. Política pública: páginas didáticas abertas, coletor de IA e robô de SEO fora, rotas caras e de API fechadas |
-| Mapa do site | `/sitemap.xml` | GET | As páginas didáticas, incluindo os **15 aprofundamentos por protocolo** e os **7 de portas**, derivados dos registros (`AprofundamentoProtocolo`/`PortaAprofundamento`), com URL absoluta no host canônico (`framework.site.base-url`) |
+| Mapa do site | `/sitemap.xml` | GET | As páginas didáticas, incluindo **todos os aprofundamentos** (protocolos, portas, certificados, camadas, criptografia, Wi-Fi, ferramentas) derivados dos registros de cada módulo — fonte única —, com URL absoluta no host canônico (`framework.site.base-url`) |
 | Sonda de saúde | `/health` | GET | JSON `{"status":"UP"}` para o healthcheck do container; **não** registrada na telemetria |
 | Histórico (API) | `/history` | GET | Lista o histórico em JSON |
 | Histórico catálogo | `/history/catalog` | POST | Registra consulta de portas/protocolos |

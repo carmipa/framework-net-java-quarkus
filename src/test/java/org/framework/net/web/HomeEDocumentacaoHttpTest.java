@@ -36,8 +36,9 @@ class HomeEDocumentacaoHttpTest {
      * {@code /admin/login}), o que é aceito: menu ⊆ home, não igualdade.</p>
      */
     private static final List<String> MODULOS_DO_MENU = List.of(
-            "/analise", "/calculadora", "/portas", "/protocolos", "/certificados", "/resolucao-problemas",
-            "/localizacao", "/trafego", "/diagnostico", "/seguranca", "/telemetria",
+            "/analise", "/calculadora", "/portas", "/protocolos", "/certificados",
+            "/camadas", "/criptografia", "/wifi", "/resolucao-problemas",
+            "/localizacao", "/trafego", "/ferramentas", "/diagnostico", "/seguranca", "/telemetria",
             "/documentacao", "/sobre");
 
     @Test

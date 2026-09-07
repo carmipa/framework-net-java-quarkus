@@ -7,9 +7,13 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.framework.net.camadas.domain.CamadaAprofundamento;
 import org.framework.net.certificados.domain.CertificadoAprofundamento;
+import org.framework.net.criptografia.domain.CriptografiaAprofundamento;
+import org.framework.net.ferramentas.domain.FerramentasAprofundamento;
 import org.framework.net.portas.domain.PortaAprofundamento;
 import org.framework.net.protocolos.domain.AprofundamentoProtocolo;
+import org.framework.net.wifi.domain.WifiAprofundamento;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,6 +91,14 @@ public class SitemapResource {
         paginas.add("/certificados");
         // Aprofundamentos de certificados (X.509/PKI) — fonte única.
         CertificadoAprofundamento.disponiveis().forEach(item -> paginas.add(item.rota()));
+        paginas.add("/camadas");
+        CamadaAprofundamento.disponiveis().forEach(item -> paginas.add(item.rota()));
+        paginas.add("/criptografia");
+        CriptografiaAprofundamento.disponiveis().forEach(item -> paginas.add(item.rota()));
+        paginas.add("/wifi");
+        WifiAprofundamento.disponiveis().forEach(item -> paginas.add(item.rota()));
+        paginas.add("/ferramentas");
+        FerramentasAprofundamento.disponiveis().forEach(item -> paginas.add(item.rota()));
         paginas.add("/resolucao-problemas");
         paginas.add("/localizacao");
         paginas.add("/trafego");

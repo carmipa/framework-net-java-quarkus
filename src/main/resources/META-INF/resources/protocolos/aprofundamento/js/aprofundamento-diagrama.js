@@ -44,10 +44,17 @@
             }
         });
         try {
-            mermaid.run({ querySelector: ".aprof-mermaid" });
+            // mermaid.run é ASSÍNCRONO: um try/catch síncrono não pega a rejeição da
+            // promise. O .catch evita "Uncaught (in promise)" quando um diagrama é
+            // inválido — o bloco cai no fallback CSS e o erro fica só no console.
+            var resultado = mermaid.run({ querySelector: ".aprof-mermaid" });
+            if (resultado && typeof resultado.catch === "function") {
+                resultado.catch(function (e) {
+                    console.warn("Mermaid não conseguiu renderizar o diagrama", e);
+                });
+            }
         } catch (e) {
-            /* diagramas inválidos não devem quebrar a página */
-            console.warn("Mermaid não conseguiu renderizar o diagrama", e);
+            console.warn("Mermaid não conseguiu inicializar", e);
         }
     }
 

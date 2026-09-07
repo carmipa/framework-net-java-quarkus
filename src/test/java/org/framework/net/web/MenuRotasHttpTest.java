@@ -53,8 +53,9 @@ class MenuRotasHttpTest {
 
     /** Rotas do menu principal, na ordem em que aparecem em shared/main_menu.html. */
     private static final List<String> ROTAS_DO_MENU = List.of(
-            "/", "/analise", "/calculadora", "/portas", "/protocolos", "/certificados", "/resolucao-problemas",
-            "/localizacao", "/trafego", "/diagnostico", "/seguranca", "/telemetria",
+            "/", "/analise", "/calculadora", "/portas", "/protocolos", "/certificados",
+            "/camadas", "/criptografia", "/wifi", "/resolucao-problemas",
+            "/localizacao", "/trafego", "/ferramentas", "/diagnostico", "/seguranca", "/telemetria",
             "/documentacao", "/sobre");
 
     @ParameterizedTest(name = "{0} abre e destaca \"{1}\" no menu")
@@ -65,9 +66,13 @@ class MenuRotasHttpTest {
             "/portas,                 Portas",
             "/protocolos,             Protocolos",
             "/certificados,           Certificados",
+            "/camadas,                Camadas",
+            "/criptografia,           Criptografia",
+            "/wifi,                   Wi-Fi",
             "/resolucao-problemas,    Resolução (VLSM+WAN)",
             "/localizacao,            Localização",
             "/trafego,                Tráfego",
+            "/ferramentas,            Ferramentas",
             "/diagnostico,            Diagnóstico",
             "/seguranca,              Segurança (ACL)",
             "/telemetria,             Telemetria",
@@ -87,8 +92,9 @@ class MenuRotasHttpTest {
     }
 
     @ParameterizedTest(name = "{0} expõe todos os demais itens do menu")
-    @CsvSource({"/", "/analise", "/calculadora", "/portas", "/protocolos", "/certificados", "/resolucao-problemas",
-            "/localizacao", "/trafego", "/diagnostico", "/seguranca", "/telemetria",
+    @CsvSource({"/", "/analise", "/calculadora", "/portas", "/protocolos", "/certificados",
+            "/camadas", "/criptografia", "/wifi", "/resolucao-problemas",
+            "/localizacao", "/trafego", "/ferramentas", "/diagnostico", "/seguranca", "/telemetria",
             "/documentacao", "/sobre"})
     void todaPaginaDoMenuNavegaParaAsOutras(String rota) {
         var resposta = given().header("Cookie", cookieDeDono())

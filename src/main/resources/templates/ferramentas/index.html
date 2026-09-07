@@ -1,0 +1,56 @@
+{! Aba Geral do módulo Ferramentas: tabela de ferramentas CLI + construtor de
+    comando (client-side). Variáveis: conteudo (resumo + tabelas), aprofundamentos,
+    aprofundamentoAtivo. !}
+{#include shared/base.html}
+{#title}CyberNet Framework | Ferramentas de rede{/title}
+{#extraHead}
+<link rel="stylesheet" href="/protocolos/css/subnav.css?v=20260810">
+<link rel="stylesheet" href="/protocolos/aprofundamento/css/aprofundamento.css?v=20260907">
+<link rel="stylesheet" href="/ferramentas/css/ferramentas.css?v=20260907">
+{/extraHead}
+{#content}
+<div class="container py-5">
+    {#include shared/main_menu.html activeMainMenu='ferramentas' /}
+    {#include ferramentas/partials/subnav.html /}
+
+    <header class="text-center mb-4">
+        <div class="aprof-hero-icone" aria-hidden="true"><span class="material-symbols-outlined">terminal</span></div>
+        <span class="aed-eyebrow aed-eyebrow-teal">Ferramentas</span>
+        <h2 class="mb-2" style="font-family:var(--aed-font-display);">Ferramentas de rede (CLI)</h2>
+        <p class="text-secondary small mx-auto" style="max-width:48rem;">{conteudo.resumo}</p>
+        <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+            <a href="/diagnostico" class="aed-btn aed-btn-neutral btn-sm" title="Rodar (simulado) ping, dns, traceroute, varredura"><span class="material-symbols-outlined" aria-hidden="true">play_circle</span> Diagnóstico (ao vivo)</a>
+        </div>
+    </header>
+
+    <section class="aprof-secao">
+        <h3 class="aprof-secao-titulo"><span class="material-symbols-outlined" aria-hidden="true">build</span> Construtor de comando</h3>
+        <p class="small text-secondary">Escolha a ferramenta e as opções: o comando é montado ao vivo e cada flag é explicada. (Educacional — rode só em redes próprias ou autorizadas.)</p>
+        <div class="card-tech p-3">
+            <div class="row g-2 align-items-end mb-3">
+                <div class="col-12 col-md-4">
+                    <label for="cmd-tool" class="form-label small text-secondary">Ferramenta</label>
+                    <select id="cmd-tool" class="form-select bg-dark text-light border-secondary"></select>
+                </div>
+                <div class="col-12 col-md-8">
+                    <label for="cmd-alvo" class="form-label small text-secondary">Alvo (host / IP / URL)</label>
+                    <input id="cmd-alvo" type="text" class="form-control bg-dark text-light border-secondary" value="exemplo.com" spellcheck="false" autocomplete="off">
+                </div>
+            </div>
+            <div id="cmd-opcoes" class="d-flex flex-wrap gap-3 mb-3"></div>
+            <label class="form-label small text-secondary">Comando</label>
+            <pre id="cmd-saida" class="aprof-codigo mb-2"></pre>
+            <div class="d-flex justify-content-end mb-3">
+                <button type="button" id="cmd-copiar" class="aed-btn aed-btn-neutral btn-sm" title="Copiar o comando"><span class="material-symbols-outlined" aria-hidden="true">content_copy</span> Copiar</button>
+            </div>
+            <div id="cmd-flags"></div>
+        </div>
+    </section>
+
+    {#include protocolos/partials/tabelas.html tabelas=conteudo.tabelas /}
+</div>
+{/content}
+{#extraScripts}
+<script src="/ferramentas/js/ferramentas.js?v=20260907"></script>
+{/extraScripts}
+{/include}

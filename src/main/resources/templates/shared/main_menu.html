@@ -29,54 +29,111 @@
             <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
             <span>Calculadora</span>
         </a>
-        <a href="/portas"
-           class="aed-nav-link {#if activeMainMenu == 'portas'}is-active{/if}"
-           title="Catálogo de portas TCP/UDP">
-            <span class="material-symbols-outlined" aria-hidden="true">settings_ethernet</span>
-            <span>Portas</span>
-        </a>
-        <a href="/protocolos"
-           class="aed-nav-link {#if activeMainMenu == 'protocolos'}is-active{/if}"
-           title="Catálogo de protocolos de rede">
-            <span class="material-symbols-outlined" aria-hidden="true">lan</span>
-            <span>Protocolos</span>
-        </a>
-        <a href="/certificados"
-           class="aed-nav-link {#if activeMainMenu == 'certificados'}is-active{/if}"
-           title="Certificados digitais X.509 / PKI: formatos, campos, tipos e aprofundamentos">
-            <span class="material-symbols-outlined" aria-hidden="true">workspace_premium</span>
-            <span>Certificados</span>
-        </a>
+        {! Menu suspenso "Topologia": agrupa os módulos de referência (portas,
+            protocolos, certificados, camadas, criptografia, Wi-Fi) para encurtar o
+            topo. Os itens continuam sendo aed-nav-link (a guarda de contagem os vê);
+            o gatilho tem classe própria e fica ativo quando qualquer um está ativo.
+            Dropdown do Bootstrap (bundle já carregado no base.html). !}
+        <div class="dropdown aed-nav-drop">
+            <button type="button"
+                    class="aed-nav-drop-toggle {#if activeMainMenu == 'portas' || activeMainMenu == 'protocolos' || activeMainMenu == 'certificados' || activeMainMenu == 'camadas' || activeMainMenu == 'criptografia' || activeMainMenu == 'wifi'}is-active{/if}"
+                    data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false"
+                    title="Topologia: portas, protocolos, certificados, camadas, criptografia e Wi-Fi">
+                <span class="material-symbols-outlined" aria-hidden="true">hub</span>
+                <span>Topologia</span>
+                <span class="material-symbols-outlined aed-nav-drop-caret" aria-hidden="true">expand_more</span>
+            </button>
+            <div class="dropdown-menu aed-nav-drop-menu">
+                <a href="/portas"
+                   class="aed-nav-link {#if activeMainMenu == 'portas'}is-active{/if}"
+                   title="Catálogo de portas TCP/UDP e aprofundamentos por família">
+                    <span class="material-symbols-outlined" aria-hidden="true">settings_ethernet</span>
+                    <span>Portas</span>
+                </a>
+                <a href="/protocolos"
+                   class="aed-nav-link {#if activeMainMenu == 'protocolos'}is-active{/if}"
+                   title="Catálogo de protocolos de rede">
+                    <span class="material-symbols-outlined" aria-hidden="true">lan</span>
+                    <span>Protocolos</span>
+                </a>
+                <a href="/certificados"
+                   class="aed-nav-link {#if activeMainMenu == 'certificados'}is-active{/if}"
+                   title="Certificados digitais X.509 / PKI: formatos, campos, tipos e aprofundamentos">
+                    <span class="material-symbols-outlined" aria-hidden="true">workspace_premium</span>
+                    <span>Certificados</span>
+                </a>
+                <a href="/camadas"
+                   class="aed-nav-link {#if activeMainMenu == 'camadas'}is-active{/if}"
+                   title="Modelo de camadas OSI × TCP/IP: PDUs, dispositivos e encapsulamento">
+                    <span class="material-symbols-outlined" aria-hidden="true">layers</span>
+                    <span>Camadas</span>
+                </a>
+                <a href="/criptografia"
+                   class="aed-nav-link {#if activeMainMenu == 'criptografia'}is-active{/if}"
+                   title="Criptografia: algoritmos, forças, hash, assinatura e um playground">
+                    <span class="material-symbols-outlined" aria-hidden="true">enhanced_encryption</span>
+                    <span>Criptografia</span>
+                </a>
+                <a href="/wifi"
+                   class="aed-nav-link {#if activeMainMenu == 'wifi'}is-active{/if}"
+                   title="Wi-Fi 802.11: padrões, canais, segurança (WPA) e planejador de canais">
+                    <span class="material-symbols-outlined" aria-hidden="true">wifi</span>
+                    <span>Wi-Fi</span>
+                </a>
+            </div>
+        </div>
         <a href="/resolucao-problemas"
            class="aed-nav-link {#if activeMainMenu == 'resolucao'}is-active{/if}"
            title="VLSM dinâmico, WAN e roteamento">
             <span class="material-symbols-outlined" aria-hidden="true">extension</span>
             <span>Resolução (VLSM+WAN)</span>
         </a>
-        <a href="/localizacao"
-           class="aed-nav-link {#if activeMainMenu == 'localizacao'}is-active{/if}"
-           title="Localização por IP (GeoIP) e por CEP no mapa">
-            <span class="material-symbols-outlined" aria-hidden="true">pin_drop</span>
-            <span>Localização</span>
-        </a>
-        <a href="/trafego"
-           class="aed-nav-link {#if activeMainMenu == 'trafego'}is-active{/if}"
-           title="Tráfego e pacotes: painel ao vivo, decodificador (hex), encapsulamento e handshake TCP">
-            <span class="material-symbols-outlined" aria-hidden="true">travel_explore</span>
-            <span>Tráfego</span>
-        </a>
-        <a href="/diagnostico"
-           class="aed-nav-link {#if activeMainMenu == 'diagnostico'}is-active{/if}"
-           title="Simulador de ferramentas de diagnóstico (PING e DNS)">
-            <span class="material-symbols-outlined" aria-hidden="true">troubleshoot</span>
-            <span>Diagnóstico</span>
-        </a>
-        <a href="/seguranca"
-           class="aed-nav-link {#if activeMainMenu == 'seguranca'}is-active{/if}"
-           title="Testador de regras de Firewall / ACL">
-            <span class="material-symbols-outlined" aria-hidden="true">security</span>
-            <span>Segurança (ACL)</span>
-        </a>
+        {! Menu suspenso "Operações": ferramentas práticas de análise/operação sobre
+            a rede (localização, tráfego, ferramentas CLI, diagnóstico, segurança).
+            Mesma mecânica da Topologia: itens continuam aed-nav-link; gatilho ativo
+            quando qualquer um está ativo. !}
+        <div class="dropdown aed-nav-drop">
+            <button type="button"
+                    class="aed-nav-drop-toggle {#if activeMainMenu == 'localizacao' || activeMainMenu == 'trafego' || activeMainMenu == 'ferramentas' || activeMainMenu == 'diagnostico' || activeMainMenu == 'seguranca'}is-active{/if}"
+                    data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false"
+                    title="Operações: localização, tráfego, ferramentas, diagnóstico e segurança">
+                <span class="material-symbols-outlined" aria-hidden="true">network_check</span>
+                <span>Operações</span>
+                <span class="material-symbols-outlined aed-nav-drop-caret" aria-hidden="true">expand_more</span>
+            </button>
+            <div class="dropdown-menu aed-nav-drop-menu">
+                <a href="/localizacao"
+                   class="aed-nav-link {#if activeMainMenu == 'localizacao'}is-active{/if}"
+                   title="Localização por IP (GeoIP) e por CEP no mapa">
+                    <span class="material-symbols-outlined" aria-hidden="true">pin_drop</span>
+                    <span>Localização</span>
+                </a>
+                <a href="/trafego"
+                   class="aed-nav-link {#if activeMainMenu == 'trafego'}is-active{/if}"
+                   title="Tráfego e pacotes: painel ao vivo, decodificador (hex), encapsulamento e handshake TCP">
+                    <span class="material-symbols-outlined" aria-hidden="true">travel_explore</span>
+                    <span>Tráfego</span>
+                </a>
+                <a href="/ferramentas"
+                   class="aed-nav-link {#if activeMainMenu == 'ferramentas'}is-active{/if}"
+                   title="Ferramentas de rede (CLI): catálogo, aprofundamentos e construtor de comando">
+                    <span class="material-symbols-outlined" aria-hidden="true">terminal</span>
+                    <span>Ferramentas</span>
+                </a>
+                <a href="/diagnostico"
+                   class="aed-nav-link {#if activeMainMenu == 'diagnostico'}is-active{/if}"
+                   title="Simulador de ferramentas de diagnóstico (PING e DNS)">
+                    <span class="material-symbols-outlined" aria-hidden="true">troubleshoot</span>
+                    <span>Diagnóstico</span>
+                </a>
+                <a href="/seguranca"
+                   class="aed-nav-link {#if activeMainMenu == 'seguranca'}is-active{/if}"
+                   title="Testador de regras de Firewall / ACL">
+                    <span class="material-symbols-outlined" aria-hidden="true">security</span>
+                    <span>Segurança (ACL)</span>
+                </a>
+            </div>
+        </div>
         <a href="/telemetria"
            class="aed-nav-link {#if activeMainMenu == 'telemetria'}is-active{/if}"
            title="Dashboard de telemetria e console ao vivo">

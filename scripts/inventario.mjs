@@ -424,6 +424,25 @@ if (existsSync(REGISTRO_CERT)) {
   avisos.push('inventario: registro de aprofundamentos de certificados nao encontrado em ' + REGISTRO_CERT);
 }
 
+// Modulos flat (Camadas, Ferramentas, Criptografia, Wi-Fi): mesma logica.
+const REGISTROS_FLAT = [
+  ['camadas', 'CamadaAprofundamento'],
+  ['ferramentas', 'FerramentasAprofundamento'],
+  ['criptografia', 'CriptografiaAprofundamento'],
+  ['wifi', 'WifiAprofundamento'],
+];
+for (const [mod, classe] of REGISTROS_FLAT) {
+  const reg = join(RAIZ, `src/main/java/org/framework/net/${mod}/domain/${classe}.java`);
+  if (existsSync(reg)) {
+    const fonte = readFileSync(reg, 'utf8');
+    for (const m of fonte.matchAll(new RegExp(`new\\s+${classe}\\s*\\(\\s*"([a-z0-9-]+)"`, 'g'))) {
+      paginasAprofundamento.push(`/${mod}/` + m[1]);
+    }
+  } else {
+    avisos.push('inventario: registro de aprofundamentos nao encontrado em ' + reg);
+  }
+}
+
 const superficie = {};
 for (const [template, rota] of porTemplate) {
   superficie[rota] = { template, ...superficieDoTemplate(templateExpandido(template, new Set(), avisos)) };

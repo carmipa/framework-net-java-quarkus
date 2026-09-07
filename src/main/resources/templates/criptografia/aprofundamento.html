@@ -1,0 +1,41 @@
+{! Aprofundamento do módulo. Reaproveita o corpo compartilhado, o CSS e o Mermaid. Variáveis: item, conteudo, aprofundamentos, aprofundamentoAtivo. !}
+{#include shared/base.html}
+{#title}CyberNet Framework | {item.titulo}{/title}
+{#extraHead}
+<link rel="stylesheet" href="/protocolos/css/subnav.css?v=20260810">
+<link rel="stylesheet" href="/protocolos/aprofundamento/css/aprofundamento.css?v=20260907">
+{/extraHead}
+{#content}
+<div class="container py-5">
+    {#include shared/main_menu.html activeMainMenu='criptografia' /}
+    {#include criptografia/partials/subnav.html /}
+    <header class="text-center mb-4">
+        <div class="aprof-hero-icone" aria-hidden="true"><span class="material-symbols-outlined">{item.icone}</span></div>
+        <span class="aed-eyebrow aed-eyebrow-teal">Aprofundamento · Criptografia</span>
+        <h2 class="mb-2" style="font-family:var(--aed-font-display);">{item.titulo}</h2>
+        <p class="text-secondary small mx-auto" style="max-width:48rem;">{conteudo.resumo}</p>
+        {#if conteudo.ficha}
+        <div class="aprof-ficha" role="list">
+            {#for f in conteudo.ficha}
+            <span class="aprof-ficha-item" role="listitem" {#if f.dica}title="{f.dica}"{/if}>
+                <span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">{#if f.rotulo.contains('RFC')}menu_book{#else if f.rotulo.contains('Chave')}key{#else if f.rotulo.contains('Banda') || f.rotulo.contains('Frequ')}cell_tower{#else if f.rotulo.contains('Protocolo')}lan{#else}label{/if}</span>
+                <strong>{f.rotulo}</strong> {f.valor}
+            </span>
+            {/for}
+        </div>
+        {/if}
+    </header>
+    {#include protocolos/partials/corpo_aprofundamento.html /}
+    <div class="text-center mt-4">
+        <a href="/criptografia" class="aed-btn aed-btn-neutral" title="Voltar ao catálogo">
+            <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span> Voltar
+        </a>
+    </div>
+</div>
+{/content}
+{#extraScripts}
+<script src="/protocolos/js/aprofundamento.js?v=20260810"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="/protocolos/aprofundamento/js/aprofundamento-diagrama.js?v=20260907"></script>
+{/extraScripts}
+{/include}

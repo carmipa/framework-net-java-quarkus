@@ -67,7 +67,13 @@ class ArquiteturaCamadasTest {
             "portas", Set.of("protocolos"),
             // Certificados reutiliza o mesmo modelo didático de aprofundamento
             // (ProtocoloAprofundamento) e cruza para o protocolo TLS. Dependência assumida.
-            "certificados", Set.of("protocolos"));
+            "certificados", Set.of("protocolos"),
+            // Camadas, Ferramentas, Criptografia e Wi-Fi também reutilizam o modelo
+            // ProtocoloAprofundamento dos protocolos (mesmo padrão catálogo + aprofundamento).
+            "camadas", Set.of("protocolos"),
+            "ferramentas", Set.of("protocolos"),
+            "criptografia", Set.of("protocolos"),
+            "wifi", Set.of("protocolos"));
 
     /** Tipos de camada que o domínio jamais pode enxergar. */
     private static final Set<String> CAMADAS_PROIBIDAS_NO_DOMINIO =

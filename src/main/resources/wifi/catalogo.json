@@ -1,0 +1,74 @@
+{
+  "resumo": "O Wi-Fi (IEEE 802.11) evoluiu de 11 Mbps a dezenas de Gbps. Abaixo, os padrões com ano, banda, velocidade máxima teórica e largura de canal; os aprofundamentos cobrem frequências/canais, segurança (WEP→WPA3) e ataques.",
+  "tabelas": [
+    {
+      "titulo": "Padrões 802.11 (Wi-Fi)",
+      "colunas": [
+        "Padrão",
+        "Nome",
+        "Ano",
+        "Banda",
+        "Velocidade",
+        "Largura de canal"
+      ],
+      "linhas": [
+        [
+          "802.11b",
+          "Wi-Fi 1",
+          "1999",
+          "2.4 GHz",
+          "11 Mbps",
+          "22 MHz"
+        ],
+        [
+          "802.11a",
+          "Wi-Fi 2",
+          "1999",
+          "5 GHz",
+          "54 Mbps",
+          "20 MHz"
+        ],
+        [
+          "802.11g",
+          "Wi-Fi 3",
+          "2003",
+          "2.4 GHz",
+          "54 Mbps",
+          "20 MHz"
+        ],
+        [
+          "802.11n",
+          "Wi-Fi 4",
+          "2009",
+          "2.4 e 5 GHz",
+          "600 Mbps",
+          "20/40 MHz"
+        ],
+        [
+          "802.11ac",
+          "Wi-Fi 5",
+          "2013",
+          "5 GHz",
+          "6933 Mbps (aprox. 6,9 Gbps)",
+          "20/40/80/160 MHz"
+        ],
+        [
+          "802.11ax",
+          "Wi-Fi 6 / 6E",
+          "2019 (6E em 2021)",
+          "2.4, 5 e 6 GHz",
+          "9608 Mbps (aprox. 9,6 Gbps)",
+          "20/40/80/160 MHz"
+        ],
+        [
+          "802.11be",
+          "Wi-Fi 7",
+          "2024",
+          "2.4, 5 e 6 GHz",
+          "46120 Mbps (aprox. 46 Gbps)",
+          "20/40/80/160/320 MHz"
+        ]
+      ]
+    }
+  ]
+}
