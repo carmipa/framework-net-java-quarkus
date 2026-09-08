@@ -89,4 +89,54 @@ class TrafegoHttpTest {
                 .body(containsString("trafego-erro"))
                 .body(containsString("Não foi possível decodificar"));
     }
+
+    // ---- Construtor de pacotes (P02) ----
+
+    @Test
+    void paginaTrazAbaConstrutorDePacotes() {
+        given()
+                .when().get("/trafego")
+                .then()
+                .statusCode(200)
+                .body(containsString("data-tab=\"construtor\""))
+                .body(containsString("hx-post=\"/trafego/api/construir\""))
+                .body(containsString("name=\"ipOrigem\""));
+    }
+
+    @Test
+    void construirTcpDevolvePacoteComBotaoDeDecodificar() {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("protocolo", "tcp")
+                .formParam("ipOrigem", "192.168.0.10")
+                .formParam("ipDestino", "203.0.113.5")
+                .formParam("portaOrigem", "51000")
+                .formParam("portaDestino", "443")
+                .formParam("flags", "SYN")
+                .formParam("ttl", "64")
+                .formParam("seq", "1000")
+                .formParam("window", "64240")
+                .formParam("checksum", "valido")
+                .when().post("/trafego/api/construir")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("Pacote TCP"))
+                .body(containsString("checksum válido"))
+                .body(containsString("hx-post=\"/trafego/api/decodificar\""))
+                .body(not(containsString("<!DOCTYPE html>")));
+    }
+
+    @Test
+    void construirProtocoloInvalidoMostraErroNoFragmento() {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("protocolo", "icmp")
+                .formParam("ipOrigem", "1.1.1.1")
+                .formParam("ipDestino", "2.2.2.2")
+                .when().post("/trafego/api/construir")
+                .then()
+                .statusCode(200)
+                .body(containsString("Protocolo"));
+    }
 }

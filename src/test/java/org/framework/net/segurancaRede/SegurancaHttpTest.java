@@ -376,4 +376,81 @@ class SegurancaHttpTest {
                 .then()
                 .statusCode(400);
     }
+
+    // ---- Firewall com estado × sem estado (P01) ----
+
+    @Test
+    void paginaTrazAbaDeFirewallComEstado() {
+        given()
+                .when().get("/seguranca")
+                .then()
+                .statusCode(200)
+                .body(containsString("data-tab=\"estado\""))
+                .body(containsString("data-tab-panel=\"estado\""))
+                .body(containsString("/seguranca/api/estado?cenario=conexao-saida"));
+    }
+
+    @Test
+    void estadoComparaOsDoisModelosNoMesmoFluxo() {
+        given()
+                .when().get("/seguranca/api/estado?cenario=conexao-saida")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("PERMITIDO"))
+                .body(containsString("BLOQUEADO"))
+                .body(not(containsString("<!DOCTYPE html>")));
+    }
+
+    @Test
+    void estadoCenarioDesconhecidoRetorna400() {
+        given()
+                .when().get("/seguranca/api/estado?cenario=inexistente")
+                .then()
+                .statusCode(400);
+    }
+
+    // ---- Handshake TLS 1.3 interativo (P03) ----
+
+    @Test
+    void paginaTrazAbaHandshakeTls() {
+        given()
+                .when().get("/seguranca")
+                .then()
+                .statusCode(200)
+                .body(containsString("data-tab=\"handshake\""))
+                .body(containsString("/seguranca/api/tls-handshake?cenario=sucesso"));
+    }
+
+    @Test
+    void handshakeSucessoPercorreOsPassos() {
+        given()
+                .when().get("/seguranca/api/tls-handshake?cenario=sucesso")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("ClientHello"))
+                .body(containsString("CertificateVerify"))
+                .body(containsString("cifrado"))
+                .body(containsString("conexão estabelecida"))
+                .body(not(containsString("<!DOCTYPE html>")));
+    }
+
+    @Test
+    void handshakeVersaoIncompativelAborta() {
+        given()
+                .when().get("/seguranca/api/tls-handshake?cenario=versao-incompativel")
+                .then()
+                .statusCode(200)
+                .body(containsString("abortado"))
+                .body(containsString("protocol_version"));
+    }
+
+    @Test
+    void handshakeCenarioDesconhecidoRetorna400() {
+        given()
+                .when().get("/seguranca/api/tls-handshake?cenario=inexistente")
+                .then()
+                .statusCode(400);
+    }
 }

@@ -48,6 +48,10 @@
                     title="Anomalias TCP: SYN flood (esgotamento do backlog) e sequestro por previsão de número de sequência">
                 <span class="material-symbols-outlined">warning</span><span>Anomalias TCP</span>
             </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="construtor" role="tab"
+                    title="Construtor de pacotes: edite os campos, gere os bytes e decodifique de volta">
+                <span class="material-symbols-outlined">construction</span><span>Construtor de pacotes</span>
+            </button>
         </div>
 
         <div class="tab-panel active" data-tab-panel="aovivo">{#include trafego/partials/tab_aovivo.html /}</div>
@@ -55,6 +59,7 @@
         <div class="tab-panel" data-tab-panel="encapsulamento">{#include trafego/partials/tab_encapsulamento.html /}</div>
         <div class="tab-panel" data-tab-panel="handshake">{#include trafego/partials/tab_handshake.html /}</div>
         <div class="tab-panel" data-tab-panel="anomalias">{#include trafego/partials/tab_anomalias.html /}</div>
+        <div class="tab-panel" data-tab-panel="construtor">{#include trafego/partials/tab_construtor.html /}</div>
     </div>
 </div>
 {/content}

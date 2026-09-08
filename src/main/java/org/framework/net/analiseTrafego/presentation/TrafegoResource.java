@@ -13,10 +13,13 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import org.framework.net.analiseTrafego.aovivo.SnapshotAoVivo;
 import org.framework.net.analiseTrafego.aovivo.TrafegoAoVivoService;
+import org.framework.net.analiseTrafego.application.ConstrutorPacoteService;
 import org.framework.net.analiseTrafego.application.TrafegoDecoderService;
+import org.framework.net.analiseTrafego.domain.model.PacoteConstruido;
 import org.framework.net.analiseTrafego.domain.model.ResultadoDecodificacao;
 import org.framework.net.telemetria.TelemetriaLogger;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,6 +31,9 @@ public class TrafegoResource {
 
     @Inject
     TrafegoDecoderService decoderService;
+
+    @Inject
+    ConstrutorPacoteService construtorService;
 
     @Inject
     TrafegoAoVivoService aoVivoService;
@@ -42,6 +48,10 @@ public class TrafegoResource {
     @Inject
     @io.quarkus.qute.Location("trafego/partials/resultado_decodificacao.html")
     Template decodificacaoFragmento;
+
+    @Inject
+    @io.quarkus.qute.Location("trafego/partials/resultado_construcao.html")
+    Template construcaoFragmento;
 
     @GET
     @Produces(MediaType.TEXT_HTML)
@@ -66,6 +76,34 @@ public class TrafegoResource {
                 resultado.ok() ? "ok" : "error",
                 Map.of("bytes", resultado.totalBytes(), "camadas", resultado.camadas().size()));
         return decodificacaoFragmento.data("resultado", resultado);
+    }
+
+    /**
+     * Monta um pacote sintético a partir dos campos do formulário e devolve o
+     * fragmento com os bytes em hex + o botão que os decodifica de volta. As
+     * flags TCP chegam como múltiplos valores do mesmo campo e viram um CSV.
+     */
+    @POST
+    @Path("/api/construir")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance construir(
+            @FormParam("protocolo") @DefaultValue("tcp") String protocolo,
+            @FormParam("ipOrigem") String ipOrigem,
+            @FormParam("ipDestino") String ipDestino,
+            @FormParam("portaOrigem") @DefaultValue("0") String portaOrigem,
+            @FormParam("portaDestino") @DefaultValue("0") String portaDestino,
+            @FormParam("flags") List<String> flags,
+            @FormParam("ttl") @DefaultValue("64") String ttl,
+            @FormParam("seq") @DefaultValue("0") String seq,
+            @FormParam("window") @DefaultValue("0") String window,
+            @FormParam("mensagem") @DefaultValue("") String mensagem,
+            @FormParam("checksum") @DefaultValue("valido") String checksum) {
+        String flagsCsv = flags == null ? "" : String.join(",", flags);
+        boolean checksumValido = !"invalido".equals(checksum);
+        PacoteConstruido pacote = construtorService.montar(protocolo, ipOrigem, ipDestino,
+                portaOrigem, portaDestino, flagsCsv, ttl, seq, window, mensagem, checksumValido);
+        return construcaoFragmento.data("sim", pacote);
     }
 
     /** Snapshot do tráfego ao vivo (simulação didática, VPS-safe). */
