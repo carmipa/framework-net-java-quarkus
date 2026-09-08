@@ -22,7 +22,7 @@ Documentação, Sobre):
 - **Topologia → Wi-Fi** — padrões 802.11 (Wi-Fi 1→7), canais e segurança (WEP→WPA3) + **planejador de canais** 2.4 GHz.
 - **Operações → Localização · Tráfego · Ferramentas · Diagnóstico · Segurança** — GeoIP; decodificador/encapsulamento de pacotes + **construtor de pacotes** e **laboratório DNS/ICMP**; ferramentas CLI (com **construtor de comando**); simuladores de diagnóstico; e Segurança: ACL/TLS, firewall **com estado × sem estado**, **handshake TLS 1.3**, **alcançabilidade de fluxo** e **montador de topologia**.
 - **Resolução de Problemas (VLSM + WAN)** — planejamento VLSM dinâmico, topologia WAN, CLI Cisco e exportação para laboratório.
-- **Telemetria** — dashboard de eventos, console ao vivo e **origem do tráfego** (por país via Cloudflare e bots × pessoas, **sem guardar IP**) — server-side.
+- **Telemetria** — dashboard de eventos, console ao vivo e **origem do tráfego** (bots × pessoas pelo User-Agent e, quando houver borda que garanta o cabeçalho, país por `CF-IPCountry` — **sem guardar IP**) — server-side. O país fica em `??` enquanto `framework.telemetria.confiar-cf-ipcountry` for `false`, que é o padrão: sem um Cloudflare que **sobrescreva** o cabeçalho, ele é escolhido pelo visitante, e métrica ditada por quem é medido não é medição.
 - **Documentação** — este README renderizado.
 
 > Repositório: [https://github.com/carmipa/framework-net-java-quarkus](https://github.com/carmipa/framework-net-java-quarkus)

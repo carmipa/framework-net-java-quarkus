@@ -8,6 +8,7 @@ import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.ext.Provider;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.framework.net.telemetria.OrigemAcesso;
 import org.framework.net.telemetria.TelemetriaContext;
 import org.framework.net.telemetria.TelemetriaLogger;
@@ -28,6 +29,31 @@ public class TelemetriaRequestFilter implements ContainerRequestFilter, Containe
     TelemetriaLogger telemetriaLogger;
 
     /**
+     * O cabeçalho {@code CF-IPCountry} vale alguma coisa neste ambiente?
+     *
+     * <p><b>Por que isto é configuração e não código:</b> {@code CF-IPCountry} só
+     * é confiável quando existe um Cloudflare na borda que o <b>sobrescreve</b>.
+     * Sem ele, o cabeçalho é apenas mais um campo que o cliente escolhe — e
+     * registrá-lo como se fosse medição publica dado fabricado no painel.
+     * Medido em 08/09/2026, com o site respondendo por {@code openresty} e sem
+     * Cloudflare nenhum: uma requisição feita do Brasil com
+     * {@code CF-IPCountry: JP} entrou na telemetria de produção como
+     * {@code framework.field.pais = "JP"}.</p>
+     *
+     * <p>É a mesma decisão, pelo mesmo motivo, que o
+     * {@code quarkus.http.proxy.allow-forwarded=false} do perfil {@code prod} e
+     * que o host canônico do {@code SitemapResource}: <b>quem decide se um
+     * cabeçalho vale é a configuração, não o código</b>. Padrão {@code false} —
+     * ligar só quando houver uma borda que garanta o cabeçalho, e a garantia é
+     * ela sobrescrever o que o cliente mandou.</p>
+     *
+     * <p>Desligado, o país vira {@code "??"}: a métrica fica vazia, que é
+     * honesto, em vez de cheia e falsa.</p>
+     */
+    @ConfigProperty(name = "framework.telemetria.confiar-cf-ipcountry", defaultValue = "false")
+    boolean confiarCfIpCountry;
+
+    /**
      * Propósito de negócio: inicia a correlação de uma requisição funcional atendida pela aplicação.
      * Invariantes do domínio: o healthcheck operacional nunca entra na telemetria funcional nem provoca I/O.
      * Comportamento em caso de falha: propaga a falha de filtro ao runtime JAX-RS e não cria contexto parcial
@@ -44,9 +70,13 @@ public class TelemetriaRequestFilter implements ContainerRequestFilter, Containe
         TelemetriaRequestContext ctx = telemetriaContext.iniciarRequisicao(requestId, method, path);
         requestContext.setProperty(TelemetriaContext.REQUEST_CONTEXT_PROPERTY, ctx);
         requestContext.setProperty("requestId", ctx.requestId());
-        // Origem AGREGAVEL, sem tocar no IP: pais (Cloudflare) e bot/humano (User-Agent).
+        // Origem AGREGAVEL, sem tocar no IP: pais (borda) e bot/humano (User-Agent).
+        // O cabecalho so e lido quando a configuracao diz que ha borda garantindo
+        // ele; senao nem chega a ser consultado, e o pais fica "??".
         requestContext.setProperty("tele.pais",
-                OrigemAcesso.pais(requestContext.getHeaderString("CF-IPCountry")));
+                OrigemAcesso.pais(confiarCfIpCountry
+                        ? requestContext.getHeaderString("CF-IPCountry")
+                        : null));
         requestContext.setProperty("tele.clienteTipo",
                 OrigemAcesso.tipo(requestContext.getHeaderString("User-Agent")));
     }
