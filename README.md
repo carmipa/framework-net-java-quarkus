@@ -244,6 +244,38 @@ requisição, que é o certo em desenvolvimento.
 - `SeoBaseUrlHttpTest` — com host canônico configurado, tudo sai em `https://` no
   domínio público, e `Host` forjado não muda nada.
 
+### O que mora no proxy, e não na aplicação
+
+Três coisas não têm como ser resolvidas dentro do Quarkus, porque acontecem **antes** dele ou
+**no lugar** dele. Ficam em dois scripts versionados, para não virarem conhecimento oral:
+
+| script | o que liga |
+|---|---|
+| `scripts/proxy-seo-frameworknet.sh` | **Force SSL** (o `http://` responde 200 em claro) e o **robots.txt próprio** deste domínio, com a linha `Sitemap:` |
+| `scripts/proxy-paginas-erro.sh` | **`error_page` 502/503/504** — sem ele, toda queda de container mostra a tela cinza do openresty |
+
+Os dois rodam **na VPS**, fazem backup, validam com `nginx -t` **antes** de recarregar,
+restauram sozinhos se o teste reprovar e são idempotentes. Cada um imprime o rollback no fim.
+
+**As páginas de erro do proxy são geradas, não escritas.** `scripts/erro-proxy/{502,503,504}.html`
+saem de `PaginaErroProxyGeneratorTest`, a partir do template real do site e do `CatalogoErros`,
+com CSS e JS **embutidos** — elas aparecem justamente quando a aplicação está fora, então nada
+nelas pode depender dela. Mexeu no visual do site? Rode a suíte, commite, e na VPS
+`git pull && bash scripts/proxy-paginas-erro.sh`.
+
+> ⚠️ `proxy_intercept_errors` fica **desligado** de propósito. Ligá-lo faria o Nginx capturar
+> também os 400 em JSON das rotas `/api/`, que virariam HTML e quebrariam todo `fetch()` do
+> frontend em silêncio. Por isso só entram no `error_page` os códigos que a aplicação **nunca
+> chega a responder**: se ela responde, ela está viva.
+
+**Limite conhecido:** URL com par de escape percentual inválido (`/%%%%`) devolve 400 sem corpo.
+Nasce no parser HTTP do Vert.x, antes do roteador — um `router.errorHandler(400, …)` foi
+tentado e **medido sem efeito nenhum**, então foi descartado em vez de ficar no repositório
+fingindo proteger. Atinge robô, scanner e link corrompido, não fluxo de usuário (o navegador
+codifica `%` como `%25`, que é caminho válido e cai no 404 com página).
+`RespostaNuncaEmBrancoHttpTest` verifica isso a cada build, e falha **nos dois sentidos**: se um
+upgrade do Quarkus passar a devolver corpo, ele avisa que o risco acabou.
+
 ### Produção: quem responde o `/robots.txt` não é a aplicação
 
 Enquanto existir o `location = /robots.txt` no NPM, **match exato ganha do
