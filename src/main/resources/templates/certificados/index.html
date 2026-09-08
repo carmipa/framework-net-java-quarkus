@@ -41,7 +41,7 @@
         <p class="small text-secondary">A "chave decodificadora": qual arquivo guarda o quê, em que codificação e com qual ferramenta.</p>
         <div class="table-responsive border border-secondary border-opacity-25 rounded">
             <table class="table table-dark table-sm align-middle mb-0 aprof-tabela">
-                <thead><tr><th>Extensão</th><th>Codificação</th><th>Conteúdo</th><th>Uso típico</th><th>Ferramenta</th></tr></thead>
+                <thead><tr><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">description</span>Extensão</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">code</span>Codificação</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">article</span>Conteúdo</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">task_alt</span>Uso típico</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">build</span>Ferramenta</th></tr></thead>
                 <tbody>
                     {#for f in catalogo.formatos}
                     <tr>
@@ -62,7 +62,7 @@
         <p class="small text-secondary">O que existe dentro de um certificado — do serial às extensões v3. A régua binária (ASN.1/DER) está na <a href="/certificados/x509" class="text-info">Anatomia do X.509</a>.</p>
         <div class="table-responsive border border-secondary border-opacity-25 rounded">
             <table class="table table-dark table-sm align-middle mb-0 aprof-tabela">
-                <thead><tr><th>Campo</th><th>O que é</th><th>Exemplo</th><th>Nota</th></tr></thead>
+                <thead><tr><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">label</span>Campo</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">help</span>O que é</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">terminal</span>Exemplo</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">notes</span>Nota</th></tr></thead>
                 <tbody>
                     {#for c in catalogo.campos}
                     <tr>
@@ -82,7 +82,7 @@
         <p class="small text-secondary">Por validação (DV/OV/EV) e por uso (servidor, cliente, code signing, S/MIME). Detalhe em <a href="/certificados/tipos" class="text-info">Tipos de certificado</a>.</p>
         <div class="table-responsive border border-secondary border-opacity-25 rounded">
             <table class="table table-dark table-sm align-middle mb-0 aprof-tabela">
-                <thead><tr><th>Tipo</th><th>O que valida</th><th>Uso</th><th>Observação</th></tr></thead>
+                <thead><tr><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">category</span>Tipo</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">verified</span>O que valida</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">task_alt</span>Uso</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">notes</span>Observação</th></tr></thead>
                 <tbody>
                     {#for t in catalogo.tipos}
                     <tr>
