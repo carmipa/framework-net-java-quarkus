@@ -145,6 +145,11 @@ public class TelemetriaDashboardService {
                 .sorted(Comparator.comparingLong(TelemetriaDashboard.EndpointStat::erros).reversed())
                 .limit(8)
                 .toList();
+        // Origem do tráfego: as rotas por VOLUME de chamadas (de onde vem a carga).
+        List<TelemetriaDashboard.EndpointStat> topRotas = stats.stream()
+                .sorted(Comparator.comparingLong(TelemetriaDashboard.EndpointStat::chamadas).reversed())
+                .limit(10)
+                .toList();
 
         List<TelemetriaDashboard.AtividadeMinuto> atividade = montarAtividade(janela, janelaMinutos);
         List<String> consoleLinhas = montarConsole(limiteConsole);
@@ -156,7 +161,7 @@ public class TelemetriaDashboardService {
                 janela.size(),
                 httpTotal, http2xx, http3xx, http4xx, http5xx,
                 taxaSucesso, taxaErroServidor,
-                latencia, metodos, porModulo, topLentos, topErros, atividade,
+                latencia, metodos, porModulo, topLentos, topErros, topRotas, atividade,
                 consoleLinhas,
                 store.pastaLogs().toAbsolutePath().toString());
     }

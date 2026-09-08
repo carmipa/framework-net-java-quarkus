@@ -26,6 +26,7 @@ public record TelemetriaDashboard(
         List<ModuloStat> porModulo,
         List<EndpointStat> topLentos,
         List<EndpointStat> topErros,
+        List<EndpointStat> topRotas,
         List<AtividadeMinuto> atividadePorMinuto,
         List<String> consoleLinhas,
         String pastaLogs

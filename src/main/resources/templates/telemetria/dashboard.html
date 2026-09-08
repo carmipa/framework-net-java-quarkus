@@ -200,6 +200,57 @@
         </div>
     </div>
 
+    <!-- Origem do tráfego: de onde vem a carga, por módulo e por rota (dados da própria telemetria) -->
+    <div class="aed-card card-tech p-3 mb-3" id="secao-origem">
+        <h6 class="tele-chart-title"><span class="material-symbols-outlined">travel_explore</span> Origem do tráfego</h6>
+        <p class="small text-secondary mb-3">
+            De onde vem a carga DENTRO da aplicação — por módulo e por rota. A telemetria não coleta IP nem
+            localização do visitante (por privacidade); a "origem" aqui é o alvo interno das requisições.
+        </p>
+        <div class="row g-3">
+            <div class="col-lg-5">
+                <div class="tele-chart-box"><canvas id="chart-origem" height="220"></canvas></div>
+            </div>
+            <div class="col-lg-7">
+                <div class="table-responsive">
+                    <table class="table table-dark table-sm telemetry-table mb-0">
+                        <caption class="text-secondary small px-2">Requisições por módulo</caption>
+                        <thead>
+                            <tr>
+                                <th>Módulo</th>
+                                <th class="text-end">Reqs</th>
+                                <th class="text-end">%</th>
+                                <th class="text-end">OK</th>
+                                <th class="text-end">Erro</th>
+                                <th class="text-end">P95</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-origem-modulos">
+                            <tr><td colspan="6" class="tele-empty">Sem dados no período.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="table-responsive mt-3">
+            <table class="table table-dark table-sm telemetry-table tele-endpoints mb-0">
+                <caption class="text-secondary small px-2">Top rotas por volume de chamadas</caption>
+                <thead>
+                    <tr>
+                        <th>Método</th>
+                        <th>Rota</th>
+                        <th class="text-end">Chamadas</th>
+                        <th class="text-end">Erros</th>
+                        <th class="text-end">P95</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-origem-rotas">
+                    <tr><td colspan="5" class="tele-empty">Sem dados no período.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <div class="aed-card card-tech console-card mb-3 p-3">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
             <div>
@@ -265,7 +316,7 @@
 {/content}
 {#extraScripts}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="/telemetria/js/dashboard.js?v=20260811c"></script>
+<script src="/telemetria/js/dashboard.js?v=20260908"></script>
 {/extraScripts}
 {/include}
         

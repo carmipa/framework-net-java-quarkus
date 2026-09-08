@@ -57,6 +57,30 @@ class TelemetriaHttpTest {
     }
 
     @Test
+    void dashboardJsonExpoeTopRotas() {
+        given()
+                .header("Cookie", cookieDeDono())
+                .when().get("/telemetria/api/dashboard")
+                .then()
+                .statusCode(200)
+                .body("topRotas", notNullValue())
+                .body("porModulo", notNullValue());
+    }
+
+    @Test
+    void paginaTrazSecaoOrigemDoTrafego() {
+        given()
+                .header("Cookie", cookieDeDono())
+                .when().get("/telemetria")
+                .then()
+                .statusCode(200)
+                .body(containsString("Origem do tráfego"))
+                .body(containsString("chart-origem"))
+                .body(containsString("tabela-origem-modulos"))
+                .body(containsString("tabela-origem-rotas"));
+    }
+
+    @Test
     void exportarArquivoCompartilhado() {
         given()
                 .header("Cookie", cookieDeDono())

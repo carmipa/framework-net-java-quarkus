@@ -8,7 +8,7 @@
     let autoRefreshMs = 10000;
     let consolePausado = false;
     let timerAutoRefresh = null;
-    let chartModulos, chartStatus, chartAtividade, chartLatencia;
+    let chartModulos, chartStatus, chartAtividade, chartLatencia, chartOrigem;
 
     const CORES_MODULO = ['#f59e0b', '#60a5fa', '#34d399', '#818cf8', '#f43f5e', '#2dd4bf', '#c084fc', '#fb923c'];
     const CORES_STATUS = { '2xx': '#34d399', '3xx': '#60a5fa', '4xx': '#f59e0b', '5xx': '#f43f5e' };
@@ -201,6 +201,68 @@
             </tr>`).join('');
     }
 
+    // ---------- Origem do tráfego (por módulo e por rota) ----------
+    function renderOrigem(data) {
+        const modulos = data.porModulo || [];
+        const total = modulos.reduce((a, m) => a + (m.total || 0), 0);
+
+        const canvas = $('chart-origem');
+        if (canvas) {
+            const labels = modulos.map(m => m.modulo);
+            const valores = modulos.map(m => m.total);
+            if (chartOrigem) chartOrigem.destroy();
+            chartOrigem = new Chart(canvas, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: valores,
+                        backgroundColor: labels.map((_, i) => CORES_MODULO[i % CORES_MODULO.length]),
+                        borderColor: '#0c121c', borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '58%',
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: { callbacks: { label: (i) => {
+                            const v = i.parsed;
+                            const pct = total > 0 ? Math.round((v * 100) / total) : 0;
+                            return ' ' + i.label + ': ' + v + ' (' + pct + '%)';
+                        } } }
+                    }
+                }
+            });
+        }
+
+        const tbMod = $('tabela-origem-modulos');
+        if (tbMod) {
+            tbMod.innerHTML = modulos.length === 0
+                ? '<tr><td colspan="6" class="tele-empty">Sem dados no período.</td></tr>'
+                : modulos.map(m => {
+                    const pct = total > 0 ? Math.round((m.total * 100) / total) : 0;
+                    return '<tr><td>' + esc(m.modulo) + '</td>'
+                        + '<td class="num">' + m.total + '</td>'
+                        + '<td class="num">' + pct + '%</td>'
+                        + '<td class="num">' + m.ok + '</td>'
+                        + '<td class="num ' + (m.erro > 0 ? 'txt-err' : '') + '">' + m.erro + '</td>'
+                        + '<td class="num mono">' + ms(m.p95) + '</td></tr>';
+                }).join('');
+        }
+
+        const rotas = data.topRotas || [];
+        const tbRot = $('tabela-origem-rotas');
+        if (tbRot) {
+            tbRot.innerHTML = rotas.length === 0
+                ? '<tr><td colspan="5" class="tele-empty">Sem dados no período.</td></tr>'
+                : rotas.map(e => '<tr><td>' + metodoBadge(e.metodo) + '</td>'
+                    + '<td class="col-endpoint" title="' + esc(e.endpoint) + '">' + esc(e.endpoint) + '</td>'
+                    + '<td class="num">' + e.chamadas + '</td>'
+                    + '<td class="num ' + (e.erros > 0 ? 'txt-err' : '') + '">' + e.erros + '</td>'
+                    + '<td class="num mono">' + ms(e.p95) + '</td></tr>').join('');
+        }
+    }
+
     // ---------- Console ----------
     function filtrarConsole() {
         const nivel = ($('t-console-nivel') && $('t-console-nivel').value) || '';
@@ -310,6 +372,7 @@
             atualizarGraficos(data);
             renderTopLentos(data.topLentos);
             renderTopErros(data.topErros);
+            renderOrigem(data);
             if (!consolePausado) {
                 consoleLinhas = data.consoleLinhas || [];
                 renderConsole();
