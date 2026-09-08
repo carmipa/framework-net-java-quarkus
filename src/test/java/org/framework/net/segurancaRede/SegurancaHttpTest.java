@@ -494,4 +494,69 @@ class SegurancaHttpTest {
                 .then()
                 .statusCode(400);
     }
+
+    // ---- Montador de topologia (P05 fase 2) ----
+
+    private static final String TOPO =
+            "host H1 vlan=10 gw=R1\n"
+            + "switchl3 R1 vlans=10,20\n"
+            + "firewall FW deny=tcp/23\n"
+            + "server S1 vlan=20 porta=443\n"
+            + "link H1 R1\nlink R1 FW\nlink FW S1";
+
+    @Test
+    void paginaTrazAbaMontarTopologia() {
+        given()
+                .when().get("/seguranca")
+                .then()
+                .statusCode(200)
+                .body(containsString("data-tab=\"topologia\""))
+                .body(containsString("hx-post=\"/seguranca/api/topologia\""))
+                .body(containsString("id=\"topo-texto\""));
+    }
+
+    @Test
+    void topologiaAlcancaMostraDiagramaECaminho() {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("topologia", TOPO)
+                .formParam("origem", "H1")
+                .formParam("destino", "S1")
+                .formParam("porta", "443")
+                .when().post("/seguranca/api/topologia")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("alcança o destino"))
+                .body(containsString("graph LR"))
+                .body(not(containsString("<!DOCTYPE html>")));
+    }
+
+    @Test
+    void topologiaAclNegaBloqueiaNoFirewall() {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("topologia", TOPO)
+                .formParam("origem", "H1")
+                .formParam("destino", "S1")
+                .formParam("porta", "23")
+                .when().post("/seguranca/api/topologia")
+                .then()
+                .statusCode(200)
+                .body(containsString("bloqueado em"))
+                .body(containsString("FW"));
+    }
+
+    @Test
+    void topologiaInvalidaRetorna400() {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("topologia", "gizmo X")
+                .formParam("origem", "X")
+                .formParam("destino", "X")
+                .formParam("porta", "80")
+                .when().post("/seguranca/api/topologia")
+                .then()
+                .statusCode(400);
+    }
 }

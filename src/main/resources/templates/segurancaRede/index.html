@@ -43,6 +43,10 @@
                     title="Alcança o destino? Diagnostique um fluxo salto a salto e veja onde ele trava">
                 <span class="material-symbols-outlined">route</span><span>Alcança o destino?</span>
             </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="topologia" role="tab"
+                    title="Monte sua própria topologia (equipamentos, enlaces, VLANs, ACLs) e teste se um fluxo alcança o destino">
+                <span class="material-symbols-outlined">account_tree</span><span>Montar topologia</span>
+            </button>
         </div>
 
         <!-- ACL -->
@@ -297,11 +301,67 @@
                 </div>
             </div>
         </div>
+
+        <!-- Montar topologia — diagnóstico sobre topologia arbitrária (P05 fase 2) -->
+        <div class="tab-panel" data-tab-panel="topologia">
+            <p class="small text-secondary mb-2">
+                Monte a topologia (um item por linha), edite à vontade e teste se um fluxo alcança o
+                destino. Formato: <code>host H1 vlan=10 gw=R1</code>, <code>switchl3 R1 vlans=10,20</code>,
+                <code>firewall FW deny=tcp/23</code>, <code>server S1 vlan=20 porta=443</code>,
+                <code>link A B</code>.
+            </p>
+            <div class="aed-mode-grid mb-2" role="group" aria-label="Inserir equipamento">
+                <button type="button" class="aed-btn aed-btn-neutral" data-topo-add="host H1 vlan=10 gw=R1">
+                    <span class="material-symbols-outlined">computer</span> + Host</button>
+                <button type="button" class="aed-btn aed-btn-neutral" data-topo-add="switchl3 R1 vlans=10,20">
+                    <span class="material-symbols-outlined">lan</span> + Switch L3</button>
+                <button type="button" class="aed-btn aed-btn-neutral" data-topo-add="firewall FW deny=tcp/23">
+                    <span class="material-symbols-outlined">security</span> + Firewall</button>
+                <button type="button" class="aed-btn aed-btn-neutral" data-topo-add="server S1 vlan=20 porta=443">
+                    <span class="material-symbols-outlined">dns</span> + Servidor</button>
+                <button type="button" class="aed-btn aed-btn-neutral" data-topo-add="link A B">
+                    <span class="material-symbols-outlined">cable</span> + Enlace</button>
+            </div>
+            <form hx-post="/seguranca/api/topologia" hx-target="#topoResultado" hx-swap="innerHTML"
+                  hx-disabled-elt="find button[type='submit']" autocomplete="off">
+                <textarea id="topo-texto" name="topologia" rows="8"
+                          class="form-control bg-dark text-light border-secondary"
+                          style="font-family: var(--bs-font-monospace, monospace);">host H1 vlan=10 gw=R1
+switchl3 R1 vlans=10,20
+firewall FW deny=tcp/23
+server S1 vlan=20 porta=443
+link H1 R1
+link R1 FW
+link FW S1</textarea>
+                <div class="row g-2 mt-2">
+                    <div class="col-sm-4">
+                        <label class="form-label small text-secondary" for="topo-origem">Origem (host)</label>
+                        <input id="topo-origem" name="origem" value="H1" class="form-control form-control-sm bg-dark text-light border-secondary">
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="form-label small text-secondary" for="topo-destino">Destino</label>
+                        <input id="topo-destino" name="destino" value="S1" class="form-control form-control-sm bg-dark text-light border-secondary">
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="form-label small text-secondary" for="topo-porta">Porta</label>
+                        <input id="topo-porta" name="porta" value="443" class="form-control form-control-sm bg-dark text-light border-secondary">
+                    </div>
+                </div>
+                <button type="submit" class="aed-btn aed-btn-teal mt-3"
+                        title="Avaliar se o fluxo alcança o destino nesta topologia">
+                    <span class="spinner-border spinner-border-sm htmx-indicator" role="status" aria-hidden="true"></span>
+                    <span class="material-symbols-outlined" aria-hidden="true">route</span> Testar fluxo
+                </button>
+            </form>
+            <div id="topoResultado" class="mt-3" aria-live="polite"></div>
+        </div>
     </div>
 </div>
 
 {/content}
 {#extraScripts}
 <script src="/web/js/aed-tabs.js?v=20260710"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="/web/js/seguranca-topologia.js?v=20260908"></script>
 {/extraScripts}
 {/include}

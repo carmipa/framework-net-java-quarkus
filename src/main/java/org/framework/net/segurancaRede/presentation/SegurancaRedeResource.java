@@ -11,8 +11,10 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import org.framework.net.segurancaRede.application.AclSimulatorService;
+import org.framework.net.segurancaRede.application.AvaliadorTopologiaService;
 import org.framework.net.segurancaRede.application.DiagnosticoFluxoService;
 import org.framework.net.segurancaRede.application.FirewallEstadoService;
+import org.framework.net.segurancaRede.domain.DiagnosticoFluxo;
 import org.framework.net.segurancaRede.application.TlsHandshakeService;
 import org.framework.net.segurancaRede.application.TlsInspectorService;
 import jakarta.ws.rs.DefaultValue;
@@ -37,6 +39,9 @@ public class SegurancaRedeResource {
     DiagnosticoFluxoService diagnosticoFluxoService;
 
     @Inject
+    AvaliadorTopologiaService avaliadorTopologiaService;
+
+    @Inject
     @io.quarkus.qute.Location("segurancaRede/index.html")
     Template index;
 
@@ -51,6 +56,10 @@ public class SegurancaRedeResource {
     @Inject
     @io.quarkus.qute.Location("segurancaRede/partials/diagnostico_fluxo.html")
     Template diagnosticoFluxoFragmento;
+
+    @Inject
+    @io.quarkus.qute.Location("segurancaRede/partials/topologia_fluxo.html")
+    Template topologiaFluxoFragmento;
 
     @Inject
     @io.quarkus.qute.Location("segurancaRede/partials/resultado.html")
@@ -78,6 +87,26 @@ public class SegurancaRedeResource {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance diagnosticarFluxo(@QueryParam("cenario") String cenario) {
         return diagnosticoFluxoFragmento.data("fluxo", diagnosticoFluxoService.diagnosticar(cenario));
+    }
+
+    /**
+     * Diagnostica o fluxo sobre a topologia que o usuário montou e devolve o
+     * fragmento com o caminho salto a salto e o diagrama Mermaid. POST (leva
+     * texto no corpo); erro de sintaxe/entrada vira HTTP 400 pelo mapper.
+     */
+    @POST
+    @Path("/api/topologia")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance diagnosticarTopologia(
+            @FormParam("topologia") String topologia,
+            @FormParam("origem") String origem,
+            @FormParam("destino") String destino,
+            @FormParam("porta") @DefaultValue("443") String porta) {
+        DiagnosticoFluxo fluxo = avaliadorTopologiaService.diagnosticar(topologia, origem, destino, porta);
+        return topologiaFluxoFragmento
+                .data("fluxo", fluxo)
+                .data("mermaid", avaliadorTopologiaService.mermaidDe(topologia, fluxo));
     }
 
     /**
