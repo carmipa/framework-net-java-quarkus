@@ -15,18 +15,18 @@
       hx-disabled-elt="find button[type='submit']">
     <div class="row g-3">
         <div class="col-sm-4">
-            <label class="form-label small text-secondary" for="c-proto">Protocolo</label>
+            <label class="form-label small text-secondary" for="c-proto"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">swap_horiz</span> Protocolo</label>
             <select id="c-proto" name="protocolo" class="form-select form-select-sm bg-dark text-light border-secondary">
                 <option value="tcp" selected>TCP</option>
                 <option value="udp">UDP</option>
             </select>
         </div>
         <div class="col-sm-4">
-            <label class="form-label small text-secondary" for="c-ttl">TTL</label>
+            <label class="form-label small text-secondary" for="c-ttl"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">timer</span> TTL</label>
             <input id="c-ttl" name="ttl" value="64" class="form-control form-control-sm bg-dark text-light border-secondary">
         </div>
         <div class="col-sm-4">
-            <label class="form-label small text-secondary" for="c-checksum">Checksum</label>
+            <label class="form-label small text-secondary" for="c-checksum"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">verified</span> Checksum</label>
             <select id="c-checksum" name="checksum" class="form-select form-select-sm bg-dark text-light border-secondary">
                 <option value="valido" selected>Válido (calculado)</option>
                 <option value="invalido">Inválido (didático)</option>
@@ -34,33 +34,33 @@
         </div>
 
         <div class="col-sm-6">
-            <label class="form-label small text-secondary" for="c-ipo">IP de origem</label>
+            <label class="form-label small text-secondary" for="c-ipo"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">call_made</span> IP de origem</label>
             <input id="c-ipo" name="ipOrigem" value="192.168.0.10" class="form-control form-control-sm bg-dark text-light border-secondary">
         </div>
         <div class="col-sm-6">
-            <label class="form-label small text-secondary" for="c-ipd">IP de destino</label>
+            <label class="form-label small text-secondary" for="c-ipd"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">call_received</span> IP de destino</label>
             <input id="c-ipd" name="ipDestino" value="203.0.113.5" class="form-control form-control-sm bg-dark text-light border-secondary">
         </div>
 
         <div class="col-sm-3">
-            <label class="form-label small text-secondary" for="c-po">Porta origem</label>
+            <label class="form-label small text-secondary" for="c-po"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">login</span> Porta origem</label>
             <input id="c-po" name="portaOrigem" value="51000" class="form-control form-control-sm bg-dark text-light border-secondary">
         </div>
         <div class="col-sm-3">
-            <label class="form-label small text-secondary" for="c-pd">Porta destino</label>
+            <label class="form-label small text-secondary" for="c-pd"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">logout</span> Porta destino</label>
             <input id="c-pd" name="portaDestino" value="443" class="form-control form-control-sm bg-dark text-light border-secondary">
         </div>
         <div class="col-sm-3">
-            <label class="form-label small text-secondary" for="c-seq">Sequência (TCP)</label>
+            <label class="form-label small text-secondary" for="c-seq"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">tag</span> Sequência (TCP)</label>
             <input id="c-seq" name="seq" value="1000" class="form-control form-control-sm bg-dark text-light border-secondary">
         </div>
         <div class="col-sm-3">
-            <label class="form-label small text-secondary" for="c-win">Janela (TCP)</label>
+            <label class="form-label small text-secondary" for="c-win"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">aspect_ratio</span> Janela (TCP)</label>
             <input id="c-win" name="window" value="64240" class="form-control form-control-sm bg-dark text-light border-secondary">
         </div>
 
         <div class="col-12">
-            <label class="form-label small text-secondary d-block">Flags TCP</label>
+            <label class="form-label small text-secondary d-block"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">flag</span> Flags TCP</label>
             <div class="d-flex flex-wrap gap-3 small text-light">
                 <label class="d-flex align-items-center gap-1"><input type="checkbox" name="flags" value="SYN" checked> SYN</label>
                 <label class="d-flex align-items-center gap-1"><input type="checkbox" name="flags" value="ACK"> ACK</label>
@@ -71,7 +71,7 @@
         </div>
 
         <div class="col-12">
-            <label class="form-label small text-secondary" for="c-msg">Mensagem / payload (opcional)</label>
+            <label class="form-label small text-secondary" for="c-msg"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">notes</span> Mensagem / payload (opcional)</label>
             <input id="c-msg" name="mensagem" value="" placeholder="ex.: GET / HTTP/1.1"
                    class="form-control form-control-sm bg-dark text-light border-secondary">
         </div>

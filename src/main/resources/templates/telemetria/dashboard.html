@@ -217,12 +217,12 @@
                         <caption class="text-secondary small px-2">Requisições por módulo</caption>
                         <thead>
                             <tr>
-                                <th>Módulo</th>
-                                <th class="text-end">Reqs</th>
-                                <th class="text-end">%</th>
-                                <th class="text-end">OK</th>
-                                <th class="text-end">Erro</th>
-                                <th class="text-end">P95</th>
+                                <th title="Módulo da aplicação (alvo interno da requisição)"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">category</span>Módulo</th>
+                                <th class="text-end" title="Total de requisições no período"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">tag</span>Reqs</th>
+                                <th class="text-end" title="Participação no total de requisições"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">percent</span>%</th>
+                                <th class="text-end" title="Respostas de sucesso (2xx/3xx)"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">check_circle</span>OK</th>
+                                <th class="text-end" title="Respostas com erro (4xx/5xx)"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">error</span>Erro</th>
+                                <th class="text-end" title="Latência no percentil 95 (ms)"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">query_stats</span>P95</th>
                             </tr>
                         </thead>
                         <tbody id="tabela-origem-modulos">
@@ -237,11 +237,11 @@
                 <caption class="text-secondary small px-2">Top rotas por volume de chamadas</caption>
                 <thead>
                     <tr>
-                        <th>Método</th>
-                        <th>Rota</th>
-                        <th class="text-end">Chamadas</th>
-                        <th class="text-end">Erros</th>
-                        <th class="text-end">P95</th>
+                        <th title="Método HTTP"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">http</span>Método</th>
+                        <th title="Rota/endpoint acessado"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">route</span>Rota</th>
+                        <th class="text-end" title="Volume de chamadas no período"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">tag</span>Chamadas</th>
+                        <th class="text-end" title="Chamadas que terminaram em erro"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">error</span>Erros</th>
+                        <th class="text-end" title="Latência no percentil 95 (ms)"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">query_stats</span>P95</th>
                     </tr>
                 </thead>
                 <tbody id="tabela-origem-rotas">
@@ -255,7 +255,11 @@
                     <table class="table table-dark table-sm telemetry-table mb-0">
                         <caption class="text-secondary small px-2">Acessos por país (código ISO via Cloudflare — sem IP)</caption>
                         <thead>
-                            <tr><th>País</th><th class="text-end">Acessos</th><th class="text-end">%</th></tr>
+                            <tr>
+                                <th title="Código ISO do país (via Cloudflare, sem IP)"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">public</span>País</th>
+                                <th class="text-end" title="Acessos originados desse país"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">tag</span>Acessos</th>
+                                <th class="text-end" title="Participação no total de acessos"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">percent</span>%</th>
+                            </tr>
                         </thead>
                         <tbody id="tabela-origem-paises">
                             <tr><td colspan="3" class="tele-empty">Sem dados no período.</td></tr>

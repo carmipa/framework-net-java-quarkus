@@ -964,3 +964,19 @@ body.aed-app h2, body.aed-app h3, body.aed-app h4, body.aed-app h5, body.aed-app
 
 body.aed-app .text-warning { color: var(--aed-risk-attention) !important; }
 body.aed-app .text-info { color: var(--aed-teal) !important; }
+
+/* Ícone pequeno e discreto dentro de cabeçalho de coluna ou label de campo —
+   utilitário global (as páginas que não carregam o CSS da Calculadora usam este). */
+.aed-inline-icon {
+    font-size: 0.95rem;
+    vertical-align: middle;
+    opacity: 0.6;
+    margin-right: 0.2rem;
+}
+
+/* Coluna com explicação no hover: cursor de ajuda + sublinhado pontilhado. */
+thead th[title] {
+    cursor: help;
+    text-decoration: underline dotted rgba(255, 255, 255, 0.25);
+    text-underline-offset: 3px;
+}
