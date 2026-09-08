@@ -99,8 +99,10 @@
       <h2 class="home-module-title">Tráfego &amp; Pacotes</h2>
       <p class="home-module-desc">
         Painel ao vivo (simulação), decodificador de pacotes (hex → camadas),
-        encapsulamento, handshake TCP e <strong>anomalias TCP</strong> (SYN flood e
-        sequestro por previsão de sequência).
+        encapsulamento, handshake TCP, <strong>anomalias TCP</strong> (SYN flood e
+        sequestro por previsão de sequência), <strong>construtor de pacotes</strong>
+        (gera os bytes e decodifica de volta) e <strong>laboratório DNS/ICMP</strong>
+        (normal × tunneling).
       </p>
     </a>
     <a href="/portas" class="home-module aed-card card-tech"
@@ -238,8 +240,10 @@
       >
       <h2 class="home-module-title">Segurança de Rede</h2>
       <p class="home-module-desc">
-        Testador de regras de Firewall (ACL) com pacotes forjados e
-        <strong>Inspetor de TLS/Certificado</strong> (nome, validade, cadeia, protocolo e cipher).
+        Testador de regras de Firewall (ACL) com pacotes forjados,
+        <strong>Inspetor de TLS/Certificado</strong> (nome, validade, cadeia, protocolo e cipher),
+        firewall <strong>com estado × sem estado</strong>, <strong>handshake TLS 1.3</strong> passo a passo,
+        diagnóstico de <strong>alcançabilidade de fluxo</strong> e montador de topologia.
       </p>
     </a>
 
@@ -252,9 +256,10 @@
       >
       <h2 class="home-module-title">Telemetria <span class="badge rounded-pill bg-secondary align-middle" style="font-size: 0.6rem;">ADMIN</span></h2>
       <p class="home-module-desc">
-        Dashboard de eventos, console ao vivo e exportação OpenTelemetry
-        OTLP/JSON. <strong>Requer login</strong> — os eventos carregam o IP de
-        quem acessou.
+        Dashboard de eventos, console ao vivo, <strong>origem do tráfego</strong>
+        (por país e bots × pessoas) e exportação OpenTelemetry OTLP/JSON.
+        <strong>Requer login</strong>. Por privacidade, os eventos <strong>não</strong>
+        guardam o IP do visitante — só métricas agregadas.
       </p>
     </a>
     <a href="/documentacao" class="home-module aed-card card-tech"
