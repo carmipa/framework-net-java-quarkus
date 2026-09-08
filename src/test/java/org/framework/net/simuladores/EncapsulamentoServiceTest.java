@@ -72,4 +72,27 @@ class EncapsulamentoServiceTest {
                 "GET /", "TCP", "192.168.0.10", "8.8.8.8", "51000", "70000");
         assertFalse(r.ok());
     }
+
+    @Test
+    void rotulaNaturezaDosCampos() {
+        // M01: cada valor diz sua natureza — nada de exemplo se passando por calculado.
+        ResultadoEncapsulamento r = service.encapsular(
+                "GET / HTTP/1.1", "TCP", "192.168.0.10", "142.250.79.14", "51000", "80");
+        assertTrue(r.ok());
+
+        assertEquals("fornecido", campo(r, 3, "IP origem").natureza(), "o IP de origem veio do usuário");
+        assertEquals("calculado", campo(r, 3, "Comprimento total").natureza(), "o comprimento é derivado dos tamanhos");
+        assertEquals("ilustrativo", campo(r, 3, "Checksum").natureza(), "o checksum não é computado aqui");
+        assertFalse(campo(r, 3, "Checksum").valor().equals("calculado"),
+                "o VALOR do checksum não pode se apresentar como 'calculado' quando não é");
+    }
+
+    private static ResultadoEncapsulamento.Campo campo(ResultadoEncapsulamento r, int nivel, String nome) {
+        return r.camadas().stream()
+                .filter(c -> c.nivel() == nivel)
+                .flatMap(c -> c.cabecalho().stream())
+                .filter(f -> f.nome().equals(nome))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("campo não encontrado: nível " + nivel + " / " + nome));
+    }
 }

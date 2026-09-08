@@ -63,9 +63,9 @@ public class EncapsulamentoService {
         camadas.add(new Camada(7, "Aplicação", appProto, "Dados", "apps",
                 0, appPayload, appPayload,
                 List.of(
-                        new Campo("Protocolo", appProto, "Deduzido pela porta de destino " + dpNum + "."),
-                        new Campo("Payload", appPayload + " bytes", "A mensagem em si, ainda sem cabeçalhos de rede."),
-                        new Campo("Mensagem", resumir(mensagem), "Conteúdo textual gerado pela aplicação.")),
+                        Campo.calculado("Protocolo", appProto, "Deduzido pela porta de destino " + dpNum + "."),
+                        Campo.calculado("Payload", appPayload + " bytes", "A mensagem em si, ainda sem cabeçalhos de rede."),
+                        Campo.fornecido("Mensagem", resumir(mensagem), "Conteúdo textual gerado pela aplicação.")),
                 hexTexto(mensagem)));
 
         // ---- Nível 4: Transporte ----
@@ -73,24 +73,24 @@ public class EncapsulamentoService {
             camadas.add(new Camada(4, "Transporte", "TCP", "Segmento", "swap_horiz",
                     TCP_HDR, appPayload, transTotal,
                     List.of(
-                            new Campo("Porta origem", String.valueOf(spNum), "Porta efêmera do cliente."),
-                            new Campo("Porta destino", String.valueOf(dpNum), "Identifica o serviço no servidor."),
+                            Campo.fornecido("Porta origem", String.valueOf(spNum), "Porta efêmera do cliente."),
+                            Campo.fornecido("Porta destino", String.valueOf(dpNum), "Identifica o serviço no servidor."),
                             new Campo("Nº sequência", "0x0000000A", "Controle de ordem/confiabilidade (exemplo)."),
                             new Campo("Nº ACK", "0x00000000", "Confirmação do próximo byte esperado (exemplo)."),
                             new Campo("Flags", "SYN", "Bits de controle (SYN/ACK/FIN/RST/PSH/URG)."),
                             new Campo("Janela", "64240", "Controle de fluxo (bytes que o receptor aceita)."),
-                            new Campo("Checksum", "calculado", "Verificação de integridade do segmento."),
-                            new Campo("Cabeçalho", TCP_HDR + " bytes", "Header TCP mínimo (sem opções).")),
+                            new Campo("Checksum", "não calculado aqui", "Valor real: use o Construtor de pacotes."),
+                            Campo.calculado("Cabeçalho", TCP_HDR + " bytes", "Header TCP mínimo (sem opções).")),
                     "?? ?? " + hex16(spNum) + " " + hex16(dpNum)));
         } else {
             camadas.add(new Camada(4, "Transporte", "UDP", "Datagrama", "swap_horiz",
                     UDP_HDR, appPayload, transTotal,
                     List.of(
-                            new Campo("Porta origem", String.valueOf(spNum), "Porta efêmera do cliente."),
-                            new Campo("Porta destino", String.valueOf(dpNum), "Identifica o serviço no servidor."),
-                            new Campo("Comprimento", transTotal + " bytes", "Header (8) + dados."),
-                            new Campo("Checksum", "calculado", "Verificação de integridade (opcional em IPv4)."),
-                            new Campo("Cabeçalho", UDP_HDR + " bytes", "Header UDP é enxuto: sem controle de conexão.")),
+                            Campo.fornecido("Porta origem", String.valueOf(spNum), "Porta efêmera do cliente."),
+                            Campo.fornecido("Porta destino", String.valueOf(dpNum), "Identifica o serviço no servidor."),
+                            Campo.calculado("Comprimento", transTotal + " bytes", "Header (8) + dados."),
+                            new Campo("Checksum", "não calculado aqui", "Valor real: use o Construtor de pacotes."),
+                            Campo.calculado("Cabeçalho", UDP_HDR + " bytes", "Header UDP é enxuto: sem controle de conexão.")),
                     hex16(spNum) + " " + hex16(dpNum) + " " + hex16(transTotal) + " ????"));
         }
 
@@ -99,24 +99,24 @@ public class EncapsulamentoService {
         camadas.add(new Camada(3, "Rede", "IPv4", "Pacote", "hub",
                 IP_HDR, transTotal, ipTotal,
                 List.of(
-                        new Campo("Versão / IHL", "4 / 5", "IPv4, cabeçalho de 5×4 = 20 bytes."),
-                        new Campo("Comprimento total", ipTotal + " bytes", "Header IP + segmento/datagrama."),
+                        Campo.calculado("Versão / IHL", "4 / 5", "IPv4, cabeçalho de 5×4 = 20 bytes."),
+                        Campo.calculado("Comprimento total", ipTotal + " bytes", "Header IP + segmento/datagrama."),
                         new Campo("TTL", "64", "Saltos máximos antes de descartar o pacote."),
-                        new Campo("Protocolo", protoNum + " (" + proto + ")", "Aponta a camada de transporte (TCP=6, UDP=17)."),
-                        new Campo("IP origem", ipSrc, "Endereço lógico do emissor."),
-                        new Campo("IP destino", ipDst, "Endereço lógico do destinatário."),
-                        new Campo("Checksum", "calculado", "Integridade do cabeçalho IP.")),
+                        Campo.calculado("Protocolo", protoNum + " (" + proto + ")", "Aponta a camada de transporte (TCP=6, UDP=17)."),
+                        Campo.fornecido("IP origem", ipSrc, "Endereço lógico do emissor."),
+                        Campo.fornecido("IP destino", ipDst, "Endereço lógico do destinatário."),
+                        new Campo("Checksum", "não calculado aqui", "Valor real: use o Construtor de pacotes.")),
                 "45 00 " + hex16(ipTotal) + " .. .. .. " + hex8(protoNum)));
 
         // ---- Nível 2: Enlace ----
         List<Campo> ethCampos = new ArrayList<>(List.of(
                 new Campo("MAC destino", "aa:bb:cc:00:11:22", "Endereço físico do próximo salto (ex.: gateway)."),
                 new Campo("MAC origem", "de:ad:be:ef:00:01", "Endereço físico da placa emissora."),
-                new Campo("EtherType", "0x0800", "Indica que o payload é IPv4."),
-                new Campo("Payload", quadroPayload + " bytes", "Pacote IP" + (ipTotal < ETH_MIN_PAYLOAD
+                Campo.calculado("EtherType", "0x0800", "Indica que o payload é IPv4."),
+                Campo.calculado("Payload", quadroPayload + " bytes", "Pacote IP" + (ipTotal < ETH_MIN_PAYLOAD
                         ? " + padding (mínimo de 46 bytes)" : "") + "."),
                 new Campo("FCS", "CRC-32", "Frame Check Sequence: detecção de erro no quadro."),
-                new Campo("Quadro total", quadro + " bytes", "MAC dst+src+type (14) + payload + FCS (4).")));
+                Campo.calculado("Quadro total", quadro + " bytes", "MAC dst+src+type (14) + payload + FCS (4).")));
         camadas.add(new Camada(2, "Enlace", "Ethernet II", "Quadro", "cable",
                 ETH_HDR + ETH_FCS, quadroPayload, quadro, ethCampos,
                 "aabbcc001122 deadbeef0001 0800"));

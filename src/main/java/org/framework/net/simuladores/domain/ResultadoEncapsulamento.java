@@ -30,7 +30,27 @@ public record ResultadoEncapsulamento(
     }
 
     /** Um campo do cabeçalho da camada (nome, valor e explicação didática). */
-    public record Campo(String nome, String valor, String descricao) {
+    /**
+     * Um campo de cabeçalho, com a NATUREZA do valor mostrado:
+     * {@code fornecido} (veio do usuário), {@code calculado} (derivado de tamanhos
+     * reais) ou {@code ilustrativo} (exemplo, não computado aqui). Distinguir os
+     * três impede que um valor de exemplo (seq, checksum, MAC) pareça calculado —
+     * quem quer os bytes efetivos usa o Construtor de pacotes.
+     */
+    public record Campo(String nome, String valor, String descricao, String natureza) {
+
+        /** Compat: sem natureza declarada, assume-se ilustrativo (o mais conservador). */
+        public Campo(String nome, String valor, String descricao) {
+            this(nome, valor, descricao, "ilustrativo");
+        }
+
+        public static Campo fornecido(String nome, String valor, String descricao) {
+            return new Campo(nome, valor, descricao, "fornecido");
+        }
+
+        public static Campo calculado(String nome, String valor, String descricao) {
+            return new Campo(nome, valor, descricao, "calculado");
+        }
     }
 
     public static ResultadoEncapsulamento erroDe(String mensagem) {

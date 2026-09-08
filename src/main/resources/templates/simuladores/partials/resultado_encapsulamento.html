@@ -31,6 +31,13 @@
     </div>
 
     <h4 class="encap-secao">Cabeçalhos, campo a campo</h4>
+    <p class="small text-secondary">
+        Cada valor traz sua natureza:
+        <span class="badge bg-info text-dark">fornecido</span> (você informou),
+        <span class="badge bg-success">calculado</span> (derivado de tamanhos reais) e
+        <span class="badge bg-secondary">ilustrativo</span> (exemplo — para os bytes e checksums
+        efetivos, use o <strong>Construtor de pacotes</strong> na aba Tráfego).
+    </p>
     {#for camada in resultado.camadas}
     <div class="encap-detalhe nivel-{camada.nivel}">
         <div class="encap-detalhe-head">
@@ -45,7 +52,11 @@
             {#for campo in camada.cabecalho}
             <tr>
                 <td class="encap-campo-nome">{campo.nome}</td>
-                <td class="encap-campo-valor">{campo.valor}</td>
+                <td class="encap-campo-valor">{campo.valor}
+                    {#if campo.natureza == 'fornecido'}<span class="badge bg-info text-dark" title="valor que você informou no formulário">fornecido</span>
+                    {#else if campo.natureza == 'calculado'}<span class="badge bg-success" title="derivado de tamanhos/números reais">calculado</span>
+                    {#else}<span class="badge bg-secondary" title="valor de exemplo — não computado aqui; use o Construtor de pacotes">ilustrativo</span>{/if}
+                </td>
                 <td class="encap-campo-desc">{campo.descricao}</td>
             </tr>
             {/for}
