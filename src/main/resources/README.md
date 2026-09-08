@@ -985,7 +985,7 @@ um caso de uso:
 
 ## 👨‍💻 Autor
 
-Paulo André Carminati | RM570877 | FIAP 2026 | Cyber Defense
+Paulo André Carminati
 
 ---
 
