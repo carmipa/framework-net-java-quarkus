@@ -246,12 +246,12 @@ requisição, que é o certo em desenvolvimento.
 
 ### Produção: quem responde o `/robots.txt` não é a aplicação
 
-Enquanto existir o `location = /robots.txt` em
-`/opt/infra-proxy/data/nginx/custom/server_proxy.conf` do NPM, **match exato ganha do
-`proxy_pass`** e quem responde é o arquivo compartilhado da VPS
-(`/opt/infra-proxy/data/robots/robots.txt`), que serve os três domínios. O arquivo
-deste repositório é a fonte versionada da política e vale em desenvolvimento e em
-qualquer outro deploy — as duas cópias precisam ser mantidas em acordo.
+Enquanto existir o `location = /robots.txt` no NPM, **match exato ganha do
+`proxy_pass`** e quem responde é o arquivo do proxy, não o do jar. Desde 03/09 a
+política é **por host** (`map $host` com lista branca — nunca `try_files /$host.txt`,
+porque `$host` vem do cabeçalho `Host`, que o cliente escolhe). O arquivo deste
+repositório é a fonte versionada da política e vale em desenvolvimento e em qualquer
+outro deploy — as duas cópias precisam ser mantidas em acordo.
 
 O `/sitemap.xml`, esse sim, é servido pela aplicação.
 
