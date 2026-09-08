@@ -47,11 +47,11 @@
         <table class="table table-dark table-sm table-bordered mb-0 calc-tabela">
             <thead>
             <tr>
-                <th>Prefixo</th>
-                <th>Máscara</th>
-                <th>Sub-redes</th>
-                <th>IPs por sub-rede</th>
-                <th>Hosts úteis</th>
+                <th title="Máscara em bits: /n"><span class="material-symbols-outlined" aria-hidden="true">tag</span>Prefixo</th>
+                <th title="Máscara de sub-rede em decimal"><span class="material-symbols-outlined" aria-hidden="true">grid_view</span>Máscara</th>
+                <th title="Quantas sub-redes desse prefixo cabem no bloco base"><span class="material-symbols-outlined" aria-hidden="true">grid_on</span>Sub-redes</th>
+                <th title="Endereços totais por sub-rede (inclui rede e broadcast)"><span class="material-symbols-outlined" aria-hidden="true">deployed_code</span>IPs por sub-rede</th>
+                <th title="Endereços utilizáveis por sub-rede (exclui rede e broadcast)"><span class="material-symbols-outlined" aria-hidden="true">group</span>Hosts úteis</th>
             </tr>
             </thead>
             <tbody>
@@ -89,13 +89,13 @@
         <table class="table table-dark table-sm table-bordered mb-0 calc-tabela">
             <thead>
             <tr>
-                <th>#</th>
-                <th>Rede</th>
-                <th>Primeiro host</th>
-                <th>Último host</th>
-                <th>Broadcast</th>
-                <th>Wildcard</th>
-                <th>Hosts</th>
+                <th title="Número da sub-rede na sequência"><span class="material-symbols-outlined" aria-hidden="true">tag</span>#</th>
+                <th title="Endereço de rede da sub-rede (não atribuível a host)"><span class="material-symbols-outlined" aria-hidden="true">hub</span>Rede</th>
+                <th title="Primeiro endereço utilizável (normalmente o gateway)"><span class="material-symbols-outlined" aria-hidden="true">first_page</span>Primeiro host</th>
+                <th title="Último endereço utilizável"><span class="material-symbols-outlined" aria-hidden="true">last_page</span>Último host</th>
+                <th title="Endereço de broadcast (não atribuível a host)"><span class="material-symbols-outlined" aria-hidden="true">campaign</span>Broadcast</th>
+                <th title="Máscara curinga (inverso da máscara) — usada em ACL e OSPF"><span class="material-symbols-outlined" aria-hidden="true">flip</span>Wildcard</th>
+                <th title="Endereços utilizáveis nesta sub-rede"><span class="material-symbols-outlined" aria-hidden="true">group</span>Hosts</th>
             </tr>
             </thead>
             <tbody>

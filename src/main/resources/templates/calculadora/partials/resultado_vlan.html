@@ -33,6 +33,13 @@
         </div>
     </div>
 
+    <p class="calc-explicacao">
+        <span class="material-symbols-outlined" aria-hidden="true">school</span>
+        Cada VLAN vira uma sub-rede própria, com seu gateway (o <strong>SVI</strong> — endereço .1 no switch L3)
+        e sua faixa de <strong>DHCP</strong>. O tronco (<strong>802.1Q</strong>) carrega as VLANs permitidas entre
+        switches. O script Cisco ao lado já sai pronto para colar.
+    </p>
+
     {#for aviso in plano.avisos}
     <div class="calc-aviso" role="status">
         <span class="material-symbols-outlined" aria-hidden="true">warning</span>
@@ -48,14 +55,14 @@
         <table class="table table-dark table-sm table-bordered mb-0 calc-tabela">
             <thead>
             <tr>
-                <th>VLAN</th>
-                <th>Nome</th>
-                <th>Faixa</th>
-                <th>Sub-rede</th>
-                <th>Gateway (SVI)</th>
-                <th>DHCP</th>
-                <th>Wildcard</th>
-                <th>Hosts</th>
+                <th title="ID da VLAN (802.1Q)"><span class="material-symbols-outlined" aria-hidden="true">sell</span>VLAN</th>
+                <th title="Nome da VLAN"><span class="material-symbols-outlined" aria-hidden="true">label</span>Nome</th>
+                <th title="Faixa de IDs: normal (1–1001) ou estendida"><span class="material-symbols-outlined" aria-hidden="true">linear_scale</span>Faixa</th>
+                <th title="Sub-rede atribuída à VLAN"><span class="material-symbols-outlined" aria-hidden="true">hub</span>Sub-rede</th>
+                <th title="Gateway da VLAN — o SVI no switch L3 (endereço .1)"><span class="material-symbols-outlined" aria-hidden="true">router</span>Gateway (SVI)</th>
+                <th title="Faixa de endereços distribuída por DHCP"><span class="material-symbols-outlined" aria-hidden="true">dns</span>DHCP</th>
+                <th title="Máscara curinga (inverso da máscara) — usada em ACL/OSPF"><span class="material-symbols-outlined" aria-hidden="true">flip</span>Wildcard</th>
+                <th title="Endereços utilizáveis por VLAN"><span class="material-symbols-outlined" aria-hidden="true">group</span>Hosts</th>
             </tr>
             </thead>
             <tbody>

@@ -16,7 +16,7 @@
                   hx-disabled-elt="find button[type='submit']">
 
                 <div class="mb-3">
-                    <label for="divBloco" class="form-label text-secondary">Bloco base</label>
+                    <label for="divBloco" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">lan</span> Bloco base</label>
                     <input type="text" class="aed-input form-control input-ipv4" id="divBloco" name="bloco"
                            placeholder="192.168.0.0/21" value="192.168.0.0/21"
                            inputmode="text" autocomplete="off" spellcheck="false" required>
@@ -35,7 +35,7 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label text-secondary">Critério da divisão</label>
+                    <label class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">tune</span> Critério da divisão</label>
                     <div class="calc-radio-group" role="radiogroup">
                         <label class="calc-radio">
                             <input type="radio" name="criterio" value="prefixo" checked data-alvo="grupo-prefixo">
@@ -53,14 +53,14 @@
                 </div>
 
                 <div class="mb-3 calc-criterio" id="grupo-prefixo">
-                    <label for="divPrefixoAlvo" class="form-label text-secondary">Prefixo alvo</label>
+                    <label for="divPrefixoAlvo" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">tag</span> Prefixo alvo</label>
                     <input type="text" class="aed-input form-control input-cidr" id="divPrefixoAlvo"
                            name="prefixoAlvo" inputmode="numeric" maxlength="2" placeholder="24" value="24">
                     <div class="form-text text-muted">O prefixo de cada sub-rede resultante (0 a 32).</div>
                 </div>
 
                 <div class="mb-3 calc-criterio d-none" id="grupo-quantidade">
-                    <label for="divQuantidade" class="form-label text-secondary">Quantas sub-redes você precisa</label>
+                    <label for="divQuantidade" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">grid_on</span> Quantas sub-redes você precisa</label>
                     <input type="text" class="aed-input form-control input-numeric" id="divQuantidade"
                            name="quantidade" inputmode="numeric" placeholder="6" value="6">
                     <div class="form-text text-muted">
@@ -69,7 +69,7 @@
                 </div>
 
                 <div class="mb-3 calc-criterio d-none" id="grupo-hosts">
-                    <label for="divHosts" class="form-label text-secondary">Hosts por sub-rede</label>
+                    <label for="divHosts" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">group</span> Hosts por sub-rede</label>
                     <input type="text" class="aed-input form-control input-numeric" id="divHosts"
                            name="hosts" inputmode="numeric" placeholder="500" value="500">
                     <div class="form-text text-muted">

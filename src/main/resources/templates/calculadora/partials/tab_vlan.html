@@ -16,7 +16,7 @@
                   hx-disabled-elt="find button[type='submit']">
 
                 <div class="mb-3">
-                    <label for="vlanBloco" class="form-label text-secondary">Bloco base</label>
+                    <label for="vlanBloco" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">lan</span> Bloco base</label>
                     <input type="text" class="aed-input form-control input-ipv4" id="vlanBloco" name="bloco"
                            placeholder="192.168.0.0/16" value="192.168.0.0/16"
                            inputmode="text" autocomplete="off" spellcheck="false" required>
@@ -24,12 +24,12 @@
 
                 <div class="row g-2 mb-3">
                     <div class="col-6">
-                        <label for="vlanPrefixo" class="form-label text-secondary">Prefixo por VLAN</label>
+                        <label for="vlanPrefixo" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">tag</span> Prefixo por VLAN</label>
                         <input type="text" class="aed-input form-control input-cidr" id="vlanPrefixo"
                                name="prefixoPorVlan" inputmode="numeric" maxlength="2" value="24">
                     </div>
                     <div class="col-6">
-                        <label for="vlanQtd" class="form-label text-secondary">Quantas VLANs</label>
+                        <label for="vlanQtd" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">format_list_numbered</span> Quantas VLANs</label>
                         <input type="text" class="aed-input form-control input-numeric" id="vlanQtd"
                                name="quantidade" inputmode="numeric" value="4" required>
                     </div>
@@ -37,19 +37,19 @@
 
                 <div class="row g-2 mb-3">
                     <div class="col-6">
-                        <label for="vlanInicial" class="form-label text-secondary">VLAN ID inicial</label>
+                        <label for="vlanInicial" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">sell</span> VLAN ID inicial</label>
                         <input type="text" class="aed-input form-control input-numeric" id="vlanInicial"
                                name="vlanInicial" inputmode="numeric" value="10">
                     </div>
                     <div class="col-6">
-                        <label for="vlanPasso" class="form-label text-secondary">Passo entre IDs</label>
+                        <label for="vlanPasso" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">skip_next</span> Passo entre IDs</label>
                         <input type="text" class="aed-input form-control input-numeric" id="vlanPasso"
                                name="passoVlan" inputmode="numeric" value="10">
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label for="vlanEstrategia" class="form-label text-secondary">Como mapear a sub-rede</label>
+                    <label for="vlanEstrategia" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">account_tree</span> Como mapear a sub-rede</label>
                     <select class="aed-input form-select" id="vlanEstrategia" name="estrategia">
                         <option value="sequencial" selected>Sequencial — blocos consecutivos do bloco base</option>
                         <option value="octeto">VLAN ID no 3º octeto — VLAN 10 vira x.x.10.0/24</option>

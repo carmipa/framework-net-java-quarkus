@@ -320,6 +320,30 @@
     white-space: nowrap;
 }
 
+/* Ícone dentro do cabeçalho da coluna: pequeno, discreto e alinhado ao texto. */
+.calc-tabela thead th .material-symbols-outlined {
+    font-size: 0.95rem;
+    vertical-align: middle;
+    opacity: 0.6;
+    margin-right: 0.2rem;
+    text-transform: none;
+}
+
+/* Coluna com explicação no hover ganha o cursor de ajuda. */
+.calc-tabela thead th[title] {
+    cursor: help;
+    text-decoration: underline dotted rgba(255, 255, 255, 0.25);
+    text-underline-offset: 3px;
+}
+
+/* Ícone dentro do label de campo do formulário: pequeno e discreto. */
+.form-label .material-symbols-outlined {
+    font-size: 0.95rem;
+    vertical-align: middle;
+    opacity: 0.6;
+    margin-right: 0.15rem;
+}
+
 .calc-linha-destaque td {
     background: rgba(0, 0, 0, 0.35);
     color: var(--aed-risk-attention);
