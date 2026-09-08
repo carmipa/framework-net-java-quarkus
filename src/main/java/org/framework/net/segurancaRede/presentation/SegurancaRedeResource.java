@@ -11,6 +11,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import org.framework.net.segurancaRede.application.AclSimulatorService;
+import org.framework.net.segurancaRede.application.DiagnosticoFluxoService;
 import org.framework.net.segurancaRede.application.FirewallEstadoService;
 import org.framework.net.segurancaRede.application.TlsHandshakeService;
 import org.framework.net.segurancaRede.application.TlsInspectorService;
@@ -33,6 +34,9 @@ public class SegurancaRedeResource {
     TlsHandshakeService tlsHandshakeService;
 
     @Inject
+    DiagnosticoFluxoService diagnosticoFluxoService;
+
+    @Inject
     @io.quarkus.qute.Location("segurancaRede/index.html")
     Template index;
 
@@ -43,6 +47,10 @@ public class SegurancaRedeResource {
     @Inject
     @io.quarkus.qute.Location("segurancaRede/partials/tls_handshake.html")
     Template tlsHandshakeFragmento;
+
+    @Inject
+    @io.quarkus.qute.Location("segurancaRede/partials/diagnostico_fluxo.html")
+    Template diagnosticoFluxoFragmento;
 
     @Inject
     @io.quarkus.qute.Location("segurancaRede/partials/resultado.html")
@@ -57,7 +65,19 @@ public class SegurancaRedeResource {
     public TemplateInstance paginaInicial() {
         return index.data("activeMainMenu", "seguranca")
                 .data("cenarios", firewallEstadoService.cenariosDisponiveis())
-                .data("cenariosHandshake", tlsHandshakeService.cenariosDisponiveis());
+                .data("cenariosHandshake", tlsHandshakeService.cenariosDisponiveis())
+                .data("cenariosFluxo", diagnosticoFluxoService.cenariosDisponiveis());
+    }
+
+    /**
+     * Diagnostica a alcançabilidade de um fluxo (chega? onde bloqueia?) e devolve
+     * o fragmento com o caminho salto a salto. GET: só lê o catálogo de cenários.
+     */
+    @GET
+    @Path("/api/fluxo")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance diagnosticarFluxo(@QueryParam("cenario") String cenario) {
+        return diagnosticoFluxoFragmento.data("fluxo", diagnosticoFluxoService.diagnosticar(cenario));
     }
 
     /**

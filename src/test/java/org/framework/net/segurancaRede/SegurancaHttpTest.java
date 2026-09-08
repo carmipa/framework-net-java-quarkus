@@ -453,4 +453,45 @@ class SegurancaHttpTest {
                 .then()
                 .statusCode(400);
     }
+
+    // ---- Diagnóstico de alcançabilidade de fluxo (P05 v1) ----
+
+    @Test
+    void paginaTrazAbaDeFluxo() {
+        given()
+                .when().get("/seguranca")
+                .then()
+                .statusCode(200)
+                .body(containsString("data-tab=\"fluxo\""))
+                .body(containsString("/seguranca/api/fluxo?cenario=alcanca"));
+    }
+
+    @Test
+    void fluxoAlcancaMostraCaminhoCompleto() {
+        given()
+                .when().get("/seguranca/api/fluxo?cenario=alcanca")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("alcança o destino"))
+                .body(containsString("Servidor de destino"))
+                .body(not(containsString("<!DOCTYPE html>")));
+    }
+
+    @Test
+    void fluxoAclNegaMostraOndeBloqueia() {
+        given()
+                .when().get("/seguranca/api/fluxo?cenario=acl-nega")
+                .then()
+                .statusCode(200)
+                .body(containsString("bloqueado em Firewall"));
+    }
+
+    @Test
+    void fluxoCenarioDesconhecidoRetorna400() {
+        given()
+                .when().get("/seguranca/api/fluxo?cenario=inexistente")
+                .then()
+                .statusCode(400);
+    }
 }
