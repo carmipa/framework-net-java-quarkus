@@ -249,6 +249,25 @@
                 </tbody>
             </table>
         </div>
+        <div class="row g-3 mt-1">
+            <div class="col-lg-7">
+                <div class="table-responsive">
+                    <table class="table table-dark table-sm telemetry-table mb-0">
+                        <caption class="text-secondary small px-2">Acessos por país (código ISO via Cloudflare — sem IP)</caption>
+                        <thead>
+                            <tr><th>País</th><th class="text-end">Acessos</th><th class="text-end">%</th></tr>
+                        </thead>
+                        <tbody id="tabela-origem-paises">
+                            <tr><td colspan="3" class="tele-empty">Sem dados no período.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="tele-chart-box"><canvas id="chart-clientes" height="200"></canvas></div>
+                <p class="small text-secondary text-center mb-0 mt-1">Bots × pessoas (classificado pelo User-Agent)</p>
+            </div>
+        </div>
     </div>
 
     <div class="aed-card card-tech console-card mb-3 p-3">
@@ -316,7 +335,7 @@
 {/content}
 {#extraScripts}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="/telemetria/js/dashboard.js?v=20260908"></script>
+<script src="/telemetria/js/dashboard.js?v=20260908b"></script>
 {/extraScripts}
 {/include}
         

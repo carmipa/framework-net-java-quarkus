@@ -64,7 +64,9 @@ class TelemetriaHttpTest {
                 .then()
                 .statusCode(200)
                 .body("topRotas", notNullValue())
-                .body("porModulo", notNullValue());
+                .body("porModulo", notNullValue())
+                .body("paises", notNullValue())
+                .body("clientes", notNullValue());
     }
 
     @Test
@@ -77,7 +79,9 @@ class TelemetriaHttpTest {
                 .body(containsString("Origem do tráfego"))
                 .body(containsString("chart-origem"))
                 .body(containsString("tabela-origem-modulos"))
-                .body(containsString("tabela-origem-rotas"));
+                .body(containsString("tabela-origem-rotas"))
+                .body(containsString("tabela-origem-paises"))
+                .body(containsString("chart-clientes"));
     }
 
     @Test

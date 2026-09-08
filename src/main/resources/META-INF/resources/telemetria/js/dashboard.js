@@ -8,7 +8,7 @@
     let autoRefreshMs = 10000;
     let consolePausado = false;
     let timerAutoRefresh = null;
-    let chartModulos, chartStatus, chartAtividade, chartLatencia, chartOrigem;
+    let chartModulos, chartStatus, chartAtividade, chartLatencia, chartOrigem, chartClientes;
 
     const CORES_MODULO = ['#f59e0b', '#60a5fa', '#34d399', '#818cf8', '#f43f5e', '#2dd4bf', '#c084fc', '#fb923c'];
     const CORES_STATUS = { '2xx': '#34d399', '3xx': '#60a5fa', '4xx': '#f59e0b', '5xx': '#f43f5e' };
@@ -260,6 +260,39 @@
                     + '<td class="num">' + e.chamadas + '</td>'
                     + '<td class="num ' + (e.erros > 0 ? 'txt-err' : '') + '">' + e.erros + '</td>'
                     + '<td class="num mono">' + ms(e.p95) + '</td></tr>').join('');
+        }
+
+        // Acessos por país (código ISO via Cloudflare; nunca o IP).
+        const paises = data.paises || {};
+        const chavesP = Object.keys(paises);
+        const totalP = chavesP.reduce((a, k) => a + (paises[k] || 0), 0);
+        const tbPais = $('tabela-origem-paises');
+        if (tbPais) {
+            tbPais.innerHTML = chavesP.length === 0
+                ? '<tr><td colspan="3" class="tele-empty">Sem dados no período.</td></tr>'
+                : chavesP.map(k => {
+                    const v = paises[k] || 0;
+                    const pct = totalP > 0 ? Math.round((v * 100) / totalP) : 0;
+                    const nome = k === '??' ? '?? (desconhecido)' : esc(k);
+                    return '<tr><td>' + nome + '</td><td class="num">' + v + '</td><td class="num">' + pct + '%</td></tr>';
+                }).join('');
+        }
+
+        // Bots × pessoas (classificado pelo User-Agent).
+        const clientes = data.clientes || {};
+        const canvasC = $('chart-clientes');
+        if (canvasC) {
+            const rotulos = Object.keys(clientes);
+            const cores = rotulos.map(r => r === 'humano' ? '#34d399' : (r === 'bot' ? '#f59e0b' : '#64748b'));
+            if (chartClientes) chartClientes.destroy();
+            chartClientes = new Chart(canvasC, {
+                type: 'doughnut',
+                data: {
+                    labels: rotulos,
+                    datasets: [{ data: rotulos.map(r => clientes[r] || 0), backgroundColor: cores, borderColor: '#0c121c', borderWidth: 3 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '58%', plugins: { legend: { position: 'bottom' } } }
+            });
         }
     }
 

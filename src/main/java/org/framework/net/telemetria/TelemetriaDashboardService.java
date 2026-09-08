@@ -55,6 +55,8 @@ public class TelemetriaDashboardService {
 
         long http2xx = 0, http3xx = 0, http4xx = 0, http5xx = 0;
         Map<String, Long> metodos = new LinkedHashMap<>();
+        Map<String, Long> paisesAgg = new LinkedHashMap<>();   // pais -> total (origem, sem IP)
+        Map<String, Long> clientesAgg = new LinkedHashMap<>(); // bot/humano -> total
         List<Long> duracoes = new ArrayList<>();
         Map<String, long[]> modAgg = new LinkedHashMap<>();       // modulo -> [total, ok, erro]
         Map<String, List<Long>> modDur = new LinkedHashMap<>();    // modulo -> durações
@@ -72,6 +74,11 @@ public class TelemetriaDashboardService {
             if (e.httpMethod() != null) {
                 metodos.merge(e.httpMethod(), 1L, Long::sum);
             }
+            Map<String, Object> campos = e.fields();
+            Object paisVal = campos == null ? null : campos.get("pais");
+            paisesAgg.merge(paisVal == null ? "??" : paisVal.toString(), 1L, Long::sum);
+            Object clienteVal = campos == null ? null : campos.get("clienteTipo");
+            clientesAgg.merge(clienteVal == null ? "desconhecido" : clienteVal.toString(), 1L, Long::sum);
             Long dur = e.durationMs();
             if (dur != null) {
                 duracoes.add(dur);
@@ -154,6 +161,13 @@ public class TelemetriaDashboardService {
         List<TelemetriaDashboard.AtividadeMinuto> atividade = montarAtividade(janela, janelaMinutos);
         List<String> consoleLinhas = montarConsole(limiteConsole);
 
+        // Top países por volume, preservando a ordem (LinkedHashMap) para o JSON/gráfico.
+        Map<String, Long> paisesTop = new LinkedHashMap<>();
+        paisesAgg.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(12)
+                .forEach(en -> paisesTop.put(en.getKey(), en.getValue()));
+
         return new TelemetriaDashboard(
                 resumo,
                 janelaMinutos,
@@ -161,7 +175,7 @@ public class TelemetriaDashboardService {
                 janela.size(),
                 httpTotal, http2xx, http3xx, http4xx, http5xx,
                 taxaSucesso, taxaErroServidor,
-                latencia, metodos, porModulo, topLentos, topErros, topRotas, atividade,
+                latencia, metodos, paisesTop, clientesAgg, porModulo, topLentos, topErros, topRotas, atividade,
                 consoleLinhas,
                 store.pastaLogs().toAbsolutePath().toString());
     }

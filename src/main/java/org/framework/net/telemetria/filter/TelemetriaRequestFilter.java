@@ -8,6 +8,7 @@ import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.ext.Provider;
+import org.framework.net.telemetria.OrigemAcesso;
 import org.framework.net.telemetria.TelemetriaContext;
 import org.framework.net.telemetria.TelemetriaLogger;
 import org.framework.net.telemetria.TelemetriaRequestContext;
@@ -43,6 +44,11 @@ public class TelemetriaRequestFilter implements ContainerRequestFilter, Containe
         TelemetriaRequestContext ctx = telemetriaContext.iniciarRequisicao(requestId, method, path);
         requestContext.setProperty(TelemetriaContext.REQUEST_CONTEXT_PROPERTY, ctx);
         requestContext.setProperty("requestId", ctx.requestId());
+        // Origem AGREGAVEL, sem tocar no IP: pais (Cloudflare) e bot/humano (User-Agent).
+        requestContext.setProperty("tele.pais",
+                OrigemAcesso.pais(requestContext.getHeaderString("CF-IPCountry")));
+        requestContext.setProperty("tele.clienteTipo",
+                OrigemAcesso.tipo(requestContext.getHeaderString("User-Agent")));
     }
 
     /**
@@ -57,7 +63,9 @@ public class TelemetriaRequestFilter implements ContainerRequestFilter, Containe
             if (property instanceof TelemetriaRequestContext ctx) {
                 int status = responseContext.getStatus();
                 telemetriaContext.registrarResposta(ctx, status);
-                telemetriaLogger.logHttpAccess(ctx, status);
+                String pais = textoOu(requestContext.getProperty("tele.pais"), "??");
+                String clienteTipo = textoOu(requestContext.getProperty("tele.clienteTipo"), "desconhecido");
+                telemetriaLogger.logHttpAccess(ctx, status, pais, clienteTipo);
                 Object requestId = requestContext.getProperty("requestId");
                 if (requestId != null) {
                     responseContext.getHeaders().putSingle("X-Request-Id", requestId.toString());
@@ -67,5 +75,9 @@ public class TelemetriaRequestFilter implements ContainerRequestFilter, Containe
         } finally {
             telemetriaContext.limpar();
         }
+    }
+
+    private static String textoOu(Object valor, String padrao) {
+        return valor instanceof String s && !s.isBlank() ? s : padrao;
     }
 }

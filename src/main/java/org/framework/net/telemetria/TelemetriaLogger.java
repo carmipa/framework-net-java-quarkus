@@ -126,7 +126,7 @@ public class TelemetriaLogger {
         }
     }
 
-    public void logHttpAccess(TelemetriaRequestContext ctx, int httpStatus) {
+    public void logHttpAccess(TelemetriaRequestContext ctx, int httpStatus, String pais, String clienteTipo) {
         if (!enabled || ctx == null) {
             return;
         }
@@ -135,6 +135,9 @@ public class TelemetriaLogger {
         Map<String, Object> fields = new LinkedHashMap<>();
         fields.put("httpStatus", httpStatus);
         fields.put("durationMs", ctx.elapsedMillis());
+        // Origem agregavel, nunca o IP: pais (CF-IPCountry) e bot/humano (User-Agent).
+        fields.put("pais", pais == null ? "??" : pais);
+        fields.put("clienteTipo", clienteTipo == null ? "desconhecido" : clienteTipo);
 
         TelemetriaEvent telemetriaEvent = new TelemetriaEvent(
                 UUID.randomUUID().toString(),

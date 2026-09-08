@@ -23,6 +23,8 @@ public record TelemetriaDashboard(
         double taxaErroServidor,
         Latencia latencia,
         Map<String, Long> metodos,
+        Map<String, Long> paises,
+        Map<String, Long> clientes,
         List<ModuloStat> porModulo,
         List<EndpointStat> topLentos,
         List<EndpointStat> topErros,
