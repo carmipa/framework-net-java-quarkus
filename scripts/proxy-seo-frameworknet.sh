@@ -48,6 +48,7 @@ CONF="$BASE/nginx/proxy_host/1.conf"
 MAPA="$BASE/nginx/custom/http.conf"
 BANCO="$BASE/database.sqlite"
 ROBOTS="$BASE/robots"
+FONTE_ROBOTS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/src/main/resources/META-INF/resources/robots.txt"
 DOM=frameworknet.carminati.dev.br
 D=$(date +%Y%m%d-%H%M%S)
 
@@ -112,13 +113,37 @@ PY
 
 # ---------------------------------------------------------------------
 echo "== item 2: robots.txt proprio =="
+
+# O ARQUIVO e regerado SEMPRE — assim "git pull + rodar o script" leva a politica
+# nova a producao. So a entrada no map e que acontece uma vez.
+#
+# A politica servida e a VERSIONADA no repositorio: a mesma que o
+# RobotsTxtHttpTest valida a cada build, e que ja traz a linha Sitemap:.
+#
+# A primeira versao deste script copiava o robots GENERICO do proxy, e o resultado
+# foi divergencia silenciosa, medida em 08/09: producao ficou com "Disallow: /api/"
+# (com barra, que pela regra de prefixo NAO cobre "/api") enquanto o repo tem
+# "Disallow: /api", e ainda herdou "/q/" e "/oauth2/", que sao rotas de OUTRO
+# projeto. Guarda que valida um arquivo enquanto producao serve outro nao guarda
+# coisa nenhuma.
+#
+# Os comentarios saem: explicam a politica para quem mexe no codigo e citam caminho
+# interno da VPS. O robots.txt e publico, e o robo le regras, nao comentario.
+[ -f "$FONTE_ROBOTS" ] || erro "nao achei a politica versionada em $FONTE_ROBOTS"
+{
+  echo "# Politica versionada em src/main/resources/META-INF/resources/robots.txt"
+  echo "# do repositorio framework-net-java-quarkus. Nao edite aqui: rode"
+  echo "# scripts/proxy-seo-frameworknet.sh depois de um git pull."
+  echo
+  grep -vE '^[[:space:]]*#' "$FONTE_ROBOTS" | grep -vE '^[[:space:]]*$'
+} > "$ROBOTS/$DOM.txt"
+grep -q "^Sitemap:" "$ROBOTS/$DOM.txt" || erro "a politica versionada perdeu a linha Sitemap:"
+grep -q "^Disallow: /telemetria$" "$ROBOTS/$DOM.txt" || erro "a politica gerada nao fecha /telemetria — abortado"
+echo "   $ROBOTS/$DOM.txt gerado da politica VERSIONADA ($(grep -c '^Disallow' "$ROBOTS/$DOM.txt") regras Disallow, $(grep -c '^User-agent' "$ROBOTS/$DOM.txt") grupos)"
+
 if grep -q "$DOM" "$MAPA"; then
-  echo "   ja mapeado (idempotente)"
+  echo "   ja mapeado no map \$host (idempotente)"
 else
-  [ -f "$ROBOTS/robots.txt" ] || erro "nao achei o robots generico em $ROBOTS"
-  cp "$ROBOTS/robots.txt" "$ROBOTS/$DOM.txt"
-  printf '\n# Mapa do site, servido pela aplicacao (SitemapResource).\nSitemap: https://%s/sitemap.xml\n' "$DOM" >> "$ROBOTS/$DOM.txt"
-  echo "   criado $ROBOTS/$DOM.txt (generico + linha Sitemap)"
   python3 - "$MAPA" "$DOM" <<'PY' || exit 1
 import io, sys
 mapa, dom = sys.argv[1], sys.argv[2]
