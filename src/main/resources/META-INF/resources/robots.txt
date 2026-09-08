@@ -32,12 +32,20 @@
 # /portas /protocolos (+/bgp +/ssh) /resolucao-problemas /localizacao /trafego
 # /seguranca /diagnostico /documentacao /sobre.
 #
-# NOTA DE PRODUCAO (medido em 02/09/2026): o nginx do proxy reverso da VPS tem
-# um "location = /robots.txt" em /opt/infra-proxy/data/nginx/custom/server_proxy.conf,
-# incluido no server{} de TODOS os hosts. Match exato ganha do "location /" que
-# faz o proxy_pass, entao enquanto aquele bloco existir a resposta em
-# frameworknet.carminati.dev.br vem do arquivo compartilhado da VPS e ESTE
-# arquivo vale so em desenvolvimento e em qualquer outro deploy.
+# NOTA DE PRODUCAO (medido em 02/09, revisado em 08/09/2026): o nginx do proxy
+# reverso da VPS tem um "location = /robots.txt" em
+# /opt/infra-proxy/data/nginx/custom/server_proxy.conf, incluido no server{} de
+# TODOS os hosts. Match exato ganha do "location /" que faz o proxy_pass, entao
+# enquanto aquele bloco existir a resposta em frameworknet.carminati.dev.br vem
+# do proxy, e ESTE arquivo vale so em desenvolvimento e em qualquer outro deploy.
+#
+# MUDOU EM 03/09: a politica deixou de ser um arquivo unico para os tres dominios
+# e passou a ser POR HOST, via "map $host" com lista branca -- e nao
+# "try_files /$host.txt", porque $host vem do cabecalho Host, que o cliente
+# escolhe, e interpolar isso num caminho de arquivo e path traversal esperando
+# acontecer. Medido em 08/09: os dominios servem robots.txt com MD5 DIFERENTES
+# (aspm e challengepride tem o seu; frameworknet e binmapper ainda dividem o
+# arquivo padrao).
 
 # --- Buscadores: bem-vindos nas paginas ---
 User-agent: Googlebot
@@ -110,7 +118,11 @@ Crawl-delay: 10
 # Mapa do site, servido por SitemapResource: so as paginas didaticas, as mesmas
 # que os grupos acima deixam abertas. A URL e absoluta e canonica de propriedade
 # -- o Sitemap: independe de grupo e vale para o arquivo inteiro.
-# Nao esta no robots.txt compartilhado da VPS de proposito: aquele arquivo responde
-# por tres dominios, e apontar o sitemap de um deles para os outros e submissao
-# cruzada, que o buscador descarta.
+# Ausente do arquivo servido em producao, e isto e PENDENCIA, nao decisao: em
+# 02/09 a linha ficou de fora porque um unico arquivo respondia pelos tres
+# dominios, e apontar o sitemap de um para os outros e submissao cruzada, que o
+# buscador descarta. Desde 03/09 a politica e por host, entao a objecao caiu --
+# falta o frameworknet ganhar entrada propria no "map $host" (hoje ele divide o
+# arquivo padrao com o binmapper). Enquanto isso, o sitemap chega ao Google pelo
+# Search Console, que independe do robots.txt.
 Sitemap: https://frameworknet.carminati.dev.br/sitemap.xml
