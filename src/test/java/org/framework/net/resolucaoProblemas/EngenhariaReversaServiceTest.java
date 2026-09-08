@@ -288,4 +288,47 @@ class EngenhariaReversaServiceTest {
                 .map(InterfaceLida::ip)
                 .findFirst().orElseThrow();
     }
+
+    // ---- Correções do parecer (C02 e C03) ----
+
+    @Test
+    @DisplayName("C02: o diagrama mostra TODAS as LANs do roteador, não só a primeira")
+    void diagramaMostraTodasAsLans() {
+        String config = """
+                hostname R1
+                int g0/0
+                 ip address 10.1.0.1 255.255.255.0
+                 no shutdown
+                int g0/1
+                 ip address 10.2.0.1 255.255.255.0
+                 no shutdown
+                """;
+        CenarioReconstruido cenario = servico.interpretar(config);
+        String mermaid = cenario.mermaid();
+        assertTrue(mermaid.contains("LAN 10.1.0.0/24"),
+                "A primeira LAN deveria aparecer no diagrama:\n" + mermaid);
+        assertTrue(mermaid.contains("LAN 10.2.0.0/24"),
+                "A SEGUNDA LAN também deveria aparecer (antes omitida por findFirst):\n" + mermaid);
+    }
+
+    @Test
+    @DisplayName("C03: reconstrução preserva o clock rate original e não força no shutdown")
+    void reconstrucaoPreservaClockRateENaoForcaNoShutdown() {
+        String config = """
+                hostname R9
+                int s0/0/0
+                 ip address 192.168.9.1 255.255.255.252
+                 clock rate 128000
+                """;
+        CenarioReconstruido cenario = servico.interpretar(config);
+        String script = cenario.scripts().stream()
+                .map(CenarioReconstruido.ScriptCorrigido::conteudo)
+                .reduce("", (a, b) -> a + "\n" + b);
+        assertTrue(script.contains("clock rate 128000"),
+                "O clock rate original (128000) deveria ser preservado:\n" + script);
+        assertFalse(script.contains("clock rate 64000"),
+                "Não pode reinventar 64000 quando o original era 128000:\n" + script);
+        assertFalse(script.contains("no shutdown"),
+                "A interface não tinha 'no shutdown'; a reconstrução fiel não deve forçá-lo:\n" + script);
+    }
 }

@@ -96,14 +96,16 @@ public record ConfiguracaoLida(
      * <p><b>Invariantes do domínio:</b> {@code ip} e {@code mascara} podem vir
      * vazios (interface declarada sem endereço) — quem consome checa
      * {@link #temIp()} antes de calcular sub-rede. {@code prefixo} vale -1
-     * enquanto não houver máscara válida, nunca 0, que é um prefixo legítimo.</p>
+     * enquanto não houver máscara válida, nunca 0, que é um prefixo legítimo.
+     * {@code clockRateBps} guarda o VALOR original do {@code clock rate} (0 quando
+     * não houve): reconstrução fiel não pode reinventar o número do relógio.</p>
      */
     public record InterfaceLida(
             String nome,
             String ip,
             String mascara,
             int prefixo,
-            boolean clockRate,
+            int clockRateBps,
             boolean noShutdown,
             String descricao,
             int vlan,
@@ -111,6 +113,11 @@ public record ConfiguracaoLida(
 
         public boolean temIp() {
             return ip != null && !ip.isBlank() && prefixo >= 0;
+        }
+
+        /** Havia {@code clock rate} nesta interface (lado DCE do enlace serial). */
+        public boolean temClockRate() {
+            return clockRateBps > 0;
         }
 
         /** Interface serial participa de enlace WAN; a distinção guia a correção de endereço. */
@@ -125,7 +132,7 @@ public record ConfiguracaoLida(
 
         /** Cópia com outro endereço — usada pela auditoria ao aplicar uma correção derivada. */
         public InterfaceLida comIp(String novoIp) {
-            return new InterfaceLida(nome, novoIp, mascara, prefixo, clockRate, noShutdown,
+            return new InterfaceLida(nome, novoIp, mascara, prefixo, clockRateBps, noShutdown,
                     descricao, vlan, linha);
         }
     }

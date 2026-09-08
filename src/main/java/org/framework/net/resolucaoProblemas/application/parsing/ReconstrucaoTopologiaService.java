@@ -118,8 +118,8 @@ public class ReconstrucaoTopologiaService {
 
             if (pontas.size() >= 2) {
                 Ponta b = pontas.get(1);
-                String dce = a.itf().clockRate() ? a.roteador() + " " + a.itf().nome()
-                        : b.itf().clockRate() ? b.roteador() + " " + b.itf().nome() : "não definido";
+                String dce = a.itf().temClockRate() ? a.roteador() + " " + a.itf().nome()
+                        : b.itf().temClockRate() ? b.roteador() + " " + b.itf().nome() : "não definido";
                 enlaces.add(new EnlaceReconstruido(rede, prefixo, a.itf().mascara(),
                         a.roteador(), a.itf().nome(), a.itf().ip(),
                         b.roteador(), b.itf().nome(), b.itf().ip(), dce, true));
@@ -128,7 +128,7 @@ public class ReconstrucaoTopologiaService {
                 enlaces.add(new EnlaceReconstruido(rede, prefixo, a.itf().mascara(),
                         a.roteador(), a.itf().nome(), a.itf().ip(),
                         "", "", par.isEmpty() ? "-" : par + " (livre)",
-                        a.itf().clockRate() ? a.roteador() + " " + a.itf().nome() : "não definido",
+                        a.itf().temClockRate() ? a.roteador() + " " + a.itf().nome() : "não definido",
                         false));
             }
         }
@@ -145,7 +145,7 @@ public class ReconstrucaoTopologiaService {
                         : i.prefixo() >= PREFIXO_PONTO_A_PONTO ? "WAN (ponto a ponto)"
                         : i.temIp() ? "LAN" : "sem endereço";
                 List<String> notas = new ArrayList<>();
-                if (i.clockRate()) {
+                if (i.temClockRate()) {
                     notas.add("DCE (clock rate)");
                 }
                 if (i.temIp() && !i.noShutdown()) {
@@ -190,18 +190,23 @@ public class ReconstrucaoTopologiaService {
             String id = "R" + indice;
             idPorRoteador.put(r.hostname(), id);
             String as = r.asBgp() > 0 ? "\\nAS " + r.asBgp() : "";
-            LanReconstruida lan = lans.stream()
-                    .filter(l -> l.roteador().equals(r.hostname())).findFirst().orElse(null);
+            // TODAS as LANs do roteador entram no desenho — não apenas a primeira.
+            // Omitir uma LAN faz o diagrama parecer completo enquanto esconde uma
+            // sub-rede: o pior resultado numa ferramenta didática de reconstrução.
+            List<LanReconstruida> lansDoRoteador = lans.stream()
+                    .filter(l -> l.roteador().equals(r.hostname())).toList();
 
             linhas.add("    subgraph SG" + indice + "[\"" + escapar(r.hostname())
                     + (r.asBgp() > 0 ? " · AS " + r.asBgp() : "") + "\"]");
-            linhas.add("        " + id + "[\"" + escapar(r.hostname()) + as
-                    + (lan != null ? "\\n" + lan.nomeInterface() + ": " + lan.gateway() : "") + "\"]");
-            if (lan != null) {
-                String lanId = "L" + indice;
-                linhas.add("        " + lanId + "[\"LAN " + lan.cidr() + "\\n" + lan.hostsUtilizaveis()
-                        + " hosts\"]");
+            linhas.add("        " + id + "[\"" + escapar(r.hostname()) + as + "\"]");
+            int seqLan = 1;
+            for (LanReconstruida lan : lansDoRoteador) {
+                String lanId = "L" + indice + "_" + seqLan;
+                linhas.add("        " + lanId + "[\"" + escapar(lan.nomeInterface()) + ": "
+                        + escapar(lan.gateway()) + "\\nLAN " + escapar(lan.cidr()) + "\\n"
+                        + lan.hostsUtilizaveis() + " hosts\"]");
                 linhas.add("        " + id + " --- " + lanId);
+                seqLan++;
             }
             linhas.add("    end");
             indice++;
@@ -272,10 +277,15 @@ public class ReconstrucaoTopologiaService {
                     marcarCorrecao(linhas, correcoes, comando);
                     linhas.add(" " + comando);
                 }
-                if (i.clockRate()) {
-                    linhas.add(" clock rate 64000");
+                if (i.temClockRate()) {
+                    linhas.add(" clock rate " + i.clockRateBps());
                 }
-                linhas.add(" no shutdown");
+                // Reconstrução FIEL: só traz "no shutdown" se a interface original tinha.
+                // A antiga forçava sempre, apagando um "shutdown" real; a interface
+                // endereçada sem "no shutdown" já é sinalizada como achado pela auditoria.
+                if (i.noShutdown()) {
+                    linhas.add(" no shutdown");
+                }
                 linhas.add(" exit");
             }
 

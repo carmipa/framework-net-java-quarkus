@@ -227,7 +227,16 @@ public class CiscoConfigParser {
             return true;
         }
         if ("clock".equals(comando) && tokens.length >= 2 && tokens[1].toLowerCase(Locale.ROOT).startsWith("rate")) {
-            alvo.clockRate = true;
+            // Preserva o VALOR do clock rate (bps); reconstrução fiel não reinventa o número.
+            int bps = 0;
+            if (tokens.length >= 3) {
+                try {
+                    bps = Integer.parseInt(tokens[2]);
+                } catch (NumberFormatException ignored) {
+                    bps = 0;
+                }
+            }
+            alvo.clockRateBps = bps;
             return true;
         }
         if (ehPrefixoDe(comando, "description", 4)) {
@@ -478,7 +487,7 @@ public class CiscoConfigParser {
         private String ip = "";
         private String mascaraTexto = "";
         private int prefixo = -1;
-        private boolean clockRate;
+        private int clockRateBps;
         private boolean noShutdown;
         private String descricao = "";
         private int vlan;
@@ -489,7 +498,7 @@ public class CiscoConfigParser {
         }
 
         InterfaceLida selar() {
-            return new InterfaceLida(nome, ip, mascaraTexto, prefixo, clockRate, noShutdown,
+            return new InterfaceLida(nome, ip, mascaraTexto, prefixo, clockRateBps, noShutdown,
                     descricao, vlan, linha);
         }
     }

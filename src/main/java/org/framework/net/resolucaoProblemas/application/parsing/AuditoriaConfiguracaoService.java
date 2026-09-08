@@ -528,7 +528,7 @@ public class AuditoriaConfiguracaoService {
             if (pontas.size() != 2) {
                 continue;
             }
-            long comRelogio = pontas.stream().filter(p -> p.itf().clockRate()).count();
+            long comRelogio = pontas.stream().filter(p -> p.itf().temClockRate()).count();
             if (comRelogio == 0) {
                 Ponta p = pontas.get(0);
                 achados.add(AchadoConfiguracao.semCorrecao("Camada física", p.roteador(),

@@ -140,6 +140,96 @@ class SegurancaHttpTest {
                 .statusCode(400);
     }
 
+    // ---- Contraexemplos que reprovariam a avaliação antiga (parecer C01) ----
+
+    @Test
+    void portaComparaExatoNaoSubstring() {
+        // Antes: contains("eq 80") casava com "eq 8080". Porta 80 NÃO deve casar 8080.
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("regra", "permit tcp any eq 8080")
+                .formParam("ipOrigem", "192.168.1.5")
+                .formParam("ipDestino", "10.0.0.1")
+                .formParam("portaDestino", "80")
+                .when().post("/seguranca/api/testar")
+                .then()
+                .statusCode(200)
+                .body(containsString("NO MATCH"))
+                .body(not(containsString("PERMITIDO")));
+    }
+
+    @Test
+    void destinoForaDoAlcanceDaNoMatch() {
+        // Antes: o IP de destino não participava da decisão. host 10.0.0.1 != 10.0.0.2 -> NO MATCH.
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("regra", "permit ip any host 10.0.0.1")
+                .formParam("ipOrigem", "192.168.1.5")
+                .formParam("ipDestino", "10.0.0.2")
+                .formParam("portaDestino", "80")
+                .when().post("/seguranca/api/testar")
+                .then()
+                .statusCode(200)
+                .body(containsString("NO MATCH"));
+    }
+
+    @Test
+    void destinoNoAlcanceDaMatch() {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("regra", "permit ip any host 10.0.0.1")
+                .formParam("ipOrigem", "192.168.1.5")
+                .formParam("ipDestino", "10.0.0.1")
+                .formParam("portaDestino", "80")
+                .when().post("/seguranca/api/testar")
+                .then()
+                .statusCode(200)
+                .body(containsString("PERMITIDO"));
+    }
+
+    @Test
+    void curingaDeRedeCasaFaixa() {
+        // 192.168.1.0 0.0.0.255 cobre 192.168.1.99, mas não 192.168.2.5.
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("regra", "permit tcp 192.168.1.0 0.0.0.255 eq 80")
+                .formParam("ipOrigem", "192.168.1.99")
+                .formParam("ipDestino", "10.0.0.1")
+                .formParam("portaDestino", "80")
+                .when().post("/seguranca/api/testar")
+                .then()
+                .statusCode(200)
+                .body(containsString("PERMITIDO"));
+    }
+
+    @Test
+    void curingaDeRedeForaDaFaixaDaNoMatch() {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("regra", "permit tcp 192.168.1.0 0.0.0.255 eq 80")
+                .formParam("ipOrigem", "192.168.2.5")
+                .formParam("ipDestino", "10.0.0.1")
+                .formParam("portaDestino", "80")
+                .when().post("/seguranca/api/testar")
+                .then()
+                .statusCode(200)
+                .body(containsString("NO MATCH"));
+    }
+
+    @Test
+    void regraNaoSuportadaRetorna400() {
+        // Sintaxe fora do suportado é recusada, não reinterpretada como "no match".
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("regra", "allow tcp any eq 80")
+                .formParam("ipOrigem", "192.168.1.5")
+                .formParam("ipDestino", "10.0.0.1")
+                .formParam("portaDestino", "80")
+                .when().post("/seguranca/api/testar")
+                .then()
+                .statusCode(400);
+    }
+
     // ---- Inspeção TLS (aba nova) ----
 
     @Test
