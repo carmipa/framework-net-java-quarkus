@@ -139,4 +139,38 @@ class TrafegoHttpTest {
                 .statusCode(200)
                 .body(containsString("Protocolo"));
     }
+
+    // ---- Laboratório DNS/ICMP (P04) ----
+
+    @Test
+    void paginaTrazAbaLabDnsIcmp() {
+        given()
+                .when().get("/trafego")
+                .then()
+                .statusCode(200)
+                .body(containsString("data-tab=\"lab\""))
+                .body(containsString("/trafego/api/lab?cenario=dns"));
+    }
+
+    @Test
+    void labDnsMostraNormalSuspeitoEFalsoPositivo() {
+        given()
+                .when().get("/trafego/api/lab?cenario=dns")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("NORMAL"))
+                .body(containsString("SUSPEITO"))
+                .body(containsString("Falso positivo"))
+                .body(containsString("fictícios"))
+                .body(not(containsString("<!DOCTYPE html>")));
+    }
+
+    @Test
+    void labCenarioDesconhecidoRetorna400() {
+        given()
+                .when().get("/trafego/api/lab?cenario=inexistente")
+                .then()
+                .statusCode(400);
+    }
 }

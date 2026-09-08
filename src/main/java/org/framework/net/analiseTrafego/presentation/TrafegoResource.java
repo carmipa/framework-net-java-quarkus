@@ -11,9 +11,12 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.QueryParam;
 import org.framework.net.analiseTrafego.aovivo.SnapshotAoVivo;
 import org.framework.net.analiseTrafego.aovivo.TrafegoAoVivoService;
 import org.framework.net.analiseTrafego.application.ConstrutorPacoteService;
+import org.framework.net.analiseTrafego.application.LabDnsIcmpService;
 import org.framework.net.analiseTrafego.application.TrafegoDecoderService;
 import org.framework.net.analiseTrafego.domain.model.PacoteConstruido;
 import org.framework.net.analiseTrafego.domain.model.ResultadoDecodificacao;
@@ -36,6 +39,9 @@ public class TrafegoResource {
     ConstrutorPacoteService construtorService;
 
     @Inject
+    LabDnsIcmpService labDnsIcmpService;
+
+    @Inject
     TrafegoAoVivoService aoVivoService;
 
     @Inject
@@ -53,10 +59,15 @@ public class TrafegoResource {
     @io.quarkus.qute.Location("trafego/partials/resultado_construcao.html")
     Template construcaoFragmento;
 
+    @Inject
+    @io.quarkus.qute.Location("trafego/partials/resultado_lab.html")
+    Template labFragmento;
+
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance pagina() {
-        return index.data("activeMainMenu", "trafego");
+        return index.data("activeMainMenu", "trafego")
+                .data("cenariosLab", labDnsIcmpService.cenariosDisponiveis());
     }
 
     /**
@@ -104,6 +115,22 @@ public class TrafegoResource {
         PacoteConstruido pacote = construtorService.montar(protocolo, ipOrigem, ipDestino,
                 portaOrigem, portaDestino, flagsCsv, ttl, seq, window, mensagem, checksumValido);
         return construcaoFragmento.data("sim", pacote);
+    }
+
+    /**
+     * Laboratório DNS/ICMP: devolve o fragmento com o dataset fictício de um
+     * cenário, classificado com evidência. GET porque só lê o catálogo; cenário
+     * desconhecido vira HTTP 400.
+     */
+    @GET
+    @Path("/api/lab")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance laboratorio(@QueryParam("cenario") String cenario) {
+        try {
+            return labFragmento.data("lab", labDnsIcmpService.analisar(cenario));
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException(e.getMessage());
+        }
     }
 
     /** Snapshot do tráfego ao vivo (simulação didática, VPS-safe). */

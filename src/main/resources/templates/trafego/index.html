@@ -52,6 +52,10 @@
                     title="Construtor de pacotes: edite os campos, gere os bytes e decodifique de volta">
                 <span class="material-symbols-outlined">construction</span><span>Construtor de pacotes</span>
             </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="lab" role="tab"
+                    title="Laboratório DNS/ICMP: compare tráfego normal e suspeito (tunneling) em dados fictícios">
+                <span class="material-symbols-outlined">biotech</span><span>Lab DNS/ICMP</span>
+            </button>
         </div>
 
         <div class="tab-panel active" data-tab-panel="aovivo">{#include trafego/partials/tab_aovivo.html /}</div>
@@ -60,6 +64,7 @@
         <div class="tab-panel" data-tab-panel="handshake">{#include trafego/partials/tab_handshake.html /}</div>
         <div class="tab-panel" data-tab-panel="anomalias">{#include trafego/partials/tab_anomalias.html /}</div>
         <div class="tab-panel" data-tab-panel="construtor">{#include trafego/partials/tab_construtor.html /}</div>
+        <div class="tab-panel" data-tab-panel="lab">{#include trafego/partials/tab_lab.html /}</div>
     </div>
 </div>
 {/content}
