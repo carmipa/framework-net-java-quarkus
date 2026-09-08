@@ -1,5 +1,6 @@
 {#include shared/base.html}
 {#title}CyberNet Framework | FIAP - Paulo André{/title}
+{#description}Análise didática de endereços IPv4 e IPv6: CIDR, máscara, wildcard, classe, RFC1918, rede e broadcast, com o cálculo mostrado bit a bit e comparador de endereços.{/description}
 {#extraHead}
 <link rel="stylesheet" href="/calculadora/css/calculadora.css?v=20260803" />
 {/extraHead}
@@ -75,12 +76,12 @@
         <div class="tab-panel" data-tab-panel="calculadora">{#include analiseDidatica/partials/tab_calculadora.html /}</div>
 
         <div class="aed-action-row action-buttons mt-3">
-            <a href="/export/json" class="aed-btn aed-btn-json" target="_blank" rel="noopener"
+            <a href="/export/json" class="aed-btn aed-btn-json" target="_blank" rel="noopener nofollow"
                data-bs-toggle="tooltip" data-bs-placement="top"
                title="Baixe o resultado da análise em formato JSON (requer login admin)">
                 <span class="material-symbols-outlined">download</span> Exportar JSON
             </a>
-            <a href="/export/pdf" class="aed-btn aed-btn-pdf"
+            <a href="/export/pdf" rel="nofollow" class="aed-btn aed-btn-pdf"
                data-bs-toggle="tooltip" data-bs-placement="top"
                title="Gere um PDF com o resultado da análise (requer login admin)">
                 <span class="material-symbols-outlined">picture_as_pdf</span> Exportar PDF

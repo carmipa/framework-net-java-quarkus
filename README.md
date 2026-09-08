@@ -188,6 +188,73 @@ Principais chaves (`application.properties` / `application-prod.properties`), so
 - Proteção CSRF (double-submit + HMAC), rate limiting (com limpeza periódica dos buckets) e headers HTTP de segurança (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`).
 - Cookies `HttpOnly` + `SameSite`; marque `framework.security.cookie-secure=true` atrás de HTTPS (padrão no perfil `prod`).
 
+## Indexação e SEO
+
+Quatro peças, e elas **não são intercambiáveis** — cada uma resolve uma coisa:
+
+| peça | onde | o que resolve |
+|---|---|---|
+| `robots.txt` | `META-INF/resources/robots.txt` (estático) | por onde o robô **não** passa |
+| `/sitemap.xml` | `SitemapResource` | o que existe para ser **encontrado** |
+| `canonical` + `description` + Open Graph | `shared/base.html` + `SeoPagina` | qual é o **endereço oficial** da página e como ela aparece no resultado |
+| `rel="nofollow"` | links para rota fechada | evita que o robô **descubra** o que não deve rastrear |
+
+A lista do que é página pública mora em **um lugar só**: `web/domain/PaginasPublicas`.
+Sitemap, canonical e as guardas leem dela. Aprofundamento novo (porta, protocolo,
+certificado, camada, criptografia, Wi-Fi, ferramenta) entra sozinho, porque a lista
+é montada a partir dos registros de cada módulo — os mesmos que alimentam o sub-menu.
+
+### A armadilha: `noindex` e `Disallow` se anulam
+
+É o erro mais comum, e parece o contrário do que é:
+
+> Rota fechada com `Disallow` **nunca é buscada**, logo a `<meta name="robots"
+> content="noindex">` dela **nunca é lida**. As duas juntas não somam — a segunda
+> fica inerte.
+
+Por isso, para cada rota, escolher **uma** estratégia:
+
+- **quero fora do índice e o acesso custa caro** (`/informacoes` dispara consulta
+  geográfica externa a cada GET; `/export/*` gera PDF sob demanda) → `Disallow`.
+  A URL pode acabar listada sem descrição se alguém a linkar de fora; é o preço, e
+  o `rel="nofollow"` nos links internos reduz a chance;
+- **quero fora do índice e o acesso é barato** → deixar rastrear e usar `noindex`.
+  É o caso das telas autônomas `login/index.html` e `paginaErros/erro.html`, que
+  têm a meta no próprio `<head>`;
+- **nenhuma das duas é controle de acesso.** Quem fecha `/telemetria`, `/admin` e
+  `/export` é o login e o `AdminApiKeyFilter`.
+
+### O host é configurado, nunca deduzido
+
+`framework.site.base-url` (perfil `prod`) alimenta **sitemap e canonical**. Não se usa
+o `Host` da requisição: canonical seguindo cabeçalho do cliente deixaria um terceiro
+apontar a URL oficial deste site para o domínio dele — e há teste para isso
+(`SeoBaseUrlHttpTest#hostForjadoNaoMudaOCanonical`). Sem a propriedade, a URL segue a
+requisição, que é o certo em desenvolvimento.
+
+### Guardas (reprovam o build)
+
+- `RobotsTxtHttpTest` — cada grupo permissivo fecha a lista inteira; rota `/*/api/`
+  nova no código sem entrar no arquivo reprova. O `robots.txt` **não soma grupos**.
+- `SitemapHttpTest` — cruza menu × robots × sitemap; toda URL listada responde 200.
+- `SeoHttpTest` — canonical absoluto e description própria em toda página pública;
+  rota fechada **não** recebe canonical (com controle positivo, para a guarda não
+  aprovar por não ter renderizado nada); query string fora do canonical; link para
+  rota fechada marcado `nofollow`.
+- `SeoBaseUrlHttpTest` — com host canônico configurado, tudo sai em `https://` no
+  domínio público, e `Host` forjado não muda nada.
+
+### Produção: quem responde o `/robots.txt` não é a aplicação
+
+Enquanto existir o `location = /robots.txt` em
+`/opt/infra-proxy/data/nginx/custom/server_proxy.conf` do NPM, **match exato ganha do
+`proxy_pass`** e quem responde é o arquivo compartilhado da VPS
+(`/opt/infra-proxy/data/robots/robots.txt`), que serve os três domínios. O arquivo
+deste repositório é a fonte versionada da política e vale em desenvolvimento e em
+qualquer outro deploy — as duas cópias precisam ser mantidas em acordo.
+
+O `/sitemap.xml`, esse sim, é servido pela aplicação.
+
 ## Telemetria (observabilidade)
 
 O dashboard vive em `/telemetria`. Os artefatos **compartilháveis** seguem o padrão **OpenTelemetry OTLP/JSON** (Logs Data Model): `logs/telemetria_compartilhada.json` (documento `LogsData`), `logs/framework-net-eventos.jsonl` (um `LogRecord` OTLP por linha) e o download em `GET /telemetria/api/exportar`. Detalhes em `src/main/resources/README.md` ou `/documentacao`.

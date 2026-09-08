@@ -7,16 +7,8 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.framework.net.camadas.domain.CamadaAprofundamento;
-import org.framework.net.certificados.domain.CertificadoAprofundamento;
-import org.framework.net.criptografia.domain.CriptografiaAprofundamento;
-import org.framework.net.ferramentas.domain.FerramentasAprofundamento;
-import org.framework.net.portas.domain.PortaAprofundamento;
-import org.framework.net.protocolos.domain.AprofundamentoProtocolo;
-import org.framework.net.wifi.domain.WifiAprofundamento;
+import org.framework.net.web.domain.PaginasPublicas;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -30,13 +22,15 @@ import java.util.Optional;
  *
  * <p><b>Invariantes do domínio:</b> (1) só entram páginas HTML públicas, nunca
  * rota autenticada, de API ou fechada no robots.txt — sitemap e robots dizendo
- * coisas opostas é contradição que o buscador resolve contra o site;
- * (2) a URL é absoluta e no host canônico do site, senão o Google descarta as
- * entradas como submissão cruzada — o host vem de {@code framework.site.base-url}
- * e, na falta dela, da própria requisição; este código <b>não lê cabeçalho de
- * encaminhamento por conta própria</b>, pela mesma razão que o
- * {@code RequestRateLimiter} não lê: quem decide se o cabeçalho vale é a
- * configuração, não o código; (3) não há {@code lastmod} nem
+ * coisas opostas é contradição que o buscador resolve contra o site. Quem decide
+ * o que é público é {@link PaginasPublicas}, a mesma lista que o
+ * {@code <link rel="canonical">} consulta: duas listas discordando apareceriam
+ * como os dois lados "corretos"; (2) a URL é absoluta e no host canônico do site,
+ * senão o Google descarta as entradas como submissão cruzada — o host vem de
+ * {@code framework.site.base-url} e, na falta dela, da própria requisição; este
+ * código <b>não lê cabeçalho de encaminhamento por conta própria</b>, pela mesma
+ * razão que o {@code RequestRateLimiter} não lê: quem decide se o cabeçalho vale
+ * é a configuração, não o código; (3) não há {@code lastmod} nem
  * {@code priority} — data de alteração inventada a cada requisição é dado
  * fabricado, e o Google ignora prioridade.</p>
  *
@@ -61,55 +55,6 @@ import java.util.Optional;
 public class SitemapResource {
 
     /**
-     * Páginas HTML públicas, na ordem em que aparecem no menu.
-     *
-     * <p>Não estão aqui, de propósito: {@code /telemetria} (autenticada),
-     * {@code /informacoes} (dispara consulta geográfica externa a cada acesso),
-     * {@code /admin}, {@code /login}, {@code /history}, {@code /export} e as
-     * rotas de API — todas fechadas no {@code robots.txt}. Os aprofundamentos
-     * de protocolo ({@code /protocolos/bgp}, {@code /protocolos/http}…) entram
-     * porque só se chega a eles por um botão no grid ou pelo sub-menu por camada,
-     * mas são conteúdo público indexável. Eles NÃO são escritos à mão aqui: vêm
-     * de {@link AprofundamentoProtocolo#disponiveis()}, a mesma fonte que alimenta
-     * o sub-menu, então protocolo novo entra no sitemap sozinho. A guarda
-     * {@code SitemapHttpTest} cruza a lista final com o registro para nenhum
-     * escapar.</p>
-     */
-    private static final List<String> PAGINAS_PUBLICAS = montarPaginasPublicas();
-
-    private static List<String> montarPaginasPublicas() {
-        List<String> paginas = new ArrayList<>();
-        paginas.add("/");
-        paginas.add("/analise");
-        paginas.add("/calculadora");
-        paginas.add("/portas");
-        // Aprofundamentos de portas (Anatomia + famílias) — fonte única.
-        PortaAprofundamento.disponiveis().forEach(item -> paginas.add(item.rota()));
-        paginas.add("/protocolos");
-        // Aprofundamentos por protocolo — fonte única, logo após a aba Geral.
-        AprofundamentoProtocolo.disponiveis().forEach(item -> paginas.add(item.rota()));
-        paginas.add("/certificados");
-        // Aprofundamentos de certificados (X.509/PKI) — fonte única.
-        CertificadoAprofundamento.disponiveis().forEach(item -> paginas.add(item.rota()));
-        paginas.add("/camadas");
-        CamadaAprofundamento.disponiveis().forEach(item -> paginas.add(item.rota()));
-        paginas.add("/criptografia");
-        CriptografiaAprofundamento.disponiveis().forEach(item -> paginas.add(item.rota()));
-        paginas.add("/wifi");
-        WifiAprofundamento.disponiveis().forEach(item -> paginas.add(item.rota()));
-        paginas.add("/ferramentas");
-        FerramentasAprofundamento.disponiveis().forEach(item -> paginas.add(item.rota()));
-        paginas.add("/resolucao-problemas");
-        paginas.add("/localizacao");
-        paginas.add("/trafego");
-        paginas.add("/seguranca");
-        paginas.add("/diagnostico");
-        paginas.add("/documentacao");
-        paginas.add("/sobre");
-        return List.copyOf(paginas);
-    }
-
-    /**
      * Host canônico do site, com esquema e sem barra final.
      *
      * <p>{@code Optional<String>} e não {@code defaultValue=""}: o SmallRye
@@ -130,7 +75,7 @@ public class SitemapResource {
         StringBuilder xml = new StringBuilder(1024);
         xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         xml.append("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
-        for (String pagina : PAGINAS_PUBLICAS) {
+        for (String pagina : PaginasPublicas.rotas()) {
             xml.append("  <url><loc>")
                     .append(escapar(base + pagina))
                     .append("</loc></url>\n");

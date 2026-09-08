@@ -5,6 +5,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{#insert title}Framework de Redes A&D{/insert}</title>
+    {! ---------------------------------------------------------------------
+       SEO do <head>. Três peças, cada uma resolvendo um problema MEDIDO neste
+       site em 08/09/2026 — não boas práticas genéricas:
+
+       description  não existia em nenhuma página. Sem ela o buscador monta o
+                    resumo do resultado sozinho, e num site cheio de jargão ele
+                    costuma pegar a primeira frase da tela — aqui, rótulo de
+                    menu. O bloco tem PADRÃO: página que não declarar o seu
+                    continua com uma descrição correta, nunca sem nenhuma.
+
+       canonical    http:// e https:// deste domínio respondem 200 com o MESMO
+                    corpo (MD5 idêntico, medido), e o HSTS da resposta é
+                    ignorado quando ela chega fora de TLS. Sem canonical, quem
+                    escolhe qual URL indexar é o buscador. O SeoPagina só
+                    devolve valor para rota que está na lista branca das
+                    páginas públicas — por isso o {#if}: página de erro, login
+                    e rota privada NÃO recebem a tag, e nenhum caminho vindo do
+                    cliente chega a virar atributo.
+
+       Open Graph   é o cartão que WhatsApp, LinkedIn e Discord mostram quando
+                    alguém cola o link. Sem ele o link aparece cru.
+       --------------------------------------------------------------------- !}
+    <meta name="description" content="{#insert description}Framework didático de redes e cibersegurança: análise de IPv4/IPv6, CIDR, VLSM, portas, protocolos, certificados e criptografia, com o cálculo binário explicado passo a passo.{/insert}">
+    {#if cdi:seo.canonical}
+    <link rel="canonical" href="{cdi:seo.canonical}">
+    <meta property="og:url" content="{cdi:seo.canonical}">
+    {/if}
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:site_name" content="Framework de Redes A&amp;D">
+    <meta property="og:title" content="{#insert title}Framework de Redes A&amp;D{/insert}">
+    <meta property="og:description" content="{#insert description}Framework didático de redes e cibersegurança: análise de IPv4/IPv6, CIDR, VLSM, portas, protocolos, certificados e criptografia, com o cálculo binário explicado passo a passo.{/insert}">
+    {#if cdi:seo.urlBase}
+    <meta property="og:image" content="{cdi:seo.urlBase}/icone.png?v=20260710c">
+    {/if}
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/png" href="/icone.png?v=20260710c">
     <!-- PWA: o manifest é o que faz o Chrome oferecer "Instalar" na barra de
          endereço e permite criar o atalho na área de trabalho. O apple-touch-icon
