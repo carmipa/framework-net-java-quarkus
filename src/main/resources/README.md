@@ -108,6 +108,7 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Criptografia | `/criptografia` (+ `/criptografia/{simetrica,assimetrica,hash,troca-de-chaves,assinatura}`) | GET | Algoritmos e forças + **playground de hash** (WebCrypto, client-side) e comparador de força |
 | Wi-Fi | `/wifi` (+ `/wifi/{padroes,canais,seguranca,ataques}`) | GET | Padrões 802.11 (Wi-Fi 1→7) + **planejador de canais** 2.4 GHz (1/6/11) |
 | Ferramentas | `/ferramentas` (+ `/ferramentas/{conectividade,dns-tools,captura,varredura,http-tls,sockets}`) | GET | Ferramentas CLI (ping, dig, tcpdump, nmap, curl, openssl…) + **construtor de comando** |
+| Ferramentas | `/ferramentas/rede` | GET | **Rede: Windows × Linux** — comandos comparados por intenção (IP, rotas, ARP, DNS, conectividade, portas, processos) com parâmetros, saída simulada dissecável, limites, busca/filtros e investigações guiadas |
 | Resolução VLSM | `/resolucao-problemas` | GET/POST | Aba **Projetar**: cenários VLSM/WAN, demos e exportações |
 | Resolução — reversa | `/resolucao-problemas?aba=reversa` | GET/POST | Aba **Engenharia reversa**: interpreta configuração Cisco colada, audita, corrige e reconstrói o projeto |
 | Páginas de erro | qualquer rota que falhe | — | Página única em `paginaErros/erro.html` servindo os 12 códigos (400…504) |

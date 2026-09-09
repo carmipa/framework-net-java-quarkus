@@ -98,6 +98,7 @@ public final class PaginasPublicas {
         paginas.add("/wifi");
         WifiAprofundamento.disponiveis().forEach(item -> paginas.add(item.rota()));
         paginas.add("/ferramentas");
+        paginas.add("/ferramentas/rede");
         FerramentasAprofundamento.disponiveis().forEach(item -> paginas.add(item.rota()));
         paginas.add("/resolucao-problemas");
         paginas.add("/localizacao");
