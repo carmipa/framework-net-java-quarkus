@@ -42,6 +42,8 @@
     var modoLigar = false;
     var ligarPrimeiro = null;
     var arrasto = null;      // {id, p0, x0, y0, moveu}
+    var avaliacaoSeq = 0;    // guarda contra resposta assincrona fora de ordem
+    var textoAvaliado = null; // texto que gerou o resultado atualmente exibido
 
     var svg, gLinks, gNodes, dica, props, textoPreview;
 
@@ -64,7 +66,8 @@
     }
 
     function sanId(v) {
-        return (v || "").replace(/\s+/g, "");
+        // Id compativel com o parser (split por espaco), os seletores DOM e o Mermaid.
+        return (v || "").replace(/[^A-Za-z0-9_]/g, "");
     }
 
     function centro(no) {
@@ -184,6 +187,10 @@
     function removerNo(id) {
         nos = nos.filter(function (n) { return n.id !== id; });
         enlaces = enlaces.filter(function (l) { return l.a !== id && l.b !== id; });
+        // Referencias de gateway ao no removido nao podem ficar penduradas.
+        nos.forEach(function (n) {
+            if (n.attrs && n.attrs.gw === id) { n.attrs.gw = ""; }
+        });
         if (selecionado === id) { selecionado = null; props.hidden = true; }
         if (ligarPrimeiro === id) { ligarPrimeiro = null; }
         sincronizarFluxo();
@@ -229,7 +236,16 @@
     }
 
     function atualizarTexto() {
-        if (textoPreview) { textoPreview.textContent = serializar() || "(canvas vazio)"; }
+        var texto = serializar();
+        if (textoPreview) { textoPreview.textContent = texto || "(canvas vazio)"; }
+        // Um resultado de avaliacao anterior nao pode parecer valido para outro desenho.
+        if (textoAvaliado !== null && texto !== textoAvaliado) {
+            var alvo = document.getElementById("canvasResultado");
+            if (alvo && alvo.innerHTML.trim()) {
+                alvo.innerHTML = '<div class="alert alert-secondary py-2 mb-0">A topologia mudou — clique em <strong>Testar fluxo</strong> para reavaliar.</div>';
+            }
+            textoAvaliado = null;
+        }
     }
 
     function renderMermaid(raiz) {
@@ -257,11 +273,13 @@
             alvo.innerHTML = '<div class="alert alert-secondary py-2 mb-0">Informe a origem (um host) e o destino.</div>';
             return;
         }
-        var corpo = "topologia=" + encodeURIComponent(serializar())
+        var enviado = serializar();
+        var corpo = "topologia=" + encodeURIComponent(enviado)
             + "&origem=" + encodeURIComponent(origem)
             + "&destino=" + encodeURIComponent(destino)
             + "&porta=" + encodeURIComponent(porta);
         if (spin) { spin.hidden = false; }
+        var meu = ++avaliacaoSeq;
         fetch("/seguranca/api/topologia", {
             method: "POST",
             headers: {
@@ -272,12 +290,15 @@
         }).then(function (resp) {
             return resp.text().then(function (txt) { return { ok: resp.ok, txt: txt }; });
         }).then(function (r) {
+            if (meu !== avaliacaoSeq) { return; } // uma avaliacao mais nova ja respondeu
             alvo.innerHTML = r.txt;
+            textoAvaliado = enviado;
             renderMermaid(alvo);
         }).catch(function () {
+            if (meu !== avaliacaoSeq) { return; }
             alvo.innerHTML = '<div class="alert alert-danger py-2 mb-0">Falha ao avaliar o fluxo (rede). Tente de novo.</div>';
         }).finally(function () {
-            if (spin) { spin.hidden = true; }
+            if (meu === avaliacaoSeq && spin) { spin.hidden = true; }
         });
     }
 
@@ -339,6 +360,10 @@
         enlaces.forEach(function (l) {
             if (l.a === antigo) { l.a = novo; }
             if (l.b === antigo) { l.b = novo; }
+        });
+        // Todo host que apontava para este gateway precisa acompanhar o novo id.
+        nos.forEach(function (n) {
+            if (n.attrs && n.attrs.gw === antigo) { n.attrs.gw = novo; }
         });
         ["canvas-origem", "canvas-destino"].forEach(function (fid) {
             var f = document.getElementById(fid);
