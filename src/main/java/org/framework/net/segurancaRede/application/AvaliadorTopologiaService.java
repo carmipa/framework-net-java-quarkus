@@ -108,11 +108,11 @@ public class AvaliadorTopologiaService {
                 }
             }
             dispositivos.add(new Dispositivo(id, tipo,
-                    inteiro(attrs.get("vlan")),
+                    vlanAtributo(attrs.get("vlan"), numero),
                     attrs.getOrDefault("gw", ""),
-                    listaInt(attrs.get("vlans")),
+                    vlansAtributo(attrs.get("vlans"), numero),
                     listaStr(attrs.get("deny")),
-                    inteiro(attrs.get("porta"))));
+                    portaAtributo(attrs.get("porta"), numero)));
         }
         // Enlaces só entre ids existentes.
         for (Enlace e : enlaces) {
@@ -145,14 +145,6 @@ public class AvaliadorTopologiaService {
         String rotuloOrigem = origemId + " (VLAN " + origem.vlan() + ")";
         String rotuloDestino = destinoId + ":" + porta;
 
-        List<String> caminho = caminhoMaisCurto(topo, origemId, destinoId);
-        if (caminho == null) {
-            List<Salto> so = List.of(new Salto(1, origemId + " (host)", "L2/L3", false,
-                    "Não há caminho físico (enlaces) do host até o destino."));
-            return new DiagnosticoFluxo("montado", titulo, rotuloOrigem, rotuloDestino, false,
-                    origemId + " (host)", "Sem caminho: faltam enlaces ligando origem e destino.", so);
-        }
-
         List<Salto> saltos = new ArrayList<>();
         int ordem = 1;
 
@@ -169,6 +161,22 @@ public class AvaliadorTopologiaService {
                     "Gateway '" + gw + "' não é vizinho do host (sem ARP do next-hop): o pacote nem sai da LAN."));
             return bloqueado(titulo, rotuloOrigem, rotuloDestino, origemId + " (host)", saltos);
         }
+
+        // INV-TOPO-1: o caminho avaliado É o do encaminhamento configurado —
+        // host -> gateway -> (menor caminho a partir do gateway). Tomar o menor
+        // caminho direto origem->destino deixaria um enlace paralelo (atalho) furar
+        // o gateway e as regras dos nós que ele atravessa (firewall/roteamento).
+        List<String> aPartirDoGw = caminhoMaisCurto(topo, gw, destinoId);
+        if (aPartirDoGw == null) {
+            String noGw = gw + " (" + rotuloTipo(topo.por(gw).tipo()) + ")";
+            saltos.add(new Salto(ordem, noGw, "L3", false,
+                    "Sem rota do gateway " + gw + " até o destino: o encaminhamento não chega."));
+            return bloqueado(titulo, rotuloOrigem, rotuloDestino, noGw, saltos);
+        }
+        List<String> caminho = new ArrayList<>();
+        caminho.add(origemId);
+        caminho.addAll(aPartirDoGw);
+
         saltos.add(new Salto(ordem++, origemId + " (host)", "L3", true,
                 "Encaminha ao gateway " + gw + " porque o destino está em outra sub-rede."));
 
@@ -341,29 +349,90 @@ public class AvaliadorTopologiaService {
         }
     }
 
-    private static int inteiro(String v) {
-        if (v == null || v.isBlank()) {
+    /**
+     * VLAN de um equipamento a partir do atributo textual do montador.
+     *
+     * <p><b>Propósito de negócio:</b> traduzir {@code vlan=<n>} para o domínio,
+     * distinguindo ausência (equipamento sem VLAN) de erro de digitação.</p>
+     *
+     * <p><b>Invariantes do domínio:</b> atributo ausente ({@code null}) vira
+     * {@code 0} (sem VLAN); presente precisa ser inteiro em 1–4094.</p>
+     *
+     * <p><b>Comportamento em caso de falha:</b> valor não numérico ou fora da
+     * faixa lança {@link SegurancaException} (HTTP 400) citando linha e campo —
+     * nunca coage em silêncio para {@code 0}.</p>
+     */
+    private static int vlanAtributo(String v, int linha) {
+        if (v == null) {
             return 0;
         }
+        int n = inteiroExigido(v, linha, "vlan");
+        if (n < 1 || n > 4094) {
+            throw new SegurancaException("Linha " + linha + ": vlan fora do intervalo 1–4094 ('" + v.trim() + "').");
+        }
+        return n;
+    }
+
+    /**
+     * Porta aberta de um servidor a partir do atributo textual.
+     *
+     * <p><b>Propósito de negócio:</b> traduzir {@code porta=<n>} para o domínio,
+     * distinguindo ausência de erro de digitação.</p>
+     *
+     * <p><b>Invariantes do domínio:</b> ausente vira {@code 0} (sem porta
+     * declarada); presente precisa ser inteiro em 1–65535.</p>
+     *
+     * <p><b>Comportamento em caso de falha:</b> valor não numérico ou fora da
+     * faixa lança {@link SegurancaException} (HTTP 400) citando linha e campo.</p>
+     */
+    private static int portaAtributo(String v, int linha) {
+        if (v == null) {
+            return 0;
+        }
+        int n = inteiroExigido(v, linha, "porta");
+        if (n < 1 || n > 65535) {
+            throw new SegurancaException("Linha " + linha + ": porta fora do intervalo 1–65535 ('" + v.trim() + "').");
+        }
+        return n;
+    }
+
+    /**
+     * Lista de VLANs roteadas por um switch L3 (os SVIs) a partir do atributo.
+     *
+     * <p><b>Propósito de negócio:</b> traduzir {@code vlans=<a,b,...>} para o
+     * domínio de roteamento inter-VLAN.</p>
+     *
+     * <p><b>Invariantes do domínio:</b> ausente/vazio vira lista vazia (nenhum
+     * SVI); cada token não vazio precisa ser VLAN válida em 1–4094.</p>
+     *
+     * <p><b>Comportamento em caso de falha:</b> qualquer token não numérico ou
+     * fora da faixa lança {@link SegurancaException} — não descarta o token em
+     * silêncio, para uma lista parcialmente inválida não virar diagnóstico falso.</p>
+     */
+    private static List<Integer> vlansAtributo(String v, int linha) {
+        List<Integer> out = new ArrayList<>();
+        if (v == null || v.isBlank()) {
+            return out;
+        }
+        for (String p : v.split(",")) {
+            if (p.isBlank()) {
+                continue;
+            }
+            int n = inteiroExigido(p, linha, "vlans");
+            if (n < 1 || n > 4094) {
+                throw new SegurancaException("Linha " + linha + ": vlan fora do intervalo 1–4094 na lista ('" + p.trim() + "').");
+            }
+            out.add(n);
+        }
+        return out;
+    }
+
+    private static int inteiroExigido(String v, int linha, String campo) {
         try {
             return Integer.parseInt(v.trim());
         } catch (NumberFormatException e) {
-            return 0;
+            throw new SegurancaException("Linha " + linha + ": " + campo + " precisa ser um número ('" + v.trim() + "').");
         }
-    }
-
-    private static List<Integer> listaInt(String v) {
-        List<Integer> out = new ArrayList<>();
-        if (v != null && !v.isBlank()) {
-            for (String p : v.split(",")) {
-                try {
-                    out.add(Integer.parseInt(p.trim()));
-                } catch (NumberFormatException ignored) {
-                    // ignora token não numérico
-                }
-            }
-        }
-        return out;
     }
 
     private static List<String> listaStr(String v) {

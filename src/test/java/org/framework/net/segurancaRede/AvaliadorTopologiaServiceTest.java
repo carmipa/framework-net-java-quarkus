@@ -97,6 +97,72 @@ class AvaliadorTopologiaServiceTest {
         assertThrows(SegurancaException.class, () -> servico.diagnosticar("gizmo X\nlink X X", "X", "X", "80"));
     }
 
+    @Test
+    @DisplayName("#1: atalho paralelo não pode furar o gateway (firewall que nega a porta)")
+    void atalhoNaoFuraGateway() {
+        String topo = String.join("\n",
+                "host H vlan=10 gw=FW",
+                "firewall FW deny=tcp/443",
+                "server S vlan=20 porta=443",
+                "link H FW",
+                "link FW S",
+                "link H S");
+        DiagnosticoFluxo d = servico.diagnosticar(topo, "H", "S", "443");
+        assertFalse(d.alcanca(), () -> "o fluxo deveria travar no firewall-gateway, não furar pelo atalho H-S");
+        assertTrue(d.pontoBloqueio().contains("FW"), d.pontoBloqueio());
+    }
+
+    @Test
+    @DisplayName("#1: os saltos percorrem o gateway declarado (explicação = caminho real)")
+    void saltosPassamPeloGateway() {
+        String topo = String.join("\n",
+                "host H vlan=10 gw=FW",
+                "firewall FW deny=tcp/23",
+                "server S vlan=20 porta=443",
+                "link H FW",
+                "link FW S",
+                "link H S");
+        DiagnosticoFluxo d = servico.diagnosticar(topo, "H", "S", "443");
+        assertTrue(d.alcanca(), () -> "sem deny da porta o fluxo alcança, mas via gateway; ponto: " + d.pontoBloqueio());
+        assertTrue(d.saltos().stream().anyMatch(s -> s.no().contains("FW")),
+                "o firewall-gateway precisa aparecer entre os saltos percorridos");
+    }
+
+    @Test
+    @DisplayName("#2: vlan não numérica é recusada (não vira VLAN 0)")
+    void vlanInvalidaRecusa() {
+        String topo = TOPO.replace("host H1 vlan=10 gw=R1", "host H1 vlan=abc gw=R1");
+        assertThrows(SegurancaException.class, () -> servico.diagnosticar(topo, "H1", "S1", "443"));
+    }
+
+    @Test
+    @DisplayName("#2: lista de vlans com token inválido é recusada (não vira lista vazia)")
+    void vlansInvalidaRecusa() {
+        String topo = TOPO.replace("switchl3 R1 vlans=10,20", "switchl3 R1 vlans=10,abc");
+        assertThrows(SegurancaException.class, () -> servico.diagnosticar(topo, "H1", "S1", "443"));
+    }
+
+    @Test
+    @DisplayName("#2: porta não numérica no atributo é recusada")
+    void portaAtributoInvalidaRecusa() {
+        String topo = TOPO.replace("server S1 vlan=20 porta=443", "server S1 vlan=20 porta=abc");
+        assertThrows(SegurancaException.class, () -> servico.diagnosticar(topo, "H1", "S1", "443"));
+    }
+
+    @Test
+    @DisplayName("#2: vlan fora do intervalo 1–4094 é recusada")
+    void vlanForaDoIntervaloRecusa() {
+        String topo = TOPO.replace("host H1 vlan=10 gw=R1", "host H1 vlan=99999 gw=R1");
+        assertThrows(SegurancaException.class, () -> servico.diagnosticar(topo, "H1", "S1", "443"));
+    }
+
+    @Test
+    @DisplayName("#2: atributo ausente segue usando o default (ausência não é erro)")
+    void atributoAusentePreservaDefault() {
+        DiagnosticoFluxo d = servico.diagnosticar(TOPO, "H1", "S1", "443");
+        assertTrue(d.alcanca(), () -> "ausência de vlan em FW/R1 não pode virar erro; ponto: " + d.pontoBloqueio());
+    }
+
     private static void verificarBloqueioUnicoEFinal(DiagnosticoFluxo d) {
         assertEquals(1, d.saltos().stream().filter(s -> !s.ok()).count(), "um único ponto de bloqueio");
         assertFalse(d.saltos().get(d.saltos().size() - 1).ok(), "o bloqueio é o último salto");
