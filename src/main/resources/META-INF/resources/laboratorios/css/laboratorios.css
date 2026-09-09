@@ -95,6 +95,7 @@
 .lab-camada:not(.presente) > .lab-camada-nome, .lab-camada:not(.presente) > .lab-camada-bytes { display: none; }
 .lab-total { margin-top: 0.75rem; font-size: 0.9rem; color: #cbd5e1; }
 .lab-total strong { color: #2dd4bf; font-variant-numeric: tabular-nums; }
+.lab-total-nota { margin: 0.25rem 0 0; font-size: 0.78rem; color: #64748b; line-height: 1.35; }
 
 /* ---- Explicação ---- */
 .lab-explica { margin-top: 1.25rem; border: 1px solid rgba(148, 163, 184, 0.22); border-radius: 14px; background: rgba(15, 22, 34, 0.55); padding: 1rem 1.1rem; }

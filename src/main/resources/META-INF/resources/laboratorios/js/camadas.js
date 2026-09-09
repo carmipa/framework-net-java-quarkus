@@ -20,8 +20,19 @@
 (function () {
     "use strict";
 
-    var HDR = { udp: 8, ip: 20, eth: 18 }; // Ethernet = 14 (cabeçalho) + 4 (FCS)
-    var POS = { A: 130, A_SW: 290, SW: 450, SW_B: 610, B: 770 };
+    var HDR = { udp: 8, ip: 20 };
+    var ETH_CABECALHO = 14; // MAC destino + origem + EtherType
+    var ETH_FCS = 4;        // sequência de verificação no fim do quadro
+    var ETH_QUADRO_MIN = 64; // mínimo do quadro no fio (IEEE 802.3), padding quando menor
+    // Num equipamento o pacote paira ACIMA da caixa (y=58) para não cobrir o rótulo
+    // do nó; em trânsito ele desce para o fio (y=130).
+    var POS = {
+        A:    { x: 130, y: 58 },
+        A_SW: { x: 290, y: 130 },
+        SW:   { x: 450, y: 58 },
+        SW_B: { x: 610, y: 130 },
+        B:    { x: 770, y: 58 }
+    };
 
     // nivel: camadas presentes ao redor da mensagem (0=só app, 1=+udp, 2=+ip, 3=+eth)
     var ETAPAS = [
@@ -59,7 +70,7 @@
             disp: "Host A · Enlace (L2)", titulo: "Ethernet monta o quadro",
             desc: "A camada de enlace embrulha o pacote IP num quadro Ethernet, com o MAC de origem e o MAC de destino, e um FCS no fim para detectar erro.",
             porque: "Na rede local quem entrega o quadro ao próximo equipamento é o endereço MAC. O Host A já conhece o MAC do Host B neste cenário.",
-            campos: [["MAC de destino", "acrescentado", "…BB:00:14 (Host B)"], ["MAC de origem", "acrescentado", "…AA:00:0A (Host A)"], ["EtherType", "acrescentado", "0x0800 (IPv4)"], ["FCS", "acrescentado", "4 B no fim do quadro"]],
+            campos: [["MAC de destino", "acrescentado", "02:00:00:00:00:14 (Host B)"], ["MAC de origem", "acrescentado", "02:00:00:00:00:0A (Host A)"], ["EtherType", "acrescentado", "0x0800 (IPv4)"], ["FCS", "acrescentado", "4 B no fim do quadro"]],
             proximo: "O quadro vira bits e sai pela porta do Host A."
         },
         {
@@ -73,9 +84,9 @@
         {
             pos: "SW", op: 1, nivel: 3, ativa: "eth", acao: "exam", rotulo: "quadro",
             disp: "Switch · Enlace (L2)", titulo: "O switch encaminha pelo MAC",
-            desc: "O switch recebe o quadro, lê o MAC de destino, consulta sua tabela de endereços e encaminha o quadro pela porta do Host B. Ele NÃO abre o IP nem o UDP.",
-            porque: "Um switch opera na camada 2: sua decisão usa só o MAC de destino. IP, portas e conteúdo passam intactos — ele nem os examina.",
-            campos: [["MAC de destino", "examinado", "…BB:00:14 → porta do Host B"], ["IP / UDP / mensagem", "não examinado", "passam sem alteração"], ["Quadro", "encaminhado", "sai pela porta certa, inalterado"]],
+            desc: "O switch recebe o quadro, lê o MAC de destino e consulta sua tabela de endereços (que já aprendeu em qual porta o Host B está) para encaminhar o quadro por essa porta. Ele NÃO abre o IP nem o UDP.",
+            porque: "Um switch opera na camada 2: sua decisão usa só o MAC de destino. IP, portas e conteúdo passam intactos — ele nem os examina. Aqui a tabela já contém o MAC do Host B; se não contivesse, o switch inundaria as demais portas para descobri-lo.",
+            campos: [["MAC de destino", "examinado", "02:00:00:00:00:14 → porta do Host B"], ["IP / UDP / mensagem", "não examinado", "passam sem alteração"], ["Quadro", "encaminhado", "sai pela porta certa, inalterado"]],
             proximo: "Os bits chegam ao Host B.",
             pergunta: {
                 texto: "Qual informação o switch usa para decidir por onde mandar o quadro?",
@@ -94,9 +105,9 @@
         {
             pos: "B", op: 1, nivel: 2, ativa: "eth", acao: "remove", rotulo: "IP",
             disp: "Host B · Enlace (L2)", titulo: "Ethernet confere e sai",
-            desc: "O Host B confere o FCS (o quadro chegou íntegro) e vê que o MAC de destino é o dele. Retira o cabeçalho Ethernet e entrega o pacote IP para cima.",
-            porque: "O MAC casou: o quadro era mesmo para este host. O FCS válido garante que os bits não se corromperam no caminho.",
-            campos: [["FCS", "conferido", "íntegro"], ["MAC de destino", "conferido", "é o meu → aceito"], ["Ethernet", "removido", "entrega o pacote IP à camada de rede"]],
+            desc: "O Host B confere o FCS (nenhum erro detectado) e vê que o MAC de destino é o dele. Retira o cabeçalho Ethernet e entrega o pacote IP para cima.",
+            porque: "O MAC casou: o quadro era mesmo para este host. O FCS não detectou erro — indica que o quadro provavelmente não se corrompeu (é uma checagem de detecção, não uma garantia; aqui o resultado é ilustrativo).",
+            campos: [["FCS", "conferido", "sem erro detectado (ilustrativo)"], ["MAC de destino", "conferido", "é o meu → aceito"], ["Ethernet", "removido", "entrega o pacote IP à camada de rede"]],
             proximo: "A camada de rede vai conferir e retirar o cabeçalho IP."
         },
         {
@@ -112,7 +123,7 @@
             disp: "Host B · Transporte (L4)", titulo: "UDP entrega pela porta",
             desc: "A camada de transporte olha a porta de destino (7777) e sabe a qual programa entregar. Retira o cabeçalho UDP e passa a mensagem para a aplicação.",
             porque: "É a porta que liga o datagrama ao programa certo. Retirado o UDP, sobra exatamente a mensagem original.",
-            campos: [["Porta de destino", "lida", "7777 → o programa que escuta"], ["Checksum", "conferido", "datagrama íntegro"], ["UDP", "removido", "entrega a mensagem à aplicação"]],
+            campos: [["Porta de destino", "lida", "7777 → o programa que escuta"], ["Checksum", "conferido", "sem erro detectado (ilustrativo)"], ["UDP", "removido", "entrega a mensagem à aplicação"]],
             proximo: "A aplicação do Host B recebe a mensagem."
         },
         {
@@ -168,16 +179,43 @@
             el.classList.toggle("saindo", c === etapa.ativa && (etapa.acao === "remove" || etapa.acao === "exam"));
         });
         $("lab-app-bytes").textContent = payloadBytes + " B";
-        var total = payloadBytes
-            + (etapa.nivel >= 1 ? HDR.udp : 0)
-            + (etapa.nivel >= 2 ? HDR.ip : 0)
-            + (etapa.nivel >= 3 ? HDR.eth : 0);
-        $("lab-total-bytes").textContent = total + " bytes";
+        // Mostra a PDU da etapa ATUAL (não "no fio" o tempo todo), com o tamanho certo.
+        var rotulo, bytes, nota = "";
+        if (etapa.nivel === 0) {
+            rotulo = "Mensagem";
+            bytes = payloadBytes;
+            if (payloadBytes === 0) { nota = "Mensagem vazia: um datagrama sem dados (0 byte de payload) é válido em UDP."; }
+        } else if (etapa.nivel === 1) {
+            rotulo = "Datagrama UDP";
+            bytes = payloadBytes + HDR.udp;
+        } else if (etapa.nivel === 2) {
+            rotulo = "Pacote IP";
+            bytes = payloadBytes + HDR.udp + HDR.ip;
+        } else {
+            // Quadro Ethernet no fio: mínimo de 64 B (com FCS). Se a carga L2 for
+            // menor que 46 B, entra padding até o mínimo — Cisco/IEEE 802.3.
+            rotulo = "Quadro Ethernet (no fio)";
+            var cargaMin = ETH_QUADRO_MIN - ETH_CABECALHO - ETH_FCS; // = 46 B mínimos de carga
+            var cargaL2 = payloadBytes + HDR.udp + HDR.ip;           // o que vai DENTRO do Ethernet
+            var cargaComPad = Math.max(cargaMin, cargaL2);
+            bytes = ETH_CABECALHO + cargaComPad + ETH_FCS;           // 14 + carga(≥46) + 4
+            var pad = cargaComPad - cargaL2;
+            nota = (pad > 0
+                ? "Inclui " + pad + " B de padding para o mínimo de " + ETH_QUADRO_MIN + " B do quadro. "
+                : "")
+                + "Preâmbulo, SFD e o intervalo entre quadros ficam fora desta conta.";
+        }
+        $("lab-total-rotulo").textContent = rotulo;
+        $("lab-total-bytes").textContent = bytes + (bytes === 1 ? " byte" : " bytes");
+        var notaEl = $("lab-total-nota");
+        notaEl.textContent = nota;
+        notaEl.hidden = nota === "";
     }
 
     function renderPacote(etapa) {
         var g = $("lab-pacote");
-        g.setAttribute("transform", "translate(" + POS[etapa.pos] + ",130)");
+        var p = POS[etapa.pos];
+        g.setAttribute("transform", "translate(" + p.x + "," + p.y + ")");
         g.setAttribute("opacity", etapa.op ? "1" : "0");
         $("lab-pacote-rotulo").textContent = etapa.rotulo;
     }

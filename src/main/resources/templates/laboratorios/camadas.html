@@ -5,7 +5,7 @@
 {#title}Camadas em ação | Laboratórios Interativos{/title}
 {#description}Laboratório interativo Camadas em ação: veja passo a passo uma mensagem ganhar cabeçalhos (UDP, IP, Ethernet), atravessar um switch e ser desencapsulada no destino, na mesma rede.{/description}
 {#extraHead}
-<link rel="stylesheet" href="/laboratorios/css/laboratorios.css?v=20260909">
+<link rel="stylesheet" href="/laboratorios/css/laboratorios.css?v=20260909b">
 {/extraHead}
 {#content}
 <div class="container py-5 lab-page">
@@ -32,8 +32,8 @@
             <div class="lab-cenario-col">
                 <h3>Como está montado</h3>
                 <ul>
-                    <li><strong>Host A</strong> — IP <code>192.168.1.10</code>, MAC <code>AA:AA:AA:00:00:0A</code></li>
-                    <li><strong>Host B</strong> — IP <code>192.168.1.20</code>, MAC <code>BB:BB:BB:00:00:14</code></li>
+                    <li><strong>Host A</strong> — IP <code>192.168.1.10</code>, MAC <code>02:00:00:00:00:0A</code></li>
+                    <li><strong>Host B</strong> — IP <code>192.168.1.20</code>, MAC <code>02:00:00:00:00:14</code> (unicast, localmente administrado)</li>
                     <li>Um <strong>switch</strong> Ethernet ligando os dois (mesma rede <code>192.168.1.0/24</code>)</li>
                     <li>Transporte: <strong>UDP</strong> — um datagrama transporta a mensagem inteira</li>
                 </ul>
@@ -143,7 +143,8 @@
                 </div>
             </div>
             <p class="lab-total"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">straighten</span>
-                Tamanho no fio: <strong id="lab-total-bytes">—</strong></p>
+                <span id="lab-total-rotulo">Tamanho da unidade</span>: <strong id="lab-total-bytes">—</strong></p>
+            <p class="lab-total-nota" id="lab-total-nota" hidden></p>
         </div>
     </div>
 
@@ -206,6 +207,6 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/laboratorios/js/camadas.js?v=20260909"></script>
+<script src="/laboratorios/js/camadas.js?v=20260909c"></script>
 {/extraScripts}
 {/include}
