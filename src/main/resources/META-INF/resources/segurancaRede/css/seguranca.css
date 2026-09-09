@@ -132,3 +132,69 @@
 .tls-ref-nota .material-symbols-outlined { font-size: 1rem; flex: 0 0 auto; }
 
 /* A ajuda de exemplo dos campos usa a classe compartilhada .aed-ajuda (app.css). */
+
+/* -------------------------------------------------- Canvas de topologia (aba arrastar) */
+.topo-canvas-wrap { width: 100%; }
+
+.topo-canvas {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 900 / 460;
+    display: block;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 12px;
+    background-color: #0a0e16;
+    background-image:
+        linear-gradient(rgba(148, 163, 184, 0.10) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.10) 1px, transparent 1px);
+    background-size: 30px 30px;
+    touch-action: none; /* pointer-drag também no touch, sem o scroll roubar o gesto */
+}
+
+.topo-node { cursor: grab; }
+.topo-node:active { cursor: grabbing; }
+
+.topo-node-box {
+    fill: #0f1622;
+    stroke-width: 2;
+    transition: filter 0.12s ease;
+}
+.topo-node.sel .topo-node-box {
+    stroke-width: 3;
+    filter: drop-shadow(0 0 6px rgba(45, 212, 191, 0.55));
+}
+.topo-node.connect-first .topo-node-box {
+    stroke-dasharray: 5 3;
+    filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.7));
+}
+
+.topo-node-id {
+    fill: #eef2f8;
+    font-family: "Inter Tight", system-ui, sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+}
+.topo-node-sub {
+    fill: #94a3b8;
+    font-family: "Inter Tight", system-ui, sans-serif;
+    font-size: 11px;
+}
+
+.topo-edge {
+    stroke: #5b6679;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+}
+
+.topo-props {
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 10px;
+    padding: 0.75rem;
+    background: rgba(15, 22, 34, 0.6);
+}
+
+#canvas-ligar.active {
+    border-color: #2dd4bf;
+    color: #2dd4bf;
+    box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.5) inset;
+}

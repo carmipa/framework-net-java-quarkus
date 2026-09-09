@@ -20,7 +20,7 @@ Documentação, Sobre):
 - **Topologia → Camadas** — modelo **OSI × TCP/IP**: tabela das 7 camadas (PDU, protocolos, dispositivos) + aprofundamentos (OSI, TCP/IP, encapsulamento, dispositivos).
 - **Topologia → Criptografia** — algoritmos e forças (simétrica, assimétrica, hash, assinatura) + **playground de hash** (WebCrypto) e comparador de força.
 - **Topologia → Wi-Fi** — padrões 802.11 (Wi-Fi 1→7), canais e segurança (WEP→WPA3) + **planejador de canais** 2.4 GHz.
-- **Operações → Localização · Tráfego · Ferramentas · Diagnóstico · Segurança** — GeoIP; decodificador/encapsulamento de pacotes + **construtor de pacotes** e **laboratório DNS/ICMP**; ferramentas CLI (com **construtor de comando**); simuladores de diagnóstico; e Segurança: ACL/TLS, firewall **com estado × sem estado**, **handshake TLS 1.3**, **alcançabilidade de fluxo** e **montador de topologia**.
+- **Operações → Localização · Tráfego · Ferramentas · Diagnóstico · Segurança** — GeoIP; decodificador/encapsulamento de pacotes + **construtor de pacotes** e **laboratório DNS/ICMP**; ferramentas CLI (com **construtor de comando**); simuladores de diagnóstico; e Segurança: ACL/TLS, firewall **com estado × sem estado**, **handshake TLS 1.3**, **alcançabilidade de fluxo** e **montador de topologia** (em texto ou **canvas de arrastar**).
 - **Resolução de Problemas (VLSM + WAN)** — planejamento VLSM dinâmico, topologia WAN, CLI Cisco e exportação para laboratório.
 - **Telemetria** — dashboard de eventos, console ao vivo e **origem do tráfego** (bots × pessoas pelo User-Agent e, quando houver borda que garanta o cabeçalho, país por `CF-IPCountry` — **sem guardar IP**) — server-side. O país fica em `??` enquanto `framework.telemetria.confiar-cf-ipcountry` for `false`, que é o padrão: sem um Cloudflare que **sobrescreva** o cabeçalho, ele é escolhido pelo visitante, e métrica ditada por quem é medido não é medição.
 - **Documentação** — este README renderizado.
@@ -85,13 +85,13 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Simuladores (API) | `/simuladores/api/anomalia-tcp` | GET | JSON: cenário de anomalia TCP (`?tipo=syn-flood\|sequence-hijack`) — passos, KPIs e defesas |
 | Diagnóstico | `/diagnostico` | GET | Sub-abas de ferramentas do analista, **resultado dissecado**: Ping, DNS (dig), Traceroute, Ping Sweep, Varredura SYN e DNS Spoofing |
 | Diagnóstico (API) | `/diagnostico/api/{ping,dns,traceroute,ping-sweep,scan,dns-spoofing}` | POST | Fragmento HTML dissecado (KPIs, tabela, legenda, como funciona, o que observar) + saída bruta. Tudo simulado |
-| Segurança | `/seguranca` | GET | Sub-abas: Firewall (ACL) com pacote forjado, **Inspetor TLS/Certificado**, **com estado × sem estado**, **handshake TLS 1.3**, **alcança o destino?** e **montar topologia** |
+| Segurança | `/seguranca` | GET | Sub-abas: Firewall (ACL) com pacote forjado, **Inspetor TLS/Certificado**, **com estado × sem estado**, **handshake TLS 1.3**, **alcança o destino?** e **montar topologia** (texto ou **canvas de arrastar**) |
 | Segurança (API) | `/seguranca/api/testar` | POST | Fragmento HTML: veredito MATCH/DENY da regra ACL (parser tipado: porta exata, IP origem/destino por wildcard) |
 | Segurança (API) | `/seguranca/api/tls` | POST | Fragmento HTML: veredito por checagem (nome, validade, cadeia, protocolo, cipher) |
 | Segurança (API) | `/seguranca/api/estado` | GET | Fragmento HTML: firewall com estado × sem estado, passo a passo (`?cenario=`) |
 | Segurança (API) | `/seguranca/api/tls-handshake` | GET | Fragmento HTML: handshake TLS 1.3 passo a passo — claro × cifrado (`?cenario=`) |
 | Segurança (API) | `/seguranca/api/fluxo` | GET | Fragmento HTML: alcançabilidade de um fluxo por cenário e onde bloqueia (`?cenario=`) |
-| Segurança (API) | `/seguranca/api/topologia` | POST | Fragmento HTML: monta a topologia (equipamentos/enlaces/VLANs/ACLs) + diagrama Mermaid e caminho do fluxo |
+| Segurança (API) | `/seguranca/api/topologia` | POST | Fragmento HTML: monta a topologia (equipamentos/enlaces/VLANs/ACLs) + diagrama Mermaid e caminho do fluxo — usado pelo montador em texto e pelo canvas de arrastar |
 | GeoIP | `/informacoes` | GET | Página de geolocalização (`?ip=`) |
 | GeoIP (API) | `/api/informacoes/geo` | GET | JSON de geolocalização (`?ip=`) |
 | Referência de máscaras | `/mascara-referencia` | GET | Tabela JSON de máscaras/prefixos |

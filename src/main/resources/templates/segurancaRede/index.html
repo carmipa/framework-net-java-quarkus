@@ -2,7 +2,7 @@
 {#title}Framework de Redes | Segurança de Rede{/title}
 {#description}Segurança de rede na prática: testador de regras de firewall e ACL para conferir se uma regra libera ou bloqueia exatamente o tráfego que você espera.{/description}
 {#extraHead}
-<link rel="stylesheet" href="/segurancaRede/css/seguranca.css?v=20260907" />
+<link rel="stylesheet" href="/segurancaRede/css/seguranca.css?v=20260908" />
 {/extraHead}
 {#content}
 
@@ -46,6 +46,10 @@
             <button type="button" class="aed-mode-btn tab-trigger" data-tab="topologia" role="tab"
                     title="Monte sua própria topologia (equipamentos, enlaces, VLANs, ACLs) e teste se um fluxo alcança o destino">
                 <span class="material-symbols-outlined">account_tree</span><span>Montar topologia</span>
+            </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="canvas" role="tab"
+                    title="Mesma topologia, montada arrastando equipamentos e ligando interfaces num canvas visual (alternativa ao texto)">
+                <span class="material-symbols-outlined">drag_pan</span><span>Canvas (arrastar)</span>
             </button>
         </div>
 
@@ -355,6 +359,108 @@ link FW S1</textarea>
             </form>
             <div id="topoResultado" class="mt-3" aria-live="polite"></div>
         </div>
+
+        <!-- Canvas (arrastar) — mesma topologia montada visualmente (alternativa ao texto) -->
+        <div class="tab-panel" data-tab-panel="canvas">
+            <p class="small text-secondary mb-2">
+                Arraste os equipamentos para posicioná-los; clique em <strong>Ligar</strong> e depois em dois
+                equipamentos para criar um enlace; selecione um equipamento para editar VLAN, gateway, ACL ou porta.
+                Ao avaliar, o canvas vira <strong>exatamente o mesmo texto</strong> do montador e usa o mesmo motor.
+            </p>
+            <div class="aed-mode-grid mb-2" role="group" aria-label="Inserir equipamento no canvas">
+                <button type="button" class="aed-btn aed-btn-neutral" data-canvas-add="host">
+                    <span class="material-symbols-outlined">computer</span> + Host</button>
+                <button type="button" class="aed-btn aed-btn-neutral" data-canvas-add="switchl3">
+                    <span class="material-symbols-outlined">lan</span> + Switch L3</button>
+                <button type="button" class="aed-btn aed-btn-neutral" data-canvas-add="firewall">
+                    <span class="material-symbols-outlined">security</span> + Firewall</button>
+                <button type="button" class="aed-btn aed-btn-neutral" data-canvas-add="server">
+                    <span class="material-symbols-outlined">dns</span> + Servidor</button>
+                <button type="button" class="aed-btn aed-btn-neutral" id="canvas-ligar" aria-pressed="false"
+                        title="Modo ligar: clique em dois equipamentos para criar um enlace">
+                    <span class="material-symbols-outlined">cable</span> Ligar</button>
+                <button type="button" class="aed-btn aed-btn-neutral" id="canvas-limpar"
+                        title="Remover todos os equipamentos e enlaces do canvas">
+                    <span class="material-symbols-outlined">delete_sweep</span> Limpar</button>
+            </div>
+            <div class="topo-canvas-wrap">
+                <svg id="topo-canvas" class="topo-canvas" viewBox="0 0 900 460" role="img"
+                     aria-label="Canvas de topologia: equipamentos e enlaces">
+                    <g data-canvas-links></g>
+                    <g data-canvas-nodes></g>
+                </svg>
+                <p id="canvas-dica" class="small text-secondary mt-1 mb-0">
+                    <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">info</span>
+                    Comece adicionando equipamentos acima.
+                </p>
+            </div>
+
+            <div id="canvas-props" class="topo-props mt-2" hidden>
+                <div class="row g-2 align-items-end">
+                    <div class="col-6 col-sm-3">
+                        <label class="form-label small text-secondary" for="cp-id">
+                            <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">badge</span> Nome</label>
+                        <input id="cp-id" class="form-control form-control-sm bg-dark text-light border-secondary" autocomplete="off">
+                    </div>
+                    <div class="col-6 col-sm-3" data-prop="vlan">
+                        <label class="form-label small text-secondary" for="cp-vlan">
+                            <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">tag</span> VLAN</label>
+                        <input id="cp-vlan" class="form-control form-control-sm bg-dark text-light border-secondary" inputmode="numeric" autocomplete="off">
+                    </div>
+                    <div class="col-6 col-sm-3" data-prop="gw">
+                        <label class="form-label small text-secondary" for="cp-gw">
+                            <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">router</span> Gateway</label>
+                        <input id="cp-gw" class="form-control form-control-sm bg-dark text-light border-secondary" autocomplete="off">
+                    </div>
+                    <div class="col-6 col-sm-3" data-prop="vlans">
+                        <label class="form-label small text-secondary" for="cp-vlans">
+                            <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">lan</span> VLANs roteadas</label>
+                        <input id="cp-vlans" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="10,20" autocomplete="off">
+                    </div>
+                    <div class="col-6 col-sm-3" data-prop="deny">
+                        <label class="form-label small text-secondary" for="cp-deny">
+                            <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">block</span> Nega (deny)</label>
+                        <input id="cp-deny" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="tcp/23" autocomplete="off">
+                    </div>
+                    <div class="col-6 col-sm-3" data-prop="porta">
+                        <label class="form-label small text-secondary" for="cp-porta">
+                            <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">tag</span> Porta aberta</label>
+                        <input id="cp-porta" class="form-control form-control-sm bg-dark text-light border-secondary" inputmode="numeric" autocomplete="off">
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <button type="button" class="aed-btn aed-btn-neutral w-100" id="cp-remover"
+                                title="Remover este equipamento e seus enlaces">
+                            <span class="material-symbols-outlined">delete</span> Remover
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-2 mt-2">
+                <div class="col-sm-4">
+                    <label class="form-label small text-secondary" for="canvas-origem"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">call_made</span> Origem (host)</label>
+                    <input id="canvas-origem" class="form-control form-control-sm bg-dark text-light border-secondary" autocomplete="off">
+                </div>
+                <div class="col-sm-4">
+                    <label class="form-label small text-secondary" for="canvas-destino"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">call_received</span> Destino</label>
+                    <input id="canvas-destino" class="form-control form-control-sm bg-dark text-light border-secondary" autocomplete="off">
+                </div>
+                <div class="col-sm-4">
+                    <label class="form-label small text-secondary" for="canvas-porta"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">tag</span> Porta</label>
+                    <input id="canvas-porta" value="443" class="form-control form-control-sm bg-dark text-light border-secondary" autocomplete="off">
+                </div>
+            </div>
+            <button type="button" class="aed-btn aed-btn-teal mt-3" id="canvas-avaliar"
+                    title="Serializar o canvas e avaliar se o fluxo alcança o destino (mesmo motor do montador em texto)">
+                <span class="spinner-border spinner-border-sm" id="canvas-spin" role="status" aria-hidden="true" hidden></span>
+                <span class="material-symbols-outlined" aria-hidden="true">route</span> Testar fluxo
+            </button>
+            <details class="mt-2">
+                <summary class="small text-secondary">Ver o texto equivalente (o que o canvas gera)</summary>
+                <pre id="canvas-texto" class="small text-light bg-dark border-secondary rounded p-2 mt-1 mb-0" style="white-space:pre-wrap;"></pre>
+            </details>
+            <div id="canvasResultado" class="mt-3" aria-live="polite"></div>
+        </div>
     </div>
 </div>
 
@@ -363,5 +469,6 @@ link FW S1</textarea>
 <script src="/web/js/aed-tabs.js?v=20260710"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 <script src="/web/js/seguranca-topologia.js?v=20260908"></script>
+<script src="/web/js/seguranca-canvas.js?v=20260908"></script>
 {/extraScripts}
 {/include}
