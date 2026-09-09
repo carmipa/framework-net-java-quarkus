@@ -41,6 +41,13 @@ public class AvaliadorTopologiaService {
 
     private static final int MAX_LINHAS = 60;
 
+    /** Atributos aceitos por tipo de equipamento — qualquer outro é erro de entrada. */
+    private static final Map<String, Set<String>> ATRIBUTOS_POR_TIPO = Map.of(
+            "host", Set.of("vlan", "gw"),
+            "switchl3", Set.of("vlans"),
+            "firewall", Set.of("deny"),
+            "server", Set.of("vlan", "porta"));
+
     @Inject
     TelemetriaLogger telemetriaLogger;
 
@@ -86,6 +93,10 @@ public class AvaliadorTopologiaService {
                 if (t.length < 3) {
                     throw new SegurancaException("Linha " + numero + ": link precisa de dois equipamentos.");
                 }
+                if (t.length > 3) {
+                    throw new SegurancaException("Linha " + numero
+                            + ": link aceita só dois equipamentos (token extra '" + t[3] + "').");
+                }
                 enlaces.add(new Enlace(t[1], t[2]));
                 continue;
             }
@@ -101,17 +112,28 @@ public class AvaliadorTopologiaService {
                 throw new SegurancaException("Linha " + numero + ": id repetido '" + id + "'.");
             }
             Map<String, String> attrs = new HashMap<>();
+            Set<String> permitidos = ATRIBUTOS_POR_TIPO.getOrDefault(tipo, Set.of());
             for (int i = 2; i < t.length; i++) {
                 int eq = t[i].indexOf('=');
-                if (eq > 0) {
-                    attrs.put(t[i].substring(0, eq).toLowerCase(Locale.ROOT), t[i].substring(eq + 1));
+                if (eq <= 0) {
+                    throw new SegurancaException("Linha " + numero + ": token inesperado '" + t[i]
+                            + "' (atributos são no formato chave=valor).");
                 }
+                String chave = t[i].substring(0, eq).toLowerCase(Locale.ROOT);
+                if (!permitidos.contains(chave)) {
+                    throw new SegurancaException("Linha " + numero + ": atributo '" + chave
+                            + "' não é válido para " + tipo + " (aceita: " + String.join(", ", permitidos) + ").");
+                }
+                if (attrs.containsKey(chave)) {
+                    throw new SegurancaException("Linha " + numero + ": atributo '" + chave + "' repetido.");
+                }
+                attrs.put(chave, t[i].substring(eq + 1));
             }
             dispositivos.add(new Dispositivo(id, tipo,
                     vlanAtributo(attrs.get("vlan"), numero),
                     attrs.getOrDefault("gw", ""),
                     vlansAtributo(attrs.get("vlans"), numero),
-                    listaStr(attrs.get("deny")),
+                    denyAtributo(attrs.get("deny"), numero),
                     portaAtributo(attrs.get("porta"), numero)));
         }
         // Enlaces só entre ids existentes.
@@ -163,10 +185,11 @@ public class AvaliadorTopologiaService {
         }
 
         // INV-TOPO-1: o caminho avaliado É o do encaminhamento configurado —
-        // host -> gateway -> (menor caminho a partir do gateway). Tomar o menor
-        // caminho direto origem->destino deixaria um enlace paralelo (atalho) furar
-        // o gateway e as regras dos nós que ele atravessa (firewall/roteamento).
-        List<String> aPartirDoGw = caminhoMaisCurto(topo, gw, destinoId);
+        // host -> gateway -> (menor caminho a partir do gateway), e só transita por
+        // equipamentos que ENCAMINHAM (switch L3 / firewall). Sem isso, um enlace
+        // paralelo faria o BFS furar o gateway, ou a busca voltaria pelo próprio host
+        // de origem usando-o como roteador — papel que host/servidor não têm no modelo.
+        List<String> aPartirDoGw = caminhoDoGateway(topo, gw, destinoId);
         if (aPartirDoGw == null) {
             String noGw = gw + " (" + rotuloTipo(topo.por(gw).tipo()) + ")";
             saltos.add(new Salto(ordem, noGw, "L3", false,
@@ -296,8 +319,22 @@ public class AvaliadorTopologiaService {
         };
     }
 
-    /** Busca em largura: menor caminho (lista de ids) de origem a destino, ou null. */
-    private static List<String> caminhoMaisCurto(TopologiaRede topo, String origem, String destino) {
+    /**
+     * Busca em largura do gateway até o destino, respeitando o encaminhamento.
+     *
+     * <p><b>Propósito de negócio:</b> achar o menor caminho (lista de ids) que o
+     * pacote percorreria a partir do gateway, para o motor aplicar a regra de cada
+     * nó ao longo dele.</p>
+     *
+     * <p><b>Invariantes do domínio:</b> um nó intermediário só entra no caminho se
+     * souber ENCAMINHAR (switch L3 ou firewall); host e servidor são pontas — só
+     * podem ser o destino, nunca trânsito. Isso impede que a busca volte pelo host
+     * de origem (ou por qualquer endpoint) tratando-o como roteador.</p>
+     *
+     * <p><b>Comportamento em caso de falha:</b> devolve {@code null} quando não há
+     * caminho de encaminhamento até o destino — o chamador bloqueia o fluxo.</p>
+     */
+    private static List<String> caminhoDoGateway(TopologiaRede topo, String gateway, String destino) {
         Map<String, List<String>> adj = new HashMap<>();
         for (Dispositivo d : topo.dispositivos()) {
             adj.put(d.id(), new ArrayList<>());
@@ -309,8 +346,8 @@ public class AvaliadorTopologiaService {
         Map<String, String> veioDe = new HashMap<>();
         Set<String> visto = new HashSet<>();
         ArrayDeque<String> fila = new ArrayDeque<>();
-        fila.add(origem);
-        visto.add(origem);
+        fila.add(gateway);
+        visto.add(gateway);
         while (!fila.isEmpty()) {
             String atual = fila.poll();
             if (atual.equals(destino)) {
@@ -321,13 +358,23 @@ public class AvaliadorTopologiaService {
                 return caminho;
             }
             for (String viz : adj.getOrDefault(atual, List.of())) {
-                if (visto.add(viz)) {
+                if (visto.contains(viz)) {
+                    continue;
+                }
+                // Só transita por quem encaminha; o destino pode ser de qualquer tipo.
+                if (viz.equals(destino) || encaminha(topo.por(viz))) {
+                    visto.add(viz);
                     veioDe.put(viz, atual);
                     fila.add(viz);
                 }
             }
         }
         return null;
+    }
+
+    /** No modelo, só switch L3 e firewall encaminham pacotes de terceiros. */
+    private static boolean encaminha(Dispositivo d) {
+        return d != null && (d.ehTipo("switchl3") || d.ehTipo("firewall"));
     }
 
     private static String exigir(String v, String msg) {
@@ -435,14 +482,39 @@ public class AvaliadorTopologiaService {
         }
     }
 
-    private static List<String> listaStr(String v) {
+    /**
+     * Regras deny de um firewall a partir do atributo textual do montador.
+     *
+     * <p><b>Propósito de negócio:</b> traduzir {@code deny=<proto>/<porta>[,...]}
+     * para o domínio de bloqueio do firewall.</p>
+     *
+     * <p><b>Invariantes do domínio:</b> ausente/vazio vira lista vazia (firewall
+     * não bloqueia nada); cada regra precisa ser {@code tcp/<porta>} ou
+     * {@code udp/<porta>} com porta em 1–65535.</p>
+     *
+     * <p><b>Comportamento em caso de falha:</b> regra malformada lança
+     * {@link SegurancaException} — um deny mal digitado nunca vira "sem bloqueio".</p>
+     */
+    private static List<String> denyAtributo(String v, int linha) {
         List<String> out = new ArrayList<>();
-        if (v != null && !v.isBlank()) {
-            for (String p : v.split(",")) {
-                if (!p.isBlank()) {
-                    out.add(p.trim());
-                }
+        if (v == null || v.isBlank()) {
+            return out;
+        }
+        for (String bruto : v.split(",")) {
+            String r = bruto.trim().toLowerCase(Locale.ROOT);
+            if (r.isEmpty()) {
+                continue;
             }
+            if (!r.matches("(tcp|udp)/\\d{1,5}")) {
+                throw new SegurancaException("Linha " + linha + ": regra deny inválida '" + bruto.trim()
+                        + "' (use tcp/<porta> ou udp/<porta>).");
+            }
+            int porta = Integer.parseInt(r.substring(r.indexOf('/') + 1));
+            if (porta < 1 || porta > 65535) {
+                throw new SegurancaException("Linha " + linha
+                        + ": porta da regra deny fora de 1–65535 ('" + bruto.trim() + "').");
+            }
+            out.add(r);
         }
         return out;
     }

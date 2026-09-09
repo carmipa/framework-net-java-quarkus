@@ -163,6 +163,90 @@ class AvaliadorTopologiaServiceTest {
         assertTrue(d.alcanca(), () -> "ausência de vlan em FW/R1 não pode virar erro; ponto: " + d.pontoBloqueio());
     }
 
+    @Test
+    @DisplayName("#1b: o caminho não volta pelo host de origem (host não é trânsito)")
+    void naoTransitaPeloHostDeOrigem() {
+        // R e S só se ligam a H; R só chegaria a S passando por H (host), que não encaminha.
+        String topo = String.join("\n",
+                "host H vlan=10 gw=R",
+                "switchl3 R vlans=10,20",
+                "server S vlan=20 porta=443",
+                "link H R",
+                "link H S");
+        DiagnosticoFluxo d = servico.diagnosticar(topo, "H", "S", "443");
+        assertFalse(d.alcanca(), () -> "S só é alcançável via o host, que não encaminha: deveria bloquear. ponto: " + d.pontoBloqueio());
+    }
+
+    @Test
+    @DisplayName("#1b: servidor no meio não serve de trânsito")
+    void servidorNaoEhTransito() {
+        String topo = String.join("\n",
+                "host H vlan=10 gw=R",
+                "switchl3 R vlans=10,20",
+                "server MEIO vlan=20 porta=80",
+                "server S vlan=20 porta=443",
+                "link H R",
+                "link R MEIO",
+                "link MEIO S");
+        DiagnosticoFluxo d = servico.diagnosticar(topo, "H", "S", "443");
+        assertFalse(d.alcanca(), () -> "um servidor (ponta) não pode encaminhar até S. ponto: " + d.pontoBloqueio());
+    }
+
+    @Test
+    @DisplayName("#2b: atributo desconhecido (denny) é recusado, não ignorado")
+    void atributoDesconhecidoRecusa() {
+        String topo = String.join("\n",
+                "host H vlan=10 gw=R",
+                "switchl3 R vlans=10,20",
+                "firewall FW denny=tcp/443",
+                "server S vlan=20 porta=443",
+                "link H R", "link R FW", "link FW S");
+        assertThrows(SegurancaException.class, () -> servico.diagnosticar(topo, "H", "S", "443"));
+    }
+
+    @Test
+    @DisplayName("#2b: atributo de outro tipo de equipamento é recusado")
+    void atributoDeOutroTipoRecusa() {
+        String topo = TOPO.replace("host H1 vlan=10 gw=R1", "host H1 vlan=10 gw=R1 porta=443");
+        assertThrows(SegurancaException.class, () -> servico.diagnosticar(topo, "H1", "S1", "443"));
+    }
+
+    @Test
+    @DisplayName("#2b: atributo repetido é recusado")
+    void atributoRepetidoRecusa() {
+        String topo = TOPO.replace("host H1 vlan=10 gw=R1", "host H1 vlan=10 vlan=20 gw=R1");
+        assertThrows(SegurancaException.class, () -> servico.diagnosticar(topo, "H1", "S1", "443"));
+    }
+
+    @Test
+    @DisplayName("#2b: token solto (sem =) é recusado")
+    void tokenSoltoRecusa() {
+        String topo = TOPO.replace("host H1 vlan=10 gw=R1", "host H1 vlan=10 gw=R1 lixo");
+        assertThrows(SegurancaException.class, () -> servico.diagnosticar(topo, "H1", "S1", "443"));
+    }
+
+    @Test
+    @DisplayName("#2b: token extra em link é recusado")
+    void linkTokenExtraRecusa() {
+        String topo = TOPO.replace("link H1 R1", "link H1 R1 extra");
+        assertThrows(SegurancaException.class, () -> servico.diagnosticar(topo, "H1", "S1", "443"));
+    }
+
+    @Test
+    @DisplayName("#2b: regra deny malformada é recusada")
+    void denyMalformadaRecusa() {
+        String topo = TOPO.replace("firewall FW deny=tcp/23", "firewall FW deny=23");
+        assertThrows(SegurancaException.class, () -> servico.diagnosticar(topo, "H1", "S1", "443"));
+    }
+
+    @Test
+    @DisplayName("#2b: deny com udp válido é aceito (não trava o que não deve)")
+    void denyUdpAceito() {
+        String topo = TOPO.replace("firewall FW deny=tcp/23", "firewall FW deny=udp/53,tcp/23");
+        DiagnosticoFluxo d = servico.diagnosticar(topo, "H1", "S1", "443");
+        assertTrue(d.alcanca(), () -> "porta 443 não está nos denies; deveria alcançar. ponto: " + d.pontoBloqueio());
+    }
+
     private static void verificarBloqueioUnicoEFinal(DiagnosticoFluxo d) {
         assertEquals(1, d.saltos().stream().filter(s -> !s.ok()).count(), "um único ponto de bloqueio");
         assertFalse(d.saltos().get(d.saltos().size() - 1).ok(), "o bloqueio é o último salto");
