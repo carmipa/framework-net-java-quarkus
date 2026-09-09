@@ -159,6 +159,9 @@
         $("lab-play-icone").textContent = v ? "pause" : "play_arrow";
         $("lab-play-texto").textContent = v ? "Pausar" : "Executar";
         btn.setAttribute("aria-pressed", v ? "true" : "false");
+        // Indicador fixo e visível de que a reprodução automática está acontecendo.
+        var rep = $("lab-reproduzindo");
+        if (rep) { rep.hidden = !v; }
     }
 
     function reduzirMovimento() {

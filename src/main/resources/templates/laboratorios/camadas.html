@@ -5,7 +5,7 @@
 {#title}Camadas em ação | Laboratórios Interativos{/title}
 {#description}Laboratório interativo Camadas em ação: veja passo a passo uma mensagem ganhar cabeçalhos (UDP, IP, Ethernet), atravessar um switch e ser desencapsulada no destino, na mesma rede.{/description}
 {#extraHead}
-<link rel="stylesheet" href="/laboratorios/css/laboratorios.css?v=20260909b">
+<link rel="stylesheet" href="/laboratorios/css/laboratorios.css?v=20260909c">
 {/extraHead}
 {#content}
 <div class="container py-5 lab-page">
@@ -75,18 +75,18 @@
 
     {! Controles da experiência — separados da navegação de páginas. !}
     <div class="lab-controles" role="group" aria-label="Controles da experiência">
-        <button type="button" class="aed-btn aed-btn-neutral" id="lab-reiniciar" title="Voltar à etapa inicial">
+        <button type="button" class="aed-btn aed-btn-neutral" id="lab-reiniciar" data-bs-trigger="hover" title="Voltar à etapa inicial">
             <span class="material-symbols-outlined" aria-hidden="true">restart_alt</span> Reiniciar
         </button>
-        <button type="button" class="aed-btn aed-btn-neutral" id="lab-prev" title="Etapa anterior">
+        <button type="button" class="aed-btn aed-btn-neutral" id="lab-prev" data-bs-trigger="hover" title="Etapa anterior">
             <span class="material-symbols-outlined" aria-hidden="true">skip_previous</span> Anterior
         </button>
         <button type="button" class="aed-btn aed-btn-teal" id="lab-play" aria-pressed="false"
-                title="Reproduzir automaticamente / pausar">
+                data-bs-trigger="hover" title="Reproduzir / pausar">
             <span class="material-symbols-outlined" aria-hidden="true" id="lab-play-icone">play_arrow</span>
             <span id="lab-play-texto">Executar</span>
         </button>
-        <button type="button" class="aed-btn aed-btn-neutral" id="lab-next" title="Próxima etapa">
+        <button type="button" class="aed-btn aed-btn-neutral" id="lab-next" data-bs-trigger="hover" title="Próxima etapa">
             <span class="material-symbols-outlined" aria-hidden="true">skip_next</span> Próxima
         </button>
         <span class="lab-passo-indicador" aria-live="polite">
@@ -97,6 +97,9 @@
     <div class="lab-corpo">
         {! Cena: Host A — switch — Host B, com o pacote em trânsito. !}
         <div class="lab-cena-wrap">
+            <div id="lab-reproduzindo" class="lab-reproduzindo" role="status" aria-live="polite" hidden>
+                <span class="lab-rep-dot" aria-hidden="true"></span> Reproduzindo demonstração
+            </div>
             <svg id="lab-cena" class="lab-cena" viewBox="0 0 900 260" role="img"
                  aria-label="Cena: Host A à esquerda, um switch no centro e Host B à direita; o pacote percorre esse caminho.">
                 <line class="lab-fio" x1="150" y1="130" x2="450" y2="130"></line>
@@ -207,6 +210,6 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/laboratorios/js/camadas.js?v=20260909c"></script>
+<script src="/laboratorios/js/camadas.js?v=20260909d"></script>
 {/extraScripts}
 {/include}

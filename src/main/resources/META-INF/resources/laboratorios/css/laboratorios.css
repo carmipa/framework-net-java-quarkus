@@ -67,7 +67,22 @@
 .lab-corpo { display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.25rem; align-items: start; }
 @media (max-width: 820px) { .lab-corpo { grid-template-columns: 1fr; } }
 
-.lab-cena-wrap { border: 1px solid rgba(148, 163, 184, 0.22); border-radius: 14px; background: #0a0e16; padding: 0.5rem; }
+.lab-cena-wrap { position: relative; border: 1px solid rgba(148, 163, 184, 0.22); border-radius: 14px; background: #0a0e16; padding: 0.5rem; }
+.lab-reproduzindo {
+    position: absolute; top: 0.6rem; right: 0.6rem; z-index: 2;
+    display: inline-flex; align-items: center; gap: 0.45rem;
+    padding: 0.3rem 0.7rem; border-radius: 999px;
+    background: rgba(16, 185, 129, 0.16); border: 1px solid #10b981; color: #6ee7b7;
+    font-size: 0.8rem; font-weight: 700; letter-spacing: 0.01em;
+    box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.15), 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+.lab-rep-dot { width: 9px; height: 9px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); animation: lab-rep-pulse 1.2s ease-out infinite; }
+@keyframes lab-rep-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
+    70% { box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .lab-rep-dot { animation: none; } }
 .lab-cena { width: 100%; height: auto; aspect-ratio: 900 / 260; display: block; }
 .lab-cena .lab-fio { stroke: #334155; stroke-width: 3; stroke-linecap: round; }
 .lab-cena .lab-no rect { fill: #0f1622; stroke: #5b6679; stroke-width: 2; }
