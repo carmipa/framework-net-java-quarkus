@@ -73,6 +73,8 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Calculadora (API) | `/calculadora/api/vlan`, `/calculadora/api/vlan-id` | POST | Fragmento HTML: plano de VLANs com CLI Cisco / parecer sobre um VLAN ID |
 | Calculadora (API) | `/calculadora/api/sumarizar`, `/calculadora/api/comparar`, `/calculadora/api/faixa` | POST | Fragmento HTML: rota resumo, relação entre blocos, faixa em CIDR |
 | Calculadora (export) | `/calculadora/export/divisao.csv`, `/calculadora/export/vlan.csv` | GET | CSV do plano exibido |
+| Laboratórios | `/laboratorios` | GET | Visão geral dos laboratórios interativos (só experiências disponíveis) |
+| Laboratórios | `/laboratorios/camadas` | GET | Experiência "Camadas em ação": encapsulamento/desencapsulamento (UDP/IP/Ethernet) entre dois hosts e um switch, passo a passo, com animação e explicações |
 | Localização | `/localizacao` | GET | Localização por IP e por CEP no mapa |
 | Localização (API) | `/localizacao/api/ip`, `/localizacao/api/cep` | GET | JSON: geolocalização por IP / endereço por CEP (ViaCEP + OSM) |
 | Tráfego | `/trafego` | GET | Sub-abas: painel ao vivo (simulação), decodificador (hex), encapsulamento, handshake TCP, **anomalias TCP** (SYN flood, sequestro de sequência), **construtor de pacotes** e **lab DNS/ICMP** |
