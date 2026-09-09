@@ -18,8 +18,8 @@
             form.requestSubmit();
         });
 
-        $("encap-limpar").addEventListener("click", function () {
-            $("encap-resultado").replaceChildren();
-        });
+        // O botão "Limpar" (encap-limpar) usa o mecanismo genérico data-limpar
+        // (limpar-form.js): esvazia os campos do form E apaga o resultado. O antigo
+        // handler daqui só apagava o resultado — deixava os campos preenchidos.
     });
 })();

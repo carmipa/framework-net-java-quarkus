@@ -122,6 +122,19 @@
         });
         sel.addEventListener("change", function () { estado.tool = sel.value; renderOpcoes(); });
         document.getElementById("cmd-alvo").addEventListener("input", montar);
+        var limpar = document.getElementById("cmd-limpar");
+        if (limpar) {
+            limpar.addEventListener("click", function () {
+                // Limpar = esvaziar o alvo digitado e desmarcar as opções; mantém a
+                // ferramenta escolhida. Remonta o comando base (sem repopular nada).
+                var alvo = document.getElementById("cmd-alvo");
+                alvo.value = "";
+                estado.flags = {};
+                document.querySelectorAll("#cmd-opcoes input[type=checkbox]").forEach(function (c) { c.checked = false; });
+                montar();
+                alvo.focus();
+            });
+        }
         var copiar = document.getElementById("cmd-copiar");
         copiar.addEventListener("click", async function () {
             try {

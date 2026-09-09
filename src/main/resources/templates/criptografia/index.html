@@ -28,9 +28,15 @@
     <section class="aprof-secao">
         <h3 class="aprof-secao-titulo"><span class="material-symbols-outlined" aria-hidden="true">tag</span> Playground de hash e codificação</h3>
         <p class="small text-secondary">Digite um texto e veja o hash e a codificação ao vivo — tudo no seu navegador (WebCrypto), nada é enviado ao servidor. Note o <strong>efeito avalanche</strong>: mude um caractere e o hash muda por completo.</p>
-        <div class="card-tech p-3">
+        <div class="card-tech p-3" id="cripto-hash">
             <label for="cripto-in" class="form-label small text-secondary">Texto de entrada</label>
-            <textarea id="cripto-in" class="form-control bg-dark text-light border-secondary mb-3" rows="2" spellcheck="false">O rato roeu a roupa do rei de Roma</textarea>
+            <textarea id="cripto-in" class="form-control bg-dark text-light border-secondary mb-2" rows="2" spellcheck="false">O rato roeu a roupa do rei de Roma</textarea>
+            <div class="mb-3">
+                <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-limpar="#cripto-hash" data-limpar-resultado="#cripto-out"
+                        title="Esvaziar o texto e apagar as saídas de hash/codificação">
+                    <span class="material-symbols-outlined">delete_sweep</span> Limpar
+                </button>
+            </div>
             <div class="table-responsive">
                 <table class="table table-dark table-sm align-middle mb-0 aprof-tabela">
                     <thead><tr><th>Algoritmo / codificação</th><th>Saída</th></tr></thead>
@@ -74,6 +80,6 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/criptografia/js/criptografia.js?v=20260907"></script>
+<script src="/criptografia/js/criptografia.js?v=20260909"></script>
 {/extraScripts}
 {/include}

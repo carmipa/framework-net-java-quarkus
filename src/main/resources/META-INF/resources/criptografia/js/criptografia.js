@@ -49,6 +49,15 @@
     async function atualizarHash() {
         var texto = document.getElementById("cripto-in").value;
         var linhas = document.querySelectorAll("#cripto-out tr");
+        if (texto === "") {
+            // Entrada vazia (ex.: após "Limpar"): zera as células de forma síncrona,
+            // sem disparar digest assíncrono que repovoaria depois da limpeza.
+            for (var k = 0; k < linhas.length; k++) {
+                var vazia = linhas[k].querySelector(".cripto-val");
+                if (vazia) { vazia.textContent = ""; }
+            }
+            return;
+        }
         for (var i = 0; i < linhas.length; i++) {
             var linha = linhas[i];
             var alg = linha.getAttribute("data-alg");
