@@ -148,7 +148,9 @@ public class ReconstrucaoTopologiaService {
                 if (i.temClockRate()) {
                     notas.add("DCE (clock rate)");
                 }
-                if (i.temIp() && !i.noShutdown()) {
+                if (i.temIp() && i.shutdownExplicito()) {
+                    notas.add("shutdown explícito");
+                } else if (i.temIp() && !i.noShutdown()) {
                     notas.add("falta no shutdown");
                 }
                 if (i.vlan() > 0) {
@@ -280,10 +282,14 @@ public class ReconstrucaoTopologiaService {
                 if (i.temClockRate()) {
                     linhas.add(" clock rate " + i.clockRateBps());
                 }
-                // Reconstrução FIEL: só traz "no shutdown" se a interface original tinha.
-                // A antiga forçava sempre, apagando um "shutdown" real; a interface
-                // endereçada sem "no shutdown" já é sinalizada como achado pela auditoria.
-                if (i.noShutdown()) {
+                // Reconstrução FIEL dos TRÊS estados administrativos distintos:
+                // "shutdown" explícito, "no shutdown" explícito e comando ausente
+                // (nada emitido). Colapsar shutdown com ausência apagaria a intenção
+                // do operador — a interface endereçada sem "no shutdown" já é
+                // sinalizada como achado pela auditoria.
+                if (i.shutdownExplicito()) {
+                    linhas.add(" shutdown");
+                } else if (i.noShutdown()) {
                     linhas.add(" no shutdown");
                 }
                 linhas.add(" exit");

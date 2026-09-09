@@ -220,10 +220,12 @@ public class CiscoConfigParser {
 
         if ("no".equals(comando) && tokens.length >= 2 && ehPrefixoDe(tokens[1], "shutdown", 4)) {
             alvo.noShutdown = true;
+            alvo.shutdownExplicito = false; // último comando vence; estados mutuamente exclusivos
             return true;
         }
         if (ehPrefixoDe(comando, "shutdown", 4)) {
             alvo.noShutdown = false;
+            alvo.shutdownExplicito = true;
             return true;
         }
         if ("clock".equals(comando) && tokens.length >= 2 && tokens[1].toLowerCase(Locale.ROOT).startsWith("rate")) {
@@ -489,6 +491,7 @@ public class CiscoConfigParser {
         private int prefixo = -1;
         private int clockRateBps;
         private boolean noShutdown;
+        private boolean shutdownExplicito;
         private String descricao = "";
         private int vlan;
 
@@ -499,7 +502,7 @@ public class CiscoConfigParser {
 
         InterfaceLida selar() {
             return new InterfaceLida(nome, ip, mascaraTexto, prefixo, clockRateBps, noShutdown,
-                    descricao, vlan, linha);
+                    shutdownExplicito, descricao, vlan, linha);
         }
     }
 

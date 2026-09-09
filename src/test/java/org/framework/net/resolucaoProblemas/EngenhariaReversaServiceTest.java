@@ -331,4 +331,56 @@ class EngenhariaReversaServiceTest {
         assertFalse(script.contains("no shutdown"),
                 "A interface não tinha 'no shutdown'; a reconstrução fiel não deve forçá-lo:\n" + script);
     }
+
+    // ---- Fidelidade do estado administrativo: shutdown / no shutdown / ausente ----
+
+    private String reconstruir(String config) {
+        return servico.interpretar(config).scripts().stream()
+                .map(CenarioReconstruido.ScriptCorrigido::conteudo)
+                .reduce("", (a, b) -> a + "\n" + b);
+    }
+
+    @Test
+    @DisplayName("estado admin: shutdown explícito é preservado na reconstrução")
+    void reconstrucaoPreservaShutdownExplicito() {
+        String script = reconstruir("""
+                hostname R1
+                interface GigabitEthernet0/0
+                 ip address 10.0.0.1 255.255.255.0
+                 shutdown
+                """);
+        assertTrue(script.lines().anyMatch(l -> l.strip().equals("shutdown")),
+                "shutdown explícito deve voltar como 'shutdown':\n" + script);
+        assertTrue(script.lines().noneMatch(l -> l.strip().equals("no shutdown")),
+                "shutdown explícito não pode virar 'no shutdown':\n" + script);
+    }
+
+    @Test
+    @DisplayName("estado admin: no shutdown explícito é preservado")
+    void reconstrucaoPreservaNoShutdown() {
+        String script = reconstruir("""
+                hostname R1
+                interface GigabitEthernet0/0
+                 ip address 10.0.0.1 255.255.255.0
+                 no shutdown
+                """);
+        assertTrue(script.lines().anyMatch(l -> l.strip().equals("no shutdown")),
+                "no shutdown explícito deve voltar como 'no shutdown':\n" + script);
+        assertTrue(script.lines().noneMatch(l -> l.strip().equals("shutdown")),
+                "não pode aparecer um 'shutdown' que não existia:\n" + script);
+    }
+
+    @Test
+    @DisplayName("estado admin: comando ausente não inventa shutdown nem no shutdown")
+    void reconstrucaoPreservaAusencia() {
+        String script = reconstruir("""
+                hostname R1
+                interface GigabitEthernet0/0
+                 ip address 10.0.0.1 255.255.255.0
+                """);
+        assertTrue(script.lines().noneMatch(l -> l.strip().equals("shutdown")),
+                "ausência de comando não pode virar 'shutdown':\n" + script);
+        assertTrue(script.lines().noneMatch(l -> l.strip().equals("no shutdown")),
+                "ausência de comando não pode virar 'no shutdown':\n" + script);
+    }
 }

@@ -98,7 +98,11 @@ public record ConfiguracaoLida(
      * {@link #temIp()} antes de calcular sub-rede. {@code prefixo} vale -1
      * enquanto não houver máscara válida, nunca 0, que é um prefixo legítimo.
      * {@code clockRateBps} guarda o VALOR original do {@code clock rate} (0 quando
-     * não houve): reconstrução fiel não pode reinventar o número do relógio.</p>
+     * não houve): reconstrução fiel não pode reinventar o número do relógio.
+     * O estado administrativo tem TRÊS valores distintos, não dois: {@code shutdown}
+     * explícito ({@code shutdownExplicito=true}), {@code no shutdown} explícito
+     * ({@code noShutdown=true}) e comando ausente (ambos {@code false}) — colapsar
+     * shutdown com ausência apagaria a intenção do operador na reconstrução.</p>
      */
     public record InterfaceLida(
             String nome,
@@ -107,9 +111,17 @@ public record ConfiguracaoLida(
             int prefixo,
             int clockRateBps,
             boolean noShutdown,
+            boolean shutdownExplicito,
             String descricao,
             int vlan,
             int linha) {
+
+        public InterfaceLida {
+            if (noShutdown && shutdownExplicito) {
+                throw new IllegalArgumentException(
+                        "estado administrativo inconsistente: 'no shutdown' e 'shutdown' ao mesmo tempo em " + nome);
+            }
+        }
 
         public boolean temIp() {
             return ip != null && !ip.isBlank() && prefixo >= 0;
@@ -133,7 +145,7 @@ public record ConfiguracaoLida(
         /** Cópia com outro endereço — usada pela auditoria ao aplicar uma correção derivada. */
         public InterfaceLida comIp(String novoIp) {
             return new InterfaceLida(nome, novoIp, mascara, prefixo, clockRateBps, noShutdown,
-                    descricao, vlan, linha);
+                    shutdownExplicito, descricao, vlan, linha);
         }
     }
 

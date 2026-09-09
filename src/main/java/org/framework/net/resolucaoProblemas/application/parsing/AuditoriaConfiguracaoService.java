@@ -569,7 +569,11 @@ public class AuditoriaConfiguracaoService {
     private void conferirBoasPraticas(List<RoteadorLido> roteadores, List<AchadoConfiguracao> achados) {
         for (RoteadorLido r : roteadores) {
             for (InterfaceLida i : r.interfacesComIp()) {
-                if (!i.noShutdown()) {
+                if (i.shutdownExplicito()) {
+                    achados.add(AchadoConfiguracao.aviso("Interface", r.hostname(), i.linha(),
+                            "A interface " + i.nome() + " tem endereço, mas está em \"shutdown\" explícito.",
+                            "É intencional? Um endereço numa interface em shutdown não entra em operação até o \"no shutdown\"."));
+                } else if (!i.noShutdown()) {
                     achados.add(AchadoConfiguracao.aviso("Interface", r.hostname(), i.linha(),
                             "A interface " + i.nome() + " tem endereço, mas não recebeu \"no shutdown\".",
                             "Interface de roteador nasce administrativamente desligada no IOS."));
