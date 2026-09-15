@@ -24,6 +24,8 @@ class ModuloDePathTest {
         assertEquals("Início", TelemetriaDashboardService.moduloDePath("/"));
         assertEquals("Análise Didática", TelemetriaDashboardService.moduloDePath("/analise"));
         assertEquals("Calculadora", TelemetriaDashboardService.moduloDePath("/calculadora"));
+        assertEquals("IPv6", TelemetriaDashboardService.moduloDePath("/ipv6"));
+        assertEquals("IPv6", TelemetriaDashboardService.moduloDePath("/ipv6/api/dividir"));
         assertEquals("Portas", TelemetriaDashboardService.moduloDePath("/portas"));
         assertEquals("Protocolos", TelemetriaDashboardService.moduloDePath("/protocolos"));
         assertEquals("Resolução", TelemetriaDashboardService.moduloDePath("/resolucao-problemas"));

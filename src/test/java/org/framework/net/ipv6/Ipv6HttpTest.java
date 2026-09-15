@@ -1,0 +1,101 @@
+package org.framework.net.ipv6;
+
+import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.Test;
+
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.CoreMatchers.containsString;
+
+/**
+ * Guarda HTTP da Calculadora IPv6: a página abre, os assets são servidos, e os dois endpoints
+ * (analisar e dividir) renderizam o fragmento com o conteúdo calculado — não só status 200.
+ */
+@QuarkusTest
+class Ipv6HttpTest {
+
+    private static final String FORM = "application/x-www-form-urlencoded";
+
+    @Test
+    void paginaCarregaComMenuEFormularios() {
+        given()
+                .when().get("/ipv6")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("Calculadora IPv6 (CIDR)"))
+                .body(containsString("hx-post=\"/ipv6/api/calcular\""))
+                .body(containsString("hx-post=\"/ipv6/api/dividir\""))
+                .body(containsString("/ipv6/css/ipv6.css"));
+    }
+
+    @Test
+    void menuTemDropdownIpv4EIpv6() {
+        given()
+                .when().get("/ipv6")
+                .then()
+                .statusCode(200)
+                .body(containsString(">IPv4<"))
+                .body(containsString(">IPv6<"))
+                .body(containsString("href=\"/ipv6\""))
+                .body(containsString("aed-nav-drop-toggle is-active"));
+    }
+
+    @Test
+    void cssEJsServidosDaPastaPropria() {
+        given().when().get("/ipv6/css/ipv6.css").then().statusCode(200).body(containsString(".ipv6-hextet"));
+        given().when().get("/ipv6/js/ipv6.js").then().statusCode(200).body(containsString("data-limpar"));
+    }
+
+    @Test
+    void analisarPrefixoDevolveTipoRedeEContagem() {
+        given()
+                .contentType(FORM)
+                .formParam("endereco", "2001:db8::/48")
+                .when().post("/ipv6/api/calcular")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("Documentação"))
+                .body(containsString("2^80"))
+                .body(containsString("2001:db8::"));
+    }
+
+    @Test
+    void dividirContaEListaSubredes() {
+        given()
+                .contentType(FORM)
+                .formParam("bloco", "2001:db8::/32")
+                .formParam("prefixoAlvo", "48")
+                .when().post("/ipv6/api/dividir")
+                .then()
+                .statusCode(200)
+                .body(containsString("65536"))
+                .body(containsString("2001:db8::/48"))
+                .body(containsString("Sub-redes que cabem"));
+    }
+
+    @Test
+    void entradaInvalidaNoHtmxVolta400ComFragmento() {
+        given()
+                .contentType(FORM)
+                .header("HX-Request", "true")
+                .formParam("endereco", "nao-e-ipv6")
+                .when().post("/ipv6/api/calcular")
+                .then()
+                .statusCode(400)
+                .contentType(containsString("text/html"))
+                .body(containsString("Não foi possível calcular"));
+    }
+
+    @Test
+    void alvoMaisAmploQueBaseVolta400() {
+        given()
+                .contentType(FORM)
+                .formParam("bloco", "2001:db8::/48")
+                .formParam("prefixoAlvo", "32")
+                .when().post("/ipv6/api/dividir")
+                .then()
+                .statusCode(400)
+                .body(containsString("amplo"));
+    }
+}

@@ -64,6 +64,7 @@ public class Ipv6Calculator {
         String rede64 = new IPAddressString(addr.toCanonicalString() + "/64").getAddress().toZeroHost().toCanonicalString();
 
         String tipo = classificar(inet);
+        String prefixoSugerido = prefixoSugeridoPorTipo(inet);
         String faixa = faixaReferencia(inet);
         String uso = uso(inet);
         String roteavel = isGlobalUnicast(inet) ? "Sim" : "Não";
@@ -78,7 +79,7 @@ public class Ipv6Calculator {
                 item("📍", "Faixa", faixa),
                 item("⚙️", "Uso", uso),
                 item("🌍", "Roteável na internet", roteavel),
-                item("📌", "Prefixo sugerido", "/64"),
+                item("📌", "Prefixo sugerido", prefixoSugerido),
                 item("🌐", "Rede estimada (/64)", rede64 + "/64"),
                 item("🆔", "Zone index", zone.isEmpty() ? "—" : zone),
                 item("🧠", "Primeiros 64 bits", primeiros64),
@@ -101,7 +102,7 @@ public class Ipv6Calculator {
         out.put("faixa", faixa);
         out.put("uso", uso);
         out.put("roteavel", roteavel);
-        out.put("prefixo_sugerido", "/64");
+        out.put("prefixo_sugerido", prefixoSugerido);
         out.put("blocos_16", blocos16);
         out.put("hextetos", List.of(hextetos));
         out.put("primeiros_64", primeiros64);
@@ -180,6 +181,25 @@ public class Ipv6Calculator {
         if (addr.isMulticastAddress()) return "Transmissão para um grupo de dispositivos";
         if (isGlobalUnicast(addr)) return "Comunicação pública na Internet";
         return "Especial ou reservado";
+    }
+
+    /**
+     * PROPÓSITO DE NEGÓCIO: sugere o prefixo típico do endereço conforme o seu tipo, em vez de
+     * cravar "/64" para tudo — /64 é padrão de LAN/SLAAC, mas não é resposta universal.
+     *
+     * INVARIANTES DO DOMÍNIO: loopback e não-especificado são /128; multicast é endereço de grupo
+     * (/128 para um grupo específico); unicast (link-local, ULA, global) usa /64 (fronteira do SLAAC).
+     *
+     * COMPORTAMENTO EM CASO DE FALHA: nunca lança; para tipo indeterminado devolve o padrão "/64".
+     */
+    private static String prefixoSugeridoPorTipo(Inet6Address addr) {
+        if (addr.isLoopbackAddress() || addr.isAnyLocalAddress()) {
+            return "/128";
+        }
+        if (addr.isMulticastAddress()) {
+            return "/128 (endereço de grupo)";
+        }
+        return "/64";
     }
 
     private static String grcIpv6(Inet6Address addr) {

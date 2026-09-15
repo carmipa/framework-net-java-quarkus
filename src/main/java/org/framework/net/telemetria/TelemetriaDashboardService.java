@@ -280,6 +280,7 @@ public class TelemetriaDashboardService {
             // Análise Didática e os resources que nasceram dentro dela.
             case "analise", "export", "history", "mascara-referencia" -> "Análise Didática";
             case "calculadora" -> "Calculadora";
+            case "ipv6" -> "IPv6";
             case "localizacao" -> "Localização";
             case "portas" -> "Portas";
             case "protocolos" -> "Protocolos";

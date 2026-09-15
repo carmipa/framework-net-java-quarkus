@@ -28,7 +28,7 @@
 #   /diagnostico/api            ping e DNS reais saindo do servidor
 #   /mascara-referencia, .../api, /health    devolvem JSON ou sonda, nao pagina
 #
-# As paginas didaticas ficam abertas de proposito: / /analise /calculadora
+# As paginas didaticas ficam abertas de proposito: / /analise /calculadora /ipv6
 # /portas /protocolos (+/bgp +/ssh) /resolucao-problemas /localizacao /trafego
 # /seguranca /diagnostico /documentacao /sobre.
 #
@@ -61,6 +61,7 @@ Disallow: /health
 Disallow: /api
 Disallow: /calculadora/api
 Disallow: /calculadora/export
+Disallow: /ipv6/api
 Disallow: /diagnostico/api
 Disallow: /localizacao/api
 Disallow: /seguranca/api
@@ -106,6 +107,7 @@ Disallow: /health
 Disallow: /api
 Disallow: /calculadora/api
 Disallow: /calculadora/export
+Disallow: /ipv6/api
 Disallow: /diagnostico/api
 Disallow: /localizacao/api
 Disallow: /seguranca/api

@@ -1,0 +1,23 @@
+/* Calculadora IPv6 — reusa as classes .calc-* da Calculadora IPv4; aqui só o específico. */
+.ipv6-bin {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+}
+.ipv6-hextet {
+    font-family: var(--aed-font-mono, ui-monospace, monospace);
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    color: #a7f3d0;
+    background: rgba(45, 212, 191, 0.1);
+    border: 1px solid rgba(45, 212, 191, 0.25);
+    border-radius: 6px;
+    padding: 0.25rem 0.5rem;
+    white-space: nowrap;
+}
+.ipv6-hextet:nth-child(-n+4) {
+    color: #bae6fd;
+    background: rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.25);
+}

@@ -17,18 +17,60 @@
             <span class="material-symbols-outlined" aria-hidden="true">home</span>
             <span>Início</span>
         </a>
-        <a href="/analise"
-           class="aed-nav-link {#if activeMainMenu == 'analise'}is-active{/if}"
-           title="Análise didática de IPv4/IPv6, CIDR, máscara, wildcard e comparador">
-            <span class="material-symbols-outlined" aria-hidden="true">insights</span>
-            <span>Análise Didática</span>
-        </a>
-        <a href="/calculadora"
-           class="aed-nav-link {#if activeMainMenu == 'calculadora'}is-active{/if}"
-           title="Calculadora de sub-redes e VLANs: dividir blocos, plano de VLAN, sumarização e faixa para CIDR">
-            <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
-            <span>Calculadora</span>
-        </a>
+        {! Menu suspenso "IPv4": agrupa as ferramentas IPv4 que eram itens soltos no topo
+            (Análise, Calculadora, Resolução VLSM). Mesma mecânica de Topologia/Operações; os
+            itens seguem aed-nav-link (a guarda de contagem os vê). !}
+        <div class="dropdown aed-nav-drop">
+            <button type="button"
+                    class="aed-nav-drop-toggle {#if activeMainMenu == 'analise' || activeMainMenu == 'calculadora' || activeMainMenu == 'resolucao'}is-active{/if}"
+                    data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false"
+                    title="IPv4: análise didática, calculadora de sub-redes/VLAN e resolução VLSM">
+                <span class="material-symbols-outlined" aria-hidden="true">filter_4</span>
+                <span>IPv4</span>
+                <span class="material-symbols-outlined aed-nav-drop-caret" aria-hidden="true">expand_more</span>
+            </button>
+            <div class="dropdown-menu aed-nav-drop-menu">
+                <a href="/analise"
+                   class="aed-nav-link {#if activeMainMenu == 'analise'}is-active{/if}"
+                   title="Análise didática de IPv4: CIDR, máscara, wildcard e comparador">
+                    <span class="material-symbols-outlined" aria-hidden="true">insights</span>
+                    <span>Análise Didática</span>
+                </a>
+                <a href="/calculadora"
+                   class="aed-nav-link {#if activeMainMenu == 'calculadora'}is-active{/if}"
+                   title="Calculadora de sub-redes e VLANs: dividir blocos, plano de VLAN, sumarização e faixa para CIDR">
+                    <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
+                    <span>Calculadora</span>
+                </a>
+                <a href="/resolucao-problemas"
+                   class="aed-nav-link {#if activeMainMenu == 'resolucao'}is-active{/if}"
+                   title="VLSM dinâmico, WAN e roteamento">
+                    <span class="material-symbols-outlined" aria-hidden="true">extension</span>
+                    <span>Resolução (VLSM+WAN)</span>
+                </a>
+            </div>
+        </div>
+        {! Menu suspenso "IPv6": nasce com a Calculadora IPv6 (análise de endereço/prefixo e
+            divisão de sub-redes). Cresce conforme novas ferramentas IPv6 ficarem prontas — item
+            que ainda não existe não entra no menu (mesma regra dos Laboratórios). !}
+        <div class="dropdown aed-nav-drop">
+            <button type="button"
+                    class="aed-nav-drop-toggle {#if activeMainMenu == 'ipv6'}is-active{/if}"
+                    data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false"
+                    title="IPv6: calculadora de sub-redes CIDR">
+                <span class="material-symbols-outlined" aria-hidden="true">filter_6</span>
+                <span>IPv6</span>
+                <span class="material-symbols-outlined aed-nav-drop-caret" aria-hidden="true">expand_more</span>
+            </button>
+            <div class="dropdown-menu aed-nav-drop-menu">
+                <a href="/ipv6"
+                   class="aed-nav-link {#if activeMainMenu == 'ipv6'}is-active{/if}"
+                   title="Calculadora IPv6: análise de endereço/prefixo e divisão de sub-redes CIDR">
+                    <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
+                    <span>Calculadora IPv6</span>
+                </a>
+            </div>
+        </div>
         <a href="/laboratorios"
            class="aed-nav-link {#if activeMainMenu == 'laboratorios'}is-active{/if}"
            title="Laboratórios interativos: acompanhe passo a passo, com animação e explicações, o que acontece numa comunicação de rede">
@@ -88,12 +130,6 @@
                 </a>
             </div>
         </div>
-        <a href="/resolucao-problemas"
-           class="aed-nav-link {#if activeMainMenu == 'resolucao'}is-active{/if}"
-           title="VLSM dinâmico, WAN e roteamento">
-            <span class="material-symbols-outlined" aria-hidden="true">extension</span>
-            <span>Resolução (VLSM+WAN)</span>
-        </a>
         {! Menu suspenso "Operações": ferramentas práticas de análise/operação sobre
             a rede (localização, tráfego, ferramentas CLI, diagnóstico, segurança).
             Mesma mecânica da Topologia: itens continuam aed-nav-link; gatilho ativo
