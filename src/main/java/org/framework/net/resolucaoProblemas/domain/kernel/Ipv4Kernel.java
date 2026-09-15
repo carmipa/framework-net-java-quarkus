@@ -157,12 +157,25 @@ public class Ipv4Kernel {
         return network.getCount().longValue();
     }
 
+    /**
+     * PROPÓSITO DE NEGÓCIO: converte o IPv4 textual em quatro octetos numéricos, base do
+     * planejamento VLSM e da inferência de CIDR por IP na resolução de problemas de rede.
+     *
+     * INVARIANTES DO DOMÍNIO: a entrada tem exatamente quatro grupos separados por ponto; cada
+     * grupo é só de dígitos, tem no máximo 3 caracteres e representa um octeto de 0 a 255. Grupo
+     * vazio é proibido — rejeita ponto inicial, final ou duplo (ex.: "192.168.0.10." é inválido).
+     *
+     * COMPORTAMENTO EM CASO DE FALHA: qualquer violação lança {@link EntradaInvalidaException} com
+     * mensagem didática apontando o octeto — nunca propaga {@code NumberFormatException} crua (500)
+     * nem aceita entrada malformada. Octeto com mais de 3 dígitos é barrado ANTES do
+     * {@code Integer.parseInt}, evitando estouro de int em entradas como "9999999999.1.1.1".
+     */
     public int[] parseIpv4Parts(String ipS, String nomeCampo) {
         String txt = ipS == null ? "" : ipS.strip();
         if (txt.isEmpty()) {
             throw new EntradaInvalidaException(nomeCampo + " vazio.");
         }
-        String[] rawParts = txt.split("\\.");
+        String[] rawParts = txt.split("\\.", -1);
         if (rawParts.length != 4) {
             throw new EntradaInvalidaException(nomeCampo + " inválido. Use formato x.x.x.x.");
         }
@@ -175,6 +188,9 @@ public class Ipv4Kernel {
             }
             if (!raw.chars().allMatch(Character::isDigit)) {
                 throw new EntradaInvalidaException(nomeCampo + " inválido: octeto " + octetoIdx + " não é numérico.");
+            }
+            if (raw.length() > 3) {
+                throw new EntradaInvalidaException(nomeCampo + " inválido: octeto " + octetoIdx + " fora de 0-255.");
             }
             int octeto = Integer.parseInt(raw);
             if (octeto < 0 || octeto > 255) {

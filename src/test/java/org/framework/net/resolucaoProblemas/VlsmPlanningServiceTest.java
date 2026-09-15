@@ -166,10 +166,22 @@ class VlsmPlanningServiceTest {
         ));
         VlsmPlanningService.PlanningResult result = planningService.buildLanBlocks(base, new ArrayList<>(locs));
         assertEquals(3, result.locations().size());
-        List<Integer> hostsOrdenados = result.locations().stream()
-                .map(LanBlock::getHostsRequired)
-                .sorted(Comparator.reverseOrder())
-                .toList();
-        assertEquals(List.of(800, 550, 100), hostsOrdenados);
+
+        // O invariante REAL do VLSM é a ALOCAÇÃO maior-primeiro (eficiência: a maior LAN pega o
+        // bloco alinhado mais baixo), não a ordem da lista retornada — que preserva a entrada.
+        // Entrada embaralhada de propósito (100, 800, 550). Antes, o teste fazia
+        // sorted(reverseOrder()) sobre a SAÍDA antes de comparar, anulando a própria verificação:
+        // qualquer ordem de alocação passaria verde.
+        LanBlock maiorLan = result.locations().stream()
+                .max(Comparator.comparingInt(LanBlock::getHostsRequired)).orElseThrow();
+        assertEquals(800, maiorLan.getHostsRequired());
+        long menorEndereco = result.locations().stream()
+                .mapToLong(l -> enderecoComoLong(l.getNetwork())).min().orElseThrow();
+        assertEquals(menorEndereco, enderecoComoLong(maiorLan.getNetwork()),
+                "a LAN com mais hosts deve ocupar o primeiro bloco (alocação maior-primeiro)");
+    }
+
+    private static long enderecoComoLong(String ipv4) {
+        return new inet.ipaddr.IPAddressString(ipv4).getAddress().toIPv4().longValue();
     }
 }

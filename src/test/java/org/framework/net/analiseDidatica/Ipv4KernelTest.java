@@ -35,6 +35,28 @@ class Ipv4KernelTest {
     }
 
     @Test
+    void parseIpv4PartsOctetoEstouraIntEhRejeitadoComoDominio() {
+        // Caso-controle A1: octeto gigante compartilha o sinal "só dígitos" com um octeto válido,
+        // mas estouraria int no parseInt. Deve virar EntradaInvalidaException (erro didático),
+        // nunca NumberFormatException crua (500). Antes da correção, este caso lançava NFE.
+        assertThrows(EntradaInvalidaException.class, () -> kernel.parseIpv4Parts("9999999999.1.1.1"));
+        // Legítimo semelhante (também só dígitos, no limite superior): aceito.
+        int[] noLimite = kernel.parseIpv4Parts("255.255.255.255");
+        assertEquals(255, noLimite[0]);
+        assertEquals(255, noLimite[3]);
+    }
+
+    @Test
+    void parseIpv4PartsRejeitaPontoSobrando() {
+        // Ponto final/inicial produz octeto vazio e passa a ser rejeitado (split com limite -1).
+        assertThrows(EntradaInvalidaException.class, () -> kernel.parseIpv4Parts("192.168.0.10."));
+        assertThrows(EntradaInvalidaException.class, () -> kernel.parseIpv4Parts(".192.168.0.1"));
+        // Legítimo sem ponto sobrando: aceito.
+        int[] ok = kernel.parseIpv4Parts("192.168.0.10");
+        assertEquals(10, ok[3]);
+    }
+
+    @Test
     void inferirCidrClassfulClasseA() {
         Ipv4Kernel.InferenciaCidr inf = kernel.inferirCidrPorIp("10.5.5.5");
         assertEquals(8, inf.cidr());

@@ -254,12 +254,34 @@ public class TrafegoDecoderService {
 
     // ------------------------------------------------------------------ helpers
 
+    /**
+     * PROPÓSITO DE NEGÓCIO: no modo "auto", descobre por qual camada começar a decodificar o
+     * hex dump colado (Ethernet, IPv4 ou IPv6), para o usuário não precisar saber de antemão o
+     * formato do pacote capturado.
+     *
+     * INVARIANTES DO DOMÍNIO: camada escolhida explicitamente é sempre respeitada. No auto, um
+     * pacote IP cru NÃO pode ser lido como Ethernet só porque os bytes 12-13 (que num IP cru são
+     * parte do IP de origem) coincidem com um EtherType conhecido — ex.: IPv4 cujo IP de origem
+     * começa com 8.0.x.x tem bytes 12-13 = 0x0800. Por isso a hipótese IP é testada ANTES do
+     * EtherType, e só é aceita quando o cabeçalho IP é autoconsistente (versão + IHL + total
+     * length), condição que um quadro Ethernet real dificilmente satisfaz.
+     *
+     * COMPORTAMENTO EM CASO DE FALHA: sem sinal confiável de IP nem EtherType conhecido, cai no
+     * nibble de versão do primeiro byte; não havendo nem isso, assume Ethernet. Nunca lança.
+     */
     private String resolverInicio(String camadaInicial, byte[] b) {
         String c = camadaInicial == null ? "" : camadaInicial.strip().toLowerCase();
         if (INICIOS_VALIDOS.contains(c)) {
             return c;
         }
-        // auto
+        // auto: a hipótese de IP cru vem ANTES do EtherType. Aceita só quando o cabeçalho IP é
+        // autoconsistente, para não ler um IPv4/IPv6 cru como Ethernet por coincidência de bytes.
+        if (pareceIpv4Cru(b)) {
+            return "ipv4";
+        }
+        if (pareceIpv6Cru(b)) {
+            return "ipv6";
+        }
         if (b.length >= 14) {
             int ethertype = u16(b, 12);
             if (ethertype == 0x0800 || ethertype == 0x86DD || ethertype == 0x0806 || ethertype == 0x8100) {
@@ -274,6 +296,31 @@ public class TrafegoDecoderService {
             return "ipv4";
         }
         return "ethernet";
+    }
+
+    /**
+     * Reconhece um cabeçalho IPv4 cru autoconsistente: versão 4, IHL de 5 a 15 palavras, bytes
+     * suficientes para o cabeçalho e um campo Total Length coerente (&gt;= cabeçalho e &lt;=
+     * tamanho recebido). É o desempate que impede ler um IPv4 cru como Ethernet no modo auto.
+     */
+    private boolean pareceIpv4Cru(byte[] b) {
+        if (b.length < 20 || (u8(b, 0) >> 4) != 4) {
+            return false;
+        }
+        int ihl = u8(b, 0) & 0x0F;
+        if (ihl < 5 || b.length < ihl * 4) {
+            return false;
+        }
+        int totalLength = u16(b, 2);
+        return totalLength >= ihl * 4 && totalLength <= b.length;
+    }
+
+    /**
+     * Reconhece um cabeçalho IPv6 cru plausível: versão 6 e bytes suficientes para o cabeçalho
+     * fixo de 40 octetos.
+     */
+    private boolean pareceIpv6Cru(byte[] b) {
+        return b.length >= 40 && (u8(b, 0) >> 4) == 6;
     }
 
     private static Passo truncado(String nome, int off) {
