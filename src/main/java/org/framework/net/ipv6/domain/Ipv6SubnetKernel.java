@@ -204,6 +204,112 @@ public class Ipv6SubnetKernel {
                 gatewaySugerido(base.rede(), prefixo), delegacao, cisco, enunciadoProva(prefixo));
     }
 
+    /**
+     * PROPÓSITO DE NEGÓCIO: deriva o Interface ID EUI-64 e o endereço SLAAC a partir de um prefixo
+     * /64 e um MAC — mostra, passo a passo, como um host "ganha" o endereço IPv6 sozinho.
+     *
+     * INVARIANTES DO DOMÍNIO: EUI-64 = OUI(3 bytes) + FFFE + NIC(3 bytes), com o 7º bit do 1º byte
+     * (U/L) invertido (XOR 0x02). O prefixo é reduzido ao seu /64 (a fronteira do SLAAC).
+     *
+     * COMPORTAMENTO EM CASO DE FALHA: MAC ou prefixo inválidos lançam {@link Ipv6Exception}.
+     */
+    public Eui64Result eui64(String prefixo, String mac) {
+        String p = prefixo == null ? "" : prefixo.strip();
+        if (p.isEmpty()) {
+            throw new Ipv6Exception("Informe o prefixo /64 (ex.: 2001:db8:0:1::/64).");
+        }
+        IPAddressString ps = new IPAddressString(p);
+        if (!ps.isValid() || !ps.isIPv6()) {
+            throw new Ipv6Exception("Prefixo IPv6 inválido (" + p + ").");
+        }
+        byte[] rede = ps.getAddress().toIPv6().toPrefixBlock().getLower().getBytes();
+        byte[] m = parseMac(mac);
+
+        byte[] full = new byte[16];
+        System.arraycopy(rede, 0, full, 0, 8);
+        full[8] = (byte) (m[0] ^ 0x02);
+        full[9] = m[1];
+        full[10] = m[2];
+        full[11] = (byte) 0xFF;
+        full[12] = (byte) 0xFE;
+        full[13] = m[3];
+        full[14] = m[4];
+        full[15] = m[5];
+
+        IPv6Address addr = new IPv6Address(full);
+        String macNorm = String.format("%02x:%02x:%02x:%02x:%02x:%02x",
+                m[0] & 0xFF, m[1] & 0xFF, m[2] & 0xFF, m[3] & 0xFF, m[4] & 0xFF, m[5] & 0xFF);
+        String iid = String.format("%02x%02x:%02x%02x:%02x%02x:%02x%02x",
+                full[8] & 0xFF, full[9] & 0xFF, full[10] & 0xFF, full[11] & 0xFF,
+                full[12] & 0xFF, full[13] & 0xFF, full[14] & 0xFF, full[15] & 0xFF);
+        String passos = "1) MAC " + macNorm
+                + " · 2) inverte o bit U/L do 1º octeto (" + String.format("%02x", m[0] & 0xFF)
+                + " XOR 02 = " + String.format("%02x", full[8] & 0xFF)
+                + ") · 3) insere FF:FE no meio · 4) Interface ID = " + iid;
+        return new Eui64Result(macNorm, iid, addr.toCompressedString(),
+                new IPv6Address(rede).toCompressedString() + "/64", passos);
+    }
+
+    /**
+     * PROPÓSITO DE NEGÓCIO: gera um prefixo ULA (fd00::/8) com Global ID pseudo-aleatório de 40 bits
+     * (RFC 4193) — o "IP privado do IPv6", para uso interno sem coordenação com um RIR.
+     *
+     * INVARIANTES DO DOMÍNIO: prefixo sempre começa com fd (L=1, local); Global ID de 40 bits;
+     * Subnet ID de 16 bits (0–65535). O resultado é um /48 (site) e um /64 (LAN).
+     *
+     * COMPORTAMENTO EM CASO DE FALHA: Subnet ID fora de 0–65535 lança {@link Ipv6Exception}.
+     */
+    public UlaResult gerarUla(String subnetId) {
+        int sid = parseSubnetId(subnetId);
+        byte[] gid = new byte[5];
+        new java.security.SecureRandom().nextBytes(gid);
+
+        byte[] p48 = new byte[16];
+        p48[0] = (byte) 0xfd;
+        System.arraycopy(gid, 0, p48, 1, 5);
+        byte[] p64 = p48.clone();
+        p64[6] = (byte) ((sid >> 8) & 0xFF);
+        p64[7] = (byte) (sid & 0xFF);
+
+        StringBuilder gidHex = new StringBuilder();
+        for (byte b : gid) {
+            gidHex.append(String.format("%02x", b & 0xFF));
+        }
+        String explic = "fd (prefixo ULA, L=1) + Global ID de 40 bits pseudo-aleatório (" + gidHex
+                + ") + Subnet ID de 16 bits (" + sid + "). Gerado por SecureRandom, conforme RFC 4193.";
+        return new UlaResult(new IPv6Address(p48).toCompressedString() + "/48",
+                new IPv6Address(p64).toCompressedString() + "/64", gidHex.toString(), explic);
+    }
+
+    private static byte[] parseMac(String mac) {
+        String limpo = (mac == null ? "" : mac).replaceAll("[.:\\-\\s]", "");
+        if (!limpo.matches("[0-9a-fA-F]{12}")) {
+            throw new Ipv6Exception("MAC inválido. Use 12 dígitos hex (ex.: 00:1a:2b:3c:4d:5e).");
+        }
+        byte[] out = new byte[6];
+        for (int i = 0; i < 6; i++) {
+            out[i] = (byte) Integer.parseInt(limpo.substring(i * 2, i * 2 + 2), 16);
+        }
+        return out;
+    }
+
+    private static int parseSubnetId(String subnetId) {
+        String txt = subnetId == null ? "" : subnetId.strip();
+        if (txt.isEmpty()) {
+            return 0;
+        }
+        int base = txt.toLowerCase().startsWith("0x") ? 16 : 10;
+        try {
+            int v = Integer.parseInt(base == 16 ? txt.substring(2) : txt, base);
+            if (v < 0 || v > 65535) {
+                throw new Ipv6Exception("Subnet ID fora da faixa: use 0 a 65535.");
+            }
+            return v;
+        } catch (NumberFormatException ex) {
+            throw new Ipv6Exception("Subnet ID inválido: use um número de 0 a 65535 (ou 0x____).");
+        }
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private static String hexDoBin(String bin16) {
@@ -321,4 +427,11 @@ public class Ipv6SubnetKernel {
     public record DecomposicaoIpv6(AnaliseIpv6 base, List<HextetInfo> hextetos, int bitsRede,
             int bitsInterface, String gatewayLinkLocal, List<DelegacaoInfo> delegacao,
             String ciscoCli, String enunciado) { }
+
+    /** Resultado do EUI-64: MAC normalizado, Interface ID, endereço SLAAC e os passos. */
+    public record Eui64Result(String mac, String interfaceId, String enderecoSlaac,
+            String prefixoRede, String passos) { }
+
+    /** Resultado da geração de ULA (RFC 4193): prefixo /48, /64, o Global ID e a explicação. */
+    public record UlaResult(String ula48, String ula64, String globalId, String explicacao) { }
 }

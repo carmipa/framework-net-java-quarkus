@@ -47,6 +47,14 @@ public class Ipv6Resource {
     @Location("ipv6/partials/resultado_divisao.html")
     Template resultadoDivisao;
 
+    @Inject
+    @Location("ipv6/partials/resultado_eui64.html")
+    Template resultadoEui64;
+
+    @Inject
+    @Location("ipv6/partials/resultado_ula.html")
+    Template resultadoUla;
+
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance pagina() {
@@ -71,6 +79,24 @@ public class Ipv6Resource {
             @FormParam("bloco") String bloco,
             @FormParam("prefixoAlvo") String prefixoAlvo) {
         return resultadoDivisao.data("d", service.dividir(bloco, parsePrefixo(prefixoAlvo)));
+    }
+
+    /** Deriva o EUI-64 / endereço SLAAC de um prefixo /64 + MAC. */
+    @POST
+    @Path("/api/eui64")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance eui64(@FormParam("prefixo") String prefixo, @FormParam("mac") String mac) {
+        return resultadoEui64.data("e", service.eui64(prefixo, mac));
+    }
+
+    /** Gera um prefixo ULA (RFC 4193). */
+    @POST
+    @Path("/api/ula")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance ula(@FormParam("subnetId") String subnetId) {
+        return resultadoUla.data("u", service.gerarUla(subnetId));
     }
 
     private int parsePrefixo(String bruto) {

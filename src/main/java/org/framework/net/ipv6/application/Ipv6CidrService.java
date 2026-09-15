@@ -7,6 +7,8 @@ import org.framework.net.ipv6.domain.Ipv6SubnetKernel;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.AnaliseIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DecomposicaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DivisaoIpv6;
+import org.framework.net.ipv6.domain.Ipv6SubnetKernel.Eui64Result;
+import org.framework.net.ipv6.domain.Ipv6SubnetKernel.UlaResult;
 import org.framework.net.telemetria.TelemetriaLogger;
 
 import java.util.Map;
@@ -53,6 +55,20 @@ public class Ipv6CidrService {
         telemetriaLogger.logEvent("info", "ipv6", "ipv6_divisao",
                 Map.of("status", "ok", "prefixoBase", r.prefixoBase(),
                         "prefixoAlvo", r.prefixoAlvo(), "exibidas", r.exibidas()));
+        return r;
+    }
+
+    /** Deriva o Interface ID EUI-64 e o endereço SLAAC de um prefixo /64 + MAC. */
+    public Eui64Result eui64(String prefixo, String mac) {
+        Eui64Result r = kernel.eui64(prefixo, mac);
+        telemetriaLogger.logEvent("info", "ipv6", "ipv6_eui64", Map.of("status", "ok"));
+        return r;
+    }
+
+    /** Gera um prefixo ULA (fd00::/8) pseudo-aleatório (RFC 4193). */
+    public UlaResult gerarUla(String subnetId) {
+        UlaResult r = kernel.gerarUla(subnetId);
+        telemetriaLogger.logEvent("info", "ipv6", "ipv6_ula", Map.of("status", "ok"));
         return r;
     }
 }

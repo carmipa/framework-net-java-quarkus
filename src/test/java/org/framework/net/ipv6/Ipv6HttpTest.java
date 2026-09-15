@@ -78,6 +78,31 @@ class Ipv6HttpTest {
     }
 
     @Test
+    void eui64RenderizaEnderecoSlaac() {
+        given()
+                .contentType(FORM)
+                .formParam("prefixo", "2001:db8:0:1::/64")
+                .formParam("mac", "00:1a:2b:3c:4d:5e")
+                .when().post("/ipv6/api/eui64")
+                .then()
+                .statusCode(200)
+                .body(containsString("2001:db8::1:21a:2bff:fe3c:4d5e"))
+                .body(containsString("EUI-64"));
+    }
+
+    @Test
+    void ulaGeraPrefixoFd() {
+        given()
+                .contentType(FORM)
+                .formParam("subnetId", "1")
+                .when().post("/ipv6/api/ula")
+                .then()
+                .statusCode(200)
+                .body(containsString("RFC 4193"))
+                .body(containsString("/48"));
+    }
+
+    @Test
     void entradaInvalidaNoHtmxVolta400ComFragmento() {
         given()
                 .contentType(FORM)

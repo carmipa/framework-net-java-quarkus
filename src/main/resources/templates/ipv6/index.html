@@ -104,6 +104,61 @@
             </div>
         </div>
     </div>
+
+    {! ----- EUI-64 (MAC -> SLAAC) ----- !}
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="calc-form-card">
+                <h6 class="calc-form-title"><span class="material-symbols-outlined">badge</span> EUI-64 (MAC → SLAAC)</h6>
+                <p class="calc-hint">Como um host deriva o endereço IPv6 sozinho a partir do MAC.</p>
+                <form id="formEui64" hx-post="/ipv6/api/eui64" hx-target="#saidaEui64" hx-swap="innerHTML"
+                      hx-disabled-elt="find button[type='submit']">
+                    <div class="mb-3">
+                        <label for="ipv6Pref64" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">lan</span> Prefixo /64</label>
+                        <input type="text" class="aed-input form-control" id="ipv6Pref64" name="prefixo"
+                               placeholder="2001:db8:0:1::/64" value="2001:db8:0:1::/64" autocomplete="off" spellcheck="false" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="ipv6Mac" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">memory</span> Endereço MAC</label>
+                        <input type="text" class="aed-input form-control" id="ipv6Mac" name="mac"
+                               placeholder="00:1a:2b:3c:4d:5e" value="00:1a:2b:3c:4d:5e" autocomplete="off" spellcheck="false" required>
+                    </div>
+                    <button type="submit" class="aed-btn aed-btn-execute w-100"><span class="spinner-border spinner-border-sm htmx-indicator" role="status" aria-hidden="true"></span><span class="material-symbols-outlined">play_arrow</span> Derivar</button>
+                    <button type="button" class="aed-btn aed-btn-neutral w-100 mt-2" data-limpar><span class="material-symbols-outlined">delete_sweep</span> Limpar</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div id="saidaEui64" class="calc-saida">
+                <div class="calc-placeholder"><span class="material-symbols-outlined" aria-hidden="true">badge</span><p class="mb-0">Informe o prefixo /64 e o MAC para ver o Interface ID EUI-64 e o endereço SLAAC, passo a passo.</p></div>
+            </div>
+        </div>
+    </div>
+
+    {! ----- ULA (RFC 4193) ----- !}
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="calc-form-card">
+                <h6 class="calc-form-title"><span class="material-symbols-outlined">vpn_lock</span> Gerador de ULA (RFC 4193)</h6>
+                <p class="calc-hint">O "IP privado do IPv6": um prefixo fd00::/8 único para uso interno.</p>
+                <form id="formUla" hx-post="/ipv6/api/ula" hx-target="#saidaUla" hx-swap="innerHTML"
+                      hx-disabled-elt="find button[type='submit']">
+                    <div class="mb-3">
+                        <label for="ipv6Sid" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">tag</span> Subnet ID <span class="text-muted">(opcional, 0–65535)</span></label>
+                        <input type="text" class="aed-input form-control input-numeric" id="ipv6Sid" name="subnetId"
+                               inputmode="numeric" placeholder="0" value="0" autocomplete="off" spellcheck="false">
+                    </div>
+                    <button type="submit" class="aed-btn aed-btn-execute w-100"><span class="spinner-border spinner-border-sm htmx-indicator" role="status" aria-hidden="true"></span><span class="material-symbols-outlined">casino</span> Gerar ULA</button>
+                    <button type="button" class="aed-btn aed-btn-neutral w-100 mt-2" data-limpar><span class="material-symbols-outlined">delete_sweep</span> Limpar</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div id="saidaUla" class="calc-saida">
+                <div class="calc-placeholder"><span class="material-symbols-outlined" aria-hidden="true">vpn_lock</span><p class="mb-0">Gere um prefixo ULA pseudo-aleatório (fd00::/8) com Global ID de 40 bits e um Subnet ID.</p></div>
+            </div>
+        </div>
+    </div>
 </div>
 {/content}
 {#extraScripts}

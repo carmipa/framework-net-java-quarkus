@@ -4,6 +4,8 @@ import org.framework.net.ipv6.domain.Ipv6SubnetKernel;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.AnaliseIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DecomposicaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DivisaoIpv6;
+import org.framework.net.ipv6.domain.Ipv6SubnetKernel.Eui64Result;
+import org.framework.net.ipv6.domain.Ipv6SubnetKernel.UlaResult;
 import org.framework.net.ipv6.exception.Ipv6Exception;
 import org.junit.jupiter.api.Test;
 
@@ -110,6 +112,35 @@ class Ipv6SubnetKernelTest {
         // Delegação: um /48 comporta 65536 sub-redes /64 (gabarito 2^(64-48)).
         assertTrue(d.delegacao().stream()
                 .anyMatch(l -> l.prefixo().equals("/64") && l.quantidade().equals("65536")));
+    }
+
+    @Test
+    void eui64DerivaInterfaceIdComFlipUL() {
+        // Gabarito independente (RFC 4291): flip do bit U/L (00 XOR 02 = 02) + inserção de FFFE.
+        Eui64Result e = kernel.eui64("2001:db8:0:1::/64", "00:1a:2b:3c:4d:5e");
+        assertEquals("021a:2bff:fe3c:4d5e", e.interfaceId());
+        // Forma canônica da lib (seancfoley) — comprime o grupo-zero único como "::".
+        assertEquals("2001:db8::1:21a:2bff:fe3c:4d5e", e.enderecoSlaac());
+        assertEquals("2001:db8:0:1::/64", e.prefixoRede());
+    }
+
+    @Test
+    void eui64RejeitaMacInvalido() {
+        assertThrows(Ipv6Exception.class, () -> kernel.eui64("2001:db8::/64", "xyz"));
+    }
+
+    @Test
+    void ulaComecaComFdEGeraGlobalIdDe40Bits() {
+        UlaResult u = kernel.gerarUla("1");
+        assertTrue(u.ula48().startsWith("fd"), "ULA deve começar com fd: " + u.ula48());
+        assertTrue(u.ula48().endsWith("/48"));
+        assertTrue(u.ula64().endsWith("/64"));
+        assertEquals(10, u.globalId().length()); // 40 bits = 10 dígitos hex
+    }
+
+    @Test
+    void ulaRejeitaSubnetIdForaDaFaixa() {
+        assertThrows(Ipv6Exception.class, () -> kernel.gerarUla("70000"));
     }
 
     @Test
