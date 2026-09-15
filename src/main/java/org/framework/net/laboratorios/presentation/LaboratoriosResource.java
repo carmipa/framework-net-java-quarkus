@@ -38,6 +38,7 @@ public class LaboratoriosResource {
     @Inject
     @Location("laboratorios/camadas.html")
     Template camadas;
+    @Inject @Location("laboratorios/aneis-e-rede.html") Template aneisERede;
 
     @GET
     @Produces(MediaType.TEXT_HTML)
@@ -52,5 +53,19 @@ public class LaboratoriosResource {
     public TemplateInstance camadasEmAcao() {
         return camadas.data("activeMainMenu", MENU_ATIVO)
                 .data("labAtivo", "camadas");
+    }
+
+    /**
+     * Serve uma simulação didática do percurso aplicação, kernel e NIC.
+     *
+     * <p><b>Propósito de negócio:</b> explicar privilégios e rede sem executar
+     * sockets ou alterar a máquina do estudante.</p>
+     * <p><b>Invariantes do domínio:</b> somente leitura; estado no JS isolado.</p>
+     * <p><b>Comportamento em caso de falha:</b> erros de template seguem o fluxo
+     * padrão Qute/JAX-RS; não existe estado persistente.</p>
+     */
+    @GET @Path("/aneis-e-rede") @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance aneisERede() {
+        return aneisERede.data("activeMainMenu", MENU_ATIVO).data("labAtivo", "aneis-rede");
     }
 }

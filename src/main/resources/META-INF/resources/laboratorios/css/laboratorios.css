@@ -159,3 +159,28 @@
 @media (prefers-reduced-motion: reduce) {
     #lab-pacote, .lab-camada, .lab-card { transition: none !important; }
 }
+
+/* Laboratório Aplicação → Kernel → Rede: escopo exclusivo .rings-. */
+.rings-page{max-width:1320px}.rings-simulacao{display:flex;gap:.5rem;align-items:center;margin:1rem 0;padding:.7rem 1rem;border:1px solid rgba(56,189,248,.35);border-radius:10px;background:rgba(56,189,248,.07);color:#cbd5e1}.rings-simulacao .material-symbols-outlined{color:#38bdf8}.rings-acoes{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-bottom:1rem}.rings-acao,.rings-etapa{font:inherit;color:inherit;text-align:left;cursor:pointer}.rings-acao{display:grid;gap:.2rem;padding:.7rem;border:1px solid rgba(148,163,184,.24);border-radius:10px;background:#0a0e16}.rings-acao.is-active,.rings-acao:hover{border-color:#2dd4bf;background:rgba(45,212,191,.1)}.rings-acao strong,.rings-etapa strong{color:#eef2f8}.rings-acao small,.rings-etapa small{color:#94a3b8}.rings-acao .material-symbols-outlined{color:#38bdf8}.rings-fluxo,.rings-inspecao{padding:1rem;border:1px solid rgba(148,163,184,.22);border-radius:14px;background:rgba(15,22,34,.58)}.rings-fluxo-cab{display:flex;justify-content:space-between;gap:1rem;align-items:center}.rings-diagrama{display:grid;grid-template-columns:repeat(9,1fr);gap:.25rem;margin-top:.8rem}.rings-etapa{min-height:130px;display:flex;flex-direction:column;gap:.3rem;padding:.65rem;border:1px solid rgba(148,163,184,.3);border-radius:11px;background:#090d15}.rings-etapa b{font-size:.68rem;color:#a7f3d0}.rings-etapa .material-symbols-outlined{color:#38bdf8}.rings-etapa.is-selected{border-color:#2dd4bf;background:rgba(45,212,191,.12);box-shadow:0 0 0 2px rgba(45,212,191,.15)}.rings-seta{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#38bdf8}.rings-seta small{max-width:92px;font-size:.68rem;line-height:1.18}.rings-explica{margin-top:1rem;padding:1rem;border-left:3px solid #2dd4bf;background:rgba(45,212,191,.06)}.rings-explica h3{font-size:1.1rem;color:#eef2f8}.rings-dados-reais{display:grid;grid-template-columns:repeat(4,1fr);gap:.55rem;margin-top:.75rem}.rings-dados-reais>div{padding:.65rem;border:1px solid rgba(148,163,184,.16);border-radius:8px;background:rgba(2,6,23,.6)}.rings-dados-reais h4{margin:0 0 .3rem;color:#2dd4bf;font-size:.72rem;text-transform:uppercase}.rings-dados-reais p{margin:0;color:#cbd5e1;font-size:.8rem;line-height:1.35}.rings-inspecao{margin-top:1rem}.rings-inspecao summary{cursor:pointer;color:#bae6fd;font-weight:700}.rings-inspecao pre{padding:.7rem;background:#06090f;color:#a7f3d0;overflow:auto}@media(max-width:900px){.rings-acoes,.rings-dados-reais{grid-template-columns:repeat(2,1fr)}.rings-diagrama{grid-template-columns:1fr}.rings-seta{min-height:28px}.rings-seta .material-symbols-outlined{transform:rotate(90deg)}}@media(max-width:520px){.rings-acoes,.rings-dados-reais{grid-template-columns:1fr}}
+/* Conteudo didatico estatico do laboratorio de aneis (mapa de aneis, prosa, cards, notas) */
+.rings-prosa{color:#cbd5e1;line-height:1.6;max-width:70rem;margin:.4rem 0 1rem}
+.rings-prosa code,.rings-anel code,.rings-saber-card code,.rings-nota code{font-family:var(--aed-font-mono,ui-monospace,monospace);font-size:.85em;color:#a7f3d0;background:rgba(45,212,191,.1);padding:.05rem .35rem;border-radius:5px}
+.rings-mapa{display:grid;gap:.55rem;margin:.5rem 0 1rem}
+.rings-anel{display:grid;grid-template-columns:auto 1fr;gap:.9rem;align-items:start;padding:.75rem .9rem;border:1px solid rgba(148,163,184,.22);border-left-width:4px;border-radius:10px;background:rgba(15,22,34,.55)}
+.rings-anel-badge{font-weight:800;font-size:.82rem;letter-spacing:.02em;color:#0b0f17;background:#94a3b8;padding:.35rem .55rem;border-radius:8px;white-space:nowrap;text-align:center;min-width:5.2rem}
+.rings-anel strong{display:flex;align-items:center;gap:.4rem;color:#eef2f8;font-size:.98rem}
+.rings-anel strong .material-symbols-outlined{font-size:1.1rem;color:#38bdf8}
+.rings-anel p{margin:.3rem 0 0;color:#cbd5e1;font-size:.85rem;line-height:1.45}
+.rings-anel.is-user{border-left-color:#2dd4bf}.rings-anel.is-user .rings-anel-badge{background:#2dd4bf}
+.rings-anel.is-kernel{border-left-color:#f87171}.rings-anel.is-kernel .rings-anel-badge{background:#f87171}
+.rings-anel.is-unused{border-left-color:#64748b}.rings-anel.is-unused .rings-anel-badge{background:#64748b;color:#e2e8f0}
+.rings-anel.is-neg{border-left-color:#a78bfa}.rings-anel.is-neg .rings-anel-badge{background:#a78bfa;color:#0b0f17}
+.rings-nota{display:flex;gap:.7rem;align-items:flex-start;margin:1rem 0;padding:.85rem 1rem;border:1px solid rgba(250,204,21,.35);border-radius:10px;background:rgba(250,204,21,.07)}
+.rings-nota .material-symbols-outlined{color:#facc15;flex:none}
+.rings-nota p{margin:0;color:#e2e8f0;font-size:.88rem;line-height:1.5}
+.rings-saber{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;margin:.5rem 0 1rem}
+.rings-saber-card{padding:.75rem .9rem;border:1px solid rgba(148,163,184,.2);border-radius:10px;background:rgba(2,6,23,.5)}
+.rings-saber-card strong{display:flex;align-items:center;gap:.4rem;color:#eef2f8;font-size:.9rem;margin-bottom:.3rem}
+.rings-saber-card strong .material-symbols-outlined{color:#38bdf8;font-size:1.1rem}
+.rings-saber-card p{margin:0;color:#cbd5e1;font-size:.83rem;line-height:1.45}
+@media(max-width:760px){.rings-saber{grid-template-columns:1fr}.rings-anel{grid-template-columns:1fr}.rings-anel-badge{justify-self:start}}
