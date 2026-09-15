@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import org.framework.net.ipv6.config.Ipv6Config;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.AnaliseIpv6;
+import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DecomposicaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DivisaoIpv6;
 import org.framework.net.telemetria.TelemetriaLogger;
 
@@ -37,6 +38,14 @@ public class Ipv6CidrService {
         telemetriaLogger.logEvent("info", "ipv6", "ipv6_analise",
                 Map.of("status", "ok", "prefixo", r.prefixo(), "tipo", r.tipo()));
         return r;
+    }
+
+    /** Decomposição didática profunda (128 bits, corte rede/interface, delegação) para a Análise. */
+    public DecomposicaoIpv6 decompor(String entrada) {
+        DecomposicaoIpv6 d = kernel.decompor(entrada);
+        telemetriaLogger.logEvent("info", "ipv6", "ipv6_analise",
+                Map.of("status", "ok", "prefixo", d.base().prefixo(), "tipo", d.base().tipo()));
+        return d;
     }
 
     public DivisaoIpv6 dividir(String cidr, int prefixoAlvo) {

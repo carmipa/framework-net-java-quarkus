@@ -40,8 +40,8 @@ public class Ipv6Resource {
     Template index;
 
     @Inject
-    @Location("ipv6/partials/resultado_calc.html")
-    Template resultadoCalc;
+    @Location("ipv6/partials/resultado_analise.html")
+    Template resultadoAnalise;
 
     @Inject
     @Location("ipv6/partials/resultado_divisao.html")
@@ -59,7 +59,7 @@ public class Ipv6Resource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance calcular(@FormParam("endereco") String endereco) {
-        return resultadoCalc.data("r", service.analisar(endereco));
+        return resultadoAnalise.data("d", service.decompor(endereco));
     }
 
     /** Divide um prefixo base em sub-redes do prefixo alvo. */

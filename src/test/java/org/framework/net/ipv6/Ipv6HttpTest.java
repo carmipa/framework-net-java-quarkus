@@ -57,7 +57,10 @@ class Ipv6HttpTest {
                 .contentType(containsString("text/html"))
                 .body(containsString("Documentação"))
                 .body(containsString("2^80"))
-                .body(containsString("2001:db8::"));
+                .body(containsString("2001:db8::"))
+                .body(containsString("Decomposição dos 128 bits"))
+                .body(containsString("Delegação de prefixo"))
+                .body(containsString("65536"));
     }
 
     @Test

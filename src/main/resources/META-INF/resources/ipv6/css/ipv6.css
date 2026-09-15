@@ -21,3 +21,19 @@
     background: rgba(56, 189, 248, 0.1);
     border-color: rgba(56, 189, 248, 0.25);
 }
+/* Decomposição de 128 bits: rede (prefixo) x interface */
+.ipv6-bits-table td .ipv6-bit-rede,
+.ipv6-bits-table td .ipv6-bit-iface {
+    letter-spacing: 0.06em;
+    border-radius: 3px;
+    padding: 0 0.15rem;
+}
+.ipv6-bit-rede { color: #a7f3d0; background: rgba(45, 212, 191, 0.16); }
+.ipv6-bit-iface { color: #bae6fd; background: rgba(56, 189, 248, 0.14); }
+.ipv6-legenda {
+    display: inline-block;
+    margin-right: 0.6rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+}

@@ -2,6 +2,7 @@ package org.framework.net.ipv6;
 
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.AnaliseIpv6;
+import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DecomposicaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DivisaoIpv6;
 import org.framework.net.ipv6.exception.Ipv6Exception;
 import org.junit.jupiter.api.Test;
@@ -95,6 +96,20 @@ class Ipv6SubnetKernelTest {
     @Test
     void dividirSemPrefixoNaBaseEhRejeitado() {
         assertThrows(Ipv6Exception.class, () -> kernel.dividir("2001:db8::", 64, 256));
+    }
+
+    @Test
+    void decomporTem128BitsCorteRedeInterfaceEDelegacao() {
+        DecomposicaoIpv6 d = kernel.decompor("2001:db8::/48");
+        assertEquals(8, d.hextetos().size());
+        assertEquals(48, d.bitsRede());
+        assertEquals(80, d.bitsInterface());
+        // Hexteto 3 (bits 32-47) está inteiro no prefixo /48; o hexteto 4 (bits 48-63), fora.
+        assertEquals(16, d.hextetos().get(2).bitsRede());
+        assertEquals(0, d.hextetos().get(3).bitsRede());
+        // Delegação: um /48 comporta 65536 sub-redes /64 (gabarito 2^(64-48)).
+        assertTrue(d.delegacao().stream()
+                .anyMatch(l -> l.prefixo().equals("/64") && l.quantidade().equals("65536")));
     }
 
     @Test

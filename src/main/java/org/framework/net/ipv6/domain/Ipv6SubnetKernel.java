@@ -168,7 +168,69 @@ public class Ipv6SubnetKernel {
                 subredes);
     }
 
+    /**
+     * PROPÓSITO DE NEGÓCIO: decomposição didática profunda de um endereço/prefixo IPv6 — o análogo
+     * IPv6 do "array de 32 bits" e da tabela AND do IPv4, para a aba de Análise. Expõe os 128 bits
+     * por hexteto marcando o corte entre bits de REDE (prefixo) e de INTERFACE, a tabela de
+     * delegação (/48·/56·/64), o gateway sugerido e a dica Cisco/OSPFv3.
+     *
+     * INVARIANTES DO DOMÍNIO: reusa {@link #analisar} (fonte única); os bits de rede de cada hexteto
+     * derivam só do prefixo; sem broadcast e sem "hosts úteis" — conceitos que não existem em IPv6.
+     *
+     * COMPORTAMENTO EM CASO DE FALHA: propaga a {@link Ipv6Exception} de {@code analisar}.
+     */
+    public DecomposicaoIpv6 decompor(String entrada) {
+        AnaliseIpv6 base = analisar(entrada);
+        int prefixo = base.prefixo();
+
+        List<HextetInfo> hextetos = new ArrayList<>(8);
+        List<String> bins = base.binarioHextetos();
+        for (int i = 0; i < 8; i++) {
+            int bitsRedeNoHextet = Math.max(0, Math.min(16, prefixo - i * 16));
+            String bin = bins.get(i);
+            hextetos.add(new HextetInfo(i + 1, hexDoBin(bin), bin, bitsRedeNoHextet,
+                    bin.substring(0, bitsRedeNoHextet), bin.substring(bitsRedeNoHextet)));
+        }
+
+        List<DelegacaoInfo> delegacao = new ArrayList<>();
+        delegacao.add(delegacaoLinha(prefixo, 48, "Site — alocação típica de um cliente por um RIR/ISP"));
+        delegacao.add(delegacaoLinha(prefixo, 56, "Residência / filial — delegação comum do provedor"));
+        delegacao.add(delegacaoLinha(prefixo, 64, "LAN — fronteira do SLAAC (uma sub-rede por enlace)"));
+
+        String cisco = "ipv6 unicast-routing\ninterface GigabitEthernet0/0\n ipv6 address "
+                + base.rede() + "/" + prefixo + "\n ipv6 ospf 1 area 0";
+
+        return new DecomposicaoIpv6(base, hextetos, prefixo, 128 - prefixo,
+                gatewaySugerido(base.rede(), prefixo), delegacao, cisco, enunciadoProva(prefixo));
+    }
+
     // ------------------------------------------------------------------ helpers
+
+    private static String hexDoBin(String bin16) {
+        return String.format("%04x", Integer.parseInt(bin16, 2));
+    }
+
+    private String gatewaySugerido(String rede, int prefixo) {
+        BigInteger inicio = new BigInteger(1, new IPAddressString(rede + "/" + prefixo)
+                .getAddress().toIPv6().toPrefixBlock().getLower().getBytes());
+        return new IPv6Address(paraBytes16(inicio.add(BigInteger.ONE))).toCompressedString();
+    }
+
+    private DelegacaoInfo delegacaoLinha(int prefixoBase, int alvo, String uso) {
+        if (alvo < prefixoBase) {
+            return new DelegacaoInfo("/" + alvo, "— (mais amplo que /" + prefixoBase + ")", uso);
+        }
+        return new DelegacaoInfo("/" + alvo, BigInteger.TWO.pow(alvo - prefixoBase).toString(), uso);
+    }
+
+    private String enunciadoProva(int prefixo) {
+        if (prefixo <= 64) {
+            return "Um /" + prefixo + " comporta " + BigInteger.TWO.pow(64 - prefixo)
+                    + " sub-redes /64 — cada /64 é uma LAN com 2^64 endereços via SLAAC.";
+        }
+        return "Prefixo /" + prefixo + " é mais específico que /64: " + BigInteger.TWO.pow(128 - prefixo)
+                + " endereços, abaixo da fronteira do SLAAC (enlaces ponto a ponto usam /127, loopbacks /128).";
+    }
 
     private IPv6Address prefixoBloco(IPv6Address host, int prefixo) {
         return new IPAddressString(host.toCompressedString() + "/" + prefixo)
@@ -244,4 +306,19 @@ public class Ipv6SubnetKernel {
             String enderecosPorSubrede, boolean truncado, int exibidas, List<SubredeIpv6> subredes) { }
 
     public record SubredeIpv6(int indice, String rede, String prefixoStr, String primeiro, String ultimo) { }
+
+    /**
+     * Um hexteto (16 bits): hex, binário completo, quantos bits são de rede (prefixo) e o binário
+     * já partido em {@code binRede} (bits de prefixo) e {@code binInterface} (bits de interface).
+     */
+    public record HextetInfo(int indice, String hex, String bin, int bitsRede,
+            String binRede, String binInterface) { }
+
+    /** Uma linha da tabela de delegação de prefixo (/48, /56, /64). */
+    public record DelegacaoInfo(String prefixo, String quantidade, String uso) { }
+
+    /** Decomposição profunda para a Análise Didática IPv6. */
+    public record DecomposicaoIpv6(AnaliseIpv6 base, List<HextetInfo> hextetos, int bitsRede,
+            int bitsInterface, String gatewayLinkLocal, List<DelegacaoInfo> delegacao,
+            String ciscoCli, String enunciado) { }
 }
