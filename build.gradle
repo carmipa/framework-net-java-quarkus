@@ -20,6 +20,12 @@ dependencies {
     implementation 'io.quarkus:quarkus-vertx-http'
     implementation 'com.github.seancfoley:ipaddress:5.5.1'
     implementation 'com.maxmind.geoip2:geoip2:4.2.0'
+    // Consulta DNS real (registro AAAA) da aba "Domínio -> IPv6". Java puro, lê os resolvers do
+    // sistema e faz a query DNS diretamente — sem passar pelo getaddrinfo/AI_ADDRCONFIG, que omite
+    // AAAA quando o host (o container em producao) nao tem IPv6 global, e sem depender de JNDI, que
+    // o Quarkus desabilita por endurecimento. Vetorada por egress DNS, com guarda SSRF sobre o
+    // endereco retornado.
+    implementation 'dnsjava:dnsjava:3.6.3'
     testImplementation 'io.quarkus:quarkus-junit'
     testImplementation 'io.rest-assured:rest-assured'
 }

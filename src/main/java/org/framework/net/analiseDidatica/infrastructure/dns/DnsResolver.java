@@ -10,7 +10,19 @@ import org.framework.net.shared.NetworkAddressGuard;
 import org.framework.net.telemetria.TelemetriaLogger;
 import org.jboss.logging.Logger;
 
+import org.xbill.DNS.AAAARecord;
+import org.xbill.DNS.ExtendedResolver;
+import org.xbill.DNS.Lookup;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.Resolver;
+import org.xbill.DNS.ResolverConfig;
+import org.xbill.DNS.Type;
+
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -122,21 +134,11 @@ public class DnsResolver {
     private String resolverAaaaLive(String hostname) {
         long started = System.nanoTime();
         try {
-            var future = executor.submit(() -> {
-                InetAddress[] todos = InetAddress.getAllByName(hostname);
-                for (InetAddress a : todos) {
-                    if (a instanceof java.net.Inet6Address) {
-                        NetworkAddressGuard.rejectNonPublicAddress(a, "resolução AAAA");
-                        return a.getHostAddress();
-                    }
-                }
-                throw new java.net.UnknownHostException("sem registro AAAA");
-            });
-            String ip = future.get(dnsConfig.resolveTimeoutSeconds(), TimeUnit.SECONDS);
-            int pct = ip.indexOf('%');
-            if (pct >= 0) {
-                ip = ip.substring(0, pct);
-            }
+            var future = executor.submit(() -> consultarAaaa(hostname));
+            // Teto folgado: o ExtendedResolver pode tentar vários servidores em sequência, cada um com
+            // o timeout da config; o future só corta um travamento total, não o fallback normal.
+            long tetoSegundos = Math.max(10L, dnsConfig.resolveTimeoutSeconds() * 4L + 2L);
+            String ip = future.get(tetoSegundos, TimeUnit.SECONDS);
             long elapsedMs = (System.nanoTime() - started) / 1_000_000;
             Map<String, Object> fields = new LinkedHashMap<>();
             fields.put("status", "ok");
@@ -156,15 +158,49 @@ public class DnsResolver {
             if (cause instanceof DnsResolucaoException dre) {
                 throw dre;
             }
-            if (cause instanceof java.net.UnknownHostException) {
-                throw new DnsResolucaoException(
-                        "Não foi possível resolver um endereço IPv6 (AAAA) para: " + hostname
-                                + ". O domínio pode não publicar registro AAAA.", cause);
-            }
+            telemetriaLogger.logEvent("warn", "ipv6", "dns_resolve",
+                    Map.of("status", "erro", "hostname", hostname, "tipo", "AAAA"));
             throw new DnsResolucaoException("Erro interno ao resolver AAAA. Tente novamente.", ex);
-        } catch (Exception ex) {
-            throw new DnsResolucaoException("Erro interno ao resolver AAAA. Tente novamente.", ex);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new DnsResolucaoException("Resolução AAAA interrompida. Tente novamente.", ex);
         }
+    }
+
+    /**
+     * Consulta o registro AAAA via DNS diretamente (JNDI DNS), <b>não</b> pela pilha
+     * {@code getaddrinfo}/{@code InetAddress.getAllByName}.
+     *
+     * <p><b>Porquê:</b> {@code getaddrinfo} usa {@code AI_ADDRCONFIG} — omite registros AAAA quando o
+     * host (ou o container Docker) não tem endereço IPv6 global configurado. Medido em produção: o
+     * container não tem IPv6, então a resolução por {@code getAllByName} devolvia "sem AAAA" para
+     * QUALQUER domínio, inclusive dual-stack. A consulta DNS direta lê o RDATA do registro AAAA
+     * independente da conectividade IPv6 local — que é o que a aba precisa mostrar.</p>
+     *
+     * <p><b>Segurança:</b> só uma consulta DNS de registro AAAA é feita (dnsjava), sobre um nome que
+     * já passou por {@link NetworkAddressGuard#rejectBlockedHostname} e foi validado como hostname
+     * (sem esquema, sem {@code /}) — não há JNDI nem interpretação de URL LDAP/RMI. O endereço
+     * retornado ainda passa por {@link NetworkAddressGuard#rejectNonPublicAddress} (mitiga SSRF/rebinding).</p>
+     */
+    private String consultarAaaa(String hostname) throws Exception {
+        Lookup lookup = new Lookup(hostname, Type.AAAA);
+        lookup.setResolver(resolverAaaa());
+        Record[] registros = lookup.run();
+        if (lookup.getResult() != Lookup.SUCCESSFUL || registros == null || registros.length == 0) {
+            throw new DnsResolucaoException("Não foi possível resolver um endereço IPv6 (AAAA) para: "
+                    + hostname + ". O domínio pode não publicar registro AAAA.");
+        }
+        for (Record registro : registros) {
+            if (registro instanceof AAAARecord aaaa) {
+                InetAddress addr = aaaa.getAddress();
+                NetworkAddressGuard.rejectNonPublicAddress(addr, "resolução AAAA");
+                String ip = addr.getHostAddress();
+                int pct = ip.indexOf('%');
+                return pct >= 0 ? ip.substring(0, pct) : ip;
+            }
+        }
+        throw new DnsResolucaoException("Não foi possível resolver um endereço IPv6 (AAAA) para: "
+                + hostname + ". O domínio pode não publicar registro AAAA.");
     }
 
     private String resolverLive(String hostname) {
@@ -199,6 +235,29 @@ public class DnsResolver {
         } catch (Exception ex) {
             throw new DnsResolucaoException("Erro interno ao resolver DNS. Tente novamente.", ex);
         }
+    }
+
+    /**
+     * Monta o resolver da consulta AAAA: os servidores DNS do sistema primeiro (no container, o DNS
+     * do Docker que a aba de Domínio IPv4 já usa em produção), com DNS públicos anycast como fallback
+     * para ambientes cuja detecção do SO falha (medido: dev Windows devolvia "network error"). O
+     * {@link ExtendedResolver} passa ao próximo servidor quando um não responde.
+     */
+    private Resolver resolverAaaa() throws Exception {
+        List<String> servidores = new ArrayList<>();
+        try {
+            for (InetSocketAddress isa : ResolverConfig.getCurrentConfig().servers()) {
+                servidores.add(isa.getAddress().getHostAddress());
+            }
+        } catch (RuntimeException ignore) {
+            // detecção de resolver do SO indisponível — segue só com os públicos abaixo
+        }
+        servidores.add("1.1.1.1");
+        servidores.add("8.8.8.8");
+        servidores.add("9.9.9.9");
+        Resolver resolver = new ExtendedResolver(servidores.toArray(new String[0]));
+        resolver.setTimeout(Duration.ofSeconds(Math.max(1, dnsConfig.resolveTimeoutSeconds())));
+        return resolver;
     }
 
     private static String normalizar(String hostname) {
