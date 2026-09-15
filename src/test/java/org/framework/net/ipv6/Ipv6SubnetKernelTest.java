@@ -2,6 +2,7 @@ package org.framework.net.ipv6;
 
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.AnaliseIpv6;
+import org.framework.net.ipv6.domain.Ipv6SubnetKernel.ComparacaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DecomposicaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DivisaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.Eui64Result;
@@ -141,6 +142,41 @@ class Ipv6SubnetKernelTest {
     @Test
     void ulaRejeitaSubnetIdForaDaFaixa() {
         assertThrows(Ipv6Exception.class, () -> kernel.gerarUla("70000"));
+    }
+
+    @Test
+    void compararMesmoEnderecoTemDistanciaZero() {
+        ComparacaoIpv6 c = kernel.comparar("2001:db8::1", "2001:db8::1");
+        assertTrue(c.mesmoEndereco());
+        assertEquals("0", c.distancia());
+        assertEquals(128, c.bitsComuns());
+        assertTrue(c.mesmaLan());
+    }
+
+    @Test
+    void compararVizinhosContam126BitsComuns() {
+        // Gabarito independente: ...0001 vs ...0010 diferem nos 2 últimos bits → 126 bits em comum.
+        ComparacaoIpv6 c = kernel.comparar("2001:db8::1", "2001:db8::2");
+        assertFalse(c.mesmoEndereco());
+        assertEquals(126, c.bitsComuns());
+        assertEquals("1", c.distancia());
+        assertTrue(c.mesmaLan());
+    }
+
+    @Test
+    void compararPrefixoContemEnderecoNaMesmaLan() {
+        ComparacaoIpv6 c = kernel.comparar("2001:db8:0:1::/64", "2001:db8:0:1:abcd::1");
+        assertTrue(c.mesmaLan());
+        assertEquals(64, c.bitsComuns());
+        assertTrue(c.contencao().contains("contém"));
+    }
+
+    @Test
+    void compararLansDiferentesNaoSaoMesmaLan() {
+        // 2001:db8:0:1 vs 2001:db8:0:2: divergem no hexteto 4 (bit 63) → 62 bits comuns, < 64.
+        ComparacaoIpv6 c = kernel.comparar("2001:db8:0:1::1", "2001:db8:0:2::1");
+        assertFalse(c.mesmaLan());
+        assertEquals(62, c.bitsComuns());
     }
 
     @Test

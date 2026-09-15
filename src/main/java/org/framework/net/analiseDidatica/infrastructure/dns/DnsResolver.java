@@ -84,6 +84,89 @@ public class DnsResolver {
         cache.put(hostname, new CacheEntry(ip, nowSec + dnsConfig.cacheTtlSeconds()));
     }
 
+    /**
+     * Resolve o registro <b>AAAA</b> (IPv6) de um hostname, com as mesmas guardas do caminho IPv4.
+     *
+     * <p><b>Propósito de negócio:</b> alimenta a aba "Domínio → AAAA" da Calculadora IPv6 — mostra o
+     * endereço IPv6 real que um nome publica, o análogo IPv6 da resolução A já usada na Análise.
+     *
+     * <p><b>Invariantes do domínio:</b> passa pela mesma lista de hostnames bloqueados
+     * ({@link NetworkAddressGuard#rejectBlockedHostname}) e recusa endereço não-público resolvido
+     * ({@link NetworkAddressGuard#rejectNonPublicAddress}) — mitiga SSRF exatamente como o A record.
+     * Usa o mesmo cache (chave prefixada {@code AAAA|}) e teto de tamanho, e o mesmo timeout.
+     *
+     * <p><b>Comportamento em caso de falha:</b> domínio sem AAAA, inexistente ou não-público lança
+     * {@link DnsResolucaoException}; timeout também. Nunca devolve endereço privado nem trava a thread.
+     *
+     * @param hostname domínio/hostname a resolver
+     * @return o endereço IPv6 (AAAA) em texto, sem zone index
+     */
+    public String resolverAaaaComCache(String hostname) {
+        String h = normalizar(hostname);
+        long now = System.currentTimeMillis() / 1000;
+        String key = "AAAA|" + h;
+        CacheEntry cached = cache.get(key);
+        if (cached != null && cached.expiresAt > now) {
+            telemetriaLogger.logEvent("info", "ipv6", "dns_cache",
+                    Map.of("status", "hit", "hostname", h, "tipo", "AAAA"));
+            return cached.ip;
+        }
+        telemetriaLogger.logEvent("info", "ipv6", "dns_cache",
+                Map.of("status", "miss", "hostname", h, "tipo", "AAAA"));
+        NetworkAddressGuard.rejectBlockedHostname(h);
+        String ip = resolverAaaaLive(h);
+        guardarCache(key, ip, now);
+        return ip;
+    }
+
+    private String resolverAaaaLive(String hostname) {
+        long started = System.nanoTime();
+        try {
+            var future = executor.submit(() -> {
+                InetAddress[] todos = InetAddress.getAllByName(hostname);
+                for (InetAddress a : todos) {
+                    if (a instanceof java.net.Inet6Address) {
+                        NetworkAddressGuard.rejectNonPublicAddress(a, "resolução AAAA");
+                        return a.getHostAddress();
+                    }
+                }
+                throw new java.net.UnknownHostException("sem registro AAAA");
+            });
+            String ip = future.get(dnsConfig.resolveTimeoutSeconds(), TimeUnit.SECONDS);
+            int pct = ip.indexOf('%');
+            if (pct >= 0) {
+                ip = ip.substring(0, pct);
+            }
+            long elapsedMs = (System.nanoTime() - started) / 1_000_000;
+            Map<String, Object> fields = new LinkedHashMap<>();
+            fields.put("status", "ok");
+            fields.put("hostname", hostname);
+            fields.put("ip", ip);
+            fields.put("tipo", "AAAA");
+            fields.put("elapsedMs", elapsedMs);
+            telemetriaLogger.logEvent("info", "ipv6", "dns_resolve", fields);
+            return ip;
+        } catch (TimeoutException ex) {
+            telemetriaLogger.logEvent("warn", "ipv6", "dns_resolve",
+                    Map.of("status", "timeout", "hostname", hostname, "tipo", "AAAA"));
+            throw new DnsResolucaoException(
+                    "Timeout ao resolver o AAAA do domínio informado. Tente novamente em alguns segundos.", ex);
+        } catch (ExecutionException ex) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof DnsResolucaoException dre) {
+                throw dre;
+            }
+            if (cause instanceof java.net.UnknownHostException) {
+                throw new DnsResolucaoException(
+                        "Não foi possível resolver um endereço IPv6 (AAAA) para: " + hostname
+                                + ". O domínio pode não publicar registro AAAA.", cause);
+            }
+            throw new DnsResolucaoException("Erro interno ao resolver AAAA. Tente novamente.", ex);
+        } catch (Exception ex) {
+            throw new DnsResolucaoException("Erro interno ao resolver AAAA. Tente novamente.", ex);
+        }
+    }
+
     private String resolverLive(String hostname) {
         long started = System.nanoTime();
         try {

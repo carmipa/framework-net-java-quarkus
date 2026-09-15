@@ -73,7 +73,14 @@ class ArquiteturaCamadasTest {
             "camadas", Set.of("protocolos"),
             "ferramentas", Set.of("protocolos"),
             "criptografia", Set.of("protocolos"),
-            "wifi", Set.of("protocolos"));
+            "wifi", Set.of("protocolos"),
+            // A Calculadora IPv6 (aba "Domínio → AAAA") reutiliza o DnsResolver da Análise
+            // Didática — a ÚNICA egress DNS endurecida do projeto (bloqueio de hostname interno +
+            // recusa de endereço não-público = mitigação de SSRF, cache com teto, timeout).
+            // Duplicar essa infraestrutura criaria um segundo caminho de saída sem as mesmas
+            // guardas — pior para segurança. Reúso deliberado de infraestrutura, como o GeoIP da
+            // Localização acima; registrado para aparecer em revisão e travar acoplamento NOVO.
+            "ipv6", Set.of("analiseDidatica"));
 
     /** Tipos de camada que o domínio jamais pode enxergar. */
     private static final Set<String> CAMADAS_PROIBIDAS_NO_DOMINIO =

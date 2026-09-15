@@ -2,13 +2,17 @@ package org.framework.net.ipv6.application;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.framework.net.analiseDidatica.exception.DnsResolucaoException;
+import org.framework.net.analiseDidatica.infrastructure.dns.DnsResolver;
 import org.framework.net.ipv6.config.Ipv6Config;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.AnaliseIpv6;
+import org.framework.net.ipv6.domain.Ipv6SubnetKernel.ComparacaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DecomposicaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DivisaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.Eui64Result;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.UlaResult;
+import org.framework.net.ipv6.exception.Ipv6Exception;
 import org.framework.net.telemetria.TelemetriaLogger;
 
 import java.util.Map;
@@ -31,6 +35,9 @@ public class Ipv6CidrService {
 
     @Inject
     Ipv6Config config;
+
+    @Inject
+    DnsResolver dnsResolver;
 
     @Inject
     TelemetriaLogger telemetriaLogger;
@@ -71,4 +78,48 @@ public class Ipv6CidrService {
         telemetriaLogger.logEvent("info", "ipv6", "ipv6_ula", Map.of("status", "ok"));
         return r;
     }
+
+    /** Compara dois endereços/prefixos IPv6 (mesma /64, contenção, distância, bits comuns). */
+    public ComparacaoIpv6 comparar(String a, String b) {
+        ComparacaoIpv6 r = kernel.comparar(a, b);
+        telemetriaLogger.logEvent("info", "ipv6", "ipv6_comparar",
+                Map.of("status", "ok", "mesmaLan", r.mesmaLan(), "bitsComuns", r.bitsComuns()));
+        return r;
+    }
+
+    /**
+     * Resolve o registro AAAA (IPv6) de um domínio e analisa o endereço resultante.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> aba "Domínio → AAAA" — mostra o IPv6 que um nome publica e o
+     * decompõe (tipo, forma canônica, Interface ID, solicited-node, reverso ip6.arpa), reusando o
+     * mesmo motor de análise e a mesma egress DNS endurecida (guardas SSRF) da Análise IPv4.</p>
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> não reimplementa resolução DNS — delega ao {@link DnsResolver}
+     * (único ponto de saída com bloqueio de hostname interno e recusa de endereço não-público).</p>
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> domínio vazio/sem ponto lança {@link Ipv6Exception}
+     * antes de qualquer rede; falha de resolução ({@link DnsResolucaoException}) é reembalada como
+     * {@link Ipv6Exception} para virar 400 didático no {@code Ipv6ExceptionMapper}.</p>
+     */
+    public DominioAaaaResult resolverDominio(String dominio) {
+        String d = dominio == null ? "" : dominio.strip();
+        if (d.isEmpty()) {
+            throw new Ipv6Exception("Informe um domínio (ex.: google.com).");
+        }
+        if (!d.contains(".")) {
+            throw new Ipv6Exception("Domínio inválido. Use algo como google.com ou www.exemplo.org.");
+        }
+        try {
+            String aaaa = dnsResolver.resolverAaaaComCache(d);
+            AnaliseIpv6 analise = kernel.analisar(aaaa);
+            telemetriaLogger.logEvent("info", "ipv6", "ipv6_dominio_aaaa",
+                    Map.of("status", "ok", "tipo", analise.tipo()));
+            return new DominioAaaaResult(d, aaaa, analise);
+        } catch (DnsResolucaoException ex) {
+            telemetriaLogger.logEvent("warn", "ipv6", "ipv6_dominio_aaaa",
+                    Map.of("status", "erro"));
+            throw new Ipv6Exception(ex.getMessage(), ex);
+        }
+    }
+
+    /** Domínio resolvido para IPv6 (AAAA) com a análise completa do endereço. */
+    public record DominioAaaaResult(String dominio, String enderecoAaaa, AnaliseIpv6 analise) { }
 }

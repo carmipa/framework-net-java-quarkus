@@ -1,0 +1,37 @@
+<div class="calc-resultado">
+    <div class="calc-resumo-head">
+        <h5 class="mb-1"><span class="material-symbols-outlined text-info" aria-hidden="true">language</span> Domínio → IPv6 (AAAA)</h5>
+    </div>
+    <div class="calc-kpis">
+        <div class="calc-kpi calc-kpi-destaque">
+            <span class="calc-kpi-label">Domínio</span>
+            <strong class="calc-kpi-valor calc-kpi-mono">{r.dominio}</strong>
+        </div>
+        <div class="calc-kpi">
+            <span class="calc-kpi-label">Registro AAAA</span>
+            <strong class="calc-kpi-valor calc-kpi-mono">{r.enderecoAaaa}</strong>
+            <span class="calc-kpi-nota">endereço IPv6 publicado</span>
+        </div>
+        <div class="calc-kpi">
+            <span class="calc-kpi-label">Tipo (IANA)</span>
+            <strong class="calc-kpi-valor">{r.analise.tipo}</strong>
+            <span class="calc-kpi-nota">{r.analise.descricaoTipo}</span>
+        </div>
+    </div>
+    <div class="table-responsive mt-2">
+        <table class="table table-dark table-sm table-bordered mb-0">
+            <tbody>
+            <tr><td>Comprimido (RFC 5952)</td><td class="font-monospace">{r.analise.comprimido}</td></tr>
+            <tr><td>Expandido</td><td class="font-monospace">{r.analise.expandido}</td></tr>
+            <tr><td>Interface ID</td><td class="font-monospace">{r.analise.interfaceId}</td></tr>
+            <tr><td>Solicited-node</td><td class="font-monospace">{r.analise.solicitedNode}</td></tr>
+            <tr><td>Reverso (ip6.arpa)</td><td class="font-monospace" style="word-break:break-all;">{r.analise.reversePtr}</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <p class="calc-explicacao">
+        <span class="material-symbols-outlined" aria-hidden="true">school</span> O registro AAAA é o equivalente IPv6 do
+        registro A: mapeia o nome ao endereço de 128 bits. O nome reverso <code>ip6.arpa</code> é derivado do próprio
+        endereço, nibble a nibble, do último ao primeiro.
+    </p>
+</div>

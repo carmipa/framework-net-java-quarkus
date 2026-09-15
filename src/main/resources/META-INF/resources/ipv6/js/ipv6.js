@@ -1,6 +1,7 @@
 /*
- * Calculadora IPv6 — comportamento visual mínimo.
- * O cálculo acontece no servidor e volta como fragmento trocado pelo htmx; aqui só o botão Limpar.
+ * Calculadora IPv6 — comportamento visual do módulo (próprio da página, desacoplado).
+ * O cálculo acontece no servidor e volta como fragmento trocado pelo htmx; aqui ficam só a
+ * navegação por abas (mesmo padrão da Análise IPv4) e o botão Limpar.
  */
 (function () {
     "use strict";
@@ -28,10 +29,41 @@
         }
     }
 
+    function bootAbas() {
+        var root = document.querySelector(".ipv6-wrap");
+        if (!root) {
+            return;
+        }
+        var gatilhos = root.querySelectorAll(".tab-trigger");
+        var paineis = root.querySelectorAll(".tab-panel");
+
+        function mostrar(id) {
+            gatilhos.forEach(function (g) {
+                g.classList.toggle("active", g.dataset.tab === id);
+            });
+            paineis.forEach(function (p) {
+                p.classList.toggle("active", p.dataset.tabPanel === id);
+            });
+        }
+
+        gatilhos.forEach(function (g) {
+            g.addEventListener("click", function () {
+                mostrar(g.dataset.tab);
+            });
+        });
+        mostrar(root.getAttribute("data-active-tab") || "analise");
+    }
+
     document.addEventListener("click", function (evento) {
         var botao = evento.target.closest("[data-limpar]");
         if (botao) {
             limparFormulario(botao);
         }
     });
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", bootAbas);
+    } else {
+        bootAbas();
+    }
 })();

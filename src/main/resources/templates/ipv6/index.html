@@ -1,9 +1,9 @@
 {#include shared/base.html}
 {#title}Framework de Redes | Calculadora IPv6 (CIDR){/title}
-{#description}Calculadora IPv6: analisa endereços e prefixos (RFC 5952, tipo IANA, Interface ID, solicited-node, binário) e divide prefixos em sub-redes — sem broadcast nem a conta de hosts úteis do IPv4.{/description}
+{#description}Calculadora IPv6: analisa endereços e prefixos (RFC 5952, tipo IANA, Interface ID, solicited-node, binário), divide prefixos em sub-redes, deriva EUI-64/SLAAC, gera ULA, compara endereços e resolve o registro AAAA de um domínio — sem broadcast nem a conta de hosts úteis do IPv4.{/description}
 {#extraHead}
 <link rel="stylesheet" href="/calculadora/css/calculadora.css?v=20260908" />
-<link rel="stylesheet" href="/ipv6/css/ipv6.css?v=20260915a" />
+<link rel="stylesheet" href="/ipv6/css/ipv6.css?v=20260915b" />
 {/extraHead}
 {#content}
 <div class="container py-4">
@@ -15,153 +15,58 @@
             Calculadora IPv6 (CIDR)
         </h1>
         <p class="aed-subtitle">
-            Analise um endereço ou prefixo IPv6 e divida prefixos em sub-redes. IPv6 não tem broadcast
-            nem classes — aqui você conta <strong>endereços</strong> e <strong>sub-redes</strong>, não
+            Analise um endereço ou prefixo IPv6, divida prefixos em sub-redes, derive EUI-64/SLAAC,
+            gere ULA, compare endereços e resolva o AAAA de um domínio. IPv6 não tem broadcast nem
+            classes — aqui você conta <strong>endereços</strong> e <strong>sub-redes</strong>, não
             "hosts úteis" como no IPv4.
         </p>
     </header>
 
-    {! ----- Analisar endereço / prefixo ----- !}
-    <div class="row g-4 mb-4">
-        <div class="col-lg-4">
-            <div class="calc-form-card">
-                <h6 class="calc-form-title"><span class="material-symbols-outlined">tag</span> Analisar endereço ou prefixo</h6>
-                <p class="calc-hint">Ex.: <code>2001:db8::1</code>, <code>2001:db8::/48</code> ou <code>fe80::1%eth0</code>.</p>
-                <form id="formCalc" hx-post="/ipv6/api/calcular" hx-target="#saidaCalc" hx-swap="innerHTML"
-                      hx-disabled-elt="find button[type='submit']">
-                    <div class="mb-3">
-                        <label for="ipv6Endereco" class="form-label text-secondary">
-                            <span class="material-symbols-outlined" aria-hidden="true">lan</span> Endereço / prefixo IPv6
-                        </label>
-                        <input type="text" class="aed-input form-control" id="ipv6Endereco" name="endereco"
-                               placeholder="2001:db8::/48" value="2001:db8::/48" autocomplete="off" spellcheck="false" required>
-                    </div>
-                    <button type="submit" class="aed-btn aed-btn-execute w-100"
-                            title="Analisar o endereço ou prefixo IPv6 informado">
-                        <span class="spinner-border spinner-border-sm htmx-indicator" role="status" aria-hidden="true"></span>
-                        <span class="material-symbols-outlined">play_arrow</span> Analisar
-                    </button>
-                    <button type="button" class="aed-btn aed-btn-neutral w-100 mt-2" data-limpar
-                            title="Esvaziar o campo e apagar o resultado">
-                        <span class="material-symbols-outlined">delete_sweep</span> Limpar
-                    </button>
-                </form>
-            </div>
+    <div class="aed-card card-tech p-4 shadow ipv6-wrap" data-active-tab="analise">
+        <span class="aed-eyebrow">Ferramenta IPv6</span>
+        <div class="aed-mode-grid tab-nav mb-3" role="tablist">
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="analise" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Análise: normalização RFC 5952, tipo IANA, rede, Interface ID e os 128 bits por hexteto">
+                <span class="material-symbols-outlined">tag</span><span>Análise</span>
+            </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="dividir" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Sub-redes: divida um prefixo base no prefixo alvo e conte quantas cabem (2^n exato)">
+                <span class="material-symbols-outlined">grid_on</span><span>Sub-redes</span>
+            </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="eui64" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="EUI-64: derive o Interface ID e o endereço SLAAC a partir de um /64 + MAC">
+                <span class="material-symbols-outlined">badge</span><span>EUI-64</span>
+            </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="ula" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="ULA: gere um prefixo privado fd00::/8 pseudo-aleatório (RFC 4193)">
+                <span class="material-symbols-outlined">vpn_lock</span><span>ULA</span>
+            </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="comparador" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Comparador: dois endereços lado a lado — mesma /64, contenção e distância">
+                <span class="material-symbols-outlined">compare_arrows</span><span>Comparador</span>
+            </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="dominio" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Domínio: resolva o registro AAAA (IPv6) de um domínio e analise o endereço">
+                <span class="material-symbols-outlined">language</span><span>Domínio</span>
+            </button>
         </div>
-        <div class="col-lg-8">
-            <div id="saidaCalc" class="calc-saida">
-                <div class="calc-placeholder">
-                    <span class="material-symbols-outlined" aria-hidden="true">tag</span>
-                    <p class="mb-0">Informe um endereço ou prefixo para ver normalização (RFC 5952), tipo,
-                        rede, Interface ID, solicited-node e o binário por hexteto.</p>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    {! ----- Dividir prefixo em sub-redes ----- !}
-    <div class="row g-4">
-        <div class="col-lg-4">
-            <div class="calc-form-card">
-                <h6 class="calc-form-title"><span class="material-symbols-outlined">grid_on</span> Dividir prefixo em sub-redes</h6>
-                <p class="calc-hint">Ex.: um <code>/48</code> em <code>/64</code> dá <strong>65.536</strong> LANs.</p>
-                <form id="formDiv" hx-post="/ipv6/api/dividir" hx-target="#saidaDiv" hx-swap="innerHTML"
-                      hx-disabled-elt="find button[type='submit']">
-                    <div class="mb-3">
-                        <label for="ipv6Bloco" class="form-label text-secondary">
-                            <span class="material-symbols-outlined" aria-hidden="true">lan</span> Rede base (CIDR)
-                        </label>
-                        <input type="text" class="aed-input form-control" id="ipv6Bloco" name="bloco"
-                               placeholder="2001:db8::/32" value="2001:db8::/32" autocomplete="off" spellcheck="false" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="ipv6Alvo" class="form-label text-secondary">
-                            <span class="material-symbols-outlined" aria-hidden="true">tag</span> Prefixo alvo
-                        </label>
-                        <input type="text" class="aed-input form-control input-cidr" id="ipv6Alvo" name="prefixoAlvo"
-                               inputmode="numeric" maxlength="3" placeholder="48" value="48" required>
-                        <div class="form-text text-muted">O prefixo de cada sub-rede (0 a 128). <code>/64</code> é o padrão de LAN (SLAAC).</div>
-                    </div>
-                    <button type="submit" class="aed-btn aed-btn-execute w-100"
-                            title="Dividir a rede base no prefixo alvo informado">
-                        <span class="spinner-border spinner-border-sm htmx-indicator" role="status" aria-hidden="true"></span>
-                        <span class="material-symbols-outlined">play_arrow</span> Dividir
-                    </button>
-                    <button type="button" class="aed-btn aed-btn-neutral w-100 mt-2" data-limpar
-                            title="Esvaziar os campos e apagar o resultado">
-                        <span class="material-symbols-outlined">delete_sweep</span> Limpar
-                    </button>
-                </form>
-            </div>
-        </div>
-        <div class="col-lg-8">
-            <div id="saidaDiv" class="calc-saida">
-                <div class="calc-placeholder">
-                    <span class="material-symbols-outlined" aria-hidden="true">grid_on</span>
-                    <p class="mb-0">Informe a rede base e o prefixo alvo para ver quantas sub-redes cabem
-                        (contagem exata, mesmo em 2^n gigante) e as primeiras delas.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {! ----- EUI-64 (MAC -> SLAAC) ----- !}
-    <div class="row g-4">
-        <div class="col-lg-4">
-            <div class="calc-form-card">
-                <h6 class="calc-form-title"><span class="material-symbols-outlined">badge</span> EUI-64 (MAC → SLAAC)</h6>
-                <p class="calc-hint">Como um host deriva o endereço IPv6 sozinho a partir do MAC.</p>
-                <form id="formEui64" hx-post="/ipv6/api/eui64" hx-target="#saidaEui64" hx-swap="innerHTML"
-                      hx-disabled-elt="find button[type='submit']">
-                    <div class="mb-3">
-                        <label for="ipv6Pref64" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">lan</span> Prefixo /64</label>
-                        <input type="text" class="aed-input form-control" id="ipv6Pref64" name="prefixo"
-                               placeholder="2001:db8:0:1::/64" value="2001:db8:0:1::/64" autocomplete="off" spellcheck="false" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="ipv6Mac" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">memory</span> Endereço MAC</label>
-                        <input type="text" class="aed-input form-control" id="ipv6Mac" name="mac"
-                               placeholder="00:1a:2b:3c:4d:5e" value="00:1a:2b:3c:4d:5e" autocomplete="off" spellcheck="false" required>
-                    </div>
-                    <button type="submit" class="aed-btn aed-btn-execute w-100"><span class="spinner-border spinner-border-sm htmx-indicator" role="status" aria-hidden="true"></span><span class="material-symbols-outlined">play_arrow</span> Derivar</button>
-                    <button type="button" class="aed-btn aed-btn-neutral w-100 mt-2" data-limpar><span class="material-symbols-outlined">delete_sweep</span> Limpar</button>
-                </form>
-            </div>
-        </div>
-        <div class="col-lg-8">
-            <div id="saidaEui64" class="calc-saida">
-                <div class="calc-placeholder"><span class="material-symbols-outlined" aria-hidden="true">badge</span><p class="mb-0">Informe o prefixo /64 e o MAC para ver o Interface ID EUI-64 e o endereço SLAAC, passo a passo.</p></div>
-            </div>
-        </div>
-    </div>
-
-    {! ----- ULA (RFC 4193) ----- !}
-    <div class="row g-4">
-        <div class="col-lg-4">
-            <div class="calc-form-card">
-                <h6 class="calc-form-title"><span class="material-symbols-outlined">vpn_lock</span> Gerador de ULA (RFC 4193)</h6>
-                <p class="calc-hint">O "IP privado do IPv6": um prefixo fd00::/8 único para uso interno.</p>
-                <form id="formUla" hx-post="/ipv6/api/ula" hx-target="#saidaUla" hx-swap="innerHTML"
-                      hx-disabled-elt="find button[type='submit']">
-                    <div class="mb-3">
-                        <label for="ipv6Sid" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">tag</span> Subnet ID <span class="text-muted">(opcional, 0–65535)</span></label>
-                        <input type="text" class="aed-input form-control input-numeric" id="ipv6Sid" name="subnetId"
-                               inputmode="numeric" placeholder="0" value="0" autocomplete="off" spellcheck="false">
-                    </div>
-                    <button type="submit" class="aed-btn aed-btn-execute w-100"><span class="spinner-border spinner-border-sm htmx-indicator" role="status" aria-hidden="true"></span><span class="material-symbols-outlined">casino</span> Gerar ULA</button>
-                    <button type="button" class="aed-btn aed-btn-neutral w-100 mt-2" data-limpar><span class="material-symbols-outlined">delete_sweep</span> Limpar</button>
-                </form>
-            </div>
-        </div>
-        <div class="col-lg-8">
-            <div id="saidaUla" class="calc-saida">
-                <div class="calc-placeholder"><span class="material-symbols-outlined" aria-hidden="true">vpn_lock</span><p class="mb-0">Gere um prefixo ULA pseudo-aleatório (fd00::/8) com Global ID de 40 bits e um Subnet ID.</p></div>
-            </div>
-        </div>
+        <div class="tab-panel" data-tab-panel="analise">{#include ipv6/partials/tab_analise.html /}</div>
+        <div class="tab-panel" data-tab-panel="dividir">{#include ipv6/partials/tab_dividir.html /}</div>
+        <div class="tab-panel" data-tab-panel="eui64">{#include ipv6/partials/tab_eui64.html /}</div>
+        <div class="tab-panel" data-tab-panel="ula">{#include ipv6/partials/tab_ula.html /}</div>
+        <div class="tab-panel" data-tab-panel="comparador">{#include ipv6/partials/tab_comparador.html /}</div>
+        <div class="tab-panel" data-tab-panel="dominio">{#include ipv6/partials/tab_dominio.html /}</div>
     </div>
 </div>
 {/content}
 {#extraScripts}
-<script src="/ipv6/js/ipv6.js?v=20260915a"></script>
+<script src="/ipv6/js/ipv6.js?v=20260915b"></script>
 {/extraScripts}
 {/include}

@@ -281,6 +281,89 @@ public class Ipv6SubnetKernel {
                 new IPv6Address(p64).toCompressedString() + "/64", gidHex.toString(), explic);
     }
 
+    /**
+     * PROPÓSITO DE NEGÓCIO: compara dois endereços/prefixos IPv6 lado a lado — quantos bits
+     * compartilham, se caem na mesma /64 (mesma LAN), se um prefixo contém o outro endereço e a
+     * distância numérica entre eles. É o análogo IPv6 do Comparador da Análise IPv4.
+     *
+     * INVARIANTES DO DOMÍNIO: a comparação é sobre os 128 bits reais (sem broadcast, sem "hosts
+     * úteis"); "mesma LAN" é definida pela fronteira do SLAAC (/64), não por classe. A contenção usa
+     * o prefixo declarado de cada lado; sem prefixo, o endereço vale como /128.
+     *
+     * COMPORTAMENTO EM CASO DE FALHA: qualquer lado malformado propaga {@link Ipv6Exception} (via
+     * {@link #analisar}); nunca devolve comparação parcial.
+     */
+    public ComparacaoIpv6 comparar(String a, String b) {
+        AnaliseIpv6 ra = analisar(a);
+        AnaliseIpv6 rb = analisar(b);
+        IPv6Address ha = hostDe(a);
+        IPv6Address hb = hostDe(b);
+        byte[] ba = ha.getBytes();
+        byte[] bb = hb.getBytes();
+        BigInteger va = new BigInteger(1, ba);
+        BigInteger vb = new BigInteger(1, bb);
+
+        boolean mesmoEndereco = va.equals(vb);
+        int bitsComuns = bitsComuns(ba, bb);
+        boolean mesmaLan = bitsComuns >= 64;
+        BigInteger distancia = va.subtract(vb).abs();
+
+        String explic = mesmoEndereco
+                ? "São o mesmo endereço (distância zero). Prefixo comum: /128."
+                : "Compartilham os primeiros " + bitsComuns + " bits (prefixo comum /" + bitsComuns
+                        + "). " + (mesmaLan ? "Estão na mesma /64 — mesma LAN." : "Estão em /64 diferentes.")
+                        + " Distância: " + distancia + " endereço(s) entre A e B.";
+
+        return new ComparacaoIpv6(
+                ra.entrada(), ra.comprimido(), ra.prefixo(), ra.temPrefixo(), ra.tipo(),
+                rb.entrada(), rb.comprimido(), rb.prefixo(), rb.temPrefixo(), rb.tipo(),
+                mesmoEndereco, mesmaLan, bitsComuns, "/" + bitsComuns,
+                contencao(ra, rb, ha, hb), distancia.toString(), explic);
+    }
+
+    /** Host (sem prefixo, sem zone index) já validado por {@link #analisar}. */
+    private IPv6Address hostDe(String entrada) {
+        String bruto = entrada == null ? "" : entrada.strip().replace("\"", "").replace("'", "");
+        int idx = bruto.indexOf('%');
+        if (idx >= 0) {
+            bruto = bruto.substring(0, idx).strip();
+        }
+        return new IPAddressString(bruto).getAddress().toIPv6().withoutPrefixLength();
+    }
+
+    /** Quantidade de bits iniciais idênticos entre dois endereços de 128 bits (0–128). */
+    private static int bitsComuns(byte[] a, byte[] b) {
+        int bits = 0;
+        for (int i = 0; i < 16; i++) {
+            int x = (a[i] ^ b[i]) & 0xFF;
+            if (x == 0) {
+                bits += 8;
+                continue;
+            }
+            bits += Integer.numberOfLeadingZeros(x) - 24;
+            break;
+        }
+        return bits;
+    }
+
+    private String contencao(AnaliseIpv6 ra, AnaliseIpv6 rb, IPv6Address ha, IPv6Address hb) {
+        boolean aContemB = ra.temPrefixo() && prefixoBloco(ha, ra.prefixo()).contains(hb);
+        boolean bContemA = rb.temPrefixo() && prefixoBloco(hb, rb.prefixo()).contains(ha);
+        if (aContemB && bContemA) {
+            return "Os dois prefixos coincidem: descrevem o mesmo bloco.";
+        }
+        if (aContemB) {
+            return "A rede A (/" + ra.prefixo() + ") contém o endereço B.";
+        }
+        if (bContemA) {
+            return "A rede B (/" + rb.prefixo() + ") contém o endereço A.";
+        }
+        if (!ra.temPrefixo() && !rb.temPrefixo()) {
+            return "Nenhum lado tem prefixo declarado: comparados como endereços /128.";
+        }
+        return "Nenhum dos prefixos declarados contém o outro endereço.";
+    }
+
     private static byte[] parseMac(String mac) {
         String limpo = (mac == null ? "" : mac).replaceAll("[.:\\-\\s]", "");
         if (!limpo.matches("[0-9a-fA-F]{12}")) {
@@ -434,4 +517,15 @@ public class Ipv6SubnetKernel {
 
     /** Resultado da geração de ULA (RFC 4193): prefixo /48, /64, o Global ID e a explicação. */
     public record UlaResult(String ula48, String ula64, String globalId, String explicacao) { }
+
+    /**
+     * Comparação de dois endereços/prefixos IPv6: forma canônica e tipo de cada lado, se são o mesmo
+     * endereço, se caem na mesma /64 (LAN), quantos bits compartilham, a relação de contenção e a
+     * distância numérica entre eles.
+     */
+    public record ComparacaoIpv6(
+            String aEntrada, String aComprimido, int aPrefixo, boolean aTemPrefixo, String aTipo,
+            String bEntrada, String bComprimido, int bPrefixo, boolean bTemPrefixo, String bTipo,
+            boolean mesmoEndereco, boolean mesmaLan, int bitsComuns, String prefixoComum,
+            String contencao, String distancia, String explicacao) { }
 }

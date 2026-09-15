@@ -55,6 +55,14 @@ public class Ipv6Resource {
     @Location("ipv6/partials/resultado_ula.html")
     Template resultadoUla;
 
+    @Inject
+    @Location("ipv6/partials/resultado_comparacao.html")
+    Template resultadoComparacao;
+
+    @Inject
+    @Location("ipv6/partials/resultado_dominio.html")
+    Template resultadoDominio;
+
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance pagina() {
@@ -97,6 +105,24 @@ public class Ipv6Resource {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance ula(@FormParam("subnetId") String subnetId) {
         return resultadoUla.data("u", service.gerarUla(subnetId));
+    }
+
+    /** Compara dois endereços/prefixos IPv6 (mesma /64, contenção, distância). */
+    @POST
+    @Path("/api/comparar")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance comparar(@FormParam("a") String a, @FormParam("b") String b) {
+        return resultadoComparacao.data("c", service.comparar(a, b));
+    }
+
+    /** Resolve o registro AAAA (IPv6) de um domínio e analisa o endereço. */
+    @POST
+    @Path("/api/dominio")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance dominio(@FormParam("dominio") String dominio) {
+        return resultadoDominio.data("r", service.resolverDominio(dominio));
     }
 
     private int parsePrefixo(String bruto) {

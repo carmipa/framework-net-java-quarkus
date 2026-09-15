@@ -103,6 +103,47 @@ class Ipv6HttpTest {
     }
 
     @Test
+    void paginaTemAbasComparadorEDominio() {
+        given()
+                .when().get("/ipv6")
+                .then()
+                .statusCode(200)
+                .body(containsString("data-active-tab=\"analise\""))
+                .body(containsString("data-tab=\"comparador\""))
+                .body(containsString("data-tab=\"dominio\""))
+                .body(containsString("hx-post=\"/ipv6/api/comparar\""))
+                .body(containsString("hx-post=\"/ipv6/api/dominio\""));
+    }
+
+    @Test
+    void compararDoisEnderecosMostraMesmaLanEContencao() {
+        given()
+                .contentType(FORM)
+                .formParam("a", "2001:db8:0:1::/64")
+                .formParam("b", "2001:db8:0:1:abcd::1")
+                .when().post("/ipv6/api/comparar")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("Comparação de endereços"))
+                .body(containsString("Mesma /64"))
+                .body(containsString("contém"));
+    }
+
+    @Test
+    void dominioVazioVolta400ComFragmento() {
+        given()
+                .contentType(FORM)
+                .header("HX-Request", "true")
+                .formParam("dominio", "")
+                .when().post("/ipv6/api/dominio")
+                .then()
+                .statusCode(400)
+                .contentType(containsString("text/html"))
+                .body(containsString("Informe um domínio"));
+    }
+
+    @Test
     void entradaInvalidaNoHtmxVolta400ComFragmento() {
         given()
                 .contentType(FORM)
