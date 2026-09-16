@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import org.framework.net.analiseDidatica.exception.DnsResolucaoException;
 import org.framework.net.analiseDidatica.infrastructure.dns.DnsResolver;
 import org.framework.net.ipv6.config.Ipv6Config;
+import org.framework.net.ipv6.domain.Ipv6AnaliseRica;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.AnaliseIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.ComparacaoIpv6;
@@ -55,6 +56,19 @@ public class Ipv6CidrService {
         telemetriaLogger.logEvent("info", "ipv6", "ipv6_analise",
                 Map.of("status", "ok", "prefixo", d.base().prefixo(), "tipo", d.base().tipo()));
         return d;
+    }
+
+    /**
+     * Análise rica (gêmeo IPv6 da Análise Didática IPv4): grade de 128 bits, aplicação do prefixo,
+     * capacidade, passo-a-passo, linha do tempo, delegação, régua, referência, conversão, GRC, CLI,
+     * termos, banner e resumo tipo prova. O teto da régua vem da config, nunca do cliente.
+     */
+    public Ipv6AnaliseRica.Resultado analisarRica(String entrada) {
+        Ipv6AnaliseRica.Resultado r = kernel.analisarRica(entrada, config.reguaCount());
+        telemetriaLogger.logEvent("info", "ipv6", "ipv6_analise",
+                Map.of("status", "ok", "prefixo", r.base().prefixo(), "tipo", r.base().tipo(),
+                        "modo", "rica"));
+        return r;
     }
 
     public DivisaoIpv6 dividir(String cidr, int prefixoAlvo) {

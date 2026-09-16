@@ -55,6 +55,33 @@ class AdminApiKeyHttpTest {
     }
 
     @Test
+    void ipv6ExportSemChaveRetorna401() {
+        given()
+                .header("Accept", "application/json")
+                .when().get("/ipv6/export/json?endereco=2001:db8::/48")
+                .then()
+                .statusCode(401)
+                .body(containsString("API key administrativa"));
+    }
+
+    @Test
+    void ipv6ExportComHeaderValidoRetorna200() {
+        given()
+                .header("X-Admin-Api-Key", "test-admin-secret")
+                .when().get("/ipv6/export/json?endereco=2001:db8::/48")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    void ipv6PaginaPublicaSegueAbertaSemChave() {
+        given()
+                .when().get("/ipv6")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
     void historyPublicoSemChaveRetorna200() {
         given()
                 .header("Accept", "application/json")

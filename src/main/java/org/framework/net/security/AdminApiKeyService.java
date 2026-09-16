@@ -27,6 +27,7 @@ public class AdminApiKeyService {
      */
     private static final List<String> PROTECTED_PREFIXES = List.of(
             "/export",
+            "/ipv6/export",
             "/telemetria"
     );
 

@@ -10,9 +10,18 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import org.framework.net.analiseDidatica.support.PdfSimplesService;
 import org.framework.net.ipv6.application.Ipv6CidrService;
+import org.framework.net.ipv6.domain.Ipv6AnaliseRica;
 import org.framework.net.ipv6.exception.Ipv6Exception;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Rotas da Calculadora IPv6.
@@ -75,7 +84,7 @@ public class Ipv6Resource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance calcular(@FormParam("endereco") String endereco) {
-        return resultadoAnalise.data("d", service.decompor(endereco));
+        return resultadoAnalise.data("r", service.analisarRica(endereco));
     }
 
     /** Divide um prefixo base em sub-redes do prefixo alvo. */
@@ -123,6 +132,54 @@ public class Ipv6Resource {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance dominio(@FormParam("dominio") String dominio) {
         return resultadoDominio.data("r", service.resolverDominio(dominio));
+    }
+
+    /**
+     * Exporta a análise IPv6 do {@code endereco} informado em JSON (protegido por chave admin, como
+     * o {@code /export/json} do IPv4). Vive neste mesmo resource pelo invariante do módulo.
+     */
+    @GET
+    @Path("/export/json")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> exportarJson(@QueryParam("endereco") String endereco) {
+        Ipv6AnaliseRica.Resultado r = service.analisarRica(endereco);
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("generated_at", Instant.now().toString());
+        payload.put("entrada", r.base().entrada());
+        payload.put("comprimido", r.base().comprimido());
+        payload.put("expandido", r.base().expandido());
+        payload.put("prefixo", r.base().prefixo());
+        payload.put("tipo", r.base().tipo());
+        payload.put("descricao_tipo", r.base().descricaoTipo());
+        payload.put("rede", r.base().rede());
+        payload.put("primeiro", r.base().primeiro());
+        payload.put("ultimo", r.base().ultimo());
+        payload.put("total_enderecos", r.totalEnderecos());
+        payload.put("total_potencia", r.totalPotencia());
+        payload.put("interface_id", r.base().interfaceId());
+        payload.put("solicited_node", r.base().solicitedNode());
+        payload.put("reverso_ip6_arpa", r.base().reversePtr());
+        payload.put("gateway", r.gateway());
+        payload.put("bits_rede", r.bitsRede());
+        payload.put("bits_interface", r.bitsInterface());
+        payload.put("delegacao", r.delegacao());
+        payload.put("referencia", r.referencia());
+        return payload;
+    }
+
+    /**
+     * Exporta a análise IPv6 do {@code endereco} em PDF (protegido por chave admin), reusando o
+     * {@link PdfSimplesService} do IPv4.
+     */
+    @GET
+    @Path("/export/pdf")
+    public Response exportarPdf(@QueryParam("endereco") String endereco) throws IOException {
+        Ipv6AnaliseRica.Resultado r = service.analisarRica(endereco);
+        byte[] pdf = PdfSimplesService.gerarPdfSimples(r.textoCopia());
+        return Response.ok(pdf)
+                .type("application/pdf")
+                .header("Content-Disposition", "attachment; filename=\"analise_ipv6.pdf\"")
+                .build();
     }
 
     private int parsePrefixo(String bruto) {

@@ -20,4 +20,8 @@ public interface Ipv6Config {
     /** Máximo de sub-redes IPv6 renderizadas em uma divisão. */
     @WithDefault("256")
     int maxLinhas();
+
+    /** Quantas sub-redes contíguas do mesmo prefixo a "régua" da Análise lista (análogo ao IPv4). */
+    @WithDefault("8")
+    int reguaCount();
 }

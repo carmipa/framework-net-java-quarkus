@@ -37,3 +37,64 @@
     border-radius: 4px;
     font-size: 0.72rem;
 }
+
+/* ---------- Grade de 128 bits célula-a-célula (análogo do "array de 32 bits" do IPv4) ---------- */
+.ipv6-saida-full { width: 100%; }
+.ipv6-bit-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.8rem 1rem;
+}
+.ipv6-octeto-group { display: flex; flex-direction: column; align-items: center; }
+.ipv6-bit-row {
+    display: flex;
+    flex-shrink: 0;
+    border: 1px solid #444c56;
+    border-radius: 0.4rem;
+    overflow: hidden;
+}
+.ipv6-bit-col {
+    display: flex;
+    flex-direction: column;
+    width: 1.7rem;
+    min-width: 1.7rem;
+    text-align: center;
+    border-right: 1px solid #30363d;
+}
+.ipv6-bit-col:last-child { border-right: none; }
+.ipv6-info-top {
+    font-size: 0.5rem;
+    color: #768390;
+    background: #21262d;
+    line-height: 1.25;
+    padding: 0.05rem 0;
+    white-space: nowrap;
+}
+.ipv6-pow { color: #f0883e; }
+.ipv6-val-bin { font-size: 0.95rem; font-weight: 700; padding: 0.3rem 0; line-height: 1; }
+.ipv6-peso-bot {
+    font-size: 0.44rem;
+    color: #58a6ff;
+    background: #0d1117;
+    padding: 0.1rem 0;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+.ipv6-octeto-label {
+    font-size: 0.74rem;
+    color: #f2cc60;
+    margin-top: 0.35rem;
+    font-weight: 700;
+    font-family: var(--aed-font-mono, ui-monospace, monospace);
+}
+/* Estado da célula: rede (teal) x interface (azul), aceso (1) x apagado (0) */
+.ipv6-bit-col.rede.on  .ipv6-val-bin { background: #2dd4bf; color: #04231f; }
+.ipv6-bit-col.rede.off .ipv6-val-bin { background: rgba(45, 212, 191, 0.12); color: #5eead4; }
+.ipv6-bit-col.iface.on  .ipv6-val-bin { background: #38bdf8; color: #04202b; }
+.ipv6-bit-col.iface.off .ipv6-val-bin { background: rgba(56, 189, 248, 0.12); color: #7dd3fc; }
+
+@media (max-width: 575.98px) {
+    .ipv6-bit-col { width: 1.4rem; min-width: 1.4rem; }
+    .ipv6-val-bin { font-size: 0.82rem; }
+}

@@ -364,6 +364,204 @@ public class Ipv6SubnetKernel {
         return "Nenhum dos prefixos declarados contém o outro endereço.";
     }
 
+    /**
+     * PROPÓSITO DE NEGÓCIO: monta o modelo de EXIBIÇÃO rica da Análise IPv6 — o gêmeo IPv6 do
+     * resultado da Análise Didática IPv4 (grade de 128 bits, aplicação do prefixo, capacidade,
+     * passo-a-passo, linha do tempo, delegação, régua de /64, referência, conversão, GRC, CLI,
+     * termos, banner e resumo tipo prova). Reusa {@link #analisar} e {@link #decompor} como fonte.
+     *
+     * INVARIANTES DO DOMÍNIO: sem broadcast e sem "hosts úteis"; toda contagem é 2^(128−prefixo).
+     *
+     * COMPORTAMENTO EM CASO DE FALHA: propaga {@link Ipv6Exception} de {@code analisar}.
+     */
+    public Ipv6AnaliseRica.Resultado analisarRica(String entrada, int reguaCount) {
+        DecomposicaoIpv6 dec = decompor(entrada);
+        AnaliseIpv6 base = dec.base();
+        int prefixo = base.prefixo();
+
+        List<Ipv6AnaliseRica.HextetoGrade> grade = new ArrayList<>(8);
+        List<String> bins = base.binarioHextetos();
+        for (int h = 0; h < 8; h++) {
+            String bin = bins.get(h);
+            List<Ipv6AnaliseRica.BitCelula> celulas = new ArrayList<>(16);
+            for (int j = 0; j < 16; j++) {
+                int global = h * 16 + j;
+                char val = bin.charAt(j);
+                boolean rede = global < prefixo;
+                String css = (rede ? "rede" : "iface") + (val == '1' ? " on" : " off");
+                celulas.add(new Ipv6AnaliseRica.BitCelula(
+                        global + 1, 127 - global, val, 1L << (15 - j), css));
+            }
+            grade.add(new Ipv6AnaliseRica.HextetoGrade(h + 1, hexDoBin(bin), celulas));
+        }
+
+        List<Ipv6AnaliseRica.LinhaPrefixo> aplicacao = List.of(
+                new Ipv6AnaliseRica.LinhaPrefixo("Máscara de prefixo",
+                        "/" + prefixo + " — " + prefixo + " bits 1 seguidos de " + (128 - prefixo) + " bits 0",
+                        "and-row-mask"),
+                new Ipv6AnaliseRica.LinhaPrefixo("Rede (endereço & prefixo)", base.rede(), "and-row-result"),
+                new Ipv6AnaliseRica.LinhaPrefixo("Bits de interface (& complemento)",
+                        base.interfaceId(), "and-row-ip"),
+                new Ipv6AnaliseRica.LinhaPrefixo("Fronteira rede/interface",
+                        "após o bit " + prefixo + " (hexteto " + (Math.min(7, prefixo / 16) + 1)
+                                + ", nibble " + (((prefixo % 16) / 4) + 1) + ")", "and-row-wild"));
+
+        List<Ipv6AnaliseRica.PassoWizard> wizard = List.of(
+                new Ipv6AnaliseRica.PassoWizard("🧭", "Tipo e escopo", "Classificar pela faixa IANA",
+                        base.tipo() + " — " + base.descricaoTipo()),
+                new Ipv6AnaliseRica.PassoWizard("📏", "Prefixo", "Ler o /" + prefixo + " (fronteira rede/interface)",
+                        "/" + prefixo + " · " + prefixo + " bits de rede, " + (128 - prefixo) + " de interface"),
+                new Ipv6AnaliseRica.PassoWizard("🧠", "Rede (bloco)", "Zerar os bits de interface", base.rede()),
+                new Ipv6AnaliseRica.PassoWizard("📣", "Interface / SLAAC",
+                        "Os bits baixos identificam a interface", base.interfaceId()));
+
+        Ipv6AnaliseRica.LinhaTempo linhaTempo = new Ipv6AnaliseRica.LinhaTempo(
+                "faixa", base.rede(), base.primeiro(), base.ultimo(), base.entrada());
+
+        List<SubredeIpv6> regua = reguaSubredes(entrada, prefixo, reguaCount);
+
+        List<Ipv6AnaliseRica.ReferenciaPrefixo> referencia = referenciaPrefixos(prefixo);
+        List<Ipv6AnaliseRica.ConversaoLinha> conversao = List.of(
+                new Ipv6AnaliseRica.ConversaoLinha("1 bit", "1", "—", "—", "—"),
+                new Ipv6AnaliseRica.ConversaoLinha("1 nibble", "4", "1", "—", "1 dígito hex"),
+                new Ipv6AnaliseRica.ConversaoLinha("1 hexteto", "16", "4", "1", "4 hex (0000–ffff)"),
+                new Ipv6AnaliseRica.ConversaoLinha("1 endereço IPv6", "128", "32", "8", "8 hextetos"));
+
+        List<String> grc = List.of(
+                "Escopo: " + base.tipo() + " — " + base.descricaoTipo() + ".",
+                "Superfície: 2^" + (128 - prefixo) + " endereços no bloco; varredura completa é inviável"
+                        + " (vantagem de segurança do IPv6 sobre o IPv4).",
+                grcRecomendacao(base.tipo()));
+
+        List<Ipv6AnaliseRica.DicaSeguranca> dicas = segurancaDicas(base.tipo());
+
+        List<Ipv6AnaliseRica.TermoRede> termos = List.of(
+                new Ipv6AnaliseRica.TermoRede("SLAAC", "Autoconfiguração do host a partir do prefixo /64 + Interface ID (RA)."),
+                new Ipv6AnaliseRica.TermoRede("DHCPv6", "Atribuição stateful/stateless coordenada por servidor (opcional)."),
+                new Ipv6AnaliseRica.TermoRede("NDP / RA", "Neighbor Discovery substitui o ARP; Router Advertisement anuncia o prefixo."),
+                new Ipv6AnaliseRica.TermoRede("Broadcast", "Não existe em IPv6 — substituído por multicast."),
+                new Ipv6AnaliseRica.TermoRede("Solicited-node", base.solicitedNode() + " (multicast usado pelo NDP)."));
+
+        String ospfv3 = dec.ciscoCli();
+        String eigrp = "ipv6 unicast-routing\nipv6 router eigrp 100\n no shutdown\ninterface GigabitEthernet0/0\n ipv6 eigrp 100";
+        String ciscoNota = "Em IPv6 não há wildcard: o roteamento é habilitado por interface, não por 'network' com máscara curinga.";
+
+        List<Ipv6AnaliseRica.BannerItem> bannerItens = List.of(
+                new Ipv6AnaliseRica.BannerItem("Tipo", base.tipo() + " — " + base.descricaoTipo()),
+                new Ipv6AnaliseRica.BannerItem("Prefixo", "/" + prefixo + " (LAN padrão é /64 via SLAAC)"),
+                new Ipv6AnaliseRica.BannerItem("Endereços", "2^" + (128 - prefixo) + " = " + base.totalEnderecos()),
+                new Ipv6AnaliseRica.BannerItem("Sem broadcast", "todos os endereços do bloco são atribuíveis"));
+
+        List<Ipv6AnaliseRica.ItemProva> provaItens = List.of(
+                new Ipv6AnaliseRica.ItemProva("🏷️ Tipo", base.tipo()),
+                new Ipv6AnaliseRica.ItemProva("📏 Prefixo", "/" + prefixo),
+                new Ipv6AnaliseRica.ItemProva("🔢 Endereços", "2^" + (128 - prefixo) + " = " + base.totalEnderecos()),
+                new Ipv6AnaliseRica.ItemProva("🌐 Rede", base.rede()),
+                new Ipv6AnaliseRica.ItemProva("🔌 Interface ID", base.interfaceId()));
+        String provaFrase = base.comprimido() + "/" + prefixo + " é " + base.tipo()
+                + ": " + prefixo + " bits de rede, " + (128 - prefixo) + " de interface, 2^" + (128 - prefixo)
+                + " endereços, sem broadcast.";
+
+        String[] tema = temaPorPrefixo(prefixo);
+
+        String textoCopia = montarTextoCopia(base, prefixo);
+
+        return new Ipv6AnaliseRica.Resultado(
+                base, dec.bitsRede(), dec.bitsInterface(), grade, aplicacao,
+                base.totalEnderecos(), base.totalPotencia(), dec.gatewayLinkLocal(),
+                dec.delegacao(), regua, reguaCount, wizard, linhaTempo, referencia, conversao,
+                grc, dicas, termos, ospfv3, eigrp, ciscoNota,
+                "Contexto do bloco IPv6", "Como este prefixo se encaixa no plano de endereçamento",
+                bannerItens, provaFrase, provaItens,
+                tema[0], tema[1], tema[2], tema[3], dec.enunciado(), textoCopia);
+    }
+
+    /** Próximas {@code n} sub-redes contíguas do mesmo prefixo (régua), a partir do bloco base. */
+    private List<SubredeIpv6> reguaSubredes(String entrada, int prefixo, int n) {
+        IPv6Address addr = new IPAddressString(hostDe(entrada).toCompressedString() + "/" + prefixo)
+                .getAddress().toIPv6().toPrefixBlock();
+        BigInteger inicio = new BigInteger(1, addr.getLower().getBytes());
+        BigInteger passo = BigInteger.TWO.pow(128 - prefixo);
+        BigInteger teto = BigInteger.TWO.pow(128);
+        List<SubredeIpv6> out = new ArrayList<>();
+        for (int i = 0; i < Math.max(1, n); i++) {
+            BigInteger valor = inicio.add(passo.multiply(BigInteger.valueOf(i)));
+            if (valor.compareTo(teto) >= 0) {
+                break;
+            }
+            IPv6Address rede = new IPv6Address(paraBytes16(valor));
+            out.add(new SubredeIpv6(i + 1, rede.toCompressedString(), "/" + prefixo,
+                    rede.toCompressedString(), ultimoDoBloco(valor, passo)));
+        }
+        return out;
+    }
+
+    private List<Ipv6AnaliseRica.ReferenciaPrefixo> referenciaPrefixos(int prefixoAtual) {
+        int[] prefixos = {32, 40, 48, 52, 56, 60, 64};
+        List<Ipv6AnaliseRica.ReferenciaPrefixo> out = new ArrayList<>(prefixos.length);
+        for (int p : prefixos) {
+            String lans = p <= 64 ? BigInteger.TWO.pow(64 - p).toString() : "—";
+            String ends = "2^" + (128 - p);
+            String fronteira = (p % 4 == 0) ? "alinhado a nibble" : "no meio de um nibble";
+            out.add(new Ipv6AnaliseRica.ReferenciaPrefixo("/" + p, lans, ends, fronteira, p == prefixoAtual));
+        }
+        return out;
+    }
+
+    private String grcRecomendacao(String tipo) {
+        return switch (tipo) {
+            case "Global unicast" -> "Recomendação: firewall stateful (sem NAT para proteger), RA Guard e DHCPv6 snooping no enlace.";
+            case "ULA / Privado" -> "Recomendação: uso interno; não roteie o fc00::/7 para a Internet.";
+            case "Link-local" -> "Recomendação: válido apenas no enlace; nunca roteável — use para NDP e vizinhança.";
+            case "Documentação" -> "Recomendação: 2001:db8::/32 é só para exemplos/aula — nunca em produção.";
+            case "Multicast" -> "Recomendação: controle de grupos (MLD) e filtragem de escopo.";
+            default -> "Recomendação: valide o escopo antes de rotear e aplique filtragem por prefixo.";
+        };
+    }
+
+    private List<Ipv6AnaliseRica.DicaSeguranca> segurancaDicas(String tipo) {
+        List<Ipv6AnaliseRica.DicaSeguranca> out = new ArrayList<>();
+        out.add(new Ipv6AnaliseRica.DicaSeguranca("info", "🕵️",
+                "Privacidade SLAAC (RFC 4941): use endereços temporários para não expor o MAC no Interface ID."));
+        out.add(new Ipv6AnaliseRica.DicaSeguranca("warning", "🛡️",
+                "RA Guard e ND inspection no switch evitam Router Advertisement forjado (ataque clássico de IPv6)."));
+        out.add(new Ipv6AnaliseRica.DicaSeguranca("danger", "🔥",
+                "IPv6 não tem NAT como fronteira — o firewall stateful é obrigatório, não opcional."));
+        if ("ULA / Privado".equals(tipo)) {
+            out.add(new Ipv6AnaliseRica.DicaSeguranca("success", "🔒",
+                    "ULA (fd00::/8) fica contido na organização — bom para serviços internos."));
+        }
+        return out;
+    }
+
+    private String[] temaPorPrefixo(int prefixo) {
+        if (prefixo >= 64) {
+            return new String[] {"Verde", "prefixo /64+ (uma LAN ou mais específico)", "#3fb950", "#238636"};
+        }
+        if (prefixo >= 48) {
+            return new String[] {"Azul", "prefixo /48–/63 (site / delegação)", "#58a6ff", "#1f6feb"};
+        }
+        if (prefixo >= 32) {
+            return new String[] {"Âmbar", "prefixo /32–/47 (alocação de provedor)", "#d29922", "#9e6a03"};
+        }
+        return new String[] {"Vermelho", "prefixo /0–/31 (bloco enorme, raro)", "#f85149", "#da3633"};
+    }
+
+    private String montarTextoCopia(AnaliseIpv6 base, int prefixo) {
+        return "Análise IPv6\n"
+                + "Entrada: " + base.entrada() + "\n"
+                + "Comprimido: " + base.comprimido() + "\n"
+                + "Expandido: " + base.expandido() + "\n"
+                + "Tipo: " + base.tipo() + " (" + base.descricaoTipo() + ")\n"
+                + "Prefixo: /" + prefixo + "\n"
+                + "Rede: " + base.rede() + "\n"
+                + "Faixa: " + base.primeiro() + " — " + base.ultimo() + "\n"
+                + "Endereços: 2^" + (128 - prefixo) + " = " + base.totalEnderecos() + "\n"
+                + "Interface ID: " + base.interfaceId() + "\n"
+                + "Solicited-node: " + base.solicitedNode() + "\n"
+                + "Reverso: " + base.reversePtr();
+    }
+
     private static byte[] parseMac(String mac) {
         String limpo = (mac == null ? "" : mac).replaceAll("[.:\\-\\s]", "");
         if (!limpo.matches("[0-9a-fA-F]{12}")) {

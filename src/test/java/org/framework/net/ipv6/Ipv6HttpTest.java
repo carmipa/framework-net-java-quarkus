@@ -144,6 +144,27 @@ class Ipv6HttpTest {
     }
 
     @Test
+    void exportJsonDaAnaliseIpv6() {
+        given()
+                .when().get("/ipv6/export/json?endereco=2001:db8::/48")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("application/json"))
+                .body(containsString("\"tipo\""))
+                .body(containsString("Documentação"))
+                .body(containsString("2^80"));
+    }
+
+    @Test
+    void exportPdfDaAnaliseIpv6() {
+        given()
+                .when().get("/ipv6/export/pdf?endereco=2001:db8::/48")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("application/pdf"));
+    }
+
+    @Test
     void entradaInvalidaNoHtmxVolta400ComFragmento() {
         given()
                 .contentType(FORM)
