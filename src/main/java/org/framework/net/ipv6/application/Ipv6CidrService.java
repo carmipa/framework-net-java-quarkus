@@ -120,6 +120,29 @@ public class Ipv6CidrService {
         return r;
     }
 
+    /** Plano de VLANs IPv6: um /prefixoLan por VLAN + gateway + trunk + Cisco SVI. */
+    public Ipv6SubnetKernel.VlanPlano planejarVlans(String baseCidr, int prefixoLan,
+            java.util.List<String> idsTexto, java.util.List<String> nomes, boolean dhcpv6) {
+        java.util.List<Integer> ids = new java.util.ArrayList<>();
+        if (idsTexto != null) {
+            for (String s : idsTexto) {
+                Integer v = null;
+                if (s != null && !s.strip().isEmpty()) {
+                    try {
+                        v = Integer.valueOf(s.strip());
+                    } catch (NumberFormatException ex) {
+                        v = -1; // marca inválido; o kernel rejeita com mensagem didática
+                    }
+                }
+                ids.add(v);
+            }
+        }
+        Ipv6SubnetKernel.VlanPlano r = kernel.planejarVlans(baseCidr, prefixoLan, ids, nomes, dhcpv6, config.maxLinhas());
+        telemetriaLogger.logEvent("info", "ipv6", "ipv6_vlan",
+                Map.of("status", "ok", "total", r.total(), "dhcpv6", dhcpv6));
+        return r;
+    }
+
     /** Converte uma faixa [início, fim] IPv6 na lista mínima de blocos CIDR. */
     public Ipv6SubnetKernel.FaixaCidrIpv6 faixaParaCidr(String inicio, String fim) {
         Ipv6SubnetKernel.FaixaCidrIpv6 r = kernel.faixaParaCidr(inicio, fim, config.maxLinhas());

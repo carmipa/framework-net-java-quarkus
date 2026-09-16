@@ -128,11 +128,52 @@
             var el2 = document.getElementById("ipv6-plano-texto");
             var t2 = el2 ? el2.value : "";
             if (t2) {
+                var rotulo = copiar.innerHTML; // preserva o rótulo original (Copiar plano / configuração)
                 navigator.clipboard.writeText(t2).then(
                     function () { copiar.textContent = "✅ Copiado"; },
                     function () { copiar.textContent = "❌ Falhou"; }
                 );
-                setTimeout(function () { copiar.innerHTML = '<span class="material-symbols-outlined">content_copy</span> Copiar plano'; }, 1500);
+                setTimeout(function () { copiar.innerHTML = rotulo; }, 1500);
+            }
+        }
+    });
+
+    // VLANs dinâmicas da Calculadora: adicionar/remover linhas (id + nome), como no Projetar.
+    function novaLinhaVlan() {
+        var row = document.createElement("div");
+        row.className = "row g-2 align-items-end vlan-row mb-2";
+        row.innerHTML =
+            '<div class="col-lg-3 col-4"><input type="text" name="vlanId" class="aed-input form-control input-numeric" ' +
+            'inputmode="numeric" maxlength="4" placeholder="ID" required></div>' +
+            '<div class="col-lg-7 col-6"><input type="text" name="vlanNome" class="aed-input form-control" ' +
+            'placeholder="Nome da VLAN" autocomplete="off" required></div>' +
+            '<div class="col-lg-2 col-2 d-grid"><button type="button" class="aed-btn aed-btn-danger btn-sm vlan-remove" ' +
+            'title="Remover"><span class="material-symbols-outlined">delete</span></button></div>';
+        return row;
+    }
+
+    document.addEventListener("click", function (evento) {
+        var add = evento.target.closest("#vlan-add");
+        if (add) {
+            var cont = document.getElementById("vlan-container");
+            if (cont) {
+                var row = novaLinhaVlan();
+                cont.appendChild(row);
+                var inp = row.querySelector("input");
+                if (inp) {
+                    inp.focus();
+                }
+            }
+            return;
+        }
+        var rem = evento.target.closest(".vlan-remove");
+        if (rem) {
+            var cont2 = document.getElementById("vlan-container");
+            var rows = cont2 ? cont2.querySelectorAll(".vlan-row") : [];
+            if (rows.length > 1) {
+                rem.closest(".vlan-row").remove();
+            } else {
+                rem.closest(".vlan-row").querySelectorAll("input").forEach(function (i) { i.value = ""; });
             }
         }
     });

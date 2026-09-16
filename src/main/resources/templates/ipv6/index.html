@@ -49,6 +49,11 @@
                     title="Faixa → CIDR: converte uma faixa de endereços na lista mínima de prefixos">
                 <span class="material-symbols-outlined">linear_scale</span><span>Faixa → CIDR</span>
             </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="vlan" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="VLANs: uma LAN /64 por VLAN + gateway (SVI), trunk 802.1Q e CLI Cisco">
+                <span class="material-symbols-outlined">dns</span><span>VLANs</span>
+            </button>
         </div>
 
         <div class="tab-panel" data-tab-panel="dividir">{#include ipv6/partials/tab_dividir.html /}</div>
@@ -56,10 +61,11 @@
         <div class="tab-panel" data-tab-panel="ula">{#include ipv6/partials/tab_ula.html /}</div>
         <div class="tab-panel" data-tab-panel="sumarizar">{#include ipv6/partials/tab_sumarizar.html /}</div>
         <div class="tab-panel" data-tab-panel="faixa">{#include ipv6/partials/tab_faixa.html /}</div>
+        <div class="tab-panel" data-tab-panel="vlan">{#include ipv6/partials/tab_vlan.html /}</div>
     </div>
 </div>
 {/content}
 {#extraScripts}
-<script src="/ipv6/js/ipv6.js?v=20260916f"></script>
+<script src="/ipv6/js/ipv6.js?v=20260916g"></script>
 {/extraScripts}
 {/include}

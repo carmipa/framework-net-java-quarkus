@@ -916,6 +916,103 @@ public class Ipv6SubnetKernel {
         return new NibblesIpv6(base.comprimido(), base.expandido(), base.reversePtr(), lista, explic);
     }
 
+    /**
+     * PROPÓSITO DE NEGÓCIO: plano de VLANs IPv6 (aba VLANs da Calculadora) — o análogo IPv6 do plano
+     * de VLANs do IPv4. Cada VLAN recebe uma LAN /prefixoLan (padrão /64, SLAAC), gateway (::1) e a
+     * configuração Cisco de SVI; gera também o trunk 802.1Q com as VLANs permitidas.
+     *
+     * INVARIANTES DO DOMÍNIO: VLAN ID entre 1 e 4094; LAN comum é /64; sem broadcast/hosts úteis. As
+     * LANs são alocadas contíguas a partir da base; não excedem a capacidade 2^(prefixoLan−base).
+     *
+     * COMPORTAMENTO EM CASO DE FALHA: base sem prefixo, prefixo incoerente, VLAN ID fora de faixa,
+     * lista vazia ou estouro de capacidade lançam {@link Ipv6Exception}.
+     */
+    public VlanPlano planejarVlans(String baseCidr, int prefixoLan, List<Integer> ids,
+            List<String> nomes, boolean dhcpv6, int maxLinhas) {
+        String bruto = baseCidr == null ? "" : baseCidr.strip().replace("\"", "").replace("'", "");
+        if (bruto.isEmpty()) {
+            throw new Ipv6Exception("Informe o bloco base em CIDR (ex.: 2001:db8::/48).");
+        }
+        if (prefixoLan < 1 || prefixoLan > 128) {
+            throw new Ipv6Exception("Prefixo de LAN inválido: use /1 a /128 (/64 é o padrão).");
+        }
+        IPAddressString parser = new IPAddressString(bruto);
+        if (!parser.isValid() || !parser.isIPv6()) {
+            throw new Ipv6Exception("Bloco base IPv6 inválido (" + bruto + ").");
+        }
+        IPv6Address addr = parser.getAddress().toIPv6();
+        Integer pbase = addr.getNetworkPrefixLength();
+        if (pbase == null) {
+            throw new Ipv6Exception("Informe o prefixo do bloco base (ex.: 2001:db8::/48).");
+        }
+        int prefixoBase = pbase;
+        if (prefixoLan <= prefixoBase) {
+            throw new Ipv6Exception("O prefixo de LAN /" + prefixoLan + " precisa ser mais específico que a base /"
+                    + prefixoBase + ".");
+        }
+        // Pareia id+nome, ignorando linhas vazias.
+        List<Integer> idLimpos = new ArrayList<>();
+        List<String> nomeLimpos = new ArrayList<>();
+        int qtd = Math.max(ids == null ? 0 : ids.size(), nomes == null ? 0 : nomes.size());
+        for (int i = 0; i < qtd; i++) {
+            Integer id = (ids != null && i < ids.size()) ? ids.get(i) : null;
+            String nome = (nomes != null && i < nomes.size()) ? nomes.get(i) : null;
+            boolean vazio = id == null && (nome == null || nome.strip().isEmpty());
+            if (vazio) {
+                continue;
+            }
+            if (id == null || id < 1 || id > 4094) {
+                throw new Ipv6Exception("VLAN ID inválido na linha " + (i + 1) + ": use um número de 1 a 4094.");
+            }
+            idLimpos.add(id);
+            nomeLimpos.add(nome == null || nome.strip().isEmpty() ? ("VLAN" + id) : nome.strip());
+        }
+        if (idLimpos.isEmpty()) {
+            throw new Ipv6Exception("Informe ao menos uma VLAN (VLAN ID + nome).");
+        }
+        int n = idLimpos.size();
+        BigInteger cap = BigInteger.TWO.pow(prefixoLan - prefixoBase);
+        if (BigInteger.valueOf(n).compareTo(cap) > 0) {
+            throw new Ipv6Exception("Um /" + prefixoBase + " em /" + prefixoLan + " comporta " + cap
+                    + " LANs; você pediu " + n + " VLAN(s).");
+        }
+
+        IPv6Address baseBloco = addr.toPrefixBlock();
+        BigInteger inicio = new BigInteger(1, baseBloco.getLower().getBytes());
+        BigInteger passo = BigInteger.TWO.pow(128 - prefixoLan);
+        int limite = Math.min(n, Math.max(1, maxLinhas));
+        List<VlanLinha> linhas = new ArrayList<>(limite);
+        StringBuilder ids82 = new StringBuilder();
+        for (int i = 0; i < limite; i++) {
+            BigInteger v = inicio.add(passo.multiply(BigInteger.valueOf(i)));
+            IPv6Address rede = new IPv6Address(paraBytes16(v));
+            String gw = new IPv6Address(paraBytes16(v.add(BigInteger.ONE))).toCompressedString();
+            String cli = "vlan " + idLimpos.get(i) + "\n name " + nomeLimpos.get(i)
+                    + "\ninterface Vlan" + idLimpos.get(i)
+                    + "\n ipv6 address " + gw + "/" + prefixoLan
+                    + "\n ipv6 enable"
+                    + (dhcpv6
+                        ? "\n ipv6 nd managed-config-flag\n ipv6 dhcp server VLAN" + idLimpos.get(i)
+                        : "\n ipv6 nd other-config-flag") // SLAAC por padrão
+                    + "\n no shutdown";
+            linhas.add(new VlanLinha(idLimpos.get(i), nomeLimpos.get(i), rede.toCompressedString(),
+                    "/" + prefixoLan, gw, cli));
+            if (ids82.length() > 0) {
+                ids82.append(',');
+            }
+            ids82.append(idLimpos.get(i));
+        }
+        String trunk = "interface GigabitEthernet0/1\n switchport trunk encapsulation dot1q\n"
+                + " switchport mode trunk\n switchport trunk allowed vlan " + ids82;
+        String dhcpNota = dhcpv6
+                ? "DHCPv6 stateful: o RA marca M=1 (managed) e o servidor DHCPv6 entrega os endereços."
+                : "SLAAC (padrão): o RA anuncia o prefixo /64 e os hosts se autoconfiguram (sem servidor).";
+        String enunciado = n + " VLAN(s), cada uma com uma LAN /" + prefixoLan + " contígua em " + bruto
+                + ". Em IPv6 a VLAN é L2; o /64 e o SVI (interface VlanN) fazem o roteamento inter-VLAN.";
+        return new VlanPlano(baseBloco.getLower().withoutPrefixLength().toCompressedString() + "/" + prefixoBase,
+                prefixoBase, prefixoLan, n, cap.toString(), linhas, trunk, dhcpNota, enunciado);
+    }
+
     /** Host (sem prefixo, sem zone index) já validado por {@link #analisar}. */
     private IPv6Address hostDe(String entrada) {
         String bruto = entrada == null ? "" : entrada.strip().replace("\"", "").replace("'", "");
@@ -1327,6 +1424,13 @@ public class Ipv6SubnetKernel {
     /** Decomposição por nibble + expansão/compressão (RFC 4291/5952) e reverso ip6.arpa. */
     public record NibblesIpv6(String comprimido, String expandido, String reversePtr,
             List<NibbleInfo> nibbles, String explicacao) { }
+
+    /** Uma VLAN do plano: id 802.1Q, nome, LAN /prefixoLan, gateway e CLI do SVI. */
+    public record VlanLinha(int vlanId, String nome, String rede, String prefixoStr, String gateway, String cisco) { }
+
+    /** Plano de VLANs IPv6: base, alvo, capacidade, VLANs, trunk 802.1Q e nota de DHCPv6/SLAAC. */
+    public record VlanPlano(String baseCidr, int prefixoBase, int prefixoLan, int total, String capacidade,
+            List<VlanLinha> vlans, String trunkCli, String dhcpNota, String enunciado) { }
 
     // ---------- Laboratório de Resolução IPv6 (Projetar) ----------
 

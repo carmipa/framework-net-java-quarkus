@@ -104,6 +104,10 @@ public class Ipv6Resource {
     @Location("ipv6/partials/resultado_faixa.html")
     Template resultadoFaixa;
 
+    @Inject
+    @Location("ipv6/partials/resultado_vlan.html")
+    Template resultadoVlan;
+
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance pagina() {
@@ -244,6 +248,21 @@ public class Ipv6Resource {
         java.util.List<String> lista = prefixos == null ? java.util.List.of()
                 : java.util.Arrays.asList(prefixos.split("\\r?\\n"));
         return resultadoSumarizacao.data("s", service.sumarizar(lista));
+    }
+
+    /** Plano de VLANs IPv6 (um /64 por VLAN + gateway + trunk + Cisco SVI). */
+    @POST
+    @Path("/api/vlan")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance vlan(
+            @FormParam("base") String base,
+            @FormParam("prefixoLan") String prefixoLan,
+            @FormParam("vlanId") java.util.List<String> vlanIds,
+            @FormParam("vlanNome") java.util.List<String> vlanNomes,
+            @FormParam("dhcpv6") String dhcpv6) {
+        boolean dhcp = "on".equalsIgnoreCase(dhcpv6) || "true".equalsIgnoreCase(dhcpv6) || "1".equals(dhcpv6);
+        return resultadoVlan.data("v", service.planejarVlans(base, parsePrefixo(prefixoLan), vlanIds, vlanNomes, dhcp));
     }
 
     /** Converte uma faixa [início, fim] IPv6 na lista mínima de blocos CIDR. */

@@ -348,6 +348,58 @@ class Ipv6SubnetKernelTest {
     }
 
     @Test
+    void planejarVlansAlocaUmSlash64PorVlanComGatewayESvi() {
+        Ipv6SubnetKernel.VlanPlano v = kernel.planejarVlans("2001:db8::/48", 64,
+                java.util.List.of(10, 20, 30), java.util.List.of("Servidores", "Wi-Fi", "Voz"),
+                false, 100);
+        assertEquals(3, v.total());
+        assertEquals(48, v.prefixoBase());
+        assertEquals(64, v.prefixoLan());
+        assertEquals("65536", v.capacidade());              // 2^(64-48)
+        assertEquals("2001:db8::/48", v.baseCidr());
+        assertEquals(3, v.vlans().size());
+        // LANs contíguas: ::/64, 0:1::/64, 0:2::/64 (gabarito independente: passo 2^(128-64))
+        assertEquals("2001:db8::", v.vlans().get(0).rede());
+        assertEquals("2001:db8::1", v.vlans().get(0).gateway());
+        assertEquals("2001:db8:0:1::", v.vlans().get(1).rede());
+        assertEquals("2001:db8:0:1::1", v.vlans().get(1).gateway());
+        assertEquals("2001:db8:0:2::", v.vlans().get(2).rede());
+        assertEquals(10, v.vlans().get(0).vlanId());
+        assertEquals("/64", v.vlans().get(0).prefixoStr());
+        // SVI: interface VlanN + endereço do gateway + SLAAC (other-config-flag)
+        assertTrue(v.vlans().get(0).cisco().contains("interface Vlan10"));
+        assertTrue(v.vlans().get(0).cisco().contains("ipv6 address 2001:db8::1/64"));
+        assertTrue(v.vlans().get(0).cisco().contains("ipv6 nd other-config-flag"));
+        // trunk 802.1Q com as VLANs permitidas
+        assertTrue(v.trunkCli().contains("switchport trunk allowed vlan 10,20,30"));
+    }
+
+    @Test
+    void planejarVlansDhcpv6MarcaManagedConfigFlag() {
+        Ipv6SubnetKernel.VlanPlano v = kernel.planejarVlans("2001:db8::/48", 64,
+                java.util.List.of(10), java.util.List.of("Servidores"), true, 100);
+        assertTrue(v.vlans().get(0).cisco().contains("ipv6 nd managed-config-flag"));
+        assertTrue(v.dhcpNota().toLowerCase().contains("dhcpv6"));
+    }
+
+    @Test
+    void planejarVlansRejeitaIdForaDeFaixaEListaVazia() {
+        // A1: ID válido (10) aceito; ID fora de 1..4094 e lista vazia rejeitados.
+        assertEquals(1, kernel.planejarVlans("2001:db8::/48", 64,
+                java.util.List.of(10), java.util.List.of("ok"), false, 100).total());
+        assertThrows(Ipv6Exception.class, () -> kernel.planejarVlans("2001:db8::/48", 64,
+                java.util.List.of(5000), java.util.List.of("estoura"), false, 100));
+        assertThrows(Ipv6Exception.class, () -> kernel.planejarVlans("2001:db8::/48", 64,
+                java.util.List.of(), java.util.List.of(), false, 100));
+    }
+
+    @Test
+    void planejarVlansRejeitaPrefixoLanNaoMaisEspecificoQueBase() {
+        assertThrows(Ipv6Exception.class, () -> kernel.planejarVlans("2001:db8::/64", 64,
+                java.util.List.of(10), java.util.List.of("x"), false, 100));
+    }
+
+    @Test
     void casoControleEntradaInvalidaXlegitima() {
         // A1: malformado e IPv4 puro rejeitados; o legítimo semelhante é aceito.
         assertThrows(Ipv6Exception.class, () -> kernel.analisar("nao-e-ipv6"));

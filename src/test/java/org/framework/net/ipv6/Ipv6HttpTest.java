@@ -337,6 +337,39 @@ class Ipv6HttpTest {
     }
 
     @Test
+    void vlanPlanejaTresVlansComSviETrunk() {
+        given()
+                .contentType(FORM)
+                .formParam("base", "2001:db8::/48")
+                .formParam("prefixoLan", "64")
+                .formParam("vlanId", "10", "20", "30")
+                .formParam("vlanNome", "Servidores", "Wi-Fi", "Voz")
+                .when().post("/ipv6/api/vlan")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("Plano de VLANs IPv6"))
+                .body(containsString("interface Vlan10"))
+                .body(containsString("2001:db8:0:1::"))
+                .body(containsString("switchport trunk allowed vlan 10,20,30"));
+    }
+
+    @Test
+    void vlanIdForaDeFaixaNoHtmxVolta400() {
+        given()
+                .contentType(FORM)
+                .header("HX-Request", "true")
+                .formParam("base", "2001:db8::/48")
+                .formParam("prefixoLan", "64")
+                .formParam("vlanId", "5000")
+                .formParam("vlanNome", "estoura")
+                .when().post("/ipv6/api/vlan")
+                .then()
+                .statusCode(400)
+                .body(containsString("VLAN ID"));
+    }
+
+    @Test
     void entradaInvalidaNoHtmxVolta400ComFragmento() {
         given()
                 .contentType(FORM)
