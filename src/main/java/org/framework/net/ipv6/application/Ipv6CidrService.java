@@ -50,6 +50,13 @@ public class Ipv6CidrService {
         return r;
     }
 
+    /** Decomposição por nibble + expansão/compressão (RFC 4291/5952) para a aba Nibbles. */
+    public Ipv6SubnetKernel.NibblesIpv6 nibbles(String entrada) {
+        Ipv6SubnetKernel.NibblesIpv6 r = kernel.nibbles(entrada);
+        telemetriaLogger.logEvent("info", "ipv6", "ipv6_nibbles", Map.of("status", "ok"));
+        return r;
+    }
+
     /** Decomposição didática profunda (128 bits, corte rede/interface, delegação) para a Análise. */
     public DecomposicaoIpv6 decompor(String entrada) {
         DecomposicaoIpv6 d = kernel.decompor(entrada);

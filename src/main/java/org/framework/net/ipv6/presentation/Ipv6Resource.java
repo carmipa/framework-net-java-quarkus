@@ -89,6 +89,10 @@ public class Ipv6Resource {
     Template resultadoComparacao;
 
     @Inject
+    @Location("ipv6/partials/resultado_nibbles.html")
+    Template resultadoNibbles;
+
+    @Inject
     @Location("ipv6/partials/resultado_dominio.html")
     Template resultadoDominio;
 
@@ -191,6 +195,15 @@ public class Ipv6Resource {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance calcular(@FormParam("endereco") String endereco) {
         return resultadoAnalise.data("r", service.analisarRica(endereco));
+    }
+
+    /** Decomposição por nibble + expansão/compressão (aba Nibbles da Análise). */
+    @POST
+    @Path("/api/nibbles")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance nibbles(@FormParam("endereco") String endereco) {
+        return resultadoNibbles.data("n", service.nibbles(endereco));
     }
 
     /** Divide um prefixo base em sub-redes do prefixo alvo. */

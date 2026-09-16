@@ -41,6 +41,7 @@ class Ipv6HttpTest {
                 .body(containsString("hx-post=\"/ipv6/api/calcular\""))
                 .body(containsString("data-tab=\"comparador\""))
                 .body(containsString("data-tab=\"dominio\""))
+                .body(containsString("data-tab=\"nibbles\""))
                 .body(containsString("data-tab=\"conceitos\""))
                 .body(containsString("IPv4 → IPv6: o que muda"))
                 .body(containsString("Hosts úteis = total − 2"));
@@ -80,7 +81,9 @@ class Ipv6HttpTest {
                 .body(containsString("Plano de rede IPv6"))
                 .body(containsString("2001:db8::/64"))
                 .body(containsString("ipv6 unicast-routing"))
-                .body(containsString("ipv6 router ospf"));
+                .body(containsString("ipv6 router ospf"))
+                .body(containsString("Diagrama de arquitetura"))
+                .body(containsString("Baixar plano"));
     }
 
     @Test
@@ -316,6 +319,20 @@ class Ipv6HttpTest {
                 .then()
                 .statusCode(400)
                 .body(containsString("invertida"));
+    }
+
+    @Test
+    void nibblesRenderizaExpandidoENibbles() {
+        given()
+                .contentType(FORM)
+                .formParam("endereco", "2001:db8::1")
+                .when().post("/ipv6/api/nibbles")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("2001:0db8:0000"))
+                .body(containsString("32 nibbles"))
+                .body(containsString("ip6.arpa"));
     }
 
     @Test

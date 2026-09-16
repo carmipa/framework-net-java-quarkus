@@ -7,6 +7,7 @@ import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DecomposicaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DelegacaoPlano;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.EngenhariaReversaIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.FaixaCidrIpv6;
+import org.framework.net.ipv6.domain.Ipv6SubnetKernel.NibblesIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.ProjetoRede;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.SumarizacaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DivisaoIpv6;
@@ -321,6 +322,23 @@ class Ipv6SubnetKernelTest {
     @Test
     void engenhariaReversaVaziaRejeitada() {
         assertThrows(Ipv6Exception.class, () -> kernel.engenhariaReversa("   "));
+    }
+
+    @Test
+    void nibblesExpandeEComprimeCom32Nibbles() {
+        NibblesIpv6 n = kernel.nibbles("2001:db8::1");
+        assertEquals("2001:db8::1", n.comprimido());
+        assertEquals("2001:0db8:0000:0000:0000:0000:0000:0001", n.expandido());
+        assertEquals(32, n.nibbles().size());
+        assertEquals('2', n.nibbles().get(0).hex());
+        assertEquals("0001", n.nibbles().get(3).bin());   // 4º nibble = '1'
+        assertEquals('1', n.nibbles().get(31).hex());      // último nibble
+        assertEquals(8, n.nibbles().get(31).hexteto());
+    }
+
+    @Test
+    void nibblesRejeitaEntradaInvalida() {
+        assertThrows(Ipv6Exception.class, () -> kernel.nibbles("nao-e-ipv6"));
     }
 
     @Test

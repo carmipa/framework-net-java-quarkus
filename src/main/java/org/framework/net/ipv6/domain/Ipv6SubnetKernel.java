@@ -741,9 +741,36 @@ public class Ipv6SubnetKernel {
         }
         String mermaid = mer.toString();
 
+        // Relatório do plano em texto puro (para baixar .txt / copiar), como o Lab do IPv4.
+        StringBuilder txt = new StringBuilder();
+        txt.append("PLANO DE REDE IPv6 — ").append(bruto).append(" · topologia ").append(topo).append('\n');
+        txt.append(enunciado).append("\n\n== LANs (/").append(prefixoLan).append(") ==\n");
+        for (ProjetoLan l : lans) {
+            txt.append(String.format("%-16s %s%s  gw %s%n", l.nome(), l.rede(), l.prefixoStr(), l.gateway()));
+        }
+        if (!wans.isEmpty()) {
+            txt.append("\n== Enlaces WAN (/").append(prefixoWan).append(") ==\n");
+            for (ProjetoWan w : wans) {
+                txt.append(String.format("%-24s %s%s  A=%s  B=%s%n", w.nome(), w.rede(), w.prefixoStr(), w.ipA(), w.ipB()));
+            }
+        }
+        txt.append("\n== Rotas estáticas ==\n");
+        for (String r : rotas) {
+            txt.append(r).append('\n');
+        }
+        txt.append("\n== CLI Cisco por roteador (OSPFv3 + EIGRP IPv6) ==\n");
+        for (ProjetoRoteador rt : roteadores) {
+            txt.append("\n! ").append(rt.nome()).append(" · ").append(rt.local()).append('\n').append(rt.cli()).append('\n');
+        }
+        txt.append("\n== Passo a passo ==\n");
+        for (String p : passos) {
+            txt.append(p).append('\n');
+        }
+        String planoTexto = txt.toString();
+
         return new ProjetoRede(baseBloco.getLower().withoutPrefixLength().toCompressedString() + "/" + prefixoBase,
                 prefixoBase, prefixoLan, prefixoWan, topo, n, totalLinks, capLan.toString(),
-                lans, wans, roteadores, rotas, ospfv3, eigrp, passos, enunciado, mermaid);
+                lans, wans, roteadores, rotas, ospfv3, eigrp, passos, enunciado, mermaid, planoTexto);
     }
 
     /** Sanitiza um rótulo para o Mermaid (aspas, HTML e caracteres que quebram o diagrama). */
@@ -857,6 +884,31 @@ public class Ipv6SubnetKernel {
         }
 
         return new EngenhariaReversaIpv6(hostname, unicastRouting, interfaces, enderecos, rotas, protocolos, achados);
+    }
+
+    /**
+     * PROPÓSITO DE NEGÓCIO: decomposição por nibble (hexadecimal) e expansão/compressão — a aba
+     * didática que mostra como um IPv6 se escreve por extenso (RFC 4291) e comprimido (RFC 5952),
+     * e como cada um dos 32 nibbles vira um dígito hex de 4 bits (base do reverso ip6.arpa).
+     *
+     * INVARIANTES DO DOMÍNIO: reusa {@link #analisar} (fonte única); 32 nibbles = 128 bits; a forma
+     * comprimida segue a canônica da biblioteca (RFC 5952).
+     *
+     * COMPORTAMENTO EM CASO DE FALHA: propaga {@link Ipv6Exception} de {@code analisar}.
+     */
+    public NibblesIpv6 nibbles(String entrada) {
+        AnaliseIpv6 base = analisar(entrada);
+        String hex = base.expandido().replace(":", "");
+        List<NibbleInfo> lista = new ArrayList<>(32);
+        for (int i = 0; i < hex.length(); i++) {
+            int val = Integer.parseInt(String.valueOf(hex.charAt(i)), 16);
+            String bin = "0".repeat(4 - Integer.toBinaryString(val).length()) + Integer.toBinaryString(val);
+            lista.add(new NibbleInfo(i + 1, hex.charAt(i), bin, (i / 4) + 1));
+        }
+        String explic = "Expandido tem 8 hextetos × 4 dígitos = 32 nibbles (128 bits). A compressão RFC 5952"
+                + " remove zeros à esquerda de cada hexteto e substitui a MAIOR sequência de hextetos zero por"
+                + " '::' (uma única vez). O reverso ip6.arpa é a lista dos 32 nibbles, do último ao primeiro.";
+        return new NibblesIpv6(base.comprimido(), base.expandido(), base.reversePtr(), lista, explic);
     }
 
     /** Host (sem prefixo, sem zone index) já validado por {@link #analisar}. */
@@ -1252,6 +1304,13 @@ public class Ipv6SubnetKernel {
     public record FaixaCidrIpv6(String inicio, String fim, int quantidadeBlocos,
             List<BlocoSumario> blocos, String explicacao) { }
 
+    /** Um nibble (4 bits) do endereço: índice global (1–32), dígito hex, binário e o hexteto (1–8). */
+    public record NibbleInfo(int indice, char hex, String bin, int hexteto) { }
+
+    /** Decomposição por nibble + expansão/compressão (RFC 4291/5952) e reverso ip6.arpa. */
+    public record NibblesIpv6(String comprimido, String expandido, String reversePtr,
+            List<NibbleInfo> nibbles, String explicacao) { }
+
     // ---------- Laboratório de Resolução IPv6 (Projetar) ----------
 
     /** Uma LAN do plano: localidade, bloco /prefixoLan, gateway e faixa. */
@@ -1270,7 +1329,7 @@ public class Ipv6SubnetKernel {
             String topologia, int totalLocais, int totalLinks, String capacidadeLan,
             List<ProjetoLan> lans, List<ProjetoWan> wans, List<ProjetoRoteador> roteadores,
             List<String> rotasEstaticas, String ciscoOspfv3, String ciscoEigrp,
-            List<String> passos, String enunciado, String topologyMermaid) { }
+            List<String> passos, String enunciado, String topologyMermaid, String planoTexto) { }
 
     // ---------- Laboratório de Resolução IPv6 (Engenharia Reversa) ----------
 

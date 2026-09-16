@@ -103,6 +103,40 @@
         }
     });
 
+    // Baixar / copiar o plano do Projetar (texto vem no fragmento htmx).
+    document.addEventListener("click", function (evento) {
+        var baixar = evento.target.closest("[data-baixar-plano]");
+        if (baixar) {
+            var el = document.getElementById("ipv6-plano-texto");
+            var texto = el ? el.value : "";
+            if (!texto) {
+                return;
+            }
+            var blob = new Blob([texto], { type: "text/plain;charset=utf-8" });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement("a");
+            a.href = url;
+            a.download = "plano-ipv6.txt";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+            return;
+        }
+        var copiar = evento.target.closest("[data-copiar-plano]");
+        if (copiar) {
+            var el2 = document.getElementById("ipv6-plano-texto");
+            var t2 = el2 ? el2.value : "";
+            if (t2) {
+                navigator.clipboard.writeText(t2).then(
+                    function () { copiar.textContent = "✅ Copiado"; },
+                    function () { copiar.textContent = "❌ Falhou"; }
+                );
+                setTimeout(function () { copiar.innerHTML = '<span class="material-symbols-outlined">content_copy</span> Copiar plano'; }, 1500);
+            }
+        }
+    });
+
     // Diagrama de arquitetura: renderiza o Mermaid que veio no fragmento htmx.
     function renderizarMermaid(escopo) {
         if (!window.mermaid) {
