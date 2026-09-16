@@ -153,9 +153,98 @@
         }
     }
 
+    // ---------- Histórico da Análise (client-side, localStorage — só neste navegador) ----------
+    var HIST_KEY = "ipv6-analise-hist";
+
+    function histLer() {
+        try {
+            var raw = window.localStorage.getItem(HIST_KEY);
+            var arr = raw ? JSON.parse(raw) : [];
+            return Array.isArray(arr) ? arr : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function histSalvar(endereco) {
+        if (!endereco) {
+            return;
+        }
+        try {
+            var arr = histLer().filter(function (it) { return it.e !== endereco; });
+            arr.unshift({ e: endereco, t: Date.now() });
+            if (arr.length > 20) {
+                arr = arr.slice(0, 20);
+            }
+            window.localStorage.setItem(HIST_KEY, JSON.stringify(arr));
+        } catch (e) {
+            /* modo privado / storage indisponível — histórico apenas não persiste */
+        }
+    }
+
+    function escaparHtml(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+        });
+    }
+
+    function histRender() {
+        var body = document.getElementById("ipv6-hist-body");
+        if (!body) {
+            return;
+        }
+        var arr = histLer();
+        if (!arr.length) {
+            body.innerHTML = '<tr><td colspan="3" class="text-secondary small">Sem histórico ainda — faça uma análise.</td></tr>';
+            return;
+        }
+        body.innerHTML = arr.map(function (it) {
+            var quando = new Date(it.t).toLocaleString("pt-BR");
+            var e = escaparHtml(it.e);
+            return "<tr class=\"small\"><td class=\"text-secondary\">" + escaparHtml(quando) + "</td>"
+                + "<td class=\"font-monospace\">" + e + "</td>"
+                + "<td><button type=\"button\" class=\"aed-btn aed-btn-neutral btn-sm\" data-replay=\"" + e
+                + "\"><span class=\"material-symbols-outlined\">replay</span> Replay</button></td></tr>";
+        }).join("");
+    }
+
+    document.addEventListener("click", function (evento) {
+        var rep = evento.target.closest("[data-replay]");
+        if (rep) {
+            var end = rep.getAttribute("data-replay");
+            var trig = document.querySelector('.tab-trigger[data-tab="analise"]');
+            if (trig) {
+                trig.click();
+            }
+            var campo = document.getElementById("ipv6Endereco");
+            if (campo) {
+                campo.value = end;
+            }
+            var form = document.getElementById("formCalc");
+            var btn = form && form.querySelector('button[type="submit"]');
+            if (btn) {
+                btn.click();
+            }
+            return;
+        }
+        var limpar = evento.target.closest("#ipv6-hist-limpar");
+        if (limpar) {
+            try { window.localStorage.removeItem(HIST_KEY); } catch (e) { /* ignore */ }
+            histRender();
+        }
+    });
+
     document.addEventListener("htmx:afterSwap", function (e) {
-        if (e.target && (e.target.id === "saidaProjetar")) {
+        if (e.target && e.target.id === "saidaProjetar") {
             renderizarMermaid(e.target);
+        }
+        if (e.target && e.target.id === "saidaCalc") {
+            var campo = document.getElementById("ipv6Endereco");
+            // só registra quando o fragmento é um resultado (não o erro/placeholder)
+            if (campo && campo.value && /contextual-block|calc-resultado/.test(e.target.innerHTML)) {
+                histSalvar(campo.value.trim());
+                histRender();
+            }
         }
     });
 
@@ -209,10 +298,12 @@
             bootAbas();
             bootCopiar();
             sincronizarExport();
+            histRender();
         });
     } else {
         bootAbas();
         bootCopiar();
         sincronizarExport();
+        histRender();
     }
 })();

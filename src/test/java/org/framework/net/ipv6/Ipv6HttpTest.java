@@ -43,6 +43,7 @@ class Ipv6HttpTest {
                 .body(containsString("data-tab=\"dominio\""))
                 .body(containsString("data-tab=\"nibbles\""))
                 .body(containsString("data-tab=\"conceitos\""))
+                .body(containsString("Histórico (neste navegador)"))
                 .body(containsString("IPv4 → IPv6: o que muda"))
                 .body(containsString("Hosts úteis = total − 2"));
     }

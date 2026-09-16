@@ -80,9 +80,29 @@
             </a>
         </div>
     </div>
+
+    {! Histórico das análises — client-side (localStorage, só neste navegador). Análogo ao Histórico
+        do IPv4, mas sem guardar endereços no servidor (privacidade). Replay refaz a análise. !}
+    <div class="card-tech p-3 shadow mt-4 history-box">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <h6 class="text-info mb-0 d-flex align-items-center gap-2"><span class="material-symbols-outlined">history</span> Histórico (neste navegador)</h6>
+            <button type="button" class="aed-btn aed-btn-neutral btn-sm" id="ipv6-hist-limpar"
+                    data-bs-toggle="tooltip" data-bs-placement="top" title="Apagar o histórico deste navegador">
+                <span class="material-symbols-outlined">delete_sweep</span> Limpar histórico
+            </button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-sm table-bordered mb-0">
+                <thead><tr class="small text-secondary"><th>Quando</th><th>Endereço / prefixo</th><th></th></tr></thead>
+                <tbody id="ipv6-hist-body">
+                    <tr><td colspan="3" class="text-secondary small">Sem histórico ainda — faça uma análise.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {/content}
 {#extraScripts}
-<script src="/ipv6/js/ipv6.js?v=20260916e"></script>
+<script src="/ipv6/js/ipv6.js?v=20260916f"></script>
 {/extraScripts}
 {/include}
