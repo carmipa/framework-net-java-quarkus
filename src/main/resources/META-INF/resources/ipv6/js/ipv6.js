@@ -61,6 +61,70 @@
         }
     });
 
+    // Localidades dinâmicas do Projetar: adicionar/remover linhas (como no IPv4).
+    function novaLinhaLocal() {
+        var row = document.createElement("div");
+        row.className = "row g-2 align-items-end proj-local-row mb-2";
+        row.innerHTML =
+            '<div class="col-lg-10 col-9"><input type="text" name="local" class="aed-input form-control" ' +
+            'placeholder="Nome da localidade / VLAN" autocomplete="off" required></div>' +
+            '<div class="col-lg-2 col-3 d-grid"><button type="button" class="aed-btn aed-btn-danger btn-sm proj-remove-local" ' +
+            'title="Remover esta localidade"><span class="material-symbols-outlined">delete</span></button></div>';
+        return row;
+    }
+
+    document.addEventListener("click", function (evento) {
+        var add = evento.target.closest("#proj-add-local");
+        if (add) {
+            var cont = document.getElementById("proj-locais-container");
+            if (cont) {
+                var row = novaLinhaLocal();
+                cont.appendChild(row);
+                var inp = row.querySelector("input");
+                if (inp) {
+                    inp.focus();
+                }
+            }
+            return;
+        }
+        var rem = evento.target.closest(".proj-remove-local");
+        if (rem) {
+            var cont2 = document.getElementById("proj-locais-container");
+            var rows = cont2 ? cont2.querySelectorAll(".proj-local-row") : [];
+            if (rows.length > 1) {
+                rem.closest(".proj-local-row").remove();
+            } else {
+                // mantém ao menos uma linha; só limpa o campo
+                var only = rem.closest(".proj-local-row").querySelector("input");
+                if (only) {
+                    only.value = "";
+                }
+            }
+        }
+    });
+
+    // Diagrama de arquitetura: renderiza o Mermaid que veio no fragmento htmx.
+    function renderizarMermaid(escopo) {
+        if (!window.mermaid) {
+            return;
+        }
+        var alvos = (escopo || document).querySelectorAll(".mermaid:not([data-processed])");
+        if (!alvos.length) {
+            return;
+        }
+        try {
+            window.mermaid.run({ nodes: alvos });
+        } catch (e) {
+            /* diagrama é auxiliar; não quebra a página */
+        }
+    }
+
+    document.addEventListener("htmx:afterSwap", function (e) {
+        if (e.target && (e.target.id === "saidaProjetar")) {
+            renderizarMermaid(e.target);
+        }
+    });
+
     // Copiar resultado da Análise: lê a textarea oculta que vem dentro do fragmento htmx trocado.
     function bootCopiar() {
         var btn = document.getElementById("btn-copiar-resultado");

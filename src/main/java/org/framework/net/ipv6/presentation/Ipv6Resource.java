@@ -146,11 +146,19 @@ public class Ipv6Resource {
             @FormParam("prefixoLan") String prefixoLan,
             @FormParam("prefixoWan") String prefixoWan,
             @FormParam("topologia") String topologia,
-            @FormParam("locais") String locais,
+            @FormParam("local") java.util.List<String> locais,
+            @FormParam("locais") String locaisTexto,
             @FormParam("eigrpAs") String eigrpAs,
             @FormParam("ospfProc") String ospfProc) {
-        java.util.List<String> lista = locais == null ? java.util.List.of()
-                : java.util.Arrays.asList(locais.split("\\r?\\n"));
+        // Localidades dinâmicas chegam como vários campos 'local'; 'locais' (textarea) é reserva.
+        java.util.List<String> lista;
+        if (locais != null && !locais.isEmpty()) {
+            lista = locais;
+        } else if (locaisTexto != null && !locaisTexto.isBlank()) {
+            lista = java.util.Arrays.asList(locaisTexto.split("\\r?\\n"));
+        } else {
+            lista = java.util.List.of();
+        }
         return resultadoProjeto.data("p", service.projetarRede(base, parsePrefixo(prefixoLan),
                 parsePrefixo(prefixoWan), topologia, lista, parseInteiro(eigrpAs, 100), parseInteiro(ospfProc, 1)));
     }

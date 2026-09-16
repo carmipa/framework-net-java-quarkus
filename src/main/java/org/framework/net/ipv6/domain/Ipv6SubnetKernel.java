@@ -729,9 +729,27 @@ public class Ipv6SubnetKernel {
         String enunciado = "Plano IPv6 para " + n + " localidade(s) em " + topo + ": " + n + " LAN(s) /"
                 + prefixoLan + " e " + totalLinks + " enlace(s) /" + prefixoWan + ", dentro de " + bruto + ".";
 
+        // Diagrama de arquitetura (Mermaid): um roteador por localidade + enlaces WAN da topologia.
+        StringBuilder mer = new StringBuilder("graph TD\n");
+        for (int i = 0; i < n; i++) {
+            mer.append("  R").append(i + 1).append("[\"").append(mermaidTexto(nomes.get(i)))
+                    .append("<br/>").append(lans.get(i).rede()).append("/").append(prefixoLan).append("\"]\n");
+        }
+        for (int k = 0; k < pares.size(); k++) {
+            mer.append("  R").append(pares.get(k)[0] + 1).append(" ---|\"").append(wans.get(k).rede())
+                    .append("/").append(prefixoWan).append("\"| R").append(pares.get(k)[1] + 1).append("\n");
+        }
+        String mermaid = mer.toString();
+
         return new ProjetoRede(baseBloco.getLower().withoutPrefixLength().toCompressedString() + "/" + prefixoBase,
                 prefixoBase, prefixoLan, prefixoWan, topo, n, totalLinks, capLan.toString(),
-                lans, wans, roteadores, rotas, ospfv3, eigrp, passos, enunciado);
+                lans, wans, roteadores, rotas, ospfv3, eigrp, passos, enunciado, mermaid);
+    }
+
+    /** Sanitiza um rótulo para o Mermaid (aspas, HTML e caracteres que quebram o diagrama). */
+    private static String mermaidTexto(String s) {
+        return s == null ? "" : s.replace("\"", "'").replace("|", "/").replace("[", "(").replace("]", ")")
+                .replace("<", "(").replace(">", ")");
     }
 
     /**
@@ -1252,7 +1270,7 @@ public class Ipv6SubnetKernel {
             String topologia, int totalLocais, int totalLinks, String capacidadeLan,
             List<ProjetoLan> lans, List<ProjetoWan> wans, List<ProjetoRoteador> roteadores,
             List<String> rotasEstaticas, String ciscoOspfv3, String ciscoEigrp,
-            List<String> passos, String enunciado) { }
+            List<String> passos, String enunciado, String topologyMermaid) { }
 
     // ---------- Laboratório de Resolução IPv6 (Engenharia Reversa) ----------
 

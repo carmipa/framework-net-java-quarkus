@@ -119,3 +119,7 @@
     .ipv6-val-bin { font-size: 1.05rem; }
     .ipv6-info-top, .ipv6-peso-bot { font-size: 0.5rem; }
 }
+
+/* Diagrama de arquitetura (Mermaid) — ocupa a largura total, rola em telas pequenas. */
+.ipv6-diagrama { overflow-x: auto; text-align: center; background: rgba(13, 17, 23, 0.6); border-radius: 8px; }
+.ipv6-diagrama svg { max-width: 100%; height: auto; }

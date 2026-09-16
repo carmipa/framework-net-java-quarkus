@@ -67,6 +67,12 @@
     <pre class="small bg-dark border border-secondary rounded p-2 mb-0 text-light">{#for r in p.rotasEstaticas}{r}
 {/for}</pre>
 
+    <h6 class="calc-secao-titulo mt-4"><span class="material-symbols-outlined" aria-hidden="true">account_tree</span> Diagrama de arquitetura ({p.topologia})</h6>
+    <div class="ipv6-diagrama card-tech p-3 mb-2">
+        <pre class="mermaid mb-0">{p.topologyMermaid}</pre>
+    </div>
+    <div class="small text-secondary mb-2">Roteadores (um por localidade) e os enlaces WAN /{p.prefixoWan} da topologia {p.topologia}. Cada nó mostra a LAN /{p.prefixoLan}.</div>
+
     <h6 class="calc-secao-titulo mt-4"><span class="material-symbols-outlined" aria-hidden="true">terminal</span> CLI Cisco por roteador (OSPFv3 + EIGRP IPv6)</h6>
     <div class="row g-3">
         {#for rt in p.roteadores}

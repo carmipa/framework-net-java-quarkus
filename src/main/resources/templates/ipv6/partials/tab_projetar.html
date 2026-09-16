@@ -38,13 +38,34 @@
                 <input type="text" class="aed-input form-control input-numeric" id="projEigrp" name="eigrpAs"
                        inputmode="numeric" maxlength="5" placeholder="100" value="100">
             </div>
-            <div class="col-lg-6 col-md-12">
-                <label for="projLocais" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">apartment</span> Localidades / VLANs (uma por linha)</label>
-                <textarea class="aed-input form-control" id="projLocais" name="locais" rows="5"
-                          placeholder="Matriz&#10;Filial-SP&#10;Data Center&#10;Wi-Fi&#10;DMZ" spellcheck="false" required>Matriz
-Filial-SP
-Data Center
-Wi-Fi</textarea>
+            <div class="col-12">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <label class="form-label text-secondary mb-0"><span class="material-symbols-outlined" aria-hidden="true">apartment</span> Localidades / departamentos / VLANs (adicione quantas quiser)</label>
+                    <button type="button" class="aed-btn aed-btn-indigo btn-sm" id="proj-add-local"
+                            data-bs-toggle="tooltip" data-bs-placement="top" title="Adicionar uma nova localidade">
+                        <span class="material-symbols-outlined">add</span> Adicionar localidade
+                    </button>
+                </div>
+                <div id="proj-locais-container">
+                    {! As linhas iniciais; o usuário adiciona/remove livremente via JS. !}
+                    <div class="row g-2 align-items-end proj-local-row mb-2">
+                        <div class="col-lg-10 col-9"><input type="text" name="local" class="aed-input form-control" value="Matriz" placeholder="Nome da localidade / VLAN" autocomplete="off" required></div>
+                        <div class="col-lg-2 col-3 d-grid"><button type="button" class="aed-btn aed-btn-danger btn-sm proj-remove-local" title="Remover esta localidade"><span class="material-symbols-outlined">delete</span></button></div>
+                    </div>
+                    <div class="row g-2 align-items-end proj-local-row mb-2">
+                        <div class="col-lg-10 col-9"><input type="text" name="local" class="aed-input form-control" value="Filial-SP" placeholder="Nome da localidade / VLAN" autocomplete="off" required></div>
+                        <div class="col-lg-2 col-3 d-grid"><button type="button" class="aed-btn aed-btn-danger btn-sm proj-remove-local" title="Remover esta localidade"><span class="material-symbols-outlined">delete</span></button></div>
+                    </div>
+                    <div class="row g-2 align-items-end proj-local-row mb-2">
+                        <div class="col-lg-10 col-9"><input type="text" name="local" class="aed-input form-control" value="Data Center" placeholder="Nome da localidade / VLAN" autocomplete="off" required></div>
+                        <div class="col-lg-2 col-3 d-grid"><button type="button" class="aed-btn aed-btn-danger btn-sm proj-remove-local" title="Remover esta localidade"><span class="material-symbols-outlined">delete</span></button></div>
+                    </div>
+                    <div class="row g-2 align-items-end proj-local-row mb-2">
+                        <div class="col-lg-10 col-9"><input type="text" name="local" class="aed-input form-control" value="Wi-Fi" placeholder="Nome da localidade / VLAN" autocomplete="off" required></div>
+                        <div class="col-lg-2 col-3 d-grid"><button type="button" class="aed-btn aed-btn-danger btn-sm proj-remove-local" title="Remover esta localidade"><span class="material-symbols-outlined">delete</span></button></div>
+                    </div>
+                </div>
+                <div class="form-text text-muted">Cada localidade recebe uma LAN contígua no prefixo alvo. Em estrela, a 1ª é o hub.</div>
             </div>
         </div>
         <div class="d-flex gap-2 mt-3">
