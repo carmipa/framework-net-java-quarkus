@@ -59,11 +59,17 @@ class Ipv6SubnetKernelTest {
     }
 
     @Test
-    void solicitedNodeSoParaUnicast() {
-        // Unicast global: ff02::1:ff + 24 bits baixos (RFC 4291).
+    void solicitedNodeParaTodoUnicast() {
+        // Unicast global: ff02::1:ff + 24 bits baixos (RFC 4291 §2.7.1).
         assertTrue(kernel.analisar("2606:4700:4700::1111").solicitedNode().startsWith("ff02::1:ff"));
-        // Multicast não tem solicited-node.
+        // Link-local É unicast e TEM solicited-node (usado no DAD/NDP) — gabarito RFC 4291.
+        assertEquals("ff02::1:ff00:1", kernel.analisar("fe80::1").solicitedNode());
+        // ULA também.
+        assertTrue(kernel.analisar("fd00::abcd").solicitedNode().startsWith("ff02::1:ff"));
+        // Multicast, não-especificado e loopback NÃO têm solicited-node.
         assertEquals("—", kernel.analisar("ff02::1").solicitedNode());
+        assertEquals("—", kernel.analisar("::").solicitedNode());
+        assertEquals("—", kernel.analisar("::1").solicitedNode());
     }
 
     @Test

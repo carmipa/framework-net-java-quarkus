@@ -88,7 +88,12 @@ public class Ipv6SubnetKernel {
         BigInteger total = bloco.getCount();
 
         FaixaEspecial faixa = classificar(host);
-        boolean unicastGlobalOuUla = faixa.tipo().equals("Global unicast") || faixa.tipo().equals("ULA / Privado");
+        // Solicited-node existe para todo endereço UNICAST (RFC 4291 §2.7.1) — global, ULA, link-local,
+        // documentação etc. Só NÃO se aplica a multicast, ao não-especificado (::) e ao loopback (::1,
+        // que não vive num enlace). Antes só global/ULA tinham — link-local (usado no DAD/NDP) ficava sem.
+        boolean temSolicitedNode = !faixa.tipo().equals("Multicast")
+                && !faixa.tipo().equals("Não especificado")
+                && !faixa.tipo().equals("Loopback");
 
         return new AnaliseIpv6(
                 bruto,
@@ -104,7 +109,7 @@ public class Ipv6SubnetKernel {
                 interfaceId(host),
                 faixa.tipo(),
                 faixa.descricao(),
-                unicastGlobalOuUla ? solicitedNode(host) : "—",
+                temSolicitedNode ? solicitedNode(host) : "—",
                 host.toReverseDNSLookupString(),
                 binarioHextetos(host));
     }
@@ -1237,10 +1242,22 @@ public class Ipv6SubnetKernel {
         return sb.toString();
     }
 
-    /** Multicast solicited-node de um unicast: ff02::1:ff + 24 bits baixos do endereço (RFC 4291). */
+    /**
+     * Multicast solicited-node de um unicast: ff02::1:ff + 24 bits baixos do endereço (RFC 4291).
+     * Monta o endereço de 16 bytes e usa a forma canônica RFC 5952 da biblioteca (sem zeros à
+     * esquerda no último hexteto), consistente com o resto do app — em vez de formatar à mão.
+     */
     private String solicitedNode(IPv6Address host) {
         byte[] b = host.getLower().getBytes();
-        return String.format("ff02::1:ff%02x:%02x%02x", b[13] & 0xFF, b[14] & 0xFF, b[15] & 0xFF);
+        byte[] sn = new byte[16];
+        sn[0] = (byte) 0xff;
+        sn[1] = 0x02;
+        sn[11] = 0x01;
+        sn[12] = (byte) 0xff;
+        sn[13] = b[13];
+        sn[14] = b[14];
+        sn[15] = b[15];
+        return new IPv6Address(sn).toCompressedString();
     }
 
     private List<String> binarioHextetos(IPv6Address host) {
