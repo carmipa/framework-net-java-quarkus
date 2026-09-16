@@ -246,8 +246,24 @@ public class Ipv6SubnetKernel {
                 + " · 2) inverte o bit U/L do 1º octeto (" + String.format("%02x", m[0] & 0xFF)
                 + " XOR 02 = " + String.format("%02x", full[8] & 0xFF)
                 + ") · 3) insere FF:FE no meio · 4) Interface ID = " + iid;
+
+        // Grade dos 64 bits do Interface ID, destacando o bit U/L invertido (pos 6) e o FF:FE (pos 24–39).
+        List<Ipv6AnaliseRica.HextetoGrade> iidGrade = new ArrayList<>(4);
+        for (int h = 0; h < 4; h++) {
+            int hextet = ((full[8 + h * 2] & 0xFF) << 8) | (full[8 + h * 2 + 1] & 0xFF);
+            List<Ipv6AnaliseRica.BitCelula> cel = new ArrayList<>(16);
+            for (int j = 0; j < 16; j++) {
+                int pos = h * 16 + j;
+                char val = ((hextet >> (15 - j)) & 1) == 1 ? '1' : '0';
+                String marca = pos == 6 ? "flip" : (pos >= 24 && pos < 40 ? "fffe" : "iid");
+                cel.add(new Ipv6AnaliseRica.BitCelula(pos + 1, 63 - pos, val, 1L << (15 - j),
+                        marca + (val == '1' ? " on" : " off")));
+            }
+            iidGrade.add(new Ipv6AnaliseRica.HextetoGrade(h + 1, String.format("%04x", hextet), cel));
+        }
+
         return new Eui64Result(macNorm, iid, addr.toCompressedString(),
-                new IPv6Address(rede).toCompressedString() + "/64", passos);
+                new IPv6Address(rede).toCompressedString() + "/64", passos, iidGrade);
     }
 
     /**
@@ -314,11 +330,27 @@ public class Ipv6SubnetKernel {
                         + "). " + (mesmaLan ? "Estão na mesma /64 — mesma LAN." : "Estão em /64 diferentes.")
                         + " Distância: " + distancia + " endereço(s) entre A e B.";
 
+        // Grade dos 128 bits de A, marcando o prefixo comum (verde) x a partir da divergência (âmbar).
+        List<Ipv6AnaliseRica.HextetoGrade> gradeComum = new ArrayList<>(8);
+        for (int h = 0; h < 8; h++) {
+            int hextet = ((ba[h * 2] & 0xFF) << 8) | (ba[h * 2 + 1] & 0xFF);
+            List<Ipv6AnaliseRica.BitCelula> cel = new ArrayList<>(16);
+            for (int j = 0; j < 16; j++) {
+                int pos = h * 16 + j;
+                char val = ((hextet >> (15 - j)) & 1) == 1 ? '1' : '0';
+                String marca = pos < bitsComuns ? "comum" : "diverge";
+                cel.add(new Ipv6AnaliseRica.BitCelula(pos + 1, 127 - pos, val, 1L << (15 - j),
+                        marca + (val == '1' ? " on" : " off")));
+            }
+            gradeComum.add(new Ipv6AnaliseRica.HextetoGrade(h + 1, hexDoBin(
+                    "0".repeat(16 - Integer.toBinaryString(hextet).length()) + Integer.toBinaryString(hextet)), cel));
+        }
+
         return new ComparacaoIpv6(
                 ra.entrada(), ra.comprimido(), ra.prefixo(), ra.temPrefixo(), ra.tipo(),
                 rb.entrada(), rb.comprimido(), rb.prefixo(), rb.temPrefixo(), rb.tipo(),
                 mesmoEndereco, mesmaLan, bitsComuns, "/" + bitsComuns,
-                contencao(ra, rb, ha, hb), distancia.toString(), explic);
+                contencao(ra, rb, ha, hb), distancia.toString(), explic, gradeComum);
     }
 
     /** Host (sem prefixo, sem zone index) já validado por {@link #analisar}. */
@@ -709,9 +741,9 @@ public class Ipv6SubnetKernel {
             int bitsInterface, String gatewayLinkLocal, List<DelegacaoInfo> delegacao,
             String ciscoCli, String enunciado) { }
 
-    /** Resultado do EUI-64: MAC normalizado, Interface ID, endereço SLAAC e os passos. */
+    /** Resultado do EUI-64: MAC normalizado, Interface ID, endereço SLAAC, passos e grade de bits do IID. */
     public record Eui64Result(String mac, String interfaceId, String enderecoSlaac,
-            String prefixoRede, String passos) { }
+            String prefixoRede, String passos, List<Ipv6AnaliseRica.HextetoGrade> iidGrade) { }
 
     /** Resultado da geração de ULA (RFC 4193): prefixo /48, /64, o Global ID e a explicação. */
     public record UlaResult(String ula48, String ula64, String globalId, String explicacao) { }
@@ -725,5 +757,6 @@ public class Ipv6SubnetKernel {
             String aEntrada, String aComprimido, int aPrefixo, boolean aTemPrefixo, String aTipo,
             String bEntrada, String bComprimido, int bPrefixo, boolean bTemPrefixo, String bTipo,
             boolean mesmoEndereco, boolean mesmaLan, int bitsComuns, String prefixoComum,
-            String contencao, String distancia, String explicacao) { }
+            String contencao, String distancia, String explicacao,
+            List<Ipv6AnaliseRica.HextetoGrade> gradeComum) { }
 }

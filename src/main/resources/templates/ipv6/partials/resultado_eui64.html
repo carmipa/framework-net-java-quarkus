@@ -26,4 +26,29 @@
     <p class="calc-explicacao">
         <span class="material-symbols-outlined" aria-hidden="true">school</span> {e.passos}
     </p>
+
+    <h6 class="calc-secao-titulo mt-3">
+        <span class="material-symbols-outlined" aria-hidden="true">bar_chart</span>
+        Interface ID bit a bit (flip U/L + FF:FE)
+    </h6>
+    <div class="ipv6-bit-container">
+        {#for hx in e.iidGrade}
+        <div class="ipv6-octeto-group">
+            <div class="ipv6-bit-row shadow-sm">
+                {#for bit in hx.bits}
+                <div class="ipv6-bit-col {bit.css}">
+                    <div class="ipv6-info-top">#{bit.num}</div>
+                    <div class="ipv6-val-bin">{bit.val}</div>
+                </div>
+                {/for}
+            </div>
+            <div class="ipv6-octeto-label">{hx.hex}</div>
+        </div>
+        {/for}
+    </div>
+    <div class="small mt-1">
+        <span class="ipv6-legenda ipv6-mark-flip">bit U/L invertido (XOR 0x02)</span>
+        <span class="ipv6-legenda ipv6-mark-fffe">FF:FE inserido</span>
+        <span class="ipv6-legenda ipv6-bit-iface">demais bits do IID</span>
+    </div>
 </div>

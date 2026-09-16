@@ -39,4 +39,28 @@
     <p class="calc-explicacao">
         <span class="material-symbols-outlined" aria-hidden="true">school</span> {c.explicacao}
     </p>
+
+    <h6 class="calc-secao-titulo mt-3">
+        <span class="material-symbols-outlined" aria-hidden="true">bar_chart</span>
+        Prefixo comum bit a bit ({c.prefixoComum}) — endereço A
+    </h6>
+    <div class="ipv6-bit-container">
+        {#for hx in c.gradeComum}
+        <div class="ipv6-octeto-group">
+            <div class="ipv6-bit-row shadow-sm">
+                {#for bit in hx.bits}
+                <div class="ipv6-bit-col {bit.css}">
+                    <div class="ipv6-info-top">#{bit.num}</div>
+                    <div class="ipv6-val-bin">{bit.val}</div>
+                </div>
+                {/for}
+            </div>
+            <div class="ipv6-octeto-label">{hx.hex}</div>
+        </div>
+        {/for}
+    </div>
+    <div class="small mt-1">
+        <span class="ipv6-legenda ipv6-mark-comum">prefixo comum (iguais em A e B)</span>
+        <span class="ipv6-legenda ipv6-mark-diverge">a partir da divergência</span>
+    </div>
 </div>

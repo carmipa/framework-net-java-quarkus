@@ -94,6 +94,23 @@
 .ipv6-bit-col.iface.on  .ipv6-val-bin { background: #38bdf8; color: #04202b; }
 .ipv6-bit-col.iface.off .ipv6-val-bin { background: rgba(56, 189, 248, 0.12); color: #7dd3fc; }
 
+/* Marcadores extras: IID (flip U/L, FF:FE) e Comparador (prefixo comum x divergente) */
+.ipv6-bit-col.iid.on  .ipv6-val-bin { background: #38bdf8; color: #04202b; }
+.ipv6-bit-col.iid.off .ipv6-val-bin { background: rgba(56, 189, 248, 0.12); color: #7dd3fc; }
+.ipv6-bit-col.flip.on  .ipv6-val-bin,
+.ipv6-bit-col.flip.off .ipv6-val-bin { background: #f778ba; color: #2b0417; font-weight: 800; }
+.ipv6-bit-col.fffe.on  .ipv6-val-bin { background: #f0883e; color: #2b1204; }
+.ipv6-bit-col.fffe.off .ipv6-val-bin { background: rgba(240, 136, 62, 0.16); color: #f0b17e; }
+.ipv6-bit-col.comum.on  .ipv6-val-bin { background: #2dd4bf; color: #04231f; }
+.ipv6-bit-col.comum.off .ipv6-val-bin { background: rgba(45, 212, 191, 0.12); color: #5eead4; }
+.ipv6-bit-col.diverge.on  .ipv6-val-bin { background: #f0883e; color: #2b1204; }
+.ipv6-bit-col.diverge.off .ipv6-val-bin { background: rgba(240, 136, 62, 0.12); color: #f0b17e; }
+
+.ipv6-mark-flip   { color: #f778ba; background: rgba(247, 120, 186, 0.15); }
+.ipv6-mark-fffe   { color: #f0b17e; background: rgba(240, 136, 62, 0.15); }
+.ipv6-mark-comum  { color: #5eead4; background: rgba(45, 212, 191, 0.15); }
+.ipv6-mark-diverge{ color: #f0b17e; background: rgba(240, 136, 62, 0.15); }
+
 @media (max-width: 575.98px) {
     .ipv6-bit-col { width: 1.4rem; min-width: 1.4rem; }
     .ipv6-val-bin { font-size: 0.82rem; }
