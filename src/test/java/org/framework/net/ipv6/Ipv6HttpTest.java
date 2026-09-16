@@ -47,14 +47,80 @@ class Ipv6HttpTest {
     }
 
     @Test
-    void paginaResolucaoCarregaComFormulario() {
+    void paginaResolucaoCarregaComAbasProjetarEEngenharia() {
         given()
                 .when().get("/ipv6/resolucao")
                 .then()
                 .statusCode(200)
                 .contentType(containsString("text/html"))
                 .body(containsString("Resolução IPv6"))
-                .body(containsString("hx-post=\"/ipv6/api/resolver\""));
+                .body(containsString("data-active-tab=\"projetar\""))
+                .body(containsString("data-tab=\"engenharia\""))
+                .body(containsString("hx-post=\"/ipv6/api/projetar\""))
+                .body(containsString("hx-post=\"/ipv6/api/engenharia\""));
+    }
+
+    @Test
+    void projetarGeraPlanoComLansWansECli() {
+        given()
+                .contentType(FORM)
+                .formParam("base", "2001:db8::/48")
+                .formParam("prefixoLan", "64")
+                .formParam("prefixoWan", "127")
+                .formParam("topologia", "estrela")
+                .formParam("locais", "Matriz\nFilial\nDataCenter")
+                .formParam("ospfProc", "1")
+                .formParam("eigrpAs", "100")
+                .when().post("/ipv6/api/projetar")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("Plano de rede IPv6"))
+                .body(containsString("2001:db8::/64"))
+                .body(containsString("ipv6 unicast-routing"))
+                .body(containsString("ipv6 router ospf"));
+    }
+
+    @Test
+    void projetarLanNaoMaisEspecificoVolta400() {
+        given()
+                .contentType(FORM)
+                .header("HX-Request", "true")
+                .formParam("base", "2001:db8::/48")
+                .formParam("prefixoLan", "48")
+                .formParam("prefixoWan", "127")
+                .formParam("topologia", "estrela")
+                .formParam("locais", "A")
+                .when().post("/ipv6/api/projetar")
+                .then()
+                .statusCode(400)
+                .body(containsString("específico"));
+    }
+
+    @Test
+    void engenhariaReversaLeConfigCiscoIpv6() {
+        given()
+                .contentType(FORM)
+                .formParam("config", "hostname R1\nipv6 unicast-routing\ninterface GigabitEthernet0/0\n ipv6 address 2001:db8:0:1::1/64\nipv6 route 2001:db8:0:2::/64 2001:db8:0:ffff::1\nipv6 router ospf 1")
+                .when().post("/ipv6/api/engenharia")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("GigabitEthernet0/0"))
+                .body(containsString("2001:db8:0:1::1/64"))
+                .body(containsString("OSPFv3"));
+    }
+
+    @Test
+    void engenhariaReversaVaziaVolta400() {
+        given()
+                .contentType(FORM)
+                .header("HX-Request", "true")
+                .formParam("config", "")
+                .when().post("/ipv6/api/engenharia")
+                .then()
+                .statusCode(400)
+                .body(containsString("Cole uma configuração"));
     }
 
     @Test

@@ -61,6 +61,14 @@ public class Ipv6Resource {
     Template resultadoResolucao;
 
     @Inject
+    @Location("ipv6/partials/resultado_projeto.html")
+    Template resultadoProjeto;
+
+    @Inject
+    @Location("ipv6/partials/resultado_engenharia.html")
+    Template resultadoEngenharia;
+
+    @Inject
     @Location("ipv6/partials/resultado_analise.html")
     Template resultadoAnalise;
 
@@ -126,6 +134,46 @@ public class Ipv6Resource {
         java.util.List<String> lista = nomes == null ? java.util.List.of()
                 : java.util.Arrays.asList(nomes.split("\\r?\\n"));
         return resultadoResolucao.data("p", service.planejarDelegacao(base, parsePrefixo(prefixoAlvo), lista));
+    }
+
+    /** Projeta uma rede IPv6 completa (aba Projetar do Laboratório de Resolução). */
+    @POST
+    @Path("/api/projetar")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance projetar(
+            @FormParam("base") String base,
+            @FormParam("prefixoLan") String prefixoLan,
+            @FormParam("prefixoWan") String prefixoWan,
+            @FormParam("topologia") String topologia,
+            @FormParam("locais") String locais,
+            @FormParam("eigrpAs") String eigrpAs,
+            @FormParam("ospfProc") String ospfProc) {
+        java.util.List<String> lista = locais == null ? java.util.List.of()
+                : java.util.Arrays.asList(locais.split("\\r?\\n"));
+        return resultadoProjeto.data("p", service.projetarRede(base, parsePrefixo(prefixoLan),
+                parsePrefixo(prefixoWan), topologia, lista, parseInteiro(eigrpAs, 100), parseInteiro(ospfProc, 1)));
+    }
+
+    /** Engenharia reversa de configuração Cisco IPv6 (aba do Laboratório de Resolução). */
+    @POST
+    @Path("/api/engenharia")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance engenharia(@FormParam("config") String config) {
+        return resultadoEngenharia.data("e", service.engenhariaReversa(config));
+    }
+
+    private int parseInteiro(String bruto, int padrao) {
+        String t = bruto == null ? "" : bruto.strip();
+        if (t.isEmpty()) {
+            return padrao;
+        }
+        try {
+            return Integer.parseInt(t);
+        } catch (NumberFormatException ex) {
+            return padrao;
+        }
     }
 
     /** Analisa um endereço ou prefixo IPv6 (normalização, tipo, rede, faixa, IID, binário). */

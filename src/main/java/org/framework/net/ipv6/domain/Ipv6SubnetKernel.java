@@ -560,6 +560,287 @@ public class Ipv6SubnetKernel {
                 bloco.getCount().toString());
     }
 
+    /**
+     * PROPÓSITO DE NEGÓCIO: Laboratório de Resolução IPv6 (aba Projetar) — dos requisitos ao plano de
+     * endereçamento. Aloca uma LAN /prefixoLan por localidade, enlaces WAN /prefixoWan conforme a
+     * topologia, e gera gateways, rotas estáticas e CLI Cisco (OSPFv3 + EIGRP IPv6) por roteador. O
+     * análogo IPv6 do "Projetar" do IPv4 — mas por PREFIXO e QUANTIDADE de sub-redes, não por hosts.
+     *
+     * INVARIANTES DO DOMÍNIO: LAN comum é /64 (SLAAC); enlace ponto-a-ponto é /127 (RFC 6164) ou o
+     * prefixo informado; sem broadcast e sem "hosts úteis". Alvos sempre mais específicos que a base;
+     * LANs e WANs não se sobrepõem (alocação sequencial). Topologia (árvore) tem n−1 enlaces; malha
+     * tem n(n−1)/2.
+     *
+     * COMPORTAMENTO EM CASO DE FALHA: base sem prefixo, prefixos incoerentes, nenhuma localidade ou
+     * estouro de capacidade lançam {@link Ipv6Exception}.
+     */
+    public ProjetoRede projetarRede(String baseCidr, int prefixoLan, int prefixoWan,
+            String topologia, List<String> locais, int eigrpAs, int ospfProc) {
+        String bruto = baseCidr == null ? "" : baseCidr.strip().replace("\"", "").replace("'", "");
+        if (bruto.isEmpty()) {
+            throw new Ipv6Exception("Informe o bloco base em CIDR (ex.: 2001:db8::/48).");
+        }
+        if (prefixoLan < 1 || prefixoLan > 128 || prefixoWan < 1 || prefixoWan > 128) {
+            throw new Ipv6Exception("Prefixos de LAN e WAN devem estar entre /1 e /128.");
+        }
+        IPAddressString parser = new IPAddressString(bruto);
+        if (!parser.isValid() || !parser.isIPv6()) {
+            throw new Ipv6Exception("Bloco base IPv6 inválido (" + bruto + ").");
+        }
+        IPv6Address addr = parser.getAddress().toIPv6();
+        Integer pbase = addr.getNetworkPrefixLength();
+        if (pbase == null) {
+            throw new Ipv6Exception("Informe o prefixo do bloco base (ex.: 2001:db8::/48), não só o endereço.");
+        }
+        int prefixoBase = pbase;
+        if (prefixoLan <= prefixoBase) {
+            throw new Ipv6Exception("O prefixo de LAN /" + prefixoLan + " precisa ser mais específico que a base /"
+                    + prefixoBase + " (ex.: base /48 → LAN /64).");
+        }
+        if (prefixoWan < prefixoLan) {
+            throw new Ipv6Exception("O prefixo de WAN /" + prefixoWan + " deve ser igual ou mais específico que a LAN /"
+                    + prefixoLan + " (enlace ponto-a-ponto usa /127).");
+        }
+        List<String> nomes = new ArrayList<>();
+        if (locais != null) {
+            for (String n : locais) {
+                if (n != null && !n.strip().isEmpty()) {
+                    nomes.add(n.strip());
+                }
+            }
+        }
+        if (nomes.isEmpty()) {
+            throw new Ipv6Exception("Informe ao menos uma localidade (uma por linha).");
+        }
+        String topo = topologia == null ? "estrela" : topologia.strip().toLowerCase();
+        int n = nomes.size();
+        int totalLinks = switch (topo) {
+            case "malha" -> n * (n - 1) / 2;
+            default -> Math.max(0, n - 1); // estrela e estrela-estendida são árvores: n-1 enlaces
+        };
+
+        // Capacidade: LANs consomem n blocos /prefixoLan; WANs consomem totalLinks blocos /prefixoWan.
+        BigInteger capLan = BigInteger.TWO.pow(prefixoLan - prefixoBase);
+        if (BigInteger.valueOf(n).compareTo(capLan) > 0) {
+            throw new Ipv6Exception("Um /" + prefixoBase + " em /" + prefixoLan + " comporta " + capLan
+                    + " LANs; você pediu " + n + ".");
+        }
+
+        IPv6Address baseBloco = addr.toPrefixBlock();
+        BigInteger inicio = new BigInteger(1, baseBloco.getLower().getBytes());
+        BigInteger passoLan = BigInteger.TWO.pow(128 - prefixoLan);
+        BigInteger passoWan = BigInteger.TWO.pow(128 - prefixoWan);
+
+        List<ProjetoLan> lans = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            BigInteger v = inicio.add(passoLan.multiply(BigInteger.valueOf(i)));
+            IPv6Address rede = new IPv6Address(paraBytes16(v));
+            String gw = new IPv6Address(paraBytes16(v.add(BigInteger.ONE))).toCompressedString();
+            lans.add(new ProjetoLan(i + 1, nomes.get(i), rede.toCompressedString(), "/" + prefixoLan,
+                    gw, new IPv6Address(paraBytes16(v.add(BigInteger.ONE))).toCompressedString(),
+                    ultimoDoBloco(v, passoLan), BigInteger.TWO.pow(128 - prefixoLan).toString()));
+        }
+
+        // WANs começam após as LANs, alinhados ao passo da WAN.
+        BigInteger apos = inicio.add(passoLan.multiply(BigInteger.valueOf(n)));
+        BigInteger resto = apos.mod(passoWan);
+        BigInteger wanBase = resto.signum() == 0 ? apos : apos.add(passoWan.subtract(resto));
+
+        // Pares de enlace (índices de localidade) conforme a topologia.
+        List<int[]> pares = new ArrayList<>();
+        if ("malha".equals(topo)) {
+            for (int a = 0; a < n; a++) {
+                for (int b = a + 1; b < n; b++) {
+                    pares.add(new int[] {a, b});
+                }
+            }
+        } else if ("estrela-estendida".equals(topo) && n >= 3) {
+            pares.add(new int[] {0, 1});                 // núcleo — distribuição
+            for (int a = 2; a < n; a++) {
+                pares.add(new int[] {1, a});             // distribuição — acesso
+            }
+        } else { // estrela (hub = 1ª localidade)
+            for (int a = 1; a < n; a++) {
+                pares.add(new int[] {0, a});
+            }
+        }
+
+        int offset = prefixoWan >= 127 ? 0 : 1; // /127 usa ::0 e ::1 (RFC 6164)
+        List<ProjetoWan> wans = new ArrayList<>(pares.size());
+        for (int k = 0; k < pares.size(); k++) {
+            BigInteger v = wanBase.add(passoWan.multiply(BigInteger.valueOf(k)));
+            IPv6Address rede = new IPv6Address(paraBytes16(v));
+            String ipA = new IPv6Address(paraBytes16(v.add(BigInteger.valueOf(offset)))).toCompressedString();
+            String ipB = new IPv6Address(paraBytes16(v.add(BigInteger.valueOf(offset + 1L)))).toCompressedString();
+            wans.add(new ProjetoWan(k + 1, nomes.get(pares.get(k)[0]) + " ↔ " + nomes.get(pares.get(k)[1]),
+                    rede.toCompressedString(), "/" + prefixoWan, ipA, ipB,
+                    nomes.get(pares.get(k)[0]), nomes.get(pares.get(k)[1])));
+        }
+
+        // CLI por roteador (um por localidade).
+        List<ProjetoRoteador> roteadores = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            StringBuilder cli = new StringBuilder();
+            cli.append("hostname R").append(i + 1).append("-").append(nomes.get(i).replaceAll("\\s+", "_")).append('\n');
+            cli.append("ipv6 unicast-routing\n");
+            cli.append("interface GigabitEthernet0/0\n description LAN ").append(nomes.get(i)).append('\n');
+            cli.append(" ipv6 address ").append(lans.get(i).gateway()).append("/").append(prefixoLan).append('\n');
+            cli.append(" ipv6 ospf ").append(ospfProc).append(" area 0\n no shutdown\n");
+            int serial = 0;
+            for (int k = 0; k < pares.size(); k++) {
+                int a = pares.get(k)[0];
+                int b = pares.get(k)[1];
+                if (a == i || b == i) {
+                    String meu = a == i ? wans.get(k).ipA() : wans.get(k).ipB();
+                    cli.append("interface Serial0/0/").append(serial++).append('\n');
+                    cli.append(" description WAN ").append(wans.get(k).nome()).append('\n');
+                    cli.append(" ipv6 address ").append(meu).append("/").append(prefixoWan).append('\n');
+                    cli.append(" ipv6 ospf ").append(ospfProc).append(" area 0\n no shutdown\n");
+                }
+            }
+            cli.append("ipv6 router ospf ").append(ospfProc).append('\n');
+            cli.append(" router-id ").append(i + 1).append(".").append(i + 1).append(".").append(i + 1).append(".").append(i + 1).append('\n');
+            cli.append("ipv6 router eigrp ").append(eigrpAs).append("\n eigrp router-id ")
+                    .append(i + 1).append(".").append(i + 1).append(".").append(i + 1).append(".").append(i + 1).append("\n no shutdown");
+            roteadores.add(new ProjetoRoteador("R" + (i + 1), nomes.get(i), cli.toString()));
+        }
+
+        List<String> rotas = new ArrayList<>();
+        rotas.add("! Rotas estáticas de exemplo (alternativa ao OSPFv3/EIGRP):");
+        if ("estrela".equals(topo) || "estrela-estendida".equals(topo)) {
+            rotas.add("! Nos roteadores de borda (spokes), rota default para o hub:");
+            rotas.add("ipv6 route ::/0 " + (wans.isEmpty() ? "<ip-do-hub>" : wans.get(0).ipA()));
+            rotas.add("! No hub, uma rota para cada LAN remota via o enlace correspondente.");
+        } else {
+            rotas.add("! Em malha, prefira protocolo dinâmico (OSPFv3/EIGRP) — rotas estáticas não escalam.");
+        }
+
+        String ospfv3 = "ipv6 unicast-routing\nipv6 router ospf " + ospfProc
+                + "\n! habilite 'ipv6 ospf " + ospfProc + " area 0' em cada interface";
+        String eigrp = "ipv6 unicast-routing\nipv6 router eigrp " + eigrpAs + "\n no shutdown";
+
+        List<String> passos = List.of(
+                "1) Base /" + prefixoBase + " → " + n + " LAN(s) /" + prefixoLan + " contíguas (uma por localidade).",
+                "2) Gateway de cada LAN = ::1 do bloco (convenção).",
+                "3) Topologia " + topo + " → " + totalLinks + " enlace(s) WAN /" + prefixoWan + " (RFC 6164 para /127).",
+                "4) OSPFv3 (processo " + ospfProc + ") ou EIGRP IPv6 (AS " + eigrpAs + ") habilitado por interface.",
+                "5) Sem broadcast e sem 'hosts úteis': cada /64 tem 2^64 endereços via SLAAC.");
+
+        String enunciado = "Plano IPv6 para " + n + " localidade(s) em " + topo + ": " + n + " LAN(s) /"
+                + prefixoLan + " e " + totalLinks + " enlace(s) /" + prefixoWan + ", dentro de " + bruto + ".";
+
+        return new ProjetoRede(baseBloco.getLower().withoutPrefixLength().toCompressedString() + "/" + prefixoBase,
+                prefixoBase, prefixoLan, prefixoWan, topo, n, totalLinks, capLan.toString(),
+                lans, wans, roteadores, rotas, ospfv3, eigrp, passos, enunciado);
+    }
+
+    /**
+     * PROPÓSITO DE NEGÓCIO: Engenharia Reversa IPv6 — lê uma configuração Cisco IPv6 colada e
+     * reconstrói interfaces, endereços, rotas e o processo de roteamento, apontando achados. O
+     * análogo IPv6 da aba "Engenharia reversa" do IPv4.
+     *
+     * INVARIANTES DO DOMÍNIO: parsing puramente textual, sem executar nada; classifica cada endereço
+     * pelo tipo IANA (reusa {@link #analisar}); nunca inventa dado ausente.
+     *
+     * COMPORTAMENTO EM CASO DE FALHA: configuração vazia lança {@link Ipv6Exception}; linha
+     * malformada vira achado, não exceção.
+     */
+    public EngenhariaReversaIpv6 engenhariaReversa(String config) {
+        String txt = config == null ? "" : config.strip();
+        if (txt.isEmpty()) {
+            throw new Ipv6Exception("Cole uma configuração Cisco IPv6 para analisar.");
+        }
+        String hostname = "";
+        boolean unicastRouting = false;
+        List<InterfaceLida> interfaces = new ArrayList<>();
+        List<RotaLida> rotas = new ArrayList<>();
+        List<String> protocolos = new ArrayList<>();
+        List<String> achados = new ArrayList<>();
+
+        String ifAtual = null;
+        String descAtual = null;
+        List<String> endsAtual = new ArrayList<>();
+        for (String linhaBruta : txt.split("\\r?\\n")) {
+            String linha = linhaBruta.strip();
+            String low = linha.toLowerCase();
+            if (low.startsWith("hostname ")) {
+                hostname = linha.substring(9).strip();
+            } else if (low.equals("ipv6 unicast-routing")) {
+                unicastRouting = true;
+            } else if (low.startsWith("interface ")) {
+                if (ifAtual != null) {
+                    interfaces.add(new InterfaceLida(ifAtual, descAtual == null ? "" : descAtual, List.copyOf(endsAtual)));
+                }
+                ifAtual = linha.substring(10).strip();
+                descAtual = null;
+                endsAtual = new ArrayList<>();
+            } else if (low.startsWith("description ") && ifAtual != null) {
+                descAtual = linha.substring(12).strip();
+            } else if (low.startsWith("ipv6 address ") && ifAtual != null) {
+                String v = linha.substring(13).strip();
+                if (!v.toLowerCase().contains("autoconfig") && !v.toLowerCase().startsWith("dhcp")) {
+                    endsAtual.add(v);
+                }
+            } else if (low.startsWith("ipv6 route ")) {
+                String[] p = linha.substring(11).strip().split("\\s+");
+                if (p.length >= 2) {
+                    rotas.add(new RotaLida(p[0], p[p.length - 1]));
+                } else {
+                    achados.add("Rota IPv6 malformada: '" + linha + "'");
+                }
+            } else if (low.startsWith("ipv6 router ospf")) {
+                protocolos.add("OSPFv3 (" + linha.replaceFirst("(?i)ipv6 router ", "") + ")");
+            } else if (low.startsWith("ipv6 router eigrp")) {
+                protocolos.add("EIGRP IPv6 (" + linha.replaceFirst("(?i)ipv6 router ", "") + ")");
+            }
+        }
+        if (ifAtual != null) {
+            interfaces.add(new InterfaceLida(ifAtual, descAtual == null ? "" : descAtual, List.copyOf(endsAtual)));
+        }
+
+        // Enriquecer cada endereço com tipo e prefixo; coletar prefixos de rede.
+        List<EnderecoLido> enderecos = new ArrayList<>();
+        for (InterfaceLida it : interfaces) {
+            for (String e : it.enderecos()) {
+                String tipo;
+                String prefixo = e.contains("/") ? e.substring(e.indexOf('/')) : "/128";
+                try {
+                    tipo = analisar(e).tipo();
+                } catch (Ipv6Exception ex) {
+                    tipo = "inválido";
+                    achados.add("Endereço IPv6 inválido em " + it.nome() + ": '" + e + "'");
+                }
+                enderecos.add(new EnderecoLido(it.nome(), e, prefixo, tipo));
+            }
+        }
+
+        // Achados de configuração.
+        if (!unicastRouting && (!protocolos.isEmpty() || interfaces.size() > 1)) {
+            achados.add("Falta 'ipv6 unicast-routing': sem isso o roteador não encaminha IPv6 entre interfaces.");
+        }
+        long semEndereco = interfaces.stream().filter(i -> i.enderecos().isEmpty()).count();
+        if (semEndereco > 0) {
+            achados.add(semEndereco + " interface(s) sem endereço IPv6 configurado.");
+        }
+        if (interfaces.isEmpty()) {
+            achados.add("Nenhuma interface encontrada na configuração.");
+        }
+        if (protocolos.isEmpty() && rotas.isEmpty() && interfaces.size() > 1) {
+            achados.add("Sem protocolo de roteamento nem rota estática: as LANs não se alcançam.");
+        }
+        // Detecta enlaces /64 entre roteadores (recomendação /127).
+        for (EnderecoLido e : enderecos) {
+            if (e.prefixo().equals("/64") && e.interfaceNome().toLowerCase().startsWith("serial")) {
+                achados.add("Enlace ponto-a-ponto " + e.interfaceNome() + " em /64 — considere /127 (RFC 6164).");
+            }
+        }
+        if (achados.isEmpty()) {
+            achados.add("Nenhum problema estrutural evidente encontrado.");
+        }
+
+        return new EngenhariaReversaIpv6(hostname, unicastRouting, interfaces, enderecos, rotas, protocolos, achados);
+    }
+
     /** Host (sem prefixo, sem zone index) já validado por {@link #analisar}. */
     private IPv6Address hostDe(String entrada) {
         String bruto = entrada == null ? "" : entrada.strip().replace("\"", "").replace("'", "");
@@ -952,6 +1233,42 @@ public class Ipv6SubnetKernel {
     /** Resultado de faixa→CIDR: início, fim e a lista mínima de blocos CIDR que a cobre. */
     public record FaixaCidrIpv6(String inicio, String fim, int quantidadeBlocos,
             List<BlocoSumario> blocos, String explicacao) { }
+
+    // ---------- Laboratório de Resolução IPv6 (Projetar) ----------
+
+    /** Uma LAN do plano: localidade, bloco /prefixoLan, gateway e faixa. */
+    public record ProjetoLan(int indice, String nome, String rede, String prefixoStr, String gateway,
+            String primeiro, String ultimo, String enderecos) { }
+
+    /** Um enlace WAN do plano: bloco /prefixoWan e os dois endereços de roteador. */
+    public record ProjetoWan(int indice, String nome, String rede, String prefixoStr,
+            String ipA, String ipB, String roteadorA, String roteadorB) { }
+
+    /** Um roteador do plano com seu CLI Cisco IPv6 gerado. */
+    public record ProjetoRoteador(String nome, String local, String cli) { }
+
+    /** Plano completo de rede IPv6 (aba Projetar). */
+    public record ProjetoRede(String baseCidr, int prefixoBase, int prefixoLan, int prefixoWan,
+            String topologia, int totalLocais, int totalLinks, String capacidadeLan,
+            List<ProjetoLan> lans, List<ProjetoWan> wans, List<ProjetoRoteador> roteadores,
+            List<String> rotasEstaticas, String ciscoOspfv3, String ciscoEigrp,
+            List<String> passos, String enunciado) { }
+
+    // ---------- Laboratório de Resolução IPv6 (Engenharia Reversa) ----------
+
+    /** Uma interface lida da config Cisco: nome, descrição e endereços IPv6. */
+    public record InterfaceLida(String nome, String descricao, List<String> enderecos) { }
+
+    /** Um endereço IPv6 lido, com interface, prefixo e tipo IANA. */
+    public record EnderecoLido(String interfaceNome, String endereco, String prefixo, String tipo) { }
+
+    /** Uma rota estática IPv6 lida: destino e próximo salto. */
+    public record RotaLida(String destino, String proximoSalto) { }
+
+    /** Resultado da engenharia reversa: o que foi reconstruído da config + achados. */
+    public record EngenhariaReversaIpv6(String hostname, boolean unicastRouting,
+            List<InterfaceLida> interfaces, List<EnderecoLido> enderecos, List<RotaLida> rotas,
+            List<String> protocolos, List<String> achados) { }
 
     /**
      * Um hexteto (16 bits): hex, binário completo, quantos bits são de rede (prefixo) e o binário

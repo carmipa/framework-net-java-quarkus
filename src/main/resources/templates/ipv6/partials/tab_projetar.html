@@ -1,0 +1,68 @@
+{! Aba "Projetar": form em largura total; plano 100% abaixo (regra global de layout IPv6). !}
+<div class="calc-form-card mb-3">
+    <h6 class="calc-form-title"><span class="material-symbols-outlined">architecture</span> Projetar rede IPv6</h6>
+    <p class="calc-hint">Informe o bloco base, os prefixos de LAN/WAN, a topologia e as localidades (uma por linha). Gera plano de endereçamento, enlaces, gateways, rotas e CLI Cisco (OSPFv3/EIGRP).</p>
+    <form id="formProjetar" hx-post="/ipv6/api/projetar" hx-target="#saidaProjetar" hx-swap="innerHTML"
+          hx-disabled-elt="find button[type='submit']">
+        <div class="row g-3">
+            <div class="col-lg-4 col-md-6">
+                <label for="projBase" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">lan</span> Bloco base (CIDR)</label>
+                <input type="text" class="aed-input form-control" id="projBase" name="base"
+                       placeholder="2001:db8::/48" value="2001:db8::/48" autocomplete="off" spellcheck="false" required>
+            </div>
+            <div class="col-lg-2 col-md-3 col-6">
+                <label for="projLan" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">tag</span> Prefixo LAN</label>
+                <input type="text" class="aed-input form-control input-cidr" id="projLan" name="prefixoLan"
+                       inputmode="numeric" maxlength="3" placeholder="64" value="64" required>
+            </div>
+            <div class="col-lg-2 col-md-3 col-6">
+                <label for="projWan" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">cable</span> Prefixo WAN</label>
+                <input type="text" class="aed-input form-control input-cidr" id="projWan" name="prefixoWan"
+                       inputmode="numeric" maxlength="3" placeholder="127" value="127" required>
+            </div>
+            <div class="col-lg-4 col-md-12">
+                <label for="projTopo" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">account_tree</span> Topologia</label>
+                <select id="projTopo" name="topologia" class="aed-input form-select">
+                    <option value="estrela">Estrela — hub = 1ª localidade (N-1 enlaces)</option>
+                    <option value="estrela-estendida">Estrela estendida — núcleo + distribuição + acesso (N-1)</option>
+                    <option value="malha">Malha completa (N·(N-1)/2)</option>
+                </select>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <label for="projOspf" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">route</span> Processo OSPFv3</label>
+                <input type="text" class="aed-input form-control input-numeric" id="projOspf" name="ospfProc"
+                       inputmode="numeric" maxlength="5" placeholder="1" value="1">
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <label for="projEigrp" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">hub</span> AS EIGRP</label>
+                <input type="text" class="aed-input form-control input-numeric" id="projEigrp" name="eigrpAs"
+                       inputmode="numeric" maxlength="5" placeholder="100" value="100">
+            </div>
+            <div class="col-lg-6 col-md-12">
+                <label for="projLocais" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">apartment</span> Localidades / VLANs (uma por linha)</label>
+                <textarea class="aed-input form-control" id="projLocais" name="locais" rows="5"
+                          placeholder="Matriz&#10;Filial-SP&#10;Data Center&#10;Wi-Fi&#10;DMZ" spellcheck="false" required>Matriz
+Filial-SP
+Data Center
+Wi-Fi</textarea>
+            </div>
+        </div>
+        <div class="d-flex gap-2 mt-3">
+            <button type="submit" class="aed-btn aed-btn-execute" title="Gerar o plano de endereçamento IPv6">
+                <span class="spinner-border spinner-border-sm htmx-indicator" role="status" aria-hidden="true"></span>
+                <span class="material-symbols-outlined">play_arrow</span> Projetar
+            </button>
+            <button type="button" class="aed-btn aed-btn-neutral" data-limpar title="Esvaziar e recomeçar">
+                <span class="material-symbols-outlined">delete_sweep</span> Limpar
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="saidaProjetar" class="calc-saida ipv6-saida-full">
+    <div class="calc-placeholder">
+        <span class="material-symbols-outlined" aria-hidden="true">architecture</span>
+        <p class="mb-0">Informe os requisitos para ver o plano completo: LANs /64 com gateway, enlaces WAN /127,
+            topologia, rotas estáticas, OSPFv3/EIGRP e o CLI Cisco por roteador.</p>
+    </div>
+</div>

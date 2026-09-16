@@ -121,6 +121,25 @@ public class Ipv6CidrService {
         return r;
     }
 
+    /** Projeta uma rede IPv6 (Laboratório de Resolução, aba Projetar). */
+    public Ipv6SubnetKernel.ProjetoRede projetarRede(String base, int prefixoLan, int prefixoWan,
+            String topologia, java.util.List<String> locais, int eigrpAs, int ospfProc) {
+        Ipv6SubnetKernel.ProjetoRede r = kernel.projetarRede(base, prefixoLan, prefixoWan, topologia,
+                locais, eigrpAs, ospfProc);
+        telemetriaLogger.logEvent("info", "ipv6", "ipv6_projetar",
+                Map.of("status", "ok", "locais", r.totalLocais(), "links", r.totalLinks(),
+                        "topologia", r.topologia()));
+        return r;
+    }
+
+    /** Engenharia reversa de configuração Cisco IPv6 (Laboratório de Resolução). */
+    public Ipv6SubnetKernel.EngenhariaReversaIpv6 engenhariaReversa(String config) {
+        Ipv6SubnetKernel.EngenhariaReversaIpv6 r = kernel.engenhariaReversa(config);
+        telemetriaLogger.logEvent("info", "ipv6", "ipv6_engenharia_reversa",
+                Map.of("status", "ok", "interfaces", r.interfaces().size(), "achados", r.achados().size()));
+        return r;
+    }
+
     /** Compara dois endereços/prefixos IPv6 (mesma /64, contenção, distância, bits comuns). */
     public ComparacaoIpv6 comparar(String a, String b) {
         ComparacaoIpv6 r = kernel.comparar(a, b);

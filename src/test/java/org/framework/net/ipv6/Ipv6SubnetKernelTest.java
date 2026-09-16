@@ -5,7 +5,9 @@ import org.framework.net.ipv6.domain.Ipv6SubnetKernel.AnaliseIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.ComparacaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DecomposicaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DelegacaoPlano;
+import org.framework.net.ipv6.domain.Ipv6SubnetKernel.EngenhariaReversaIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.FaixaCidrIpv6;
+import org.framework.net.ipv6.domain.Ipv6SubnetKernel.ProjetoRede;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.SumarizacaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DivisaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.Eui64Result;
@@ -257,6 +259,68 @@ class Ipv6SubnetKernelTest {
     @Test
     void faixaParaCidrRejeitaEnderecoComPrefixo() {
         assertThrows(Ipv6Exception.class, () -> kernel.faixaParaCidr("2001:db8::/64", "2001:db8::ffff", 256));
+    }
+
+    @Test
+    void projetarEstrelaAlocaLansEEnlaces() {
+        ProjetoRede p = kernel.projetarRede("2001:db8::/48", 64, 127, "estrela",
+                java.util.List.of("Matriz", "Filial", "DataCenter"), 100, 1);
+        assertEquals(3, p.totalLocais());
+        assertEquals(2, p.totalLinks());          // árvore: n-1
+        assertEquals("65536", p.capacidadeLan()); // 2^(64-48)
+        assertEquals("2001:db8::", p.lans().get(0).rede());
+        assertEquals("2001:db8::1", p.lans().get(0).gateway());
+        assertEquals("2001:db8:0:1::", p.lans().get(1).rede());
+        assertEquals(3, p.roteadores().size());
+        assertEquals(2, p.wans().size());
+        assertTrue(p.roteadores().get(0).cli().contains("ipv6 unicast-routing"));
+        assertTrue(p.roteadores().get(0).cli().contains("ipv6 router ospf 1"));
+    }
+
+    @Test
+    void projetarMalhaTemNvezesNmenos1sobre2Enlaces() {
+        ProjetoRede p = kernel.projetarRede("2001:db8::/48", 64, 127, "malha",
+                java.util.List.of("A", "B", "C", "D"), 100, 1);
+        assertEquals(6, p.totalLinks());          // 4*3/2
+    }
+
+    @Test
+    void projetarRejeitaLanNaoMaisEspecifica() {
+        assertThrows(Ipv6Exception.class, () -> kernel.projetarRede("2001:db8::/48", 48, 127, "estrela",
+                java.util.List.of("A"), 100, 1));
+    }
+
+    @Test
+    void projetarRejeitaSemLocalidades() {
+        assertThrows(Ipv6Exception.class, () -> kernel.projetarRede("2001:db8::/48", 64, 127, "estrela",
+                java.util.List.of(), 100, 1));
+    }
+
+    @Test
+    void engenhariaReversaReconstroiInterfacesERotas() {
+        EngenhariaReversaIpv6 e = kernel.engenhariaReversa(
+                "hostname R1\nipv6 unicast-routing\ninterface GigabitEthernet0/0\n ipv6 address 2001:db8:0:1::1/64\n"
+                        + "ipv6 route 2001:db8:0:2::/64 2001:db8:0:ffff::1\nipv6 router ospf 1");
+        assertEquals("R1", e.hostname());
+        assertTrue(e.unicastRouting());
+        assertEquals(1, e.interfaces().size());
+        assertEquals("2001:db8:0:1::1/64", e.enderecos().get(0).endereco());
+        assertEquals("Documentação", e.enderecos().get(0).tipo()); // 2001:db8::/32
+        assertEquals(1, e.rotas().size());
+        assertTrue(e.protocolos().stream().anyMatch(s -> s.contains("OSPFv3")));
+    }
+
+    @Test
+    void engenhariaReversaSemUnicastRoutingAcusaAchado() {
+        EngenhariaReversaIpv6 e = kernel.engenhariaReversa(
+                "interface Gig0/0\n ipv6 address 2001:db8:0:1::1/64\ninterface Gig0/1\n ipv6 address 2001:db8:0:2::1/64\nipv6 router ospf 1");
+        assertFalse(e.unicastRouting());
+        assertTrue(e.achados().stream().anyMatch(a -> a.contains("unicast-routing")));
+    }
+
+    @Test
+    void engenhariaReversaVaziaRejeitada() {
+        assertThrows(Ipv6Exception.class, () -> kernel.engenhariaReversa("   "));
     }
 
     @Test
