@@ -131,7 +131,7 @@ public class Ipv6Resource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance dominio(@FormParam("dominio") String dominio) {
-        return resultadoDominio.data("r", service.resolverDominio(dominio));
+        return resultadoDominio.data("dom", service.resolverDominio(dominio));
     }
 
     /**

@@ -1,5 +1,6 @@
-<div class="calc-resultado">
+<div class="calc-resultado card-tech shadow">
     <div class="calc-resumo-head">
+        <span class="aed-eyebrow">Sub-redes</span>
         <h5 class="mb-1">
             <span class="material-symbols-outlined text-warning" aria-hidden="true">grid_on</span>
             {d.baseCidr} dividido em /{d.prefixoAlvo}
@@ -56,4 +57,10 @@
             </tbody>
         </table>
     </div>
+
+    <p class="calc-explicacao mt-3">
+        <span class="material-symbols-outlined" aria-hidden="true">school</span>
+        Cada sub-rede /{d.prefixoAlvo} tem 2^(128−{d.prefixoAlvo}) endereços. Em IPv6 não se subtrai
+        rede/broadcast: <strong>todos</strong> são atribuíveis, e a LAN padrão é /64 (fronteira do SLAAC).
+    </p>
 </div>

@@ -44,7 +44,7 @@ class Ipv6DominioAaaaIT {
         assertNotNull(r.analise());
         // cloudflare.com publica AAAA em 2606:4700::/32 → global unicast (2000::/3), endereço público
         // que passa pela guarda SSRF e é classificado pela faixa IANA.
-        assertEquals("Global unicast", r.analise().tipo(),
+        assertEquals("Global unicast", r.analise().base().tipo(),
                 "AAAA público deve ser classificado como global unicast: " + r.enderecoAaaa());
     }
 

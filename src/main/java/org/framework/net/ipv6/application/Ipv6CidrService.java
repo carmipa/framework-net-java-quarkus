@@ -123,9 +123,9 @@ public class Ipv6CidrService {
         }
         try {
             String aaaa = dnsResolver.resolverAaaaComCache(d);
-            AnaliseIpv6 analise = kernel.analisar(aaaa);
+            Ipv6AnaliseRica.Resultado analise = kernel.analisarRica(aaaa, config.reguaCount());
             telemetriaLogger.logEvent("info", "ipv6", "ipv6_dominio_aaaa",
-                    Map.of("status", "ok", "tipo", analise.tipo()));
+                    Map.of("status", "ok", "tipo", analise.base().tipo()));
             return new DominioAaaaResult(d, aaaa, analise);
         } catch (DnsResolucaoException ex) {
             telemetriaLogger.logEvent("warn", "ipv6", "ipv6_dominio_aaaa",
@@ -134,6 +134,6 @@ public class Ipv6CidrService {
         }
     }
 
-    /** Domínio resolvido para IPv6 (AAAA) com a análise completa do endereço. */
-    public record DominioAaaaResult(String dominio, String enderecoAaaa, AnaliseIpv6 analise) { }
+    /** Domínio resolvido para IPv6 (AAAA) com a análise rica completa do endereço. */
+    public record DominioAaaaResult(String dominio, String enderecoAaaa, Ipv6AnaliseRica.Resultado analise) { }
 }
