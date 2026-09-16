@@ -49,6 +49,18 @@ public class Ipv6Resource {
     Template index;
 
     @Inject
+    @Location("ipv6/analise.html")
+    Template analisePagina;
+
+    @Inject
+    @Location("ipv6/resolucao.html")
+    Template resolucaoPagina;
+
+    @Inject
+    @Location("ipv6/partials/resultado_resolucao.html")
+    Template resultadoResolucao;
+
+    @Inject
     @Location("ipv6/partials/resultado_analise.html")
     Template resultadoAnalise;
 
@@ -76,6 +88,36 @@ public class Ipv6Resource {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance pagina() {
         return index.data("activeMainMenu", "ipv6");
+    }
+
+    /** Página "Análise Didática IPv6" (análise rica + comparador + domínio). */
+    @GET
+    @Path("/analise")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance paginaAnalise() {
+        return analisePagina.data("activeMainMenu", "ipv6-analise");
+    }
+
+    /** Página "Resolução IPv6" (planejador de delegação de prefixo). */
+    @GET
+    @Path("/resolucao")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance paginaResolucao() {
+        return resolucaoPagina.data("activeMainMenu", "ipv6-resolucao");
+    }
+
+    /** Planeja a delegação de prefixo: aloca um /alvo por nome de sub-rede. */
+    @POST
+    @Path("/api/resolver")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance resolver(
+            @FormParam("base") String base,
+            @FormParam("prefixoAlvo") String prefixoAlvo,
+            @FormParam("nomes") String nomes) {
+        java.util.List<String> lista = nomes == null ? java.util.List.of()
+                : java.util.Arrays.asList(nomes.split("\\r?\\n"));
+        return resultadoResolucao.data("p", service.planejarDelegacao(base, parsePrefixo(prefixoAlvo), lista));
     }
 
     /** Analisa um endereço ou prefixo IPv6 (normalização, tipo, rede, faixa, IID, binário). */

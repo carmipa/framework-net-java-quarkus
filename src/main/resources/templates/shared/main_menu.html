@@ -50,24 +50,36 @@
                 </a>
             </div>
         </div>
-        {! Menu suspenso "IPv6": nasce com a Calculadora IPv6 (análise de endereço/prefixo e
-            divisão de sub-redes). Cresce conforme novas ferramentas IPv6 ficarem prontas — item
-            que ainda não existe não entra no menu (mesma regra dos Laboratórios). !}
+        {! Menu suspenso "IPv6": espelha o IPv4 com três itens — Análise Didática, Calculadora e
+            Resolução (delegação de prefixo). Mesma mecânica/ícones do dropdown IPv4; os itens seguem
+            aed-nav-link (a guarda de contagem os vê). !}
         <div class="dropdown aed-nav-drop">
             <button type="button"
-                    class="aed-nav-drop-toggle {#if activeMainMenu == 'ipv6'}is-active{/if}"
+                    class="aed-nav-drop-toggle {#if activeMainMenu == 'ipv6' || activeMainMenu == 'ipv6-analise' || activeMainMenu == 'ipv6-resolucao'}is-active{/if}"
                     data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false"
-                    title="IPv6: calculadora de sub-redes CIDR">
+                    title="IPv6: análise didática, calculadora de sub-redes e resolução (delegação de prefixo)">
                 <span class="material-symbols-outlined" aria-hidden="true">filter_6</span>
                 <span>IPv6</span>
                 <span class="material-symbols-outlined aed-nav-drop-caret" aria-hidden="true">expand_more</span>
             </button>
             <div class="dropdown-menu aed-nav-drop-menu">
+                <a href="/ipv6/analise"
+                   class="aed-nav-link {#if activeMainMenu == 'ipv6-analise'}is-active{/if}"
+                   title="Análise Didática IPv6: 128 bits célula-a-célula, tipo IANA, comparador e domínio (AAAA)">
+                    <span class="material-symbols-outlined" aria-hidden="true">insights</span>
+                    <span>Análise Didática</span>
+                </a>
                 <a href="/ipv6"
                    class="aed-nav-link {#if activeMainMenu == 'ipv6'}is-active{/if}"
-                   title="Calculadora IPv6: análise de endereço/prefixo e divisão de sub-redes CIDR">
+                   title="Calculadora IPv6: divisão em sub-redes, EUI-64/SLAAC e gerador de ULA">
                     <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
                     <span>Calculadora IPv6</span>
+                </a>
+                <a href="/ipv6/resolucao"
+                   class="aed-nav-link {#if activeMainMenu == 'ipv6-resolucao'}is-active{/if}"
+                   title="Resolução IPv6: planejador de delegação de prefixo (o análogo IPv6 do VLSM)">
+                    <span class="material-symbols-outlined" aria-hidden="true">extension</span>
+                    <span>Resolução IPv6</span>
                 </a>
             </div>
         </div>

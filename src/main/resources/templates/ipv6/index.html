@@ -1,6 +1,6 @@
 {#include shared/base.html}
 {#title}Framework de Redes | Calculadora IPv6 (CIDR){/title}
-{#description}Calculadora IPv6: analisa endereços e prefixos (RFC 5952, tipo IANA, Interface ID, solicited-node, binário), divide prefixos em sub-redes, deriva EUI-64/SLAAC, gera ULA, compara endereços e resolve o registro AAAA de um domínio — sem broadcast nem a conta de hosts úteis do IPv4.{/description}
+{#description}Calculadora IPv6: divide prefixos em sub-redes (contagem 2^n exata), deriva EUI-64/SLAAC a partir do MAC e gera prefixos ULA (RFC 4193) — sem broadcast nem a conta de hosts úteis do IPv4.{/description}
 {#extraHead}
 <link rel="stylesheet" href="/calculadora/css/calculadora.css?v=20260908" />
 <link rel="stylesheet" href="/ipv6/css/ipv6.css?v=20260916b" />
@@ -15,21 +15,15 @@
             Calculadora IPv6 (CIDR)
         </h1>
         <p class="aed-subtitle">
-            Analise um endereço ou prefixo IPv6, divida prefixos em sub-redes, derive EUI-64/SLAAC,
-            gere ULA, compare endereços e resolva o AAAA de um domínio. IPv6 não tem broadcast nem
-            classes — aqui você conta <strong>endereços</strong> e <strong>sub-redes</strong>, não
-            "hosts úteis" como no IPv4.
+            Divida prefixos em sub-redes, derive o endereço SLAAC (EUI-64) a partir do MAC e gere um
+            prefixo ULA privado. IPv6 conta <strong>endereços</strong> e <strong>sub-redes</strong> por
+            potência de 2 — sem broadcast e sem "hosts úteis = total − 2".
         </p>
     </header>
 
-    <div class="aed-card card-tech p-4 shadow ipv6-wrap" data-active-tab="analise">
-        <span class="aed-eyebrow">Ferramenta IPv6</span>
+    <div class="aed-card card-tech p-4 shadow ipv6-wrap" data-active-tab="dividir">
+        <span class="aed-eyebrow">Calculadora IPv6</span>
         <div class="aed-mode-grid tab-nav mb-3" role="tablist">
-            <button type="button" class="aed-mode-btn tab-trigger" data-tab="analise" role="tab"
-                    data-bs-toggle="tooltip" data-bs-placement="top"
-                    title="Análise: normalização RFC 5952, tipo IANA, rede, Interface ID e os 128 bits por hexteto">
-                <span class="material-symbols-outlined">tag</span><span>Análise</span>
-            </button>
             <button type="button" class="aed-mode-btn tab-trigger" data-tab="dividir" role="tab"
                     data-bs-toggle="tooltip" data-bs-placement="top"
                     title="Sub-redes: divida um prefixo base no prefixo alvo e conte quantas cabem (2^n exato)">
@@ -45,51 +39,15 @@
                     title="ULA: gere um prefixo privado fd00::/8 pseudo-aleatório (RFC 4193)">
                 <span class="material-symbols-outlined">vpn_lock</span><span>ULA</span>
             </button>
-            <button type="button" class="aed-mode-btn tab-trigger" data-tab="comparador" role="tab"
-                    data-bs-toggle="tooltip" data-bs-placement="top"
-                    title="Comparador: dois endereços lado a lado — mesma /64, contenção e distância">
-                <span class="material-symbols-outlined">compare_arrows</span><span>Comparador</span>
-            </button>
-            <button type="button" class="aed-mode-btn tab-trigger" data-tab="dominio" role="tab"
-                    data-bs-toggle="tooltip" data-bs-placement="top"
-                    title="Domínio: resolva o registro AAAA (IPv6) de um domínio e analise o endereço">
-                <span class="material-symbols-outlined">language</span><span>Domínio</span>
-            </button>
         </div>
 
-        <div class="tab-panel" data-tab-panel="analise">{#include ipv6/partials/tab_analise.html /}</div>
         <div class="tab-panel" data-tab-panel="dividir">{#include ipv6/partials/tab_dividir.html /}</div>
         <div class="tab-panel" data-tab-panel="eui64">{#include ipv6/partials/tab_eui64.html /}</div>
         <div class="tab-panel" data-tab-panel="ula">{#include ipv6/partials/tab_ula.html /}</div>
-        <div class="tab-panel" data-tab-panel="comparador">{#include ipv6/partials/tab_comparador.html /}</div>
-        <div class="tab-panel" data-tab-panel="dominio">{#include ipv6/partials/tab_dominio.html /}</div>
-
-        <div class="aed-action-row action-buttons mt-3">
-            <a id="ipv6-export-json" href="/ipv6/export/json" class="aed-btn aed-btn-json" target="_blank" rel="noopener nofollow"
-               data-bs-toggle="tooltip" data-bs-placement="top"
-               title="Baixe o resultado da análise IPv6 em formato JSON (requer login admin)">
-                <span class="material-symbols-outlined">download</span> Exportar JSON
-            </a>
-            <a id="ipv6-export-pdf" href="/ipv6/export/pdf" rel="nofollow" class="aed-btn aed-btn-pdf"
-               data-bs-toggle="tooltip" data-bs-placement="top"
-               title="Gere um PDF com o resultado da análise IPv6 (requer login admin)">
-                <span class="material-symbols-outlined">picture_as_pdf</span> Exportar PDF
-            </a>
-            <button type="button" class="aed-btn aed-btn-neutral" id="btn-copiar-resultado"
-                    data-bs-toggle="tooltip" data-bs-placement="top"
-                    title="Copie o resultado da Análise em texto para a área de transferência">
-                <span class="material-symbols-outlined">content_copy</span> Copiar resultado
-            </button>
-            <a id="btn-limpar-tela" href="/ipv6" class="aed-btn aed-btn-danger"
-               data-bs-toggle="tooltip" data-bs-placement="top"
-               title="Limpe os resultados e recomece a análise">
-                <span class="material-symbols-outlined">delete_sweep</span> Limpar Tela
-            </a>
-        </div>
     </div>
 </div>
 {/content}
 {#extraScripts}
-<script src="/ipv6/js/ipv6.js?v=20260916a"></script>
+<script src="/ipv6/js/ipv6.js?v=20260916b"></script>
 {/extraScripts}
 {/include}

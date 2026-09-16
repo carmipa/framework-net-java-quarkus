@@ -93,6 +93,18 @@ public class Ipv6CidrService {
         return r;
     }
 
+    /**
+     * Planeja a delegação de prefixo (Resolução IPv6): aloca um /prefixoAlvo para cada nome de
+     * sub-rede a partir do bloco base. O teto de linhas vem da config, nunca do cliente.
+     */
+    public Ipv6SubnetKernel.DelegacaoPlano planejarDelegacao(String baseCidr, int prefixoAlvo, java.util.List<String> nomes) {
+        Ipv6SubnetKernel.DelegacaoPlano p = kernel.planejarDelegacao(baseCidr, prefixoAlvo, nomes, config.maxLinhas());
+        telemetriaLogger.logEvent("info", "ipv6", "ipv6_resolucao",
+                Map.of("status", "ok", "prefixoBase", p.prefixoBase(), "prefixoAlvo", p.prefixoAlvo(),
+                        "usados", p.usados()));
+        return p;
+    }
+
     /** Compara dois endereços/prefixos IPv6 (mesma /64, contenção, distância, bits comuns). */
     public ComparacaoIpv6 comparar(String a, String b) {
         ComparacaoIpv6 r = kernel.comparar(a, b);

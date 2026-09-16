@@ -80,7 +80,9 @@ public final class PaginasPublicas {
         paginas.add("/");
         paginas.add("/analise");
         paginas.add("/calculadora");
+        paginas.add("/ipv6/analise");
         paginas.add("/ipv6");
+        paginas.add("/ipv6/resolucao");
         paginas.add("/laboratorios");
         paginas.add("/laboratorios/camadas");
         paginas.add("/portas");

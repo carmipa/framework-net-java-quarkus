@@ -4,6 +4,7 @@ import org.framework.net.ipv6.domain.Ipv6SubnetKernel;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.AnaliseIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.ComparacaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DecomposicaoIpv6;
+import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DelegacaoPlano;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DivisaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.Eui64Result;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.UlaResult;
@@ -177,6 +178,40 @@ class Ipv6SubnetKernelTest {
         ComparacaoIpv6 c = kernel.comparar("2001:db8:0:1::1", "2001:db8:0:2::1");
         assertFalse(c.mesmaLan());
         assertEquals(62, c.bitsComuns());
+    }
+
+    @Test
+    void planejarDelegacaoAlocaUmBlocoPorNome() {
+        DelegacaoPlano p = kernel.planejarDelegacao("2001:db8::/48", 64,
+                java.util.List.of("Matriz", "Filial", "DMZ"), 256);
+        assertEquals(48, p.prefixoBase());
+        assertEquals(64, p.prefixoAlvo());
+        assertEquals("65536", p.capacidade());   // 2^(64-48)
+        assertEquals(3, p.usados());
+        assertEquals(3, p.alocacoes().size());
+        assertEquals("Matriz", p.alocacoes().get(0).nome());
+        assertEquals("2001:db8::", p.alocacoes().get(0).rede());
+        assertEquals("2001:db8:0:1::", p.alocacoes().get(1).rede());
+        assertEquals("2001:db8::1", p.alocacoes().get(0).gateway()); // ::1 do bloco
+    }
+
+    @Test
+    void planejarDelegacaoRejeitaAlvoNaoMaisEspecifico() {
+        assertThrows(Ipv6Exception.class,
+                () -> kernel.planejarDelegacao("2001:db8::/48", 48, java.util.List.of("A"), 256));
+    }
+
+    @Test
+    void planejarDelegacaoRejeitaMaisNomesQueCapacidade() {
+        // Um /48 em /50 comporta 4 blocos; pedir 5 estoura (gabarito 2^(50-48)=4).
+        assertThrows(Ipv6Exception.class, () -> kernel.planejarDelegacao("2001:db8::/48", 50,
+                java.util.List.of("a", "b", "c", "d", "e"), 256));
+    }
+
+    @Test
+    void planejarDelegacaoRejeitaSemNomes() {
+        assertThrows(Ipv6Exception.class,
+                () -> kernel.planejarDelegacao("2001:db8::/48", 64, java.util.List.of(), 256));
     }
 
     @Test

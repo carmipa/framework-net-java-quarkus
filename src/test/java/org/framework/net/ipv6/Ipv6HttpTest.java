@@ -16,16 +16,42 @@ class Ipv6HttpTest {
     private static final String FORM = "application/x-www-form-urlencoded";
 
     @Test
-    void paginaCarregaComMenuEFormularios() {
+    void paginaCalculadoraCarregaComMenuEFormularios() {
         given()
                 .when().get("/ipv6")
                 .then()
                 .statusCode(200)
                 .contentType(containsString("text/html"))
                 .body(containsString("Calculadora IPv6 (CIDR)"))
-                .body(containsString("hx-post=\"/ipv6/api/calcular\""))
                 .body(containsString("hx-post=\"/ipv6/api/dividir\""))
+                .body(containsString("data-tab=\"eui64\""))
+                .body(containsString("data-tab=\"ula\""))
                 .body(containsString("/ipv6/css/ipv6.css"));
+    }
+
+    @Test
+    void paginaAnaliseCarregaComAnaliseComparadorEDominio() {
+        given()
+                .when().get("/ipv6/analise")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("Análise Didática IPv6"))
+                .body(containsString("data-active-tab=\"analise\""))
+                .body(containsString("hx-post=\"/ipv6/api/calcular\""))
+                .body(containsString("data-tab=\"comparador\""))
+                .body(containsString("data-tab=\"dominio\""));
+    }
+
+    @Test
+    void paginaResolucaoCarregaComFormulario() {
+        given()
+                .when().get("/ipv6/resolucao")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("Resolução IPv6"))
+                .body(containsString("hx-post=\"/ipv6/api/resolver\""));
     }
 
     @Test
@@ -103,16 +129,34 @@ class Ipv6HttpTest {
     }
 
     @Test
-    void paginaTemAbasComparadorEDominio() {
+    void resolverPlanejaDelegacaoDePrefixo() {
         given()
-                .when().get("/ipv6")
+                .contentType(FORM)
+                .formParam("base", "2001:db8::/48")
+                .formParam("prefixoAlvo", "64")
+                .formParam("nomes", "Matriz\nFilial\nServidores")
+                .when().post("/ipv6/api/resolver")
                 .then()
                 .statusCode(200)
-                .body(containsString("data-active-tab=\"analise\""))
-                .body(containsString("data-tab=\"comparador\""))
-                .body(containsString("data-tab=\"dominio\""))
-                .body(containsString("hx-post=\"/ipv6/api/comparar\""))
-                .body(containsString("hx-post=\"/ipv6/api/dominio\""));
+                .contentType(containsString("text/html"))
+                .body(containsString("Plano de endereçamento"))
+                .body(containsString("Matriz"))
+                .body(containsString("2001:db8::/64"))
+                .body(containsString("2001:db8:0:1::/64"));
+    }
+
+    @Test
+    void resolverAlvoNaoMaisEspecificoVolta400() {
+        given()
+                .contentType(FORM)
+                .header("HX-Request", "true")
+                .formParam("base", "2001:db8::/48")
+                .formParam("prefixoAlvo", "48")
+                .formParam("nomes", "A")
+                .when().post("/ipv6/api/resolver")
+                .then()
+                .statusCode(400)
+                .body(containsString("específico"));
     }
 
     @Test

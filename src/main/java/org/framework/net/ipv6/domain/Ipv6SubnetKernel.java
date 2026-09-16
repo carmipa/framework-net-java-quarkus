@@ -353,6 +353,78 @@ public class Ipv6SubnetKernel {
                 contencao(ra, rb, ha, hb), distancia.toString(), explic, gradeComum);
     }
 
+    /**
+     * PROPÓSITO DE NEGÓCIO: planejador de delegação de prefixo — o análogo IPv6 do VLSM/Resolução do
+     * IPv4. Dado um bloco base (ex.: /48) e um prefixo alvo (ex.: /64), aloca uma sub-rede contígua
+     * para cada nome informado (site/departamento/VLAN), com faixa e gateway sugerido.
+     *
+     * INVARIANTES DO DOMÍNIO: em IPv6 não se dimensiona por "número de hosts" (a LAN é /64 com 2^64
+     * endereços); dimensiona-se por QUANTIDADE de sub-redes. O alvo é sempre mais específico que a
+     * base; a quantidade de nomes não pode exceder a capacidade 2^(alvo−base).
+     *
+     * COMPORTAMENTO EM CASO DE FALHA: base sem prefixo, alvo fora de faixa, nenhum nome ou nomes além
+     * da capacidade lançam {@link Ipv6Exception}.
+     */
+    public DelegacaoPlano planejarDelegacao(String baseCidr, int prefixoAlvo, List<String> nomes, int maxLinhas) {
+        String bruto = baseCidr == null ? "" : baseCidr.strip().replace("\"", "").replace("'", "");
+        if (bruto.isEmpty()) {
+            throw new Ipv6Exception("Informe o bloco base em CIDR (ex.: 2001:db8::/48).");
+        }
+        if (prefixoAlvo < 0 || prefixoAlvo > 128) {
+            throw new Ipv6Exception("Prefixo alvo inválido: use um valor entre /0 e /128.");
+        }
+        IPAddressString parser = new IPAddressString(bruto);
+        if (!parser.isValid() || !parser.isIPv6()) {
+            throw new Ipv6Exception("Bloco base IPv6 inválido (" + bruto + ").");
+        }
+        IPv6Address addr = parser.getAddress().toIPv6();
+        Integer prefixoBaseInformado = addr.getNetworkPrefixLength();
+        if (prefixoBaseInformado == null) {
+            throw new Ipv6Exception("Informe o prefixo do bloco base (ex.: 2001:db8::/48), não só o endereço.");
+        }
+        int prefixoBase = prefixoBaseInformado;
+        if (prefixoAlvo <= prefixoBase) {
+            throw new Ipv6Exception("O prefixo alvo /" + prefixoAlvo + " precisa ser mais específico que a base /"
+                    + prefixoBase + " (ex.: base /48 → alvo /64).");
+        }
+        List<String> limpos = new ArrayList<>();
+        if (nomes != null) {
+            for (String n : nomes) {
+                if (n != null && !n.strip().isEmpty()) {
+                    limpos.add(n.strip());
+                }
+            }
+        }
+        if (limpos.isEmpty()) {
+            throw new Ipv6Exception("Informe ao menos um nome de sub-rede (uma por linha).");
+        }
+        BigInteger capacidade = BigInteger.TWO.pow(prefixoAlvo - prefixoBase);
+        if (BigInteger.valueOf(limpos.size()).compareTo(capacidade) > 0) {
+            throw new Ipv6Exception("Você pediu " + limpos.size() + " sub-redes, mas um /" + prefixoBase
+                    + " dividido em /" + prefixoAlvo + " comporta só " + capacidade + ".");
+        }
+
+        IPv6Address baseBloco = addr.toPrefixBlock();
+        BigInteger inicio = new BigInteger(1, baseBloco.getLower().getBytes());
+        BigInteger passo = BigInteger.TWO.pow(128 - prefixoAlvo);
+
+        int limite = Math.min(limpos.size(), Math.max(1, maxLinhas));
+        List<AlocacaoLan> alocacoes = new ArrayList<>(limite);
+        for (int i = 0; i < limite; i++) {
+            BigInteger valor = inicio.add(passo.multiply(BigInteger.valueOf(i)));
+            IPv6Address rede = new IPv6Address(paraBytes16(valor));
+            String gw = new IPv6Address(paraBytes16(valor.add(BigInteger.ONE))).toCompressedString();
+            alocacoes.add(new AlocacaoLan(i + 1, limpos.get(i), rede.toCompressedString(),
+                    "/" + prefixoAlvo, rede.toCompressedString(), ultimoDoBloco(valor, passo), gw));
+        }
+        boolean truncado = limpos.size() > limite;
+        String enunciado = "Um /" + prefixoBase + " comporta " + capacidade + " sub-redes /" + prefixoAlvo
+                + "; este plano usa " + limpos.size() + ". Em IPv6 cada /64 já tem 2^64 endereços via SLAAC,"
+                + " então dimensiona-se por quantidade de redes, não por hosts.";
+        return new DelegacaoPlano(baseBloco.getLower().withoutPrefixLength().toCompressedString() + "/" + prefixoBase,
+                prefixoBase, prefixoAlvo, capacidade.toString(), limpos.size(), truncado, alocacoes, enunciado);
+    }
+
     /** Host (sem prefixo, sem zone index) já validado por {@link #analisar}. */
     private IPv6Address hostDe(String entrada) {
         String bruto = entrada == null ? "" : entrada.strip().replace("\"", "").replace("'", "");
@@ -725,6 +797,14 @@ public class Ipv6SubnetKernel {
             String enderecosPorSubrede, boolean truncado, int exibidas, List<SubredeIpv6> subredes) { }
 
     public record SubredeIpv6(int indice, String rede, String prefixoStr, String primeiro, String ultimo) { }
+
+    /** Uma alocação do planejador de delegação: nome da sub-rede, bloco, faixa e gateway. */
+    public record AlocacaoLan(int indice, String nome, String rede, String prefixoStr,
+            String primeiro, String ultimo, String gateway) { }
+
+    /** Plano de delegação de prefixo (análogo IPv6 do VLSM): base, alvo, capacidade e alocações. */
+    public record DelegacaoPlano(String baseCidr, int prefixoBase, int prefixoAlvo, String capacidade,
+            int usados, boolean truncado, List<AlocacaoLan> alocacoes, String enunciado) { }
 
     /**
      * Um hexteto (16 bits): hex, binário completo, quantos bits são de rede (prefixo) e o binário
