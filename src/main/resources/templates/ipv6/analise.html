@@ -39,11 +39,17 @@
                     title="Domínio: resolva o registro AAAA (IPv6) de um domínio e analise o endereço">
                 <span class="material-symbols-outlined">language</span><span>Domínio</span>
             </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="conceitos" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Conceitos: o que do IPv4 não se aplica ao IPv6 (máscara, wildcard, broadcast, hosts) e o equivalente correto">
+                <span class="material-symbols-outlined">menu_book</span><span>Conceitos</span>
+            </button>
         </div>
 
         <div class="tab-panel" data-tab-panel="analise">{#include ipv6/partials/tab_analise.html /}</div>
         <div class="tab-panel" data-tab-panel="comparador">{#include ipv6/partials/tab_comparador.html /}</div>
         <div class="tab-panel" data-tab-panel="dominio">{#include ipv6/partials/tab_dominio.html /}</div>
+        <div class="tab-panel" data-tab-panel="conceitos">{#include ipv6/partials/tab_conceitos.html /}</div>
 
         <div class="aed-action-row action-buttons mt-3">
             <a id="ipv6-export-json" href="/ipv6/export/json" class="aed-btn aed-btn-json" target="_blank" rel="noopener nofollow"

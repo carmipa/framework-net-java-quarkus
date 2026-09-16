@@ -40,7 +40,10 @@ class Ipv6HttpTest {
                 .body(containsString("data-active-tab=\"analise\""))
                 .body(containsString("hx-post=\"/ipv6/api/calcular\""))
                 .body(containsString("data-tab=\"comparador\""))
-                .body(containsString("data-tab=\"dominio\""));
+                .body(containsString("data-tab=\"dominio\""))
+                .body(containsString("data-tab=\"conceitos\""))
+                .body(containsString("IPv4 → IPv6: o que muda"))
+                .body(containsString("Hosts úteis = total − 2"));
     }
 
     @Test
