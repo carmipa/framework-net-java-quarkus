@@ -16,6 +16,9 @@ Cobre análise de IPv4/IPv6, CIDR, máscaras, wildcard, VLSM, topologia WAN, scr
 |--------|------|-----------|
 | Início | `/` | Página inicial (landing) com visão geral e atalhos para os módulos |
 | Análise Didática | `/analise` | CIDR, máscara, wildcard, auto-CIDR, domínio, IPv6, comparador |
+| Análise Didática IPv6 | `/ipv6/analise` | 128 bits célula-a-célula, tipo IANA, aplicação do prefixo, comparador, domínio (AAAA), Nibbles e Conceitos; export JSON/PDF |
+| Calculadora IPv6 | `/ipv6` | Sub-redes (2^n), EUI-64/SLAAC, ULA (fd00::/8), Sumarizar, Faixa → CIDR e **VLANs** (LAN /64 por VLAN + SVI + trunk 802.1Q) |
+| Resolução IPv6 | `/ipv6/resolucao` | **Projetar** (delegação de prefixo, WAN /127, CLI OSPFv3/EIGRP e diagrama) e **Engenharia Reversa** (config Cisco → interfaces/rotas) |
 | Localização | `/localizacao` | **GeoIP por IP** (região/ISP/risco, movido da Análise Didática) + **CEP** (ViaCEP) em mapa OpenStreetMap |
 | Tráfego | `/trafego` | Dashboard de tráfego **ao vivo** (gráficos estilo Wireshark + Wi-Fi/Bluetooth, modo demo) e decodificador didático de pacotes (hex dump → Ethernet/IP/TCP/UDP/ICMP) |
 | GeoIP (página) | `/informacoes` | Página autônoma de geolocalização de IP (MaxMind + fallback) |

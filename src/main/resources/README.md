@@ -14,6 +14,9 @@ Documentação, Sobre):
 
 - **Análise Didática** — CIDR, máscara, wildcard, auto-CIDR, domínio (DNS), IPv6, comparador e GeoIP.
 - **Calculadora de Sub-redes e VLANs** — divisão de blocos (FLSM), plano de VLANs com script Cisco, sumarização de rotas e faixa de IPs para CIDR.
+- **IPv6 → Análise Didática IPv6** — decomposição dos **128 bits célula-a-célula** (8 hextetos), tipo/escopo IANA, aplicação do prefixo (rede × interface), capacidade `2^(128−prefixo)`, passo a passo, linha do tempo, Interface ID/solicited-node/reverso `ip6.arpa`, comparador de endereços, domínio (registro **AAAA**), aba **Nibbles** (expansão/compressão RFC 5952) e **Conceitos**; com histórico por navegador e exportação **JSON/PDF**.
+- **IPv6 → Calculadora IPv6 (CIDR)** — Sub-redes (contagem `2^n` exata), **EUI-64/SLAAC** a partir do MAC, gerador de **ULA** (fd00::/8, RFC 4193), **Sumarizar** (supernet + merge), **Faixa → CIDR** e **VLANs** (uma LAN /64 por VLAN, gateway SVI `::1`, SVI Cisco `interface VlanN` e trunk 802.1Q) — sem broadcast nem "hosts úteis = total − 2".
+- **IPv6 → Resolução IPv6** — **Projetar** (delegação de prefixo: um /64 por localidade com localidades dinâmicas, enlaces WAN /127 RFC 6164, CLI OSPFv3/EIGRP e diagrama de arquitetura Mermaid) e **Engenharia Reversa** (lê a config Cisco e reconstrói interfaces, endereços, rotas e protocolos).
 - **Topologia → Portas** — catálogo interativo TCP/UDP + **7 aprofundamentos** (Anatomia das portas e as famílias Web, E-mail, Acesso remoto, Arquivos, Banco de dados, Infra), com cross-link das portas para os aprofundamentos de protocolo.
 - **Topologia → Protocolos** — catálogo comparativo + troubleshooting e **15 aprofundamentos por camada** (Aplicação · Transporte · Rede), cada um com diagrama de arquitetura e decomposição binária do cabeçalho.
 - **Topologia → Certificados** — X.509/PKI: catálogo de 3 tabelas (formatos, campos, tipos) + **8 aprofundamentos** por grupo; a Anatomia traz a régua binária ASN.1/DER.
@@ -73,6 +76,11 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Calculadora (API) | `/calculadora/api/vlan`, `/calculadora/api/vlan-id` | POST | Fragmento HTML: plano de VLANs com CLI Cisco / parecer sobre um VLAN ID |
 | Calculadora (API) | `/calculadora/api/sumarizar`, `/calculadora/api/comparar`, `/calculadora/api/faixa` | POST | Fragmento HTML: rota resumo, relação entre blocos, faixa em CIDR |
 | Calculadora (export) | `/calculadora/export/divisao.csv`, `/calculadora/export/vlan.csv` | GET | CSV do plano exibido |
+| Análise Didática IPv6 | `/ipv6/analise` | GET | Análise rica de um endereço/prefixo IPv6: 128 bits célula-a-célula, tipo IANA, comparador, domínio (AAAA), Nibbles e Conceitos |
+| Calculadora IPv6 | `/ipv6` | GET | Abas: Sub-redes, EUI-64, ULA, Sumarizar, Faixa → CIDR e **VLANs** |
+| Resolução IPv6 | `/ipv6/resolucao` | GET | Projetar (delegação de prefixo + diagrama) e Engenharia Reversa (config Cisco → interfaces/rotas) |
+| IPv6 (API) | `/ipv6/api/{calcular,nibbles,dividir,eui64,ula,sumarizar,faixa,vlan,comparar,dominio,resolver,projetar,engenharia}` | POST | Fragmento HTML de cada ferramenta IPv6 (contagem `2^n`, EUI-64/SLAAC, ULA, supernet, faixa→CIDR, plano de VLANs, comparador, AAAA, projeto de rede, engenharia reversa) |
+| IPv6 (export) | `/ipv6/export/{json,pdf}` | GET | Exporta a última análise IPv6 (JSON/PDF) — **protegido** (admin) |
 | Laboratórios | `/laboratorios` | GET | Visão geral dos laboratórios interativos (só experiências disponíveis) |
 | Laboratórios | `/laboratorios/camadas` | GET | Experiência "Camadas em ação": encapsulamento/desencapsulamento (UDP/IP/Ethernet) entre dois hosts e um switch, passo a passo, com animação e explicações |
 | Localização | `/localizacao` | GET | Localização por IP e por CEP no mapa |
@@ -183,6 +191,44 @@ menor lista de blocos CIDR que cobre **exatamente** a faixa, com a ACL equivalen
 > lista no máximo `framework.calculadora.max-linhas` (padrão 512), mas o total
 > matemático real continua sendo exibido, com aviso explícito de truncamento — listagem
 > truncada nunca é apresentada como plano completo.
+
+### Módulo — Trilha IPv6 (`/ipv6/analise`, `/ipv6`, `/ipv6/resolucao`)
+
+Espelha a profundidade didática do IPv4, adaptando apenas o que é tecnicamente
+incompatível: IPv6 **não tem broadcast**, **não usa máscara decimal nem wildcard** e
+**não usa "hosts úteis = total − 2"** — a fronteira é o **prefixo** e a contagem é
+`2^(128−prefixo)`. Não há equivalentes falsos: onde o conceito IPv4 não existe, a aba
+correspondente é substituída pelo conceito IPv6 real (tipo/escopo IANA, aplicação do
+prefixo, delegação). Arquitetura desacoplada: CSS (`/ipv6/css/ipv6.css`) e JS
+(`/ipv6/js/ipv6.js`) próprios, templates em `templates/ipv6/` com partials por aba.
+
+**`/ipv6/analise` — Análise Didática IPv6.** Réplica das ~15 seções da Análise IPv4:
+banner de tipo/escopo, **decomposição dos 128 bits célula-a-célula** (8 hextetos, 2 por
+linha, cores rede × interface), aplicação do prefixo, capacidade `2^(128−prefixo)`,
+passo a passo, linha do tempo, Interface ID, **solicited-node** (`ff02::1:ffXX:XXXX`,
+RFC 4291) e reverso **`ip6.arpa`** (32 nibbles), tabelas de referência/conversão,
+GRC/segurança (privacidade SLAAC, RA Guard, ausência de NAT), OSPFv3/EIGRP, dicas de
+terminal (`ip -6`, `ping -6`) e "resposta tipo prova". Abas: **Comparador** (bits em
+comum até o prefixo), **Domínio** (resolve o registro **AAAA** via dnsjava), **Nibbles**
+(expansão ↔ compressão RFC 5952) e **Conceitos**. Barra de ações com **histórico** por
+navegador (replay) e exportação **JSON/PDF** (protegida por admin).
+
+**`/ipv6` — Calculadora IPv6 (CIDR).** Seis abas: **Sub-redes** (divide um prefixo no
+prefixo alvo, contagem `2^n` exata mesmo em blocos gigantes), **EUI-64** (deriva o
+Interface ID e o SLAAC a partir do MAC, com o flip do bit U/L e o `FF:FE` destacados na
+grade de bits), **ULA** (gera um `fd00::/8` pseudo-aleatório, RFC 4193), **Sumarizar**
+(supernet + merge dos blocos, com relação de contenção), **Faixa → CIDR** (lista mínima
+de blocos que cobre a faixa) e **VLANs** (uma LAN /64 por VLAN, gateway SVI `::1`, SVI
+Cisco `interface VlanN` com `ipv6 nd managed/other-config-flag` conforme DHCPv6/SLAAC e
+trunk 802.1Q `switchport trunk allowed vlan`).
+
+**`/ipv6/resolucao` — Resolução IPv6.** O análogo IPv6 do VLSM+WAN, dimensionado por
+sub-redes e não por hosts. **Projetar**: dado um bloco (ex.: /48), aloca um /64 por
+localidade (localidades **dinâmicas** — o usuário adiciona/remove quantas quiser),
+enlaces WAN /127 (RFC 6164), CLI OSPFv3/EIGRP por roteador, **diagrama de arquitetura
+Mermaid** por topologia (estrela/estendida/malha) e exportação do plano em `.txt`.
+**Engenharia Reversa**: cola uma config Cisco e o sistema reconstrói hostname,
+interfaces, endereços (com o tipo IANA de cada um), rotas estáticas e protocolos.
 
 ### Módulo 3 — Portas (`/portas`) e Protocolos (`/protocolos`)
 
@@ -914,6 +960,7 @@ Cobertura por área:
 |------|--------------------|
 | Análise Didática | `Ipv4KernelTest`, `AnaliseDidaticaHttpTest`, `AnaliseExportHttpTest`, `HistoricoApiHttpTest`, `GeoLookupServiceTest`, `PdfSimplesServiceTest` |
 | Calculadora | `DivisaoServiceTest`, `VlanServiceTest`, `AgregacaoServiceTest`, `CalculadoraHttpTest` |
+| IPv6 | `Ipv6SubnetKernelTest` (kernel: análise, EUI-64, ULA, sumarização, faixa, projeto, engenharia reversa, nibbles, VLANs, solicited-node), `Ipv6HttpTest` (as abas e APIs), `Ipv6DominioAaaaIT` (resolução AAAA, guardada por `Assumptions`) |
 | Saúde | `HealthResourceTest` |
 | Portas / Protocolos | `PortasServiceTest`, `ProtocolosServiceTest` |
 | Resolução VLSM/WAN | `VlsmServiceTest`, `VlsmPlanningServiceTest`, `ResolucaoProblemasHttpTest`, `BulkClassImportServiceTest` |

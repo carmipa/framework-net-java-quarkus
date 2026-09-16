@@ -2,15 +2,17 @@
 <div class="calc-form-card mb-3">
     <h6 class="calc-form-title"><span class="material-symbols-outlined">vpn_lock</span> Gerador de ULA (RFC 4193)</h6>
     <p class="calc-hint">O "IP privado do IPv6": um prefixo fd00::/8 único para uso interno.</p>
-    <form id="formUla" class="row g-3 align-items-end" hx-post="/ipv6/api/ula" hx-target="#saidaUla" hx-swap="innerHTML"
+    <form id="formUla" hx-post="/ipv6/api/ula" hx-target="#saidaUla" hx-swap="innerHTML"
           hx-disabled-elt="find button[type='submit']">
-        <div class="col-lg-6 col-md-6">
-            <label for="ipv6Sid" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">tag</span> Subnet ID <span class="text-muted">(opcional, 0–65535)</span></label>
-            <input type="text" class="aed-input form-control input-numeric" id="ipv6Sid" name="subnetId"
-                   inputmode="numeric" placeholder="0" value="0" autocomplete="off" spellcheck="false">
+        <div class="row g-3 align-items-start">
+            <div class="col-lg-6 col-md-6">
+                <label for="ipv6Sid" class="form-label text-secondary"><span class="material-symbols-outlined" aria-hidden="true">tag</span> Subnet ID <span class="text-muted">(opcional, 0–65535)</span></label>
+                <input type="text" class="aed-input form-control input-numeric" id="ipv6Sid" name="subnetId"
+                       inputmode="numeric" placeholder="0" value="0" autocomplete="off" spellcheck="false">
+            </div>
         </div>
-        <div class="col-lg-6 col-md-12 d-flex gap-2">
-            <button type="submit" class="aed-btn aed-btn-execute flex-fill" title="Gerar um prefixo ULA pseudo-aleatório"><span class="spinner-border spinner-border-sm htmx-indicator" role="status" aria-hidden="true"></span><span class="material-symbols-outlined">casino</span> Gerar ULA</button>
+        <div class="d-flex gap-2 mt-2">
+            <button type="submit" class="aed-btn aed-btn-execute" title="Gerar um prefixo ULA pseudo-aleatório"><span class="spinner-border spinner-border-sm htmx-indicator" role="status" aria-hidden="true"></span><span class="material-symbols-outlined">casino</span> Gerar ULA</button>
             <button type="button" class="aed-btn aed-btn-neutral" data-limpar title="Esvaziar o campo e apagar o resultado"><span class="material-symbols-outlined">delete_sweep</span> Limpar</button>
         </div>
     </form>
