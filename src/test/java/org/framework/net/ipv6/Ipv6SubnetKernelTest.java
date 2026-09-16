@@ -5,6 +5,8 @@ import org.framework.net.ipv6.domain.Ipv6SubnetKernel.AnaliseIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.ComparacaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DecomposicaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DelegacaoPlano;
+import org.framework.net.ipv6.domain.Ipv6SubnetKernel.FaixaCidrIpv6;
+import org.framework.net.ipv6.domain.Ipv6SubnetKernel.SumarizacaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.DivisaoIpv6;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.Eui64Result;
 import org.framework.net.ipv6.domain.Ipv6SubnetKernel.UlaResult;
@@ -212,6 +214,49 @@ class Ipv6SubnetKernelTest {
     void planejarDelegacaoRejeitaSemNomes() {
         assertThrows(Ipv6Exception.class,
                 () -> kernel.planejarDelegacao("2001:db8::/48", 64, java.util.List.of(), 256));
+    }
+
+    @Test
+    void sumarizarQuatroContiguasViramUmSlash62() {
+        // Gabarito independente: quatro /64 contíguos (0..3) alinham em um /62.
+        SumarizacaoIpv6 s = kernel.sumarizar(java.util.List.of(
+                "2001:db8:0:0::/64", "2001:db8:0:1::/64", "2001:db8:0:2::/64", "2001:db8:0:3::/64"));
+        assertEquals("2001:db8::/62", s.supernet());
+        assertEquals(1, s.blocosMesclados().size());
+        assertEquals("2001:db8::/62", s.blocosMesclados().get(0).cidr());
+    }
+
+    @Test
+    void sumarizarDetectaContencao() {
+        SumarizacaoIpv6 s = kernel.sumarizar(java.util.List.of("2001:db8::/32", "2001:db8:0:1::/64"));
+        assertTrue(s.umContemOutro());
+        assertTrue(s.relacao().toLowerCase().contains("cont"));
+        assertEquals("2001:db8::/32", s.supernet());
+    }
+
+    @Test
+    void sumarizarRejeitaListaVazia() {
+        assertThrows(Ipv6Exception.class, () -> kernel.sumarizar(java.util.List.of()));
+    }
+
+    @Test
+    void faixaParaCidrCobreExatamenteUmSlash112() {
+        // 2001:db8::0000 .. 2001:db8::ffff = 2^16 endereços alinhados = um /112.
+        FaixaCidrIpv6 f = kernel.faixaParaCidr("2001:db8::", "2001:db8::ffff", 256);
+        assertEquals(1, f.quantidadeBlocos());
+        assertEquals("2001:db8::/112", f.blocos().get(0).cidr());
+    }
+
+    @Test
+    void faixaParaCidrRejeitaFaixaInvertida() {
+        Ipv6Exception ex = assertThrows(Ipv6Exception.class,
+                () -> kernel.faixaParaCidr("2001:db8::ffff", "2001:db8::", 256));
+        assertTrue(ex.getMessage().toLowerCase().contains("invertida"));
+    }
+
+    @Test
+    void faixaParaCidrRejeitaEnderecoComPrefixo() {
+        assertThrows(Ipv6Exception.class, () -> kernel.faixaParaCidr("2001:db8::/64", "2001:db8::ffff", 256));
     }
 
     @Test

@@ -425,6 +425,141 @@ public class Ipv6SubnetKernel {
                 prefixoBase, prefixoAlvo, capacidade.toString(), limpos.size(), truncado, alocacoes, enunciado);
     }
 
+    /**
+     * PROPÓSITO DE NEGÓCIO: sumariza N prefixos/endereços IPv6 — o análogo IPv6 do "Sumarizar e
+     * comparar" do IPv4. Calcula o supernet (menor prefixo que cobre todos), a lista mínima de
+     * blocos mesclados e, quando são exatamente dois, a relação de contenção.
+     *
+     * INVARIANTES DO DOMÍNIO: a sumarização é por fronteira de bit (menor prefixo comum); nunca
+     * inventa "máscara". Um /0 cobre tudo. Reusa a biblioteca ipaddress (merge/cover por prefixo).
+     *
+     * COMPORTAMENTO EM CASO DE FALHA: lista vazia ou entrada malformada lança {@link Ipv6Exception}.
+     */
+    public SumarizacaoIpv6 sumarizar(List<String> entradas) {
+        List<IPv6Address> blocos = new ArrayList<>();
+        if (entradas != null) {
+            for (String e : entradas) {
+                if (e == null || e.strip().isEmpty()) {
+                    continue;
+                }
+                String s = e.strip().replace("\"", "").replace("'", "");
+                IPAddressString ps = new IPAddressString(s);
+                if (!ps.isValid() || !ps.isIPv6()) {
+                    throw new Ipv6Exception("Prefixo/endereço IPv6 inválido na lista: " + s);
+                }
+                IPv6Address a = ps.getAddress().toIPv6();
+                blocos.add(a.isPrefixed() ? a.toPrefixBlock() : a.withoutPrefixLength());
+            }
+        }
+        if (blocos.isEmpty()) {
+            throw new Ipv6Exception("Informe ao menos dois prefixos IPv6 para sumarizar (um por linha).");
+        }
+
+        IPv6Address supernet = blocos.get(0);
+        for (int i = 1; i < blocos.size(); i++) {
+            supernet = supernet.coverWithPrefixBlock(blocos.get(i));
+        }
+        IPv6Address[] merged = blocos.get(0).mergeToPrefixBlocks(blocos.toArray(new IPv6Address[0]));
+
+        List<BlocoSumario> mesclados = new ArrayList<>(merged.length);
+        for (IPv6Address b : merged) {
+            mesclados.add(blocoSumario(b));
+        }
+
+        boolean umContemOutro = false;
+        String relacao;
+        if (blocos.size() == 2) {
+            IPv6Address a = blocos.get(0);
+            IPv6Address b = blocos.get(1);
+            if (a.contains(b) && b.contains(a)) {
+                relacao = "Os dois descrevem o mesmo bloco.";
+                umContemOutro = true;
+            } else if (a.contains(b)) {
+                relacao = "O 1º prefixo contém o 2º.";
+                umContemOutro = true;
+            } else if (b.contains(a)) {
+                relacao = "O 2º prefixo contém o 1º.";
+                umContemOutro = true;
+            } else {
+                relacao = "Nenhum contém o outro; o supernet acima é o menor bloco que cobre ambos.";
+            }
+        } else {
+            relacao = "Supernet = menor prefixo que cobre todos; a lista mesclada é o conjunto mínimo de blocos.";
+        }
+
+        Integer pfx = supernet.getNetworkPrefixLength();
+        int prefixoSupernet = pfx == null ? 128 : pfx;
+        String explic = "Alinhamento de bits: o supernet /" + prefixoSupernet + " é o maior prefixo comum a"
+                + " todas as entradas. Diferente do IPv4, não há máscara decimal — só a fronteira de bit.";
+        return new SumarizacaoIpv6(
+                supernet.getLower().withoutPrefixLength().toCompressedString() + "/" + prefixoSupernet,
+                supernet.getLower().withoutPrefixLength().toCompressedString(),
+                supernet.getUpper().withoutPrefixLength().toCompressedString(),
+                supernet.getCount().toString(),
+                blocos.size(), mesclados, explic, umContemOutro, relacao);
+    }
+
+    /**
+     * PROPÓSITO DE NEGÓCIO: converte uma faixa [início, fim] de endereços IPv6 na lista MÍNIMA de
+     * blocos CIDR que a cobre exatamente — o análogo IPv6 do "Faixa para CIDR" do IPv4.
+     *
+     * INVARIANTES DO DOMÍNIO: início ≤ fim (senão faixa invertida); a decomposição em prefixos é
+     * exata (nem sobra nem falta endereço). Reusa {@code spanWithPrefixBlocks} da biblioteca.
+     *
+     * COMPORTAMENTO EM CASO DE FALHA: endereço inválido, entrada com prefixo (deve ser endereço puro)
+     * ou faixa invertida lançam {@link Ipv6Exception}.
+     */
+    public FaixaCidrIpv6 faixaParaCidr(String inicio, String fim, int maxLinhas) {
+        IPv6Address ini = enderecoPuro(inicio, "início");
+        IPv6Address fimA = enderecoPuro(fim, "fim");
+        BigInteger vi = new BigInteger(1, ini.getBytes());
+        BigInteger vf = new BigInteger(1, fimA.getBytes());
+        if (vi.compareTo(vf) > 0) {
+            throw new Ipv6Exception("Faixa invertida: o início (" + ini.toCompressedString()
+                    + ") é maior que o fim (" + fimA.toCompressedString() + "). Troque a ordem.");
+        }
+        IPv6Address[] blocos = ini.spanWithPrefixBlocks(fimA);
+        int limite = Math.min(blocos.length, Math.max(1, maxLinhas));
+        List<BlocoSumario> lista = new ArrayList<>(limite);
+        for (int i = 0; i < limite; i++) {
+            lista.add(blocoSumario(blocos[i]));
+        }
+        String explic = "A faixa foi decomposta em " + blocos.length + " bloco(s) CIDR alinhado(s) a bit."
+                + " Cada bloco é o maior prefixo que cabe a partir do ponto atual sem ultrapassar o fim.";
+        return new FaixaCidrIpv6(ini.toCompressedString(), fimA.toCompressedString(),
+                blocos.length, lista, explic);
+    }
+
+    private IPv6Address enderecoPuro(String entrada, String rotulo) {
+        String s = entrada == null ? "" : entrada.strip().replace("\"", "").replace("'", "");
+        if (s.isEmpty()) {
+            throw new Ipv6Exception("Informe o endereço de " + rotulo + " da faixa (ex.: 2001:db8::).");
+        }
+        int idx = s.indexOf('%');
+        if (idx >= 0) {
+            s = s.substring(0, idx).strip();
+        }
+        IPAddressString ps = new IPAddressString(s);
+        if (!ps.isValid() || !ps.isIPv6()) {
+            throw new Ipv6Exception("Endereço IPv6 de " + rotulo + " inválido (" + s + ").");
+        }
+        IPv6Address a = ps.getAddress().toIPv6();
+        if (a.isPrefixed()) {
+            throw new Ipv6Exception("Em " + rotulo + ", informe um endereço puro (sem /prefixo).");
+        }
+        return a;
+    }
+
+    private BlocoSumario blocoSumario(IPv6Address bloco) {
+        Integer pfx = bloco.getNetworkPrefixLength();
+        int p = pfx == null ? 128 : pfx;
+        return new BlocoSumario(
+                bloco.getLower().withoutPrefixLength().toCompressedString() + "/" + p,
+                bloco.getLower().withoutPrefixLength().toCompressedString(),
+                bloco.getUpper().withoutPrefixLength().toCompressedString(),
+                bloco.getCount().toString());
+    }
+
     /** Host (sem prefixo, sem zone index) já validado por {@link #analisar}. */
     private IPv6Address hostDe(String entrada) {
         String bruto = entrada == null ? "" : entrada.strip().replace("\"", "").replace("'", "");
@@ -805,6 +940,18 @@ public class Ipv6SubnetKernel {
     /** Plano de delegação de prefixo (análogo IPv6 do VLSM): base, alvo, capacidade e alocações. */
     public record DelegacaoPlano(String baseCidr, int prefixoBase, int prefixoAlvo, String capacidade,
             int usados, boolean truncado, List<AlocacaoLan> alocacoes, String enunciado) { }
+
+    /** Um bloco CIDR IPv6 com sua faixa e contagem (usado por sumarização e faixa→CIDR). */
+    public record BlocoSumario(String cidr, String primeiro, String ultimo, String enderecos) { }
+
+    /** Resultado da sumarização: supernet, blocos mesclados mínimos e relação de contenção. */
+    public record SumarizacaoIpv6(String supernet, String supernetPrimeiro, String supernetUltimo,
+            String supernetEnderecos, int entradas, List<BlocoSumario> blocosMesclados,
+            String explicacao, boolean umContemOutro, String relacao) { }
+
+    /** Resultado de faixa→CIDR: início, fim e a lista mínima de blocos CIDR que a cobre. */
+    public record FaixaCidrIpv6(String inicio, String fim, int quantidadeBlocos,
+            List<BlocoSumario> blocos, String explicacao) { }
 
     /**
      * Um hexteto (16 bits): hex, binário completo, quantos bits são de rede (prefixo) e o binário

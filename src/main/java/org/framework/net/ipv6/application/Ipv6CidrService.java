@@ -105,6 +105,22 @@ public class Ipv6CidrService {
         return p;
     }
 
+    /** Sumariza N prefixos/endereços IPv6 (supernet, blocos mesclados, contenção). */
+    public Ipv6SubnetKernel.SumarizacaoIpv6 sumarizar(java.util.List<String> entradas) {
+        Ipv6SubnetKernel.SumarizacaoIpv6 r = kernel.sumarizar(entradas);
+        telemetriaLogger.logEvent("info", "ipv6", "ipv6_sumarizacao",
+                Map.of("status", "ok", "entradas", r.entradas(), "blocos", r.blocosMesclados().size()));
+        return r;
+    }
+
+    /** Converte uma faixa [início, fim] IPv6 na lista mínima de blocos CIDR. */
+    public Ipv6SubnetKernel.FaixaCidrIpv6 faixaParaCidr(String inicio, String fim) {
+        Ipv6SubnetKernel.FaixaCidrIpv6 r = kernel.faixaParaCidr(inicio, fim, config.maxLinhas());
+        telemetriaLogger.logEvent("info", "ipv6", "ipv6_faixa_cidr",
+                Map.of("status", "ok", "blocos", r.quantidadeBlocos()));
+        return r;
+    }
+
     /** Compara dois endereços/prefixos IPv6 (mesma /64, contenção, distância, bits comuns). */
     public ComparacaoIpv6 comparar(String a, String b) {
         ComparacaoIpv6 r = kernel.comparar(a, b);

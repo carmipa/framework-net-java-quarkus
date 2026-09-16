@@ -209,6 +209,45 @@ class Ipv6HttpTest {
     }
 
     @Test
+    void sumarizarQuatroContiguasMostraSupernet() {
+        given()
+                .contentType(FORM)
+                .formParam("prefixos", "2001:db8:0:0::/64\n2001:db8:0:1::/64\n2001:db8:0:2::/64\n2001:db8:0:3::/64")
+                .when().post("/ipv6/api/sumarizar")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("Supernet"))
+                .body(containsString("2001:db8::/62"));
+    }
+
+    @Test
+    void faixaParaCidrCobreComUmBloco() {
+        given()
+                .contentType(FORM)
+                .formParam("inicio", "2001:db8::")
+                .formParam("fim", "2001:db8::ffff")
+                .when().post("/ipv6/api/faixa")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("2001:db8::/112"));
+    }
+
+    @Test
+    void faixaInvertidaVolta400() {
+        given()
+                .contentType(FORM)
+                .header("HX-Request", "true")
+                .formParam("inicio", "2001:db8::ffff")
+                .formParam("fim", "2001:db8::")
+                .when().post("/ipv6/api/faixa")
+                .then()
+                .statusCode(400)
+                .body(containsString("invertida"));
+    }
+
+    @Test
     void entradaInvalidaNoHtmxVolta400ComFragmento() {
         given()
                 .contentType(FORM)

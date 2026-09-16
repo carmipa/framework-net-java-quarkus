@@ -39,15 +39,27 @@
                     title="ULA: gere um prefixo privado fd00::/8 pseudo-aleatório (RFC 4193)">
                 <span class="material-symbols-outlined">vpn_lock</span><span>ULA</span>
             </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="sumarizar" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Sumarizar: supernet (menor prefixo comum), blocos mesclados e contenção">
+                <span class="material-symbols-outlined">merge</span><span>Sumarizar</span>
+            </button>
+            <button type="button" class="aed-mode-btn tab-trigger" data-tab="faixa" role="tab"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Faixa → CIDR: converte uma faixa de endereços na lista mínima de prefixos">
+                <span class="material-symbols-outlined">linear_scale</span><span>Faixa → CIDR</span>
+            </button>
         </div>
 
         <div class="tab-panel" data-tab-panel="dividir">{#include ipv6/partials/tab_dividir.html /}</div>
         <div class="tab-panel" data-tab-panel="eui64">{#include ipv6/partials/tab_eui64.html /}</div>
         <div class="tab-panel" data-tab-panel="ula">{#include ipv6/partials/tab_ula.html /}</div>
+        <div class="tab-panel" data-tab-panel="sumarizar">{#include ipv6/partials/tab_sumarizar.html /}</div>
+        <div class="tab-panel" data-tab-panel="faixa">{#include ipv6/partials/tab_faixa.html /}</div>
     </div>
 </div>
 {/content}
 {#extraScripts}
-<script src="/ipv6/js/ipv6.js?v=20260916b"></script>
+<script src="/ipv6/js/ipv6.js?v=20260916c"></script>
 {/extraScripts}
 {/include}

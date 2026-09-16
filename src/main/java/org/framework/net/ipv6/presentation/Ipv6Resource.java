@@ -84,6 +84,14 @@ public class Ipv6Resource {
     @Location("ipv6/partials/resultado_dominio.html")
     Template resultadoDominio;
 
+    @Inject
+    @Location("ipv6/partials/resultado_sumarizacao.html")
+    Template resultadoSumarizacao;
+
+    @Inject
+    @Location("ipv6/partials/resultado_faixa.html")
+    Template resultadoFaixa;
+
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance pagina() {
@@ -156,6 +164,26 @@ public class Ipv6Resource {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance ula(@FormParam("subnetId") String subnetId) {
         return resultadoUla.data("u", service.gerarUla(subnetId));
+    }
+
+    /** Sumariza N prefixos IPv6 (um por linha) em um supernet + blocos mesclados mínimos. */
+    @POST
+    @Path("/api/sumarizar")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance sumarizar(@FormParam("prefixos") String prefixos) {
+        java.util.List<String> lista = prefixos == null ? java.util.List.of()
+                : java.util.Arrays.asList(prefixos.split("\\r?\\n"));
+        return resultadoSumarizacao.data("s", service.sumarizar(lista));
+    }
+
+    /** Converte uma faixa [início, fim] IPv6 na lista mínima de blocos CIDR. */
+    @POST
+    @Path("/api/faixa")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance faixa(@FormParam("inicio") String inicio, @FormParam("fim") String fim) {
+        return resultadoFaixa.data("f", service.faixaParaCidr(inicio, fim));
     }
 
     /** Compara dois endereços/prefixos IPv6 (mesma /64, contenção, distância). */
