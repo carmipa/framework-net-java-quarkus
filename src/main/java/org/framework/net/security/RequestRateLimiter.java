@@ -21,6 +21,10 @@ public class RequestRateLimiter {
     @ConfigProperty(name = "framework.security.rate-limit-heavy-per-minute", defaultValue = "30")
     int heavyLimitPerMinute;
 
+    /** Teto por cliente somando TODAS as rotas: sem ele o total por IP era o limite × número de rotas. */
+    @ConfigProperty(name = "framework.security.rate-limit-global-per-minute", defaultValue = "600")
+    int globalLimitPerMinute;
+
     @Inject
     CurrentVertxRequest currentVertxRequest;
 
@@ -28,11 +32,24 @@ public class RequestRateLimiter {
     private final java.util.concurrent.atomic.AtomicLong lastPruneMinute = new java.util.concurrent.atomic.AtomicLong(-1);
 
     public boolean allow(ContainerRequestContext ctx, boolean heavy) {
+        return allow(ctx, normalizePath(ctx.getUriInfo().getPath()), heavy);
+    }
+
+    /**
+     * PROPÓSITO: decide se a requisição cabe no limite de taxa do cliente.
+     * INVARIANTES: dois baldes por requisição — (cliente, ROTA) e (cliente, global). A rota é a
+     * identidade do endpoint resolvido (classe#método), nunca o caminho bruto: com o caminho, cada
+     * {@code /protocolos/<slug>} ganhava balde próprio — limite inexistente e mapa crescendo com a
+     * escolha do atacante. O número de chaves fica limitado a clientes × endpoints.
+     * FALHA: não lança; limitador desligado devolve sempre true.
+     */
+    public boolean allow(ContainerRequestContext ctx, String routeKey, boolean heavy) {
         if (!rateLimitEnabled) {
             return true;
         }
         int limit = heavy ? heavyLimitPerMinute : defaultLimitPerMinute;
-        String key = clientKey(ctx) + "|" + normalizePath(ctx.getUriInfo().getPath()) + (heavy ? "|heavy" : "");
+        String client = clientKey(ctx);
+        String key = client + "|" + routeKey + (heavy ? "|heavy" : "");
         long windowMinute = System.currentTimeMillis() / 60_000L;
         // Limpeza oportunista (sem scheduler): no máximo uma vez por minuto, evita crescimento
         // ilimitado do mapa de buckets (memory leak / vetor de DoS).
@@ -40,13 +57,19 @@ public class RequestRateLimiter {
         if (windowMinute != previousPrune && lastPruneMinute.compareAndSet(previousPrune, windowMinute)) {
             prune();
         }
+        boolean global = incrementar(client + "|*", windowMinute) <= globalLimitPerMinute;
+        boolean rota = incrementar(key, windowMinute) <= limit;
+        return global && rota;
+    }
+
+    private int incrementar(String key, long windowMinute) {
         Bucket bucket = buckets.compute(key, (k, existing) -> {
             if (existing == null || existing.windowMinute != windowMinute) {
                 return new Bucket(windowMinute, new AtomicInteger(0));
             }
             return existing;
         });
-        return bucket.counter.incrementAndGet() <= limit;
+        return bucket.counter.incrementAndGet();
     }
 
     public void prune() {
