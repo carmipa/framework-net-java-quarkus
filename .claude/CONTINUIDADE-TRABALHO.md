@@ -40,8 +40,15 @@ EM ANDAMENTO AGORA:
   o texto anterior dizia "aguardando decisao sobre commits", e o git mostra o contrario
   (`git log db31b43..HEAD` = 21 commits; origin/main...HEAD = 0 0). Depois disso vieram as frentes IPv6.
 
+AUDITORIA COMPLETA 2026-09-24 (HEAD 60678fa, 865 testes verdes, somente leitura):
+- Relatorio: C:\cerebro_de_ia\cerebro_de_ia\chats\2026-09-24_claude-framework-net-auditoria-completa.md
+- ALTA: F01 DoS /ipv6/api/projetar (OOM medido n=990) · F02 DoS import turma (~n^6) · F06 HistoricoStore
+  corrompe -> crash-loop · F07 /history expoe IP+geo (decisao 04/08 nao implementada) · F35 mascara "/25"
+  no CLI Cisco · F36 IPv6 "2001:db8::*:*" no valor padrao + Nibbles 500 · F38 2001:db8::1 "roteavel".
+- Correcao NAO iniciada: aguarda Paulo mandar corrigir.
+
 PROXIMA ACAO EXECUTAVEL EXATA:
-- Nenhuma nesta tarefa. Itens 7, 9 e 10 dependem de decisao de Paulo (refator com risco / produto: Google Translate).
+- Se Paulo mandar corrigir: comecar por F35/F36/F38 (teste vermelho com gabarito Python, depois fix), depois F01/F02/F06. Itens 7, 9 e 10 dependem de decisao de Paulo (refator com risco / produto: Google Translate).
 
 TESTES / GUARDAS: gradle build = BUILD SUCCESSFUL, 784 testes 0 falhas. Nao ha Redis local (cache L2 off por default).
 GAPS E BLOQUEIOS REAIS: nenhum.
