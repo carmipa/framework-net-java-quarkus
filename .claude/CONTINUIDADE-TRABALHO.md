@@ -47,16 +47,14 @@ AUDITORIA COMPLETA 2026-09-24 (HEAD 60678fa, 865 testes verdes):
 TAREFA ATUAL (Paulo, 2026-09-24): "corrija todos uma a um". Commits locais, SEM push.
 Metodo por item: teste vermelho pela causa (A2) com gabarito RFC/Python (A3) -> fix -> verde -> varrer classe.
 
-FECHADO COM ARTEFATO:
-- 8864b2c F35 F36 F37 F38 F39
-- a8acc2f F01(kernel) F40 F44 F45 F46
+FECHADO COM ARTEFATO (commits locais, sem push):
+- 8864b2c F35 F36 F37 F38 F39 | a8acc2f F01 F40 F44 F45 F46 | 12f3918 F15 F41 F42 F43
+- 5d474d9 F02 | 57a74a0 F06 | fa326de F07 | 3b5d0a2 F03 | 8a25e53 F04 | 6ce1d54 F05 | (este) F29
 
 FILA (ordem):
-- math: F42 decoder TotalLength+IPv6 comprimido; F43 UDP checksum 0->FFFF; F15 split trailing dot (Encapsulamento, Acl, ConstrutorPacote); F41 ">=" (dado morto)
-- disponibilidade: F02 teto localidades no import turma; F06 HistoricoStore lock+atomico+boot tolerante; F03 DnsResolver fila limitada+cancel; F04 rate limit (slug + HEAVY /ipv6/api,/localizacao/api,/history); F05 /localizacao/api/ip so literal; F29 Nominatim reverse cache+throttle
-- privacidade: F07 historico por sessao (cookie HttpOnly id aleatorio, particao, teto, replay); F08 http.route sanitizado; F30 sw.js; F34 cookie __Host- em prod
+- privacidade: F08 http.route sanitizado; F30 sw.js; F34 cookie __Host- em prod
 - frontend: F09 informacoes .raw; F11 datagrid escape; F12 ipv6 export/copiar por aba; F13 widget mascara; F14 htmx 403/429/500; F10 mermaid click; F31 console limpar; F32 privacidade dual-stack; F17 fonte local; F18 translate=no; F19 aria-hidden; F20 SRI/pin
 - testes/build/ops/docs: F16 moduloDePath+teste derivado; F22 ArquiteturaCamadasTest (+ item 7 DnsResolucaoException->shared); F23 assercoes; F24 403 dono; F25 Assumptions rede; F26 csp/sitemap/robots; F21 Dockerfile com testes; F27 logging compose+README; F28 stream re-teste; F33 README
 
 PROXIMA ACAO EXECUTAVEL EXATA:
-- F42: teste em TrafegoDecoderServiceTest com quadro TCP ACK + 6 bytes de padding -> payload 0; depois fix em TrafegoDecoderService.java:80
+- F08: teste em DatasetPublicavelService — evento com rota /protocolos/8.8.8.8 nao pode bloquear a publicacao; http.route deve sair pelo template/rota, nao cru (DatasetPublicavelService.java:156)
