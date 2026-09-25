@@ -25,7 +25,8 @@
  *     /offline.html para navegacao e um erro 503 sintetico para o resto. Nenhuma
  *     falha do service worker impede a aplicacao de funcionar online.
  */
-const VERSAO = 'framework-net-v1';
+/* v2: expurga caches da v1, que guardavam export/API de dado pessoal (auditoria F30). */
+const VERSAO = 'framework-net-v2';
 const CACHE_ESTATICO = `${VERSAO}-estatico`;
 const PAGINA_OFFLINE = '/offline.html';
 
@@ -38,7 +39,12 @@ const PRE_CACHE = [
 ];
 
 /* Prefixos que nunca entram no cache — conteudo autenticado ou volatil. */
-const NUNCA_CACHEAR = ['/telemetria', '/admin', '/export', '/history', '/health'];
+const NUNCA_CACHEAR = ['/telemetria', '/admin', '/login', '/export', '/history', '/health'];
+
+/* Trechos em QUALQUER posicao do caminho: toda API e todo export de modulo (ex.: /ipv6/export,
+   /localizacao/api/inspecao com IP e cabecalhos). Regra por familia, nao lista de rotas: rota nova
+   ja nasce fora do cache. O Cache Storage sobrevive no disco do PC de laboratorio. */
+const NUNCA_CACHEAR_TRECHOS = ['/api/', '/export'];
 
 self.addEventListener('install', (evento) => {
   evento.waitUntil(
@@ -68,7 +74,8 @@ self.addEventListener('activate', (evento) => {
 });
 
 function ehProtegida(url) {
-  return NUNCA_CACHEAR.some((prefixo) => url.pathname.startsWith(prefixo));
+  return NUNCA_CACHEAR.some((prefixo) => url.pathname.startsWith(prefixo))
+    || NUNCA_CACHEAR_TRECHOS.some((trecho) => url.pathname.includes(trecho));
 }
 
 self.addEventListener('fetch', (evento) => {
