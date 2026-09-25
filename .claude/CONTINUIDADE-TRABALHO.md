@@ -40,16 +40,23 @@ EM ANDAMENTO AGORA:
   o texto anterior dizia "aguardando decisao sobre commits", e o git mostra o contrario
   (`git log db31b43..HEAD` = 21 commits; origin/main...HEAD = 0 0). Depois disso vieram as frentes IPv6.
 
-AUDITORIA COMPLETA 2026-09-24 (HEAD 60678fa, 865 testes verdes, somente leitura):
-- Relatorio: C:\cerebro_de_ia\cerebro_de_ia\chats\2026-09-24_claude-framework-net-auditoria-completa.md
-- ALTA: F01 DoS /ipv6/api/projetar (OOM medido n=990) · F02 DoS import turma (~n^6) · F06 HistoricoStore
-  corrompe -> crash-loop · F07 /history expoe IP+geo (decisao 04/08 nao implementada) · F35 mascara "/25"
-  no CLI Cisco · F36 IPv6 "2001:db8::*:*" no valor padrao + Nibbles 500 · F38 2001:db8::1 "roteavel".
-- Correcao NAO iniciada: aguarda Paulo mandar corrigir.
+AUDITORIA COMPLETA 2026-09-24 (HEAD 60678fa, 865 testes verdes):
+- Relatorio: C:\cerebro_de_ia\cerebro_de_ia\chats6-09-24_claude-framework-net-auditoria-completa.md
+- Scratchpad da sessao 51d37306: achados.md (F01-F46) e res.py (resumo de resultados de teste)
+
+TAREFA ATUAL (Paulo, 2026-09-24): "corrija todos uma a um". Commits locais, SEM push.
+Metodo por item: teste vermelho pela causa (A2) com gabarito RFC/Python (A3) -> fix -> verde -> varrer classe.
+
+FECHADO COM ARTEFATO:
+- 8864b2c F35 F36 F37 F38 F39
+- a8acc2f F01(kernel) F40 F44 F45 F46
+
+FILA (ordem):
+- math: F42 decoder TotalLength+IPv6 comprimido; F43 UDP checksum 0->FFFF; F15 split trailing dot (Encapsulamento, Acl, ConstrutorPacote); F41 ">=" (dado morto)
+- disponibilidade: F02 teto localidades no import turma; F06 HistoricoStore lock+atomico+boot tolerante; F03 DnsResolver fila limitada+cancel; F04 rate limit (slug + HEAVY /ipv6/api,/localizacao/api,/history); F05 /localizacao/api/ip so literal; F29 Nominatim reverse cache+throttle
+- privacidade: F07 historico por sessao (cookie HttpOnly id aleatorio, particao, teto, replay); F08 http.route sanitizado; F30 sw.js; F34 cookie __Host- em prod
+- frontend: F09 informacoes .raw; F11 datagrid escape; F12 ipv6 export/copiar por aba; F13 widget mascara; F14 htmx 403/429/500; F10 mermaid click; F31 console limpar; F32 privacidade dual-stack; F17 fonte local; F18 translate=no; F19 aria-hidden; F20 SRI/pin
+- testes/build/ops/docs: F16 moduloDePath+teste derivado; F22 ArquiteturaCamadasTest (+ item 7 DnsResolucaoException->shared); F23 assercoes; F24 403 dono; F25 Assumptions rede; F26 csp/sitemap/robots; F21 Dockerfile com testes; F27 logging compose+README; F28 stream re-teste; F33 README
 
 PROXIMA ACAO EXECUTAVEL EXATA:
-- Se Paulo mandar corrigir: comecar por F35/F36/F38 (teste vermelho com gabarito Python, depois fix), depois F01/F02/F06. Itens 7, 9 e 10 dependem de decisao de Paulo (refator com risco / produto: Google Translate).
-
-TESTES / GUARDAS: gradle build = BUILD SUCCESSFUL, 784 testes 0 falhas. Nao ha Redis local (cache L2 off por default).
-GAPS E BLOQUEIOS REAIS: nenhum.
-NAO REPETIR: assumir que PlanningResult.locations() vem ordenado — ele preserva a ordem de ENTRADA (a alocacao e que e maior-primeiro).
+- F42: teste em TrafegoDecoderServiceTest com quadro TCP ACK + 6 bytes de padding -> payload 0; depois fix em TrafegoDecoderService.java:80
