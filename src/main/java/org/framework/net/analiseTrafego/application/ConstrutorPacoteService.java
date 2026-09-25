@@ -173,7 +173,10 @@ public class ConstrutorPacoteService {
         put16(b, 4, 8 + payload.length); // length = cabeçalho + dados
         put16(b, 6, 0);                  // checksum zerado
         int ck = checksumL4(ipO, ipD, 17, b, payload);
-        put16(b, 6, checksumValido ? ck : corromper(ck));
+        // RFC 768: 0x0000 no campo significa "sem checksum"; um cálculo que dá zero é transmitido
+        // como 0xFFFF (o mesmo zero em complemento de um).
+        int transmitido = ck == 0 ? 0xFFFF : ck;
+        put16(b, 6, checksumValido ? transmitido : corromper(transmitido));
         return b;
     }
 
@@ -211,8 +214,16 @@ public class ConstrutorPacoteService {
     }
 
     /** Valor deliberadamente errado para o modo inválido — sempre diferente do correto. */
+    /**
+     * PROPÓSITO: gera um checksum deliberadamente ERRADO para o modo didático "inválido".
+     * INVARIANTES: o resultado nunca é equivalente ao correto em complemento de um (0x0000 e 0xFFFF
+     * são o mesmo zero — a inversão de bits antiga transformava um no outro e o pacote "errado"
+     * passava na verificação) e nunca é 0x0000 (no UDP significaria "sem checksum").
+     * FALHA: não lança.
+     */
     private static int corromper(int checksumCorreto) {
-        return checksumCorreto ^ 0xFFFF;
+        int r = (checksumCorreto ^ 0x5555) & 0xFFFF;
+        return r == 0 ? 0x0001 : r;
     }
 
     // ------------------------------------------------------------------ flags TCP
@@ -282,7 +293,7 @@ public class ConstrutorPacoteService {
         if (ip == null) {
             return -1;
         }
-        String[] o = ip.trim().split("\\.");
+        String[] o = ip.trim().split("\\.", -1);
         if (o.length != 4) {
             return -1;
         }

@@ -139,7 +139,7 @@ public class AclSimulatorService {
     // ---- IPv4 tipado, contido nesta fatia (sem acoplar a outro módulo) ----
 
     private static boolean ipValido(String ip) {
-        String[] octetos = ip.trim().split("\\.");
+        String[] octetos = ip.trim().split("\\.", -1);
         if (octetos.length != 4) {
             return false;
         }
@@ -161,7 +161,7 @@ public class AclSimulatorService {
     }
 
     private static long ipParaLong(String ip) {
-        String[] octetos = ip.trim().split("\\.");
+        String[] octetos = ip.trim().split("\\.", -1);
         long valor = 0L;
         for (String parte : octetos) {
             valor = (valor << 8) | (Integer.parseInt(parte) & 0xFF);

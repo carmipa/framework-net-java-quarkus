@@ -55,6 +55,38 @@ class ConstrutorPacoteServiceTest {
         assertTrue(valor(r, "TCP", "Flags").contains("SYN"));
     }
 
+    /**
+     * F43: RFC 768 — checksum UDP calculado 0x0000 é transmitido como 0xFFFF, porque 0 no campo
+     * significa "sem checksum". Caso achado por força bruta e conferido no oráculo Python RFC 1071
+     * (192.168.1.1→8.8.8.8, 59888→53, "hello!" soma 0x0000). O "inválido" nunca pode sair 0x0000
+     * (seria lido como "sem checksum", não como errado).
+     */
+    @Test
+    @DisplayName("UDP: checksum calculado 0 sai como 0xFFFF (RFC 768)")
+    void udpChecksumZeroViraFfff() {
+        PacoteConstruido ok = construtor.montar("udp", "192.168.1.1", "8.8.8.8",
+                "59888", "53", "", "64", "0", "0", "hello!", true);
+        assertTrue(ok.ok(), ok.erro());
+        assertEquals("ffff", ok.hex().substring(80, 84));
+
+        PacoteConstruido errado = construtor.montar("udp", "192.168.1.1", "8.8.8.8",
+                "59888", "53", "", "64", "0", "0", "hello!", false);
+        assertNotEquals("ffff", errado.hex().substring(80, 84));
+        assertNotEquals("0000", errado.hex().substring(80, 84));
+    }
+
+    /** F15: "10.0.0.1." (ponto sobrando) é IPv4 malformado; "10.0.0.1" é o controle legítimo (A1). */
+    @Test
+    @DisplayName("IP com ponto sobrando é recusado")
+    void ipComPontoSobrandoEhRecusado() {
+        assertFalse(construtor.montar("tcp", "10.0.0.1.", "10.0.0.2",
+                "1000", "80", "SYN", "64", "0", "1024", "", true).ok());
+        assertFalse(construtor.montar("tcp", "10.0.0.1", "10.0.0.2.",
+                "1000", "80", "SYN", "64", "0", "1024", "", true).ok());
+        assertTrue(construtor.montar("tcp", "10.0.0.1", "10.0.0.2",
+                "1000", "80", "SYN", "64", "0", "1024", "", true).ok());
+    }
+
     @Test
     @DisplayName("checksums do IPv4 e do TCP recomputam para zero (corretos)")
     void checksumsCorretos() {

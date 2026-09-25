@@ -147,7 +147,7 @@ public class EncapsulamentoService {
             return padrao;
         }
         String s = ip.strip();
-        String[] partes = s.split("\\.");
+        String[] partes = s.split("\\.", -1);
         if (partes.length != 4) {
             return null;
         }

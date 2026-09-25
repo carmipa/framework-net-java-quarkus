@@ -93,7 +93,7 @@ public class VlsmPlanningService {
             breakdown.put("total_needed", needed);
             breakdown.put("next_power_of_2", powerOf2);
             breakdown.put("host_bits_required", hostBits);
-            breakdown.put("formula_used", "2^" + hostBits + " = " + powerOf2 + " > " + needed + " ✓");
+            breakdown.put("formula_used", "2^" + hostBits + " = " + powerOf2 + " ≥ " + needed + " ✓");
             breakdown.put("prefix_calculation", "32 - " + hostBits + " = /" + prefix);
             breakdown.put("explanation_steps", List.of(
                     "1. Hosts solicitados: " + hosts,

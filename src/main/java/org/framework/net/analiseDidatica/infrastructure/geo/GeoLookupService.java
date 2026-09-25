@@ -197,7 +197,7 @@ public class GeoLookupService {
     }
 
     private static boolean looksLikeLiteralIpv4(String value) {
-        String[] parts = value.split("\\.");
+        String[] parts = value.split("\\.", -1);
         if (parts.length != 4) {
             return false;
         }

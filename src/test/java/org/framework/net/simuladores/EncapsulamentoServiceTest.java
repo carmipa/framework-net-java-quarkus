@@ -95,4 +95,11 @@ class EncapsulamentoServiceTest {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("campo não encontrado: nível " + nivel + " / " + nome));
     }
+
+    /** F15: "10.0.0.1." é IPv4 malformado e não pode ser ecoado como válido; controle legítimo passa (A1). */
+    @Test
+    void ipComPontoSobrandoEhRecusado() {
+        assertFalse(service.encapsular("oi", "TCP", "10.0.0.1.", "10.0.0.2", "1000", "80").ok());
+        assertTrue(service.encapsular("oi", "TCP", "10.0.0.1", "10.0.0.2", "1000", "80").ok());
+    }
 }

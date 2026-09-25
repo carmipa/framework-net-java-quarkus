@@ -145,7 +145,7 @@ public class BulkClassImportService {
         if (txt.contains("/")) {
             txt = txt.split("/", 2)[0].strip();
         }
-        String[] chunks = txt.split("\\.");
+        String[] chunks = txt.split("\\.", -1);
         if (chunks.length != 4) {
             return false;
         }

@@ -56,7 +56,11 @@ public class TrafegoDecoderService {
         String proxima = inicio;
         int offset = 0;
         int guarda = 0;
+        // Fim do datagrama IP segundo o próprio cabeçalho (Total Length / Payload Length). O que vier
+        // depois é trailer/padding de enlace (quadro Ethernet mínimo de 60 bytes), não dado da aplicação.
+        int fimDatagrama = bytes.length;
         while (proxima != null && offset < bytes.length && guarda++ < 10) {
+            fimDatagrama = Math.min(fimDatagrama, fimDeclarado(proxima, bytes, offset));
             Passo passo = switch (proxima) {
                 case "ethernet" -> decodeEthernet(bytes, offset);
                 case "arp" -> decodeArp(bytes, offset);
@@ -77,10 +81,32 @@ public class TrafegoDecoderService {
             offset = passo.proximoOffset();
             proxima = passo.proximaCamada();
         }
-        if (offset < bytes.length) {
-            camadas.add(payload(bytes, offset));
+        if (offset < fimDatagrama) {
+            camadas.add(payload(bytes, offset, fimDatagrama));
+        }
+        int inicioTrailer = Math.max(offset, fimDatagrama);
+        if (inicioTrailer < bytes.length) {
+            camadas.add(trailer(bytes, inicioTrailer));
         }
         return new ResultadoDecodificacao(true, "", bytes.length, inicio, camadas);
+    }
+
+    /**
+     * PROPÓSITO: onde o datagrama IP termina segundo o próprio cabeçalho — IPv4 Total Length,
+     * IPv6 40 + Payload Length — para separar dado da aplicação de padding do enlace.
+     * INVARIANTES: só cabeçalhos IP delimitam; valor incoerente (menor que o cabeçalho mínimo)
+     * é ignorado e o limite continua sendo o fim do buffer.
+     * FALHA: não lança; bytes insuficientes devolvem {@code b.length}.
+     */
+    private static int fimDeclarado(String camada, byte[] b, int off) {
+        if ("ipv4".equals(camada) && off + 4 <= b.length) {
+            int total = u16(b, off + 2);
+            return total >= 20 ? off + total : b.length;
+        }
+        if ("ipv6".equals(camada) && off + 6 <= b.length) {
+            return off + 40 + u16(b, off + 4);
+        }
+        return b.length;
     }
 
     // ------------------------------------------------------------------ camadas
@@ -243,13 +269,23 @@ public class TrafegoDecoderService {
         return new Passo(new Camada("ICMP", icmpTipo(tipo), campos), off + 4, null);
     }
 
-    private Camada payload(byte[] b, int off) {
-        int len = b.length - off;
+    private Camada payload(byte[] b, int off, int fim) {
+        int len = Math.min(fim, b.length) - off;
         String hex = hex(b, off, Math.min(len, 64));
         return new Camada("Payload / dados",
                 len + " bytes restantes",
                 List.of(campo("Bytes", hex + (len > 64 ? " …" : ""),
                         "Dados da aplicação após os cabeçalhos (primeiros " + Math.min(len, 64) + " bytes).")));
+    }
+
+    private Camada trailer(byte[] b, int off) {
+        int len = b.length - off;
+        String hex = hex(b, off, Math.min(len, 64));
+        return new Camada("Trailer / padding de enlace",
+                len + " bytes após o fim do datagrama IP",
+                List.of(campo("Bytes", hex + (len > 64 ? " …" : ""),
+                        "Enchimento que o enlace acrescenta para atingir o quadro mínimo (Ethernet: 60 bytes"
+                                + " sem FCS). Fica fora do Total Length do IP e não é dado da aplicação.")));
     }
 
     // ------------------------------------------------------------------ helpers
@@ -386,15 +422,11 @@ public class TrafegoDecoderService {
         return (b[i] & 0xFF) + "." + (b[i + 1] & 0xFF) + "." + (b[i + 2] & 0xFF) + "." + (b[i + 3] & 0xFF);
     }
 
+    /** Endereço IPv6 do cabeçalho na forma canônica RFC 5952 (ex.: 2001:db8::1). */
     private static String ipv6(byte[] b, int i) {
-        StringBuilder sb = new StringBuilder();
-        for (int k = 0; k < 8; k++) {
-            if (k > 0) {
-                sb.append(':');
-            }
-            sb.append(String.format("%x", u16(b, i + k * 2)));
-        }
-        return sb.toString();
+        byte[] ender = new byte[16];
+        System.arraycopy(b, i, ender, 0, 16);
+        return new inet.ipaddr.ipv6.IPv6Address(ender).toCanonicalString();
     }
 
     private static String hex(byte[] b, int off, int len) {

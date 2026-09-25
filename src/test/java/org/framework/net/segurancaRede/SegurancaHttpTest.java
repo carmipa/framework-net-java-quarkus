@@ -27,6 +27,29 @@ class SegurancaHttpTest {
                 .body(containsString("Origem: 192.168.1.5 -&gt; Destino: 10.0.0.1:80"));
     }
 
+    /** F15: IP com ponto sobrando ("192.168.1.5.") é IPv4 malformado → 400; o controle legítimo acima dá 200. */
+    @Test
+    void aclRecusaIpComPontoSobrando() {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("regra", "permit tcp any eq 80")
+                .formParam("ipOrigem", "192.168.1.5.")
+                .formParam("ipDestino", "10.0.0.1")
+                .formParam("portaDestino", "80")
+                .when().post("/seguranca/api/testar")
+                .then()
+                .statusCode(400);
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("regra", "permit tcp host 10.0.0.1. eq 80")
+                .formParam("ipOrigem", "192.168.1.5")
+                .formParam("ipDestino", "10.0.0.1")
+                .formParam("portaDestino", "80")
+                .when().post("/seguranca/api/testar")
+                .then()
+                .statusCode(400);
+    }
+
     @Test
     void aclDenyDaMatchBloqueado() {
         given()

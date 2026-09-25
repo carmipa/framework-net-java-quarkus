@@ -84,6 +84,43 @@ class TrafegoDecoderServiceTest {
         assertEquals("Ethernet II", eth.camadas().get(0).nome());
     }
 
+    /**
+     * F42: quadro Ethernet mínimo (60 bytes) = 54 de cabeçalhos + 6 de padding. O Total Length do
+     * IPv4 (0x0028 = 40) delimita o datagrama; o que sobra é trailer/padding de enlace, não dado da
+     * aplicação (RFC 791 §3.1; é assim que o Wireshark mostra "Padding"). Fronteira (A1): o mesmo
+     * TCP com 6 bytes DENTRO do Total Length (0x002e = 46) é payload de verdade.
+     */
+    @Test
+    void paddingEthernetNaoViraPayload() {
+        String comPadding = "aabbccddeeff1122334455660800"
+                + "450000281c46400040060000c0a80001c0a80002"
+                + "c350005000000001000000015010ffff00000000"
+                + "000000000000";
+        List<String> nomes = service.decodificar(comPadding, "auto").camadas().stream()
+                .map(ResultadoDecodificacao.Camada::nome).toList();
+        assertFalse(nomes.contains("Payload / dados"), nomes.toString());
+        assertEquals("Trailer / padding de enlace", nomes.get(nomes.size() - 1));
+
+        String comDados = "aabbccddeeff1122334455660800"
+                + "4500002e1c46400040060000c0a80001c0a80002"
+                + "c350005000000001000000015018ffff00000000"
+                + "68656c6c6f21";
+        List<String> nomesDados = service.decodificar(comDados, "auto").camadas().stream()
+                .map(ResultadoDecodificacao.Camada::nome).toList();
+        assertEquals("Payload / dados", nomesDados.get(nomesDados.size() - 1));
+    }
+
+    /** RFC 5952: o IPv6 do cabeçalho é mostrado comprimido ("2001:db8::1", não "2001:db8:0:0:0:0:0:1"). */
+    @Test
+    void ipv6DoCabecalhoSaiComprimido() {
+        String ipv6Udp = "6000000000081140"
+                + "20010db8000000000000000000000001"
+                + "20010db8000000000000000000000002"
+                + "0035003500080000";
+        ResultadoDecodificacao r = service.decodificar(ipv6Udp, "ipv6");
+        assertTrue(r.camadas().get(0).resumo().contains("2001:db8::1"), r.camadas().get(0).resumo());
+    }
+
     @Test
     void aceitaSeparadoresComuns() {
         assertEquals("450000281c46", TrafegoDecoderService.normalizar("45 00 00 28 1c:46"));
