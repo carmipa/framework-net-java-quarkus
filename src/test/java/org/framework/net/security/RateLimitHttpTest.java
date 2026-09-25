@@ -13,9 +13,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * F04: o limite era por (IP, caminho bruto). Rotas {@code /{slug}} davam um balde novo por slug
- * (limite inexistente e mapa crescendo com a escolha do atacante), o total por IP era 120 × número de
- * rotas, e rotas caras tinham ficado fora do "pesado". Os testes ligam o limitador com tetos pequenos
- * e mandam o DOBRO do teto + 2 — mesmo que a janela de um minuto vire no meio, sai ao menos um 429.
+ * (limite inexistente e mapa crescendo com a escolha do atacante) e rotas caras tinham ficado fora do
+ * "pesado". Os testes ligam o limitador com tetos pequenos e mandam o DOBRO do teto + 2 — mesmo que a
+ * janela de um minuto vire no meio, sai ao menos um 429.
+ *
+ * <p>Revisão pós-implementação: este perfil deixa o teto GLOBAL alto de propósito. Antes os três testes
+ * dividiam um global de 8 com o mesmo cliente, e depois que um deles o esgotava os outros recebiam 429
+ * do global — passavam mesmo com o balde por rota quebrado. O global tem classe própria
+ * ({@link RateLimitGlobalHttpTest}), com os tetos por rota altos.
  */
 @QuarkusTest
 @TestProfile(RateLimitHttpTest.Perfil.class)
@@ -23,7 +28,6 @@ class RateLimitHttpTest {
 
     static final int POR_ROTA = 5;
     static final int PESADO = 2;
-    static final int GLOBAL = 8;
 
     public static class Perfil implements QuarkusTestProfile {
         @Override
@@ -32,7 +36,7 @@ class RateLimitHttpTest {
                     "framework.security.rate-limit-enabled", "true",
                     "framework.security.rate-limit-per-minute", String.valueOf(POR_ROTA),
                     "framework.security.rate-limit-heavy-per-minute", String.valueOf(PESADO),
-                    "framework.security.rate-limit-global-per-minute", String.valueOf(GLOBAL));
+                    "framework.security.rate-limit-global-per-minute", "100000");
         }
     }
 
@@ -49,21 +53,6 @@ class RateLimitHttpTest {
     }
 
     @Test
-    void tetoGlobalPorClienteSomaTodasAsRotas() {
-        String[] rotas = {"/", "/portas", "/protocolos", "/camadas", "/wifi", "/criptografia",
-                "/ferramentas", "/certificados", "/sobre", "/documentacao"};
-        int limitados = 0;
-        for (int rep = 0; rep < 2; rep++) {
-            for (String r : rotas) {
-                if (given().when().get(r).then().extract().statusCode() == 429) {
-                    limitados++;
-                }
-            }
-        }
-        assertTrue(limitados > 0, "20 requisições em 10 rotas com teto global " + GLOBAL + " precisam gerar 429");
-    }
-
-    @Test
     void historicoDeCatalogoEhRotaPesada() {
         // Exatamente POR_ROTA requisições (A1): como rota comum, nenhuma daria 429; como pesada
         // (teto 2), dá ao menos um 429 mesmo com uma virada de janela (2 + 2 < 5).
@@ -77,5 +66,15 @@ class RateLimitHttpTest {
             }
         }
         assertTrue(limitados > 0, "POST /history/catalog regrava o arquivo: tem de contar como pesado");
+    }
+
+    @Test
+    void rotaComumDentroDoTetoNaoELimitada() {
+        // Controle legítimo (A1): o mesmo cliente, numa rota comum, abaixo do teto por rota, passa —
+        // prova que os 429 acima vêm do balde da rota, e não de um limitador que recusa tudo.
+        for (int i = 0; i < POR_ROTA - 1; i++) {
+            int st = given().when().get("/portas").then().extract().statusCode();
+            assertTrue(st != 429, "rota comum abaixo do teto não pode receber 429 (requisição " + (i + 1) + ")");
+        }
     }
 }
