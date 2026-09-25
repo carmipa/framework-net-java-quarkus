@@ -36,10 +36,12 @@ DECLARADO (decisao de Paulo / refator maior — NAO defeito de comportamento):
 - 10. CSP unsafe-inline: 🟡 aceito ha meses pela dependencia do Google Translate. Fechar = trocar/remover Translate = decisao de Paulo.
 
 EM ANDAMENTO AGORA:
-- Ondas 1-3 (defeitos reais) fechadas e verdes. Aguardando decisao de Paulo sobre commits e sobre refatores 7 e 9.
+- Nada. Ondas 1-3 COMMITADAS em c48eb11 (2026-09-15). Reconciliado em 2026-09-24 (sessao 51d37306):
+  o texto anterior dizia "aguardando decisao sobre commits", e o git mostra o contrario
+  (`git log db31b43..HEAD` = 21 commits; origin/main...HEAD = 0 0). Depois disso vieram as frentes IPv6.
 
 PROXIMA ACAO EXECUTAVEL EXATA:
-- Se Paulo autorizar: commit por onda (sem push). Se autorizar refator: item 7 (exceção shared + mapper) e/ou item 9.
+- Nenhuma nesta tarefa. Itens 7, 9 e 10 dependem de decisao de Paulo (refator com risco / produto: Google Translate).
 
 TESTES / GUARDAS: gradle build = BUILD SUCCESSFUL, 784 testes 0 falhas. Nao ha Redis local (cache L2 off por default).
 GAPS E BLOQUEIOS REAIS: nenhum.
