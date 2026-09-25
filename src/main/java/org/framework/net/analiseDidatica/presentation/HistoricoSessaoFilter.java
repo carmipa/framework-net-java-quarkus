@@ -16,7 +16,10 @@ import org.framework.net.analiseDidatica.infrastructure.historico.SessaoHistoric
  * PROPÓSITO DE NEGÓCIO: liga o cookie {@code fnet_hist} à sessão de histórico da requisição e emite o
  * cookie quando a requisição criou uma sessão nova.
  *
- * INVARIANTES DO DOMÍNIO: cookie HttpOnly (JavaScript não lê), SameSite=Lax, Secure conforme
+ * INVARIANTES DO DOMÍNIO: em HTTPS o nome é {@code __Host-fnet_hist} e o servidor só lê esse nome —
+ * o navegador só aceita o prefixo com Secure, Path=/ e sem Domain, então subdomínio irmão não consegue
+ * plantar um identificador conhecido para depois ler o histórico da vítima (fixação de sessão). Sem
+ * HTTPS (dev) vale o nome comum. Cookie HttpOnly (JavaScript não lê), SameSite=Lax, Secure conforme
  * {@code framework.security.cookie-secure} (o mesmo dos cookies de CSRF/admin), Path=/, sem Max-Age
  * (vale enquanto o navegador estiver aberto). Nunca emitido se a requisição não usou histórico.
  *
@@ -31,9 +34,13 @@ public class HistoricoSessaoFilter implements ContainerRequestFilter, ContainerR
     @ConfigProperty(name = "framework.security.cookie-secure", defaultValue = "false")
     boolean cookieSecure;
 
+    String nomeDoCookie() {
+        return cookieSecure ? "__Host-" + SessaoHistorico.COOKIE : SessaoHistorico.COOKIE;
+    }
+
     @Override
     public void filter(ContainerRequestContext request) {
-        Cookie c = request.getCookies().get(SessaoHistorico.COOKIE);
+        Cookie c = request.getCookies().get(nomeDoCookie());
         sessao.receber(c == null ? null : c.getValue());
     }
 
@@ -42,7 +49,7 @@ public class HistoricoSessaoFilter implements ContainerRequestFilter, ContainerR
         if (!sessao.isNova()) {
             return;
         }
-        NewCookie cookie = new NewCookie.Builder(SessaoHistorico.COOKIE)
+        NewCookie cookie = new NewCookie.Builder(nomeDoCookie())
                 .value(sessao.valorCookie())
                 .path("/")
                 .httpOnly(true)
