@@ -97,7 +97,7 @@
                         : '<span class="text-warning">' + b + "</span>"
                 )).join("");
                 return '<div class="mb-1"><span class="text-secondary me-2">Octeto ' + (idx + 1)
-                    + ":</span><code>" + nums[idx] + "</code> = <code>" + colored + "</code></div>";
+                    + ":</span><code translate='no'>" + nums[idx] + "</code> = <code translate='no'>" + colored + "</code></div>";
             }).join("");
         };
         input.addEventListener("input", render);

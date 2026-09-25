@@ -12,17 +12,17 @@
     {#include protocolos/partials/subnav.html /}
 
     <header class="text-center mb-4">
-        <div class="aprof-hero-icone" aria-hidden="true"><span class="material-symbols-outlined">hub</span></div>
+        <div class="aprof-hero-icone" aria-hidden="true"><span class="material-symbols-outlined" translate="no" aria-hidden="true">hub</span></div>
         <span class="aed-eyebrow aed-eyebrow-indigo">Aprofundamento · Camada de Rede</span>
         <h2 class="mb-2" style="font-family:var(--aed-font-display);">BGP-4 — Border Gateway Protocol</h2>
         <p class="text-secondary small mx-auto" style="max-width:44rem;">{conteudo.resumo}</p>
         <div class="bgp-ficha" role="list">
-            <span class="bgp-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">menu_book</span><strong>RFC</strong> 4271</span>
-            <span class="bgp-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">lan</span><strong>Transporte</strong> TCP 179</span>
-            <span class="bgp-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">category</span><strong>Classe</strong> EGP</span>
-            <span class="bgp-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">route</span><strong>Algoritmo</strong> Path Vector</span>
-            <span class="bgp-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">trending_up</span><strong>AD Cisco</strong> 20 eBGP / 200 iBGP</span>
-            <span class="bgp-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">update</span><strong>Atualização</strong> Incremental, por evento</span>
+            <span class="bgp-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true" translate="no">menu_book</span><strong>RFC</strong> 4271</span>
+            <span class="bgp-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true" translate="no">lan</span><strong>Transporte</strong> TCP 179</span>
+            <span class="bgp-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true" translate="no">category</span><strong>Classe</strong> EGP</span>
+            <span class="bgp-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true" translate="no">route</span><strong>Algoritmo</strong> Path Vector</span>
+            <span class="bgp-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true" translate="no">trending_up</span><strong>AD Cisco</strong> 20 eBGP / 200 iBGP</span>
+            <span class="bgp-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true" translate="no">update</span><strong>Atualização</strong> Incremental, por evento</span>
         </div>
     </header>
 
@@ -40,13 +40,13 @@
     </nav>
 
     <section id="conceitos" class="bgp-secao">
-        <h3 class="bgp-secao-titulo"><span class="material-symbols-outlined">school</span> Como o BGP pensa</h3>
+        <h3 class="bgp-secao-titulo"><span class="material-symbols-outlined" translate="no" aria-hidden="true">school</span> Como o BGP pensa</h3>
         <div class="row g-3">
             {#for item in conteudo.conceitos}
             <div class="col-12 col-lg-6">
                 <article class="card-tech p-3 h-100 bgp-conceito">
                     <h4 class="bgp-conceito-titulo">
-                        <span class="material-symbols-outlined" aria-hidden="true">{item.icone}</span>
+                        <span class="material-symbols-outlined" aria-hidden="true" translate="no">{item.icone}</span>
                         {item.titulo}
                     </h4>
                     <p class="small text-light mb-2">{item.texto}</p>
@@ -62,7 +62,7 @@
     {#include protocolos/partials/cabecalho_bits.html cabecalho=conteudo.cabecalho /}
 
     <section id="atributos" class="bgp-secao">
-        <h3 class="bgp-secao-titulo"><span class="material-symbols-outlined">tune</span> Atributos de caminho</h3>
+        <h3 class="bgp-secao-titulo"><span class="material-symbols-outlined" translate="no" aria-hidden="true">tune</span> Atributos de caminho</h3>
         <p class="small text-secondary">
             O que o BGP compara para decidir. Atributo local manda na saída do seu tráfego;
             atributo propagado apenas sugere ao vizinho por onde entrar.
@@ -94,7 +94,7 @@
     </section>
 
     <section id="selecao" class="bgp-secao">
-        <h3 class="bgp-secao-titulo"><span class="material-symbols-outlined">stairs</span> Seleção de melhor rota</h3>
+        <h3 class="bgp-secao-titulo"><span class="material-symbols-outlined" translate="no" aria-hidden="true">stairs</span> Seleção de melhor rota</h3>
         <p class="small text-secondary">
             O roteador desce esta escada e para no primeiro degrau que desempata. Diagnóstico de
             "o tráfego sai pelo link errado" é percorrer esta lista na ordem, sem pular.
@@ -114,7 +114,7 @@
     </section>
 
     <section id="sessao" class="bgp-secao">
-        <h3 class="bgp-secao-titulo"><span class="material-symbols-outlined">cable</span> A sessão: estados, mensagens e temporizadores</h3>
+        <h3 class="bgp-secao-titulo"><span class="material-symbols-outlined" translate="no" aria-hidden="true">cable</span> A sessão: estados, mensagens e temporizadores</h3>
 
         <h4 class="bgp-subtitulo">Máquina de estados finita</h4>
         <div class="bgp-estados">
@@ -126,7 +126,7 @@
                 </div>
                 <p class="small text-light mb-1">{estado.significado}</p>
                 <p class="small mb-0 bgp-estado-trava">
-                    <span class="material-symbols-outlined" aria-hidden="true">report</span>
+                    <span class="material-symbols-outlined" aria-hidden="true" translate="no">report</span>
                     {estado.travaComum}
                 </p>
             </div>
@@ -186,7 +186,7 @@
     </section>
 
     <section id="escala" class="bgp-secao">
-        <h3 class="bgp-secao-titulo"><span class="material-symbols-outlined">account_tree</span> Escalar o iBGP</h3>
+        <h3 class="bgp-secao-titulo"><span class="material-symbols-outlined" translate="no" aria-hidden="true">account_tree</span> Escalar o iBGP</h3>
         <div class="row g-3">
             {#for topo in conteudo.topologias}
             <div class="col-12 col-lg-4">
@@ -207,7 +207,7 @@
     </section>
 
     <section id="protecoes" class="bgp-secao">
-        <h3 class="bgp-secao-titulo"><span class="material-symbols-outlined">shield</span> Proteções da borda</h3>
+        <h3 class="bgp-secao-titulo"><span class="material-symbols-outlined" translate="no" aria-hidden="true">shield</span> Proteções da borda</h3>
         <p class="small text-secondary">
             BGP nasceu sem autenticação de origem: quem anuncia, é acreditado. Cada item abaixo
             fecha uma ameaça concreta — vazamento, sequestro, exaustão de memória, oscilação.
@@ -217,15 +217,15 @@
             <div class="col-12 col-xl-6">
                 <article class="card-tech p-3 h-100 bgp-protecao">
                     <h4 class="bgp-protecao-titulo">
-                        <span class="material-symbols-outlined" aria-hidden="true">gpp_good</span>
+                        <span class="material-symbols-outlined" aria-hidden="true" translate="no">gpp_good</span>
                         {prot.nome}
                     </h4>
                     <p class="small mb-2"><span class="bgp-rotulo bgp-rotulo-risco">Ameaça</span> {prot.ameaca}</p>
                     <p class="small mb-2"><span class="bgp-rotulo bgp-rotulo-ok">Aplicação</span> {prot.aplicacao}</p>
-                    <pre class="bgp-codigo" id="bgp-prot-{prot_count}">{prot.comando}</pre>
+                    <pre class="bgp-codigo" id="bgp-prot-{prot_count}" translate="no">{prot.comando}</pre>
                     <div class="d-flex justify-content-end">
                         <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="bgp-prot-{prot_count}">
-                            <span class="material-symbols-outlined">content_copy</span> Copiar
+                            <span class="material-symbols-outlined" translate="no" aria-hidden="true">content_copy</span> Copiar
                         </button>
                     </div>
                 </article>
@@ -235,18 +235,18 @@
     </section>
 
     <section id="laboratorio" class="bgp-secao">
-        <h3 class="bgp-secao-titulo"><span class="material-symbols-outlined">science</span> Laboratório Cisco</h3>
+        <h3 class="bgp-secao-titulo"><span class="material-symbols-outlined" translate="no" aria-hidden="true">science</span> Laboratório Cisco</h3>
         <div class="row g-3">
             {#for lab in conteudo.laboratorios}
             <div class="col-12 col-xl-6">
                 <article class="card-tech p-3 h-100 bgp-lab">
                     <h4 class="bgp-lab-titulo">{lab.titulo}</h4>
                     <p class="small text-secondary mb-2">{lab.cenario}</p>
-                    <pre class="bgp-codigo" id="bgp-lab-{lab_count}">{lab.comandos}</pre>
+                    <pre class="bgp-codigo" id="bgp-lab-{lab_count}" translate="no">{lab.comandos}</pre>
                     <div class="d-flex justify-content-end mb-2">
                         <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="bgp-lab-{lab_count}"
                                 title="Copiar os comandos do laboratório BGP para a área de transferência">
-                            <span class="material-symbols-outlined">content_copy</span> Copiar comandos
+                            <span class="material-symbols-outlined" translate="no" aria-hidden="true">content_copy</span> Copiar comandos
                         </button>
                     </div>
                     <p class="small text-light mb-0 bgp-lab-nota">{lab.explicacao}</p>
@@ -257,7 +257,7 @@
     </section>
 
     <section id="troubleshooting" class="bgp-secao">
-        <h3 class="bgp-secao-titulo"><span class="material-symbols-outlined">build</span> Troubleshooting</h3>
+        <h3 class="bgp-secao-titulo"><span class="material-symbols-outlined" translate="no" aria-hidden="true">build</span> Troubleshooting</h3>
         <p class="small text-secondary">
             Do sintoma para o comando, e do comando para a leitura da saída — que é a parte
             que costuma faltar nas tabelas de referência.
@@ -267,15 +267,15 @@
             <div class="col-12 col-xl-6">
                 <article class="card-tech p-3 h-100 bgp-diag">
                     <h4 class="bgp-diag-sintoma">
-                        <span class="material-symbols-outlined" aria-hidden="true">bug_report</span>
+                        <span class="material-symbols-outlined" aria-hidden="true" translate="no">bug_report</span>
                         {diag.sintoma}
                     </h4>
                     <p class="small mb-2"><span class="bgp-rotulo bgp-rotulo-risco">Causa provável</span> {diag.causaProvavel}</p>
-                    <pre class="bgp-codigo" id="bgp-diag-{diag_count}">{diag.comando}</pre>
+                    <pre class="bgp-codigo" id="bgp-diag-{diag_count}" translate="no">{diag.comando}</pre>
                     <div class="d-flex justify-content-end mb-2">
                         <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="bgp-diag-{diag_count}"
                                 title="Copiar comando de diagnóstico BGP para a área de transferência">
-                            <span class="material-symbols-outlined">content_copy</span> Copiar
+                            <span class="material-symbols-outlined" translate="no" aria-hidden="true">content_copy</span> Copiar
                         </button>
                     </div>
                     <p class="small text-light mb-0"><span class="bgp-rotulo bgp-rotulo-ok">Leitura</span> {diag.leitura}</p>
@@ -288,13 +288,13 @@
     <div class="text-center mt-4">
         <a href="/protocolos" class="aed-btn aed-btn-neutral"
            title="Retornar à tabela comparativa de protocolos">
-            <span class="material-symbols-outlined">arrow_back</span> Voltar ao catálogo de protocolos
+            <span class="material-symbols-outlined" translate="no" aria-hidden="true">arrow_back</span> Voltar ao catálogo de protocolos
         </a>
     </div>
 </div>
 {/content}
 {#extraScripts}
-<script src="/protocolos/js/aprofundamento.js?v=20260810"></script>
+<script src="/protocolos/js/aprofundamento.js?v=20260925"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 <script src="/protocolos/aprofundamento/js/aprofundamento-diagrama.js?v=20260907"></script>
 {/extraScripts}

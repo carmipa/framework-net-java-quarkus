@@ -1,6 +1,6 @@
 <div class="w-100">
     <h5 class="text-white d-flex align-items-center gap-2 mb-2">
-        <span class="material-symbols-outlined">alt_route</span> {sim.descricao}
+        <span class="material-symbols-outlined" translate="no" aria-hidden="true">alt_route</span> {sim.descricao}
     </h5>
     <div class="row g-2 small mb-3">
         <div class="col-md-6">
@@ -20,11 +20,11 @@
         <table class="table table-dark table-sm align-middle mb-2">
             <thead>
                 <tr>
-                    <th style="width: 2.5rem;" title="Ordem do pacote na sequência"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">tag</span>#</th>
-                    <th title="Direção e flag TCP do pacote"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">mail</span>Pacote</th>
-                    <th title="Veredito do firewall SEM estado (ACL que julga cada pacote isolado)"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">rule</span>Sem estado</th>
-                    <th title="Veredito do firewall COM estado (tabela de conexões)"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">account_tree</span>Com estado</th>
-                    <th title="Estado da conexão na tabela, antes e depois deste pacote"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">sync_alt</span>Estado (antes &rarr; depois)</th>
+                    <th style="width: 2.5rem;" title="Ordem do pacote na sequência"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">tag</span>#</th>
+                    <th title="Direção e flag TCP do pacote"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">mail</span>Pacote</th>
+                    <th title="Veredito do firewall SEM estado (ACL que julga cada pacote isolado)"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">rule</span>Sem estado</th>
+                    <th title="Veredito do firewall COM estado (tabela de conexões)"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">account_tree</span>Com estado</th>
+                    <th title="Estado da conexão na tabela, antes e depois deste pacote"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">sync_alt</span>Estado (antes &rarr; depois)</th>
                 </tr>
             </thead>
             <tbody>
@@ -33,7 +33,7 @@
                     <td class="text-muted">{a.pacote.passo}</td>
                     <td>
                         <span class="badge bg-secondary">{a.pacote.direcao}</span>
-                        <code class="text-info">{a.pacote.flag}</code>
+                        <code class="text-info" translate="no">{a.pacote.flag}</code>
                         <div class="text-muted small">{a.pacote.resumo}</div>
                     </td>
                     <td>
@@ -55,7 +55,7 @@
         </table>
     </div>
     <p class="small text-secondary mb-0">
-        <span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">difference</span>
+        <span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;" translate="no" aria-hidden="true">difference</span>
         Os dois modelos divergiram em <strong>{sim.divergencias}</strong> passo(s) &mdash; tipicamente o
         tráfego de retorno, que o firewall com estado libera por casar uma conexão registrada e o sem
         estado derruba por não ter regra de entrada.

@@ -23,9 +23,9 @@
             const original = copiar.innerHTML;
             try {
                 await navigator.clipboard.writeText(alvo ? alvo.textContent : "");
-                copiar.innerHTML = '<span class="material-symbols-outlined">check</span> Copiado';
+                copiar.innerHTML = '<span class="material-symbols-outlined" translate="no" aria-hidden="true">check</span> Copiado';
             } catch (err) {
-                copiar.innerHTML = '<span class="material-symbols-outlined">error</span> Falhou';
+                copiar.innerHTML = '<span class="material-symbols-outlined" translate="no" aria-hidden="true">error</span> Falhou';
                 console.warn("Cópia recusada pelo navegador", err);
             }
             setTimeout(function () {

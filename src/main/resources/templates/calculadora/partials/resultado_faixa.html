@@ -1,7 +1,7 @@
 <div class="calc-resultado">
     <div class="calc-resumo-head">
         <h5 class="mb-1">
-            <span class="material-symbols-outlined text-warning" aria-hidden="true">linear_scale</span>
+            <span class="material-symbols-outlined text-warning" aria-hidden="true" translate="no">linear_scale</span>
             {resultado.inicio} até {resultado.fim}
         </h5>
         <span class="calc-badge">{resultado.totalBlocos} bloco(s) CIDR</span>
@@ -21,7 +21,7 @@
     </div>
 
     <p class="calc-explicacao">
-        <span class="material-symbols-outlined" aria-hidden="true">school</span>
+        <span class="material-symbols-outlined" aria-hidden="true" translate="no">school</span>
         Um equipamento só entende <strong>prefixos</strong> (blocos CIDR), não "de X até Y". Esta é a MENOR
         lista de blocos que cobre exatamente a faixa pedida — cada bloco alinhado a uma fronteira de potência
         de 2. A <strong>ACL</strong> abaixo aplica a mesma cobertura, uma linha por bloco.
@@ -29,7 +29,7 @@
 
     {#if resultado.truncado}
     <div class="calc-aviso" role="status">
-        <span class="material-symbols-outlined" aria-hidden="true">info</span>
+        <span class="material-symbols-outlined" aria-hidden="true" translate="no">info</span>
         <span>
             A faixa exige mais blocos do que o limite de exibição. A lista abaixo está incompleta —
             estreite a faixa ou alinhe os extremos a limites de bloco para reduzir a quantidade.
@@ -41,13 +41,13 @@
         <table class="table table-dark table-sm table-bordered mb-0 calc-tabela">
             <thead>
             <tr>
-                <th title="Ordem do bloco na cobertura da faixa"><span class="material-symbols-outlined" aria-hidden="true">tag</span>#</th>
-                <th title="Bloco em notação CIDR (rede/prefixo)"><span class="material-symbols-outlined" aria-hidden="true">lan</span>Bloco CIDR</th>
-                <th title="Máscara de sub-rede em decimal"><span class="material-symbols-outlined" aria-hidden="true">grid_view</span>Máscara</th>
-                <th title="Máscara curinga (inverso da máscara) — usada em ACL"><span class="material-symbols-outlined" aria-hidden="true">flip</span>Wildcard</th>
-                <th title="Primeiro endereço do bloco"><span class="material-symbols-outlined" aria-hidden="true">first_page</span>Primeiro</th>
-                <th title="Último endereço do bloco"><span class="material-symbols-outlined" aria-hidden="true">last_page</span>Último</th>
-                <th title="Quantidade de endereços no bloco"><span class="material-symbols-outlined" aria-hidden="true">tag</span>Endereços</th>
+                <th title="Ordem do bloco na cobertura da faixa"><span class="material-symbols-outlined" aria-hidden="true" translate="no">tag</span>#</th>
+                <th title="Bloco em notação CIDR (rede/prefixo)"><span class="material-symbols-outlined" aria-hidden="true" translate="no">lan</span>Bloco CIDR</th>
+                <th title="Máscara de sub-rede em decimal"><span class="material-symbols-outlined" aria-hidden="true" translate="no">grid_view</span>Máscara</th>
+                <th title="Máscara curinga (inverso da máscara) — usada em ACL"><span class="material-symbols-outlined" aria-hidden="true" translate="no">flip</span>Wildcard</th>
+                <th title="Primeiro endereço do bloco"><span class="material-symbols-outlined" aria-hidden="true" translate="no">first_page</span>Primeiro</th>
+                <th title="Último endereço do bloco"><span class="material-symbols-outlined" aria-hidden="true" translate="no">last_page</span>Último</th>
+                <th title="Quantidade de endereços no bloco"><span class="material-symbols-outlined" aria-hidden="true" translate="no">tag</span>Endereços</th>
             </tr>
             </thead>
             <tbody>
@@ -67,12 +67,12 @@
     </div>
 
     <h6 class="calc-secao-titulo mt-4">
-        <span class="material-symbols-outlined" aria-hidden="true">terminal</span>
+        <span class="material-symbols-outlined" aria-hidden="true" translate="no">terminal</span>
         ACL equivalente
         <button type="button" class="aed-btn aed-btn-neutral btn-sm calc-copiar" data-alvo="cliFaixa">
-            <span class="material-symbols-outlined">content_copy</span> Copiar
+            <span class="material-symbols-outlined" translate="no" aria-hidden="true">content_copy</span> Copiar
         </button>
     </h6>
-    <pre class="calc-cli" id="cliFaixa">{#for linha in resultado.comandosCisco}{linha}
+    <pre class="calc-cli" id="cliFaixa" translate="no">{#for linha in resultado.comandosCisco}{linha}
 {/for}</pre>
 </div>

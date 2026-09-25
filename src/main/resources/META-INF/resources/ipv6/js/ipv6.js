@@ -19,7 +19,7 @@
             var saida = document.querySelector(alvo);
             if (saida) {
                 saida.innerHTML =
-                    '<div class="calc-placeholder"><span class="material-symbols-outlined" aria-hidden="true">' +
+                    '<div class="calc-placeholder"><span class="material-symbols-outlined" aria-hidden="true" translate="no">' +
                     'backspace</span><p class="mb-0">Campos limpos. Informe novos valores e calcule.</p></div>';
             }
         }
@@ -323,14 +323,14 @@
             var texto = el ? el.value : "";
             if (!texto) {
                 btn.textContent = "Sem resultado";
-                setTimeout(function () { btn.innerHTML = '<span class="material-symbols-outlined">content_copy</span> Copiar resultado'; }, 1500);
+                setTimeout(function () { btn.innerHTML = '<span class="material-symbols-outlined" translate="no" aria-hidden="true">content_copy</span> Copiar resultado'; }, 1500);
                 return;
             }
             navigator.clipboard.writeText(texto).then(
                 function () { btn.textContent = "✅ Copiado"; },
                 function () { btn.textContent = "❌ Falhou"; }
             );
-            setTimeout(function () { btn.innerHTML = '<span class="material-symbols-outlined">content_copy</span> Copiar resultado'; }, 1500);
+            setTimeout(function () { btn.innerHTML = '<span class="material-symbols-outlined" translate="no" aria-hidden="true">content_copy</span> Copiar resultado'; }, 1500);
         });
     }
 

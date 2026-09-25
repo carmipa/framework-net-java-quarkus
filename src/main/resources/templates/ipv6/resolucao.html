@@ -11,12 +11,12 @@
 
     <header class="mb-4">
         <h1 class="aed-title">
-            <span class="material-symbols-outlined aed-title-icon" aria-hidden="true">extension</span>
+            <span class="material-symbols-outlined aed-title-icon" aria-hidden="true" translate="no">extension</span>
             Resolução IPv6 (Laboratório)
         </h1>
         <p class="aed-subtitle">
-            O análogo IPv6 da Resolução VLSM. Em IPv6 a LAN é sempre <code>/64</code> (SLAAC) e o enlace
-            ponto-a-ponto é <code>/127</code> (RFC 6164): planeja-se por <strong>prefixo e quantidade de
+            O análogo IPv6 da Resolução VLSM. Em IPv6 a LAN é sempre <code translate="no">/64</code> (SLAAC) e o enlace
+            ponto-a-ponto é <code translate="no">/127</code> (RFC 6164): planeja-se por <strong>prefixo e quantidade de
             sub-redes</strong>, não por número de hosts. Projete dos requisitos ao plano, ou faça a
             engenharia reversa de uma configuração Cisco IPv6.
         </p>
@@ -28,12 +28,12 @@
             <button type="button" class="aed-mode-btn tab-trigger" data-tab="projetar" role="tab"
                     data-bs-toggle="tooltip" data-bs-placement="top"
                     title="Projetar: dos requisitos ao plano de endereçamento IPv6 (LAN, WAN, topologia, rotas, CLI)">
-                <span class="material-symbols-outlined">architecture</span><span>Projetar</span>
+                <span class="material-symbols-outlined" translate="no" aria-hidden="true">architecture</span><span>Projetar</span>
             </button>
             <button type="button" class="aed-mode-btn tab-trigger" data-tab="engenharia" role="tab"
                     data-bs-toggle="tooltip" data-bs-placement="top"
                     title="Engenharia reversa: da configuração Cisco IPv6 ao desenho, prefixos e diagnóstico">
-                <span class="material-symbols-outlined">manage_search</span><span>Engenharia reversa</span>
+                <span class="material-symbols-outlined" translate="no" aria-hidden="true">manage_search</span><span>Engenharia reversa</span>
             </button>
         </div>
 
@@ -48,6 +48,6 @@
     mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
     window.mermaid = mermaid;
 </script>
-<script src="/ipv6/js/ipv6.js?v=20260916f"></script>
+<script src="/ipv6/js/ipv6.js?v=20260925f"></script>
 {/extraScripts}
 {/include}

@@ -24,17 +24,17 @@
             </div>
             <div class="small text-light mb-3 border-start border-warning border-2 ps-2 py-2 rounded-1" style="background: rgba(210, 153, 34, 0.10);" role="note">
                 <strong class="text-warning">Resumo rápido do módulo de roteamento (PPT):</strong>
-                RIP usa <em>Distance Vector</em> (métrica por hops), OSPF/IS-IS usam <em>Link-State</em> (SPF), e BGP usa <em>Path Vector</em> (políticas entre AS). Em laboratório Cisco, destaque para sintaxe com <code>network</code> e uso de <strong>wildcard mask</strong> no OSPF.
+                RIP usa <em>Distance Vector</em> (métrica por hops), OSPF/IS-IS usam <em>Link-State</em> (SPF), e BGP usa <em>Path Vector</em> (políticas entre AS). Em laboratório Cisco, destaque para sintaxe com <code translate="no">network</code> e uso de <strong>wildcard mask</strong> no OSPF.
             </div>
             <div class="table-responsive mb-3 border border-secondary border-opacity-25 rounded">
                 <table class="table table-dark table-bordered table-sm mb-0">
                     <thead>
                         <tr>
-                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">lan</span>Protocolo</th>
-                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">straighten</span>Métrica</th>
-                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">low_priority</span>AD</th>
-                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">update</span>Convergência</th>
-                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">open_in_full</span>Escalabilidade</th>
+                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">lan</span>Protocolo</th>
+                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">straighten</span>Métrica</th>
+                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">low_priority</span>AD</th>
+                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">update</span>Convergência</th>
+                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">open_in_full</span>Escalabilidade</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -47,11 +47,11 @@
             </div>
             <div class="comm-summary mb-3" data-summary-target="protocolos"></div>
             <div class="d-flex flex-wrap gap-2 mb-2">
-                <span class="shield-badge"><span class="material-symbols-outlined icon">search</span>Busca por protocolo/camada</span>
-                <span class="shield-badge"><span class="material-symbols-outlined icon">tune</span>Filtros por camada, transporte e nível</span>
-                <span class="shield-badge"><span class="material-symbols-outlined icon">hub</span>IGP vs EGP (roteamento)</span>
-                <span class="shield-badge"><span class="material-symbols-outlined icon">swap_vert</span>Clique no cabeçalho para ordenar</span>
-                <span class="shield-badge"><span class="material-symbols-outlined icon">content_copy</span>Copie ou abra detalhes por linha</span>
+                <span class="shield-badge"><span class="material-symbols-outlined icon" translate="no" aria-hidden="true">search</span>Busca por protocolo/camada</span>
+                <span class="shield-badge"><span class="material-symbols-outlined icon" translate="no" aria-hidden="true">tune</span>Filtros por camada, transporte e nível</span>
+                <span class="shield-badge"><span class="material-symbols-outlined icon" translate="no" aria-hidden="true">hub</span>IGP vs EGP (roteamento)</span>
+                <span class="shield-badge"><span class="material-symbols-outlined icon" translate="no" aria-hidden="true">swap_vert</span>Clique no cabeçalho para ordenar</span>
+                <span class="shield-badge"><span class="material-symbols-outlined icon" translate="no" aria-hidden="true">content_copy</span>Copie ou abra detalhes por linha</span>
             </div>
             <div class="row g-2 align-items-end mb-2">
                 <div class="col-md-6 col-lg-4">
@@ -127,9 +127,9 @@
                     </select>
                 </div>
                 <div class="col-lg-3 d-flex flex-wrap gap-2 justify-content-lg-end">
-                    <button type="button" class="aed-btn aed-btn-danger btn-sm grid-action-btn" data-grid-clear="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Limpa busca, filtros e ordenação da tabela."><span class="material-symbols-outlined">delete_sweep</span> Limpar</button>
-                    <button type="button" class="aed-btn aed-btn-json btn-sm grid-action-btn" data-grid-export-json="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Exporta os protocolos filtrados para arquivo JSON."><span class="material-symbols-outlined">download</span> JSON</button>
-                    <button type="button" class="aed-btn aed-btn-pdf btn-sm grid-action-btn" data-grid-export-pdf="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Gera versão para impressão/PDF com os dados filtrados."><span class="material-symbols-outlined">picture_as_pdf</span> PDF</button>
+                    <button type="button" class="aed-btn aed-btn-danger btn-sm grid-action-btn" data-grid-clear="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Limpa busca, filtros e ordenação da tabela."><span class="material-symbols-outlined" translate="no" aria-hidden="true">delete_sweep</span> Limpar</button>
+                    <button type="button" class="aed-btn aed-btn-json btn-sm grid-action-btn" data-grid-export-json="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Exporta os protocolos filtrados para arquivo JSON."><span class="material-symbols-outlined" translate="no" aria-hidden="true">download</span> JSON</button>
+                    <button type="button" class="aed-btn aed-btn-pdf btn-sm grid-action-btn" data-grid-export-pdf="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Gera versão para impressão/PDF com os dados filtrados."><span class="material-symbols-outlined" translate="no" aria-hidden="true">picture_as_pdf</span> PDF</button>
                 </div>
             </div>
 
@@ -137,15 +137,15 @@
                 <table class="table table-dark table-hover table-bordered align-middle mb-2 datagrid-table" data-grid-table="protocolos">
                     <thead class="table-dark-header">
                         <tr>
-                            <th class="sortable" data-sort-key="nome"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">lan</span>Protocolo</th>
-                            <th class="sortable" data-sort-key="camada"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">layers</span>Camada</th>
-                            <th class="sortable" data-sort-key="alcance"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">public</span>IGP/EGP</th>
-                            <th class="sortable" data-sort-key="transporte"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">swap_horiz</span>Transporte</th>
-                            <th class="sortable" data-sort-key="porta"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">settings_ethernet</span>Porta comum</th>
-                            <th class="sortable" data-sort-key="seguro"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">shield</span>Seguro</th>
-                            <th class="sortable" data-sort-key="nivel"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">equalizer</span>Nível</th>
-                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">functions</span>Função</th>
-                            <th class="text-center" style="width: 220px;" title="Copiar linha, abrir detalhes ou aprofundar"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">touch_app</span>Ações</th>
+                            <th class="sortable" data-sort-key="nome"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">lan</span>Protocolo</th>
+                            <th class="sortable" data-sort-key="camada"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">layers</span>Camada</th>
+                            <th class="sortable" data-sort-key="alcance"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">public</span>IGP/EGP</th>
+                            <th class="sortable" data-sort-key="transporte"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">swap_horiz</span>Transporte</th>
+                            <th class="sortable" data-sort-key="porta"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">settings_ethernet</span>Porta comum</th>
+                            <th class="sortable" data-sort-key="seguro"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">shield</span>Seguro</th>
+                            <th class="sortable" data-sort-key="nivel"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">equalizer</span>Nível</th>
+                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">functions</span>Função</th>
+                            <th class="text-center" style="width: 220px;" title="Copiar linha, abrir detalhes ou aprofundar"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">touch_app</span>Ações</th>
                         </tr>
                     </thead>
                     <tbody data-grid-body="protocolos">
@@ -190,10 +190,10 @@
                             <td class="small text-info">{item.funcao}</td>
                             <td class="text-nowrap text-center">
                                 <div class="d-inline-flex align-items-center justify-content-center gap-1">
-                                    <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-copy="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Copiar os dados deste protocolo."><span class="material-symbols-outlined">content_copy</span></button>
+                                    <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-copy="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Copiar os dados deste protocolo."><span class="material-symbols-outlined" translate="no" aria-hidden="true">content_copy</span></button>
                                     <button type="button" class="aed-btn aed-btn-indigo btn-sm" data-grid-details="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir os detalhes deste protocolo.">Detalhes</button>
                                     {#if item.temAprofundamento}
-                                    <a href="{item.aprofundamentoRota}" class="aed-btn aed-btn-teal btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir a página de aprofundamento deste protocolo."><span class="material-symbols-outlined">menu_book</span> Aprofundar</a>
+                                    <a href="{item.aprofundamentoRota}" class="aed-btn aed-btn-teal btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir a página de aprofundamento deste protocolo."><span class="material-symbols-outlined" translate="no" aria-hidden="true">menu_book</span> Aprofundar</a>
                                     {/if}
                                 </div>
                             </td>
@@ -231,7 +231,7 @@
                         data-mitigacoes="{item.mitigacoes}"
                         data-casouso="{item.casoUsoReal}"
                         data-diagnostico="{item.diagnosticoComandos}">
-                        <h6 class="mb-3 text-info d-flex align-items-center gap-2"><span class="material-symbols-outlined">lan</span> {item.nome}</h6>
+                        <h6 class="mb-3 text-info d-flex align-items-center gap-2"><span class="material-symbols-outlined" translate="no" aria-hidden="true">lan</span> {item.nome}</h6>
                         <dl class="small mb-0 protocolo-mobile-dl">
                             <div class="d-flex flex-wrap justify-content-between gap-2 border-bottom border-secondary border-opacity-25 py-1">
                                 <dt class="mb-0 text-secondary">Camada</dt><dd class="mb-0 text-light">{item.camada}</dd>
@@ -262,10 +262,10 @@
                             </div>
                         </dl>
                         <div class="mt-2 pt-2 border-top border-secondary border-opacity-25 d-flex flex-wrap gap-1">
-                            <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-copy="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Copiar os dados deste protocolo."><span class="material-symbols-outlined">content_copy</span></button>
+                            <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-copy="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Copiar os dados deste protocolo."><span class="material-symbols-outlined" translate="no" aria-hidden="true">content_copy</span></button>
                             <button type="button" class="aed-btn aed-btn-indigo btn-sm" data-grid-details="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Abrir os detalhes deste protocolo.">Detalhes</button>
                             {#if item.temAprofundamento}
-                            <a href="{item.aprofundamentoRota}" class="aed-btn aed-btn-teal btn-sm"><span class="material-symbols-outlined">menu_book</span> Aprofundar</a>
+                            <a href="{item.aprofundamentoRota}" class="aed-btn aed-btn-teal btn-sm"><span class="material-symbols-outlined" translate="no" aria-hidden="true">menu_book</span> Aprofundar</a>
                             {/if}
                         </div>
                     </div>
@@ -275,14 +275,14 @@
             <div class="d-flex flex-column align-items-center gap-2 mt-2">
                 <div class="small text-secondary text-center" data-grid-counter="protocolos"></div>
                 <div class="d-flex gap-2 align-items-center justify-content-center">
-                    <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-prev="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Página anterior."><span class="material-symbols-outlined">chevron_left</span></button>
+                    <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-prev="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Página anterior."><span class="material-symbols-outlined" translate="no" aria-hidden="true">chevron_left</span></button>
                     <span class="small text-secondary" data-grid-page-label="protocolos"></span>
-                    <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-next="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Próxima página."><span class="material-symbols-outlined">chevron_right</span></button>
+                    <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-grid-next="protocolos" data-bs-toggle="tooltip" data-bs-placement="top" title="Próxima página."><span class="material-symbols-outlined" translate="no" aria-hidden="true">chevron_right</span></button>
                 </div>
             </div>
 
             <div class="card-tech p-3 mb-0 mt-4 border border-warning border-opacity-25">
-                <h6 class="text-warning mb-2 d-flex align-items-center gap-2"><span class="material-symbols-outlined">build</span> Troubleshooting rápido (roteamento)</h6>
+                <h6 class="text-warning mb-2 d-flex align-items-center gap-2"><span class="material-symbols-outlined" translate="no" aria-hidden="true">build</span> Troubleshooting rápido (roteamento)</h6>
                 <p class="small text-secondary mb-3">
                     Comandos de validação imediata para laboratório Cisco. Use após aplicar configuração e antes de exportar evidências.
                 </p>
@@ -293,7 +293,7 @@
                             <div class="small text-info fw-bold mb-1">{item.nome}</div>
                             <div class="small text-light mb-1"><strong>Falha típica:</strong> {#if item.problemasComuns.isEmpty()}—{#else}{item.problemasComuns}{/if}</div>
                             <div class="small text-light mb-1"><strong>Mitigação:</strong> {#if item.mitigacoes.isEmpty()}—{#else}{item.mitigacoes}{/if}</div>
-                            <pre class="small bg-dark border border-secondary rounded p-2 mb-0 text-light">{item.diagnosticoComandos}</pre>
+                            <pre class="small bg-dark border border-secondary rounded p-2 mb-0 text-light" translate="no">{item.diagnosticoComandos}</pre>
                             <div class="mt-2 d-flex justify-content-end">
                                 <button
                                     type="button"
@@ -302,7 +302,7 @@
                                     data-copy-label="{item.nome}"
                                     data-copy-text="{item.diagnosticoComandos}"
                                     title="Copia os comandos de troubleshooting.">
-                                    <span class="material-symbols-outlined">content_copy</span> Copiar comandos
+                                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">content_copy</span> Copiar comandos
                                 </button>
                             </div>
                         </div>
@@ -327,7 +327,7 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/web/js/datagrid.js?v=20260710"></script>
+<script src="/web/js/datagrid.js?v=20260925"></script>
 <script>
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => new bootstrap.Tooltip(el));
     document.querySelectorAll('[data-bs-toggle="popover"]').forEach((el) => new bootstrap.Popover(el));
@@ -339,8 +339,8 @@
         const label = copyBtn.getAttribute("data-copy-label") || "Comandos";
         try {
             await navigator.clipboard.writeText(text);
-            copyBtn.innerHTML = '<span class="material-symbols-outlined">check</span> Copiado';
-            setTimeout(() => { copyBtn.innerHTML = '<span class="material-symbols-outlined">content_copy</span> Copiar comandos'; }, 1500);
+            copyBtn.innerHTML = '<span class="material-symbols-outlined" translate="no" aria-hidden="true">check</span> Copiado';
+            setTimeout(() => { copyBtn.innerHTML = '<span class="material-symbols-outlined" translate="no" aria-hidden="true">content_copy</span> Copiar comandos'; }, 1500);
         } catch (err) {
             console.warn("Falha ao copiar " + label, err);
         }

@@ -1,5 +1,5 @@
 <div class="aed-card card-tech loc-nota mb-4" role="note">
-    <span class="material-symbols-outlined" aria-hidden="true">layers</span>
+    <span class="material-symbols-outlined" aria-hidden="true" translate="no">layers</span>
     <div>
         <strong>Encapsulamento camada a camada.</strong>
         Digite uma mensagem de aplicação e veja-a ser <strong>embrulhada</strong> pelo modelo TCP/IP
@@ -19,9 +19,9 @@
             <input type="text" id="encap-msg" name="mensagem" class="form-control bg-dark text-light border-secondary"
                    maxlength="512" value="GET / HTTP/1.1" placeholder="ex.: GET / HTTP/1.1">
             <div class="form-text aed-ajuda">
-                <span class="material-symbols-outlined" aria-hidden="true">lightbulb</span>
+                <span class="material-symbols-outlined" aria-hidden="true" translate="no">lightbulb</span>
                 <span>O que a aplicação quer enviar (o "recheio"). <strong>Exemplos:</strong>
-                <code>GET / HTTP/1.1</code> (um pedido de página), <code>Olá, servidor!</code>.
+                <code translate="no">GET / HTTP/1.1</code> (um pedido de página), <code translate="no">Olá, servidor!</code>.
                 Este texto é o que as camadas abaixo vão embrulhar.</span>
             </div>
         </div>
@@ -54,26 +54,26 @@
         </div>
     </div>
     <div class="form-text aed-ajuda mt-2">
-        <span class="material-symbols-outlined" aria-hidden="true">lightbulb</span>
+        <span class="material-symbols-outlined" aria-hidden="true" translate="no">lightbulb</span>
         <span><strong>Transporte:</strong> TCP (confiável, ex.: web) ou UDP (rápido, ex.: DNS/vídeo).
-        <strong>Portas</strong> vão de 1 a 65535 — origem é alta e aleatória (ex.: <code>51000</code>),
-        destino é a do serviço (<code>80</code> web, <code>443</code> HTTPS, <code>53</code> DNS).
-        <strong>IPs</strong> no formato <code>a.b.c.d</code> (origem = você; destino = o servidor).
+        <strong>Portas</strong> vão de 1 a 65535 — origem é alta e aleatória (ex.: <code translate="no">51000</code>),
+        destino é a do serviço (<code translate="no">80</code> web, <code translate="no">443</code> HTTPS, <code translate="no">53</code> DNS).
+        <strong>IPs</strong> no formato <code translate="no">a.b.c.d</code> (origem = você; destino = o servidor).
         Na dúvida, use o botão <strong>"Exemplo DNS (UDP/53)"</strong>.</span>
     </div>
     <div class="d-flex flex-wrap gap-2 mt-3">
         <button type="submit" class="aed-btn aed-btn-teal"
                 title="Executar o encapsulamento da mensagem pelas 4 camadas do modelo TCP/IP">
             <span class="spinner-border spinner-border-sm htmx-indicator" role="status" aria-hidden="true"></span>
-            <span class="material-symbols-outlined" aria-hidden="true">layers</span> Encapsular
+            <span class="material-symbols-outlined" aria-hidden="true" translate="no">layers</span> Encapsular
         </button>
         <button type="button" id="encap-exemplo-dns" class="aed-btn aed-btn-neutral"
                 title="Carregar um exemplo de consulta DNS sobre UDP porta 53">
-            <span class="material-symbols-outlined" aria-hidden="true">dns</span> Exemplo DNS (UDP/53)
+            <span class="material-symbols-outlined" aria-hidden="true" translate="no">dns</span> Exemplo DNS (UDP/53)
         </button>
         <button type="button" id="encap-limpar" class="aed-btn aed-btn-danger" data-limpar
                 title="Esvaziar os campos e apagar a visualização de camadas de encapsulamento">
-            <span class="material-symbols-outlined" aria-hidden="true">delete_sweep</span> Limpar
+            <span class="material-symbols-outlined" aria-hidden="true" translate="no">delete_sweep</span> Limpar
         </button>
     </div>
 </form>

@@ -22,7 +22,7 @@
            class="reversa-aba {#if abaAtiva == 'projetar'}is-active{/if}"
            {#if abaAtiva == 'projetar'}aria-current="page"{/if}
            title="Dos requisitos (localidades e hosts) ao plano VLSM, WAN e roteamento">
-            <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
+            <span class="material-symbols-outlined" aria-hidden="true" translate="no">calculate</span>
             <span class="reversa-aba-texto">
                 <strong>Projetar</strong>
                 <small>dos requisitos ao plano</small>
@@ -32,7 +32,7 @@
            class="reversa-aba {#if abaAtiva == 'reversa'}is-active{/if}"
            {#if abaAtiva == 'reversa'}aria-current="page"{/if}
            title="Da configuração Cisco pronta de volta ao desenho, às tabelas e aos erros">
-            <span class="material-symbols-outlined" aria-hidden="true">terminal</span>
+            <span class="material-symbols-outlined" aria-hidden="true" translate="no">terminal</span>
             <span class="reversa-aba-texto">
                 <strong>Engenharia reversa</strong>
                 <small>do script ao desenho</small>
@@ -54,7 +54,7 @@
 <script>
 window.__topologyDetails = JSON.parse(document.getElementById("topology-details-json")?.textContent || "{}");
 </script>
-<script src="/resolucaoProblemas/js/resolucao.js?v=20260703b"></script>
-<script src="/resolucaoProblemas/js/engenharia-reversa.js?v=20260810"></script>
+<script src="/resolucaoProblemas/js/resolucao.js?v=20260925b"></script>
+<script src="/resolucaoProblemas/js/engenharia-reversa.js?v=20260925"></script>
 {/extraScripts}
 {/include}

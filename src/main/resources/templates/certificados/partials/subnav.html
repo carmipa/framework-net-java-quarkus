@@ -9,7 +9,7 @@
            class="protocolo-subnav-item {#if grupoAtivo == 'geral'}is-active{/if}"
            {#if grupoAtivo == 'geral'}aria-current="page"{/if}
            title="Catálogo: formatos, campos do X.509 e tipos de certificado">
-            <span class="material-symbols-outlined" aria-hidden="true">table_rows</span>
+            <span class="material-symbols-outlined" aria-hidden="true" translate="no">table_rows</span>
             <span>Geral</span>
         </a>
         {#for g in grupos}
@@ -17,12 +17,12 @@
            class="protocolo-subnav-item protocolo-subnav-camada {#if grupoAtivo == g.nome}is-active{/if}"
            {#if grupoAtivo == g.nome}aria-current="page"{/if}
            title="{g.nome}">
-            <span class="material-symbols-outlined" aria-hidden="true">folder</span>
+            <span class="material-symbols-outlined" aria-hidden="true" translate="no">folder</span>
             <span>{g.nome}</span>
         </a>
         {/for}
         <span class="protocolo-subnav-hint">
-            <span class="material-symbols-outlined" aria-hidden="true">menu_book</span>
+            <span class="material-symbols-outlined" aria-hidden="true" translate="no">menu_book</span>
             Aprofundamento por grupo
         </span>
     </div>
@@ -35,7 +35,7 @@
            class="protocolo-subproto {#if aprofundamentoAtivo == item.slug}is-active{/if}"
            {#if aprofundamentoAtivo == item.slug}aria-current="page"{/if}
            title="{item.chamada}">
-            <span class="material-symbols-outlined" aria-hidden="true">{item.icone}</span>
+            <span class="material-symbols-outlined" aria-hidden="true" translate="no">{item.icone}</span>
             <span>{item.rotuloMenu}</span>
         </a>
         {/for}

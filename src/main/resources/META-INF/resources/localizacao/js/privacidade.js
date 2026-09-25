@@ -119,7 +119,7 @@
     }
 
     function secaoLocalizacao(geo, viaWebrtc) {
-        var head = '<h6 class="priv-sec"><span class="material-symbols-outlined">flag</span> Sua localização (pelo IP)</h6>';
+        var head = '<h6 class="priv-sec"><span class="material-symbols-outlined" translate="no" aria-hidden="true">flag</span> Sua localização (pelo IP)</h6>';
         var temGeo = geo && geo.ok && geo.reservado !== true && (geo.pais || geo.pais_codigo || geo.codigo_pais);
         if (!temGeo) {
             return head + '<p class="small text-secondary mb-0">Indisponível para este IP (reservado / rede local, ou a consulta externa falhou). ' +
@@ -194,8 +194,8 @@
         if (proxyFlag) alertas.push("O provedor sinaliza <strong>Proxy/VPN</strong> para o IP público.");
         if (ipWebrtcPublico && ipServidor && ipWebrtcPublico !== ipServidor
                 && ipServidor !== "127.0.0.1" && ipServidor !== "::1") {
-            alertas.push("<strong>Divergência de IP público</strong>: o servidor vê <code>" + esc(ipServidor) +
-                "</code> e o WebRTC revela <code>" + esc(ipWebrtcPublico) + "</code> — típico de VPN/proxy com vazamento WebRTC.");
+            alertas.push("<strong>Divergência de IP público</strong>: o servidor vê <code translate='no'>" + esc(ipServidor) +
+                "</code> e o WebRTC revela <code translate='no'>" + esc(ipWebrtcPublico) + "</code> — típico de VPN/proxy com vazamento WebRTC.");
         }
         if (privados.length) alertas.push("Seu <strong>IP de rede local</strong> foi exposto via WebRTC (" +
             esc(privados.map(function (c) { return c.addr; }).join(", ")) + ").");
@@ -207,7 +207,7 @@
         else { nivel = "ok"; texto = "Sem vazamentos óbvios neste navegador"; }
 
         var verdictHtml = '<div class="priv-verdict priv-' + nivel + '">' +
-            '<span class="material-symbols-outlined">' + (nivel === "ok" ? "verified_user" : nivel === "warn" ? "shield" : "gpp_bad") + '</span>' +
+            '<span class="material-symbols-outlined" translate="no" aria-hidden="true">' + (nivel === "ok" ? "verified_user" : nivel === "warn" ? "shield" : "gpp_bad") + '</span>' +
             '<div><strong>' + esc(texto) + '</strong>' +
             (alertas.length ? '<ul class="priv-alertas">' + alertas.map(function (a) { return "<li>" + a + "</li>"; }).join("") + "</ul>"
                 : '<div class="small text-secondary">O que dava pra medir não revelou divergência de IP nem IP local aberto.</div>') +
@@ -220,7 +220,7 @@
         if (hero) hero.classList.remove("d-none");
 
         // Detalhes em largura total, abaixo do globo.
-        var det = '<h6 class="priv-sec"><span class="material-symbols-outlined">public</span> Seu IP público (três visões)</h6>' +
+        var det = '<h6 class="priv-sec"><span class="material-symbols-outlined" translate="no" aria-hidden="true">public</span> Seu IP público (três visões)</h6>' +
             '<div class="loc-result-grid">' +
             item("Servidor vê (IP real)", ipServidor, true) +
             item("ip-api vê", ipPublico, true) +
@@ -234,19 +234,19 @@
                 (familia(ipServidor) === 4 ? "IPv6" : "IPv4") + ". Isso é normal em conexões com IPv4 e IPv6 e não indica VPN.</p>";
         }
 
-        det += '<h6 class="priv-sec"><span class="material-symbols-outlined">lan</span> Candidatos WebRTC</h6>';
+        det += '<h6 class="priv-sec"><span class="material-symbols-outlined" translate="no" aria-hidden="true">lan</span> Candidatos WebRTC</h6>';
         if (!rtc.suportado) {
             det += '<p class="small text-secondary mb-0">WebRTC não suportado ou bloqueado neste navegador (bom para privacidade).</p>';
         } else if (!rtc.candidatos.length) {
             det += '<p class="small text-secondary mb-0">Nenhum candidato exposto — navegador protegendo os IPs (mDNS/hardening).</p>';
         } else {
             det += '<div class="priv-cands">' + rtc.candidatos.map(function (c) {
-                return '<div class="priv-cand priv-' + c.classe.cor + '"><code>' + esc(c.addr) + '</code>' +
+                return '<div class="priv-cand priv-' + c.classe.cor + '"><code translate="no">' + esc(c.addr) + '</code>' +
                     '<span>' + esc(c.classe.rotulo) + "</span></div>";
             }).join("") + "</div>";
         }
 
-        det += '<h6 class="priv-sec"><span class="material-symbols-outlined">dns</span> Cadeia de cabeçalhos (como o servidor resolveu o IP)</h6>' +
+        det += '<h6 class="priv-sec"><span class="material-symbols-outlined" translate="no" aria-hidden="true">dns</span> Cadeia de cabeçalhos (como o servidor resolveu o IP)</h6>' +
             '<div class="loc-result-grid">' +
             item("IP da conexão", insp.ipConexao, true) +
             item("X-Forwarded-For", insp.xForwardedFor, true) +
@@ -256,7 +256,7 @@
             item("Accept-Language", insp.acceptLanguage) +
             "</div>";
 
-        det += '<h6 class="priv-sec"><span class="material-symbols-outlined">fingerprint</span> Fingerprint do navegador (identifica mesmo sem o IP)</h6>' +
+        det += '<h6 class="priv-sec"><span class="material-symbols-outlined" translate="no" aria-hidden="true">fingerprint</span> Fingerprint do navegador (identifica mesmo sem o IP)</h6>' +
             '<div class="loc-result-grid">' +
             item("Fuso horário", fp.timezone) +
             item("Idiomas", fp.idiomas) +

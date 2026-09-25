@@ -12,17 +12,17 @@
     {#include protocolos/partials/subnav.html /}
 
     <header class="text-center mb-4">
-        <div class="aprof-hero-icone" aria-hidden="true"><span class="material-symbols-outlined">terminal</span></div>
+        <div class="aprof-hero-icone" aria-hidden="true"><span class="material-symbols-outlined" translate="no" aria-hidden="true">terminal</span></div>
         <span class="aed-eyebrow aed-eyebrow-teal">Aprofundamento · Camada de Aplicação</span>
         <h2 class="mb-2" style="font-family:var(--aed-font-display);">SSH — Secure Shell</h2>
         <p class="text-secondary small mx-auto" style="max-width:44rem;">{conteudo.resumo}</p>
         <div class="ssh-ficha" role="list">
-            <span class="ssh-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">menu_book</span><strong>RFC</strong> 4251–4254</span>
-            <span class="ssh-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">lan</span><strong>Transporte</strong> TCP 22</span>
-            <span class="ssh-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">layers</span><strong>Camada</strong> Aplicação</span>
-            <span class="ssh-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">swap_horiz</span><strong>Substitui</strong> Telnet, rlogin, rsh, FTP</span>
-            <span class="ssh-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">extension</span><strong>Subsistemas</strong> SFTP, SCP</span>
-            <span class="ssh-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true">verified</span><strong>Versão viva</strong> SSH-2</span>
+            <span class="ssh-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true" translate="no">menu_book</span><strong>RFC</strong> 4251–4254</span>
+            <span class="ssh-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true" translate="no">lan</span><strong>Transporte</strong> TCP 22</span>
+            <span class="ssh-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true" translate="no">layers</span><strong>Camada</strong> Aplicação</span>
+            <span class="ssh-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true" translate="no">swap_horiz</span><strong>Substitui</strong> Telnet, rlogin, rsh, FTP</span>
+            <span class="ssh-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true" translate="no">extension</span><strong>Subsistemas</strong> SFTP, SCP</span>
+            <span class="ssh-ficha-item" role="listitem"><span class="material-symbols-outlined aprof-ficha-icone" aria-hidden="true" translate="no">verified</span><strong>Versão viva</strong> SSH-2</span>
         </div>
     </header>
 
@@ -40,13 +40,13 @@
     </nav>
 
     <section id="conceitos" class="ssh-secao">
-        <h3 class="ssh-secao-titulo"><span class="material-symbols-outlined">school</span> O que o SSH garante</h3>
+        <h3 class="ssh-secao-titulo"><span class="material-symbols-outlined" translate="no" aria-hidden="true">school</span> O que o SSH garante</h3>
         <div class="row g-3">
             {#for item in conteudo.conceitos}
             <div class="col-12 col-lg-6">
                 <article class="card-tech p-3 h-100 ssh-conceito">
                     <h4 class="ssh-conceito-titulo">
-                        <span class="material-symbols-outlined" aria-hidden="true">{item.icone}</span>
+                        <span class="material-symbols-outlined" aria-hidden="true" translate="no">{item.icone}</span>
                         {item.titulo}
                     </h4>
                     <p class="small text-light mb-2">{item.texto}</p>
@@ -62,7 +62,7 @@
     {#include protocolos/partials/cabecalho_bits.html cabecalho=conteudo.cabecalho /}
 
     <section id="camadas" class="ssh-secao">
-        <h3 class="ssh-secao-titulo"><span class="material-symbols-outlined">layers</span> As três camadas do SSH-2</h3>
+        <h3 class="ssh-secao-titulo"><span class="material-symbols-outlined" translate="no" aria-hidden="true">layers</span> As três camadas do SSH-2</h3>
         <p class="small text-secondary">
             A separação em camadas é o que a SSH-1 não tinha. Cada uma entra em ação depois que a
             anterior terminou — e é por isso que um erro de autenticação já acontece dentro do túnel cifrado.
@@ -83,7 +83,7 @@
     </section>
 
     <section id="autenticacao" class="ssh-secao">
-        <h3 class="ssh-secao-titulo"><span class="material-symbols-outlined">passkey</span> Métodos de autenticação</h3>
+        <h3 class="ssh-secao-titulo"><span class="material-symbols-outlined" translate="no" aria-hidden="true">passkey</span> Métodos de autenticação</h3>
         <div class="table-responsive border border-secondary border-opacity-25 rounded">
             <table class="table table-dark table-sm align-middle mb-0 ssh-tabela">
                 <thead>
@@ -111,7 +111,7 @@
     </section>
 
     <section id="chaves" class="ssh-secao">
-        <h3 class="ssh-secao-titulo"><span class="material-symbols-outlined">key</span> Tipos de chave</h3>
+        <h3 class="ssh-secao-titulo"><span class="material-symbols-outlined" translate="no" aria-hidden="true">key</span> Tipos de chave</h3>
         <div class="row g-3">
             {#for chave in conteudo.chaves}
             <div class="col-12 col-lg-6">
@@ -121,11 +121,11 @@
                         <span class="badge bg-dark border border-{chave.recomendacaoCor} text-{chave.recomendacaoCor}">{chave.recomendacao}</span>
                     </div>
                     <p class="small text-secondary mb-2">Tamanho: {chave.tamanho}</p>
-                    <pre class="ssh-codigo" id="ssh-chave-{chave_count}">{chave.comando}</pre>
+                    <pre class="ssh-codigo" id="ssh-chave-{chave_count}" translate="no">{chave.comando}</pre>
                     <div class="d-flex justify-content-end">
                         <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="ssh-chave-{chave_count}"
                                 title="Copiar o comando de geração de chave para a área de transferência">
-                            <span class="material-symbols-outlined">content_copy</span> Copiar
+                            <span class="material-symbols-outlined" translate="no" aria-hidden="true">content_copy</span> Copiar
                         </button>
                     </div>
                 </article>
@@ -135,7 +135,7 @@
     </section>
 
     <section id="tuneis" class="ssh-secao">
-        <h3 class="ssh-secao-titulo"><span class="material-symbols-outlined">swap_calls</span> Túneis e encaminhamentos</h3>
+        <h3 class="ssh-secao-titulo"><span class="material-symbols-outlined" translate="no" aria-hidden="true">swap_calls</span> Túneis e encaminhamentos</h3>
         <p class="small text-secondary">
             Liberar a porta 22 no firewall não libera apenas o shell: os túneis viajam dentro da
             mesma conexão. Por isso cada linha traz o cenário legítimo e o risco que carrega.
@@ -149,15 +149,15 @@
                         {enc.tipo}
                     </h4>
                     <p class="small text-light mb-2">{enc.cenario}</p>
-                    <pre class="ssh-codigo" id="ssh-tunel-{enc_count}">{enc.comando}</pre>
+                    <pre class="ssh-codigo" id="ssh-tunel-{enc_count}" translate="no">{enc.comando}</pre>
                     <div class="d-flex justify-content-end mb-2">
                         <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="ssh-tunel-{enc_count}"
                                 title="Copiar o comando de túnel SSH para a área de transferência">
-                            <span class="material-symbols-outlined">content_copy</span> Copiar
+                            <span class="material-symbols-outlined" translate="no" aria-hidden="true">content_copy</span> Copiar
                         </button>
                     </div>
                     <p class="small mb-0 ssh-risco">
-                        <span class="material-symbols-outlined" aria-hidden="true">warning</span>
+                        <span class="material-symbols-outlined" aria-hidden="true" translate="no">warning</span>
                         {enc.risco}
                     </p>
                 </article>
@@ -167,9 +167,9 @@
     </section>
 
     <section id="hardening" class="ssh-secao">
-        <h3 class="ssh-secao-titulo"><span class="material-symbols-outlined">lock</span> Endurecimento do servidor</h3>
+        <h3 class="ssh-secao-titulo"><span class="material-symbols-outlined" translate="no" aria-hidden="true">lock</span> Endurecimento do servidor</h3>
         <p class="small text-secondary">
-            Diretivas do <code>sshd_config</code>. A coluna "se ficar aberto" existe para que a
+            Diretivas do <code translate="no">sshd_config</code>. A coluna "se ficar aberto" existe para que a
             escolha seja consciente: cada linha aqui tem um custo operacional real.
         </p>
         <div class="table-responsive border border-secondary border-opacity-25 rounded">
@@ -197,18 +197,18 @@
     </section>
 
     <section id="laboratorio" class="ssh-secao">
-        <h3 class="ssh-secao-titulo"><span class="material-symbols-outlined">science</span> Laboratório</h3>
+        <h3 class="ssh-secao-titulo"><span class="material-symbols-outlined" translate="no" aria-hidden="true">science</span> Laboratório</h3>
         <div class="row g-3">
             {#for lab in conteudo.laboratorios}
             <div class="col-12 col-xl-6">
                 <article class="card-tech p-3 h-100 ssh-lab">
                     <h4 class="ssh-lab-titulo">{lab.titulo}</h4>
                     <p class="small text-secondary mb-2">{lab.cenario}</p>
-                    <pre class="ssh-codigo" id="ssh-lab-{lab_count}">{lab.comandos}</pre>
+                    <pre class="ssh-codigo" id="ssh-lab-{lab_count}" translate="no">{lab.comandos}</pre>
                     <div class="d-flex justify-content-end mb-2">
                         <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="ssh-lab-{lab_count}"
                                 title="Copiar os comandos do laboratório para a área de transferência">
-                            <span class="material-symbols-outlined">content_copy</span> Copiar comandos
+                            <span class="material-symbols-outlined" translate="no" aria-hidden="true">content_copy</span> Copiar comandos
                         </button>
                     </div>
                     <p class="small text-light mb-0 ssh-lab-nota">{lab.explicacao}</p>
@@ -219,21 +219,21 @@
     </section>
 
     <section id="troubleshooting" class="ssh-secao">
-        <h3 class="ssh-secao-titulo"><span class="material-symbols-outlined">build</span> Troubleshooting</h3>
+        <h3 class="ssh-secao-titulo"><span class="material-symbols-outlined" translate="no" aria-hidden="true">build</span> Troubleshooting</h3>
         <div class="row g-3">
             {#for diag in conteudo.diagnosticos}
             <div class="col-12 col-xl-6">
                 <article class="card-tech p-3 h-100 ssh-diag">
                     <h4 class="ssh-diag-sintoma">
-                        <span class="material-symbols-outlined" aria-hidden="true">bug_report</span>
+                        <span class="material-symbols-outlined" aria-hidden="true" translate="no">bug_report</span>
                         {diag.sintoma}
                     </h4>
                     <p class="small mb-2"><span class="ssh-rotulo ssh-rotulo-risco">Causa provável</span> {diag.causaProvavel}</p>
-                    <pre class="ssh-codigo" id="ssh-diag-{diag_count}">{diag.comando}</pre>
+                    <pre class="ssh-codigo" id="ssh-diag-{diag_count}" translate="no">{diag.comando}</pre>
                     <div class="d-flex justify-content-end mb-2">
                         <button type="button" class="aed-btn aed-btn-neutral btn-sm" data-copiar="ssh-diag-{diag_count}"
                                 title="Copiar comando de diagnóstico para a área de transferência">
-                            <span class="material-symbols-outlined">content_copy</span> Copiar
+                            <span class="material-symbols-outlined" translate="no" aria-hidden="true">content_copy</span> Copiar
                         </button>
                     </div>
                     <p class="small text-light mb-0"><span class="ssh-rotulo ssh-rotulo-ok">Leitura</span> {diag.leitura}</p>
@@ -246,13 +246,13 @@
     <div class="text-center mt-4">
         <a href="/protocolos" class="aed-btn aed-btn-neutral"
            title="Retornar à tabela comparativa de protocolos">
-            <span class="material-symbols-outlined">arrow_back</span> Voltar ao catálogo de protocolos
+            <span class="material-symbols-outlined" translate="no" aria-hidden="true">arrow_back</span> Voltar ao catálogo de protocolos
         </a>
     </div>
 </div>
 {/content}
 {#extraScripts}
-<script src="/protocolos/js/aprofundamento.js?v=20260810"></script>
+<script src="/protocolos/js/aprofundamento.js?v=20260925"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 <script src="/protocolos/aprofundamento/js/aprofundamento-diagrama.js?v=20260907"></script>
 {/extraScripts}

@@ -11,7 +11,7 @@
 
     <header class="mb-4">
         <h1 class="aed-title">
-            <span class="material-symbols-outlined aed-title-icon" aria-hidden="true">security</span>
+            <span class="material-symbols-outlined aed-title-icon" aria-hidden="true" translate="no">security</span>
             Segurança de Rede
         </h1>
         <p class="aed-subtitle">
@@ -25,31 +25,31 @@
         <div class="aed-mode-grid tab-nav mb-3" role="tablist">
             <button type="button" class="aed-mode-btn tab-trigger active" data-tab="acl" role="tab"
                     title="Firewall (ACL): forje um pacote e veja se a regra dá MATCH (permite) ou bloqueia">
-                <span class="material-symbols-outlined">rule</span><span>Firewall (ACL)</span>
+                <span class="material-symbols-outlined" translate="no" aria-hidden="true">rule</span><span>Firewall (ACL)</span>
             </button>
             <button type="button" class="aed-mode-btn tab-trigger" data-tab="tls" role="tab"
                     title="Inspeção TLS: avalie nome, validade, cadeia, protocolo e cipher de um certificado">
-                <span class="material-symbols-outlined">lock</span><span>Inspeção TLS / Certificado</span>
+                <span class="material-symbols-outlined" translate="no" aria-hidden="true">lock</span><span>Inspeção TLS / Certificado</span>
             </button>
             <button type="button" class="aed-mode-btn tab-trigger" data-tab="estado" role="tab"
                     title="Firewall com estado × sem estado: compare como cada modelo trata a mesma sequência de pacotes">
-                <span class="material-symbols-outlined">alt_route</span><span>Com estado × sem estado</span>
+                <span class="material-symbols-outlined" translate="no" aria-hidden="true">alt_route</span><span>Com estado × sem estado</span>
             </button>
             <button type="button" class="aed-mode-btn tab-trigger" data-tab="handshake" role="tab"
                     title="Handshake TLS 1.3 passo a passo: o que é claro, o que é cifrado e onde uma incompatibilidade aborta">
-                <span class="material-symbols-outlined">handshake</span><span>Handshake TLS</span>
+                <span class="material-symbols-outlined" translate="no" aria-hidden="true">handshake</span><span>Handshake TLS</span>
             </button>
             <button type="button" class="aed-mode-btn tab-trigger" data-tab="fluxo" role="tab"
                     title="Alcança o destino? Diagnostique um fluxo salto a salto e veja onde ele trava">
-                <span class="material-symbols-outlined">route</span><span>Alcança o destino?</span>
+                <span class="material-symbols-outlined" translate="no" aria-hidden="true">route</span><span>Alcança o destino?</span>
             </button>
             <button type="button" class="aed-mode-btn tab-trigger" data-tab="topologia" role="tab"
                     title="Monte sua própria topologia (equipamentos, enlaces, VLANs, ACLs) e teste se um fluxo alcança o destino">
-                <span class="material-symbols-outlined">account_tree</span><span>Montar topologia</span>
+                <span class="material-symbols-outlined" translate="no" aria-hidden="true">account_tree</span><span>Montar topologia</span>
             </button>
             <button type="button" class="aed-mode-btn tab-trigger" data-tab="canvas" role="tab"
                     title="Mesma topologia, montada arrastando equipamentos e ligando interfaces num canvas visual (alternativa ao texto)">
-                <span class="material-symbols-outlined">drag_pan</span><span>Canvas (arrastar)</span>
+                <span class="material-symbols-outlined" translate="no" aria-hidden="true">drag_pan</span><span>Canvas (arrastar)</span>
             </button>
         </div>
 
@@ -60,7 +60,7 @@
                     <div class="aed-card h-100">
                         <div class="card-header bg-transparent border-0 pb-0">
                             <h5 class="d-flex align-items-center gap-2 mb-0 text-white" style="color: var(--aed-risk-attention) !important;">
-                                <span class="material-symbols-outlined">rule</span>
+                                <span class="material-symbols-outlined" translate="no" aria-hidden="true">rule</span>
                                 Regra de Firewall
                             </h5>
                         </div>
@@ -75,9 +75,9 @@
                                     <input type="text" class="aed-input form-control" id="aclRegra" name="regra"
                                            value="permit tcp any eq 80" placeholder="permit tcp 192.168.1.0 0.0.0.255 eq 80" required>
                                     <div class="form-text aed-ajuda">
-                                        <span class="material-symbols-outlined" aria-hidden="true">lightbulb</span>
-                                        <span><strong>permit</strong> (libera) ou <strong>deny</strong> (bloqueia) + protocolo + origem + <code>eq porta</code>.
-                                        <strong>Exemplos:</strong> <code>permit ip any any</code>, <code>deny tcp host 10.0.0.1 eq 22</code>.</span>
+                                        <span class="material-symbols-outlined" aria-hidden="true" translate="no">lightbulb</span>
+                                        <span><strong>permit</strong> (libera) ou <strong>deny</strong> (bloqueia) + protocolo + origem + <code translate="no">eq porta</code>.
+                                        <strong>Exemplos:</strong> <code translate="no">permit ip any any</code>, <code translate="no">deny tcp host 10.0.0.1 eq 22</code>.</span>
                                     </div>
                                 </div>
                                 <hr class="border-secondary opacity-25">
@@ -86,17 +86,17 @@
                                 <div class="mb-3">
                                     <label for="ipOrigem" class="form-label text-secondary">IP de Origem</label>
                                     <input type="text" class="aed-input form-control" id="ipOrigem" name="ipOrigem" value="192.168.1.15" placeholder="192.168.1.15" required>
-                                    <div class="form-text aed-ajuda"><span class="material-symbols-outlined" aria-hidden="true">lightbulb</span><span>Quem envia o pacote. <strong>Ex.:</strong> <code>192.168.1.15</code>.</span></div>
+                                    <div class="form-text aed-ajuda"><span class="material-symbols-outlined" aria-hidden="true" translate="no">lightbulb</span><span>Quem envia o pacote. <strong>Ex.:</strong> <code translate="no">192.168.1.15</code>.</span></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="ipDestino" class="form-label text-secondary">IP de Destino</label>
                                     <input type="text" class="aed-input form-control" id="ipDestino" name="ipDestino" value="8.8.8.8" placeholder="8.8.8.8" required>
-                                    <div class="form-text aed-ajuda"><span class="material-symbols-outlined" aria-hidden="true">lightbulb</span><span>Para onde o pacote vai. <strong>Ex.:</strong> <code>8.8.8.8</code>.</span></div>
+                                    <div class="form-text aed-ajuda"><span class="material-symbols-outlined" aria-hidden="true" translate="no">lightbulb</span><span>Para onde o pacote vai. <strong>Ex.:</strong> <code translate="no">8.8.8.8</code>.</span></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="portaDestino" class="form-label text-secondary">Porta Destino</label>
                                     <input type="number" class="aed-input form-control" id="portaDestino" name="portaDestino" placeholder="80" value="80" min="1" max="65535" required>
-                                    <div class="form-text aed-ajuda"><span class="material-symbols-outlined" aria-hidden="true">lightbulb</span><span>A porta do serviço. <strong>Ex.:</strong> <code>80</code> (HTTP), <code>443</code> (HTTPS), <code>22</code> (SSH).</span></div>
+                                    <div class="form-text aed-ajuda"><span class="material-symbols-outlined" aria-hidden="true" translate="no">lightbulb</span><span>A porta do serviço. <strong>Ex.:</strong> <code translate="no">80</code> (HTTP), <code translate="no">443</code> (HTTPS), <code translate="no">22</code> (SSH).</span></div>
                                 </div>
 
                                 <button type="submit" class="aed-btn aed-btn-amber w-100" id="btnTestar"
@@ -106,7 +106,7 @@
                                 </button>
                                 <button type="button" class="aed-btn aed-btn-neutral w-100 mt-2" data-limpar
                                         title="Esvaziar os campos e apagar o resultado">
-                                    <span class="material-symbols-outlined">delete_sweep</span> Limpar
+                                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">delete_sweep</span> Limpar
                                 </button>
                             </form>
                         </div>
@@ -117,13 +117,13 @@
                     <div class="aed-card h-100 d-flex flex-column">
                         <div class="card-header bg-transparent border-0 pb-0">
                             <h5 class="d-flex align-items-center gap-2 mb-0 text-white" style="color: var(--aed-risk-safe) !important;">
-                                <span class="material-symbols-outlined">analytics</span>
+                                <span class="material-symbols-outlined" translate="no" aria-hidden="true">analytics</span>
                                 Resultado da Avaliação
                             </h5>
                         </div>
                         <div class="card-body d-flex align-items-center justify-content-center text-center flex-grow-1" id="resultadoContainer">
                             <div class="text-muted">
-                                <span class="material-symbols-outlined" style="font-size: 4rem; opacity: 0.2;">policy</span>
+                                <span class="material-symbols-outlined" style="font-size: 4rem; opacity: 0.2;" translate="no" aria-hidden="true">policy</span>
                                 <p class="mt-3">Configure a regra e injete o pacote para ver se o Firewall irá permitir o tráfego.</p>
                             </div>
                         </div>
@@ -139,7 +139,7 @@
                     <div class="aed-card h-100">
                         <div class="card-header bg-transparent border-0 pb-0">
                             <h5 class="d-flex align-items-center gap-2 mb-0 text-white" style="color: var(--aed-indigo) !important;">
-                                <span class="material-symbols-outlined">lock</span>
+                                <span class="material-symbols-outlined" translate="no" aria-hidden="true">lock</span>
                                 Certificado / Conexão
                             </h5>
                         </div>
@@ -154,19 +154,19 @@
                                     <label for="tlsHost" class="form-label text-secondary">Nome acessado (o que você digitou na barra)</label>
                                     <input type="text" class="aed-input form-control" id="tlsHost" name="hostAcessado"
                                            value="frameworknet.carminati.dev.br" required>
-                                    <div class="form-text aed-ajuda"><span class="material-symbols-outlined" aria-hidden="true">lightbulb</span><span>O endereço que a pessoa digitou. <strong>Ex.:</strong> <code>seubanco.com.br</code>.</span></div>
+                                    <div class="form-text aed-ajuda"><span class="material-symbols-outlined" aria-hidden="true" translate="no">lightbulb</span><span>O endereço que a pessoa digitou. <strong>Ex.:</strong> <code translate="no">seubanco.com.br</code>.</span></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="tlsCn" class="form-label text-secondary">Nome no certificado (SAN) — use * para curinga</label>
                                     <input type="text" class="aed-input form-control" id="tlsCn" name="nomeCertificado"
                                            value="frameworknet.carminati.dev.br" required>
-                                    <div class="form-text aed-ajuda"><span class="material-symbols-outlined" aria-hidden="true">lightbulb</span><span>O nome para o qual o certificado foi emitido. <strong>Teste o ataque:</strong> ponha um nome DIFERENTE do de cima e veja a falha. Curinga: <code>*.exemplo.com</code>.</span></div>
+                                    <div class="form-text aed-ajuda"><span class="material-symbols-outlined" aria-hidden="true" translate="no">lightbulb</span><span>O nome para o qual o certificado foi emitido. <strong>Teste o ataque:</strong> ponha um nome DIFERENTE do de cima e veja a falha. Curinga: <code translate="no">*.exemplo.com</code>.</span></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="tlsDias" class="form-label text-secondary">Dias para expirar</label>
                                     <input type="text" class="aed-input form-control" id="tlsDias" name="diasParaExpirar"
                                            inputmode="numeric" value="60" required>
-                                    <div class="form-text aed-ajuda"><span class="material-symbols-outlined" aria-hidden="true">lightbulb</span><span>Quantos dias faltam para vencer. <strong>Ex.:</strong> <code>60</code> (válido), <code>10</code> (vence em breve), <code>-3</code> (expirado há 3 dias).</span></div>
+                                    <div class="form-text aed-ajuda"><span class="material-symbols-outlined" aria-hidden="true" translate="no">lightbulb</span><span>Quantos dias faltam para vencer. <strong>Ex.:</strong> <code translate="no">60</code> (válido), <code translate="no">10</code> (vence em breve), <code translate="no">-3</code> (expirado há 3 dias).</span></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="tlsSelf" class="form-label text-secondary">Emissor</label>
@@ -203,20 +203,20 @@
                                 </button>
                                 <button type="button" class="aed-btn aed-btn-neutral w-100 mt-2" data-limpar
                                         title="Esvaziar os campos e apagar o resultado">
-                                    <span class="material-symbols-outlined">delete_sweep</span> Limpar
+                                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">delete_sweep</span> Limpar
                                 </button>
                             </form>
 
                             <div class="tls-referencia mt-3">
-                                <h6 class="tls-ref-titulo"><span class="material-symbols-outlined" aria-hidden="true">checklist</span> As 5 checagens que um navegador faz</h6>
+                                <h6 class="tls-ref-titulo"><span class="material-symbols-outlined" aria-hidden="true" translate="no">checklist</span> As 5 checagens que um navegador faz</h6>
                                 <ol class="tls-ref-lista">
                                     <li><strong>Nome (SAN):</strong> o host acessado tem de estar no certificado — senão é o erro de nome divergente que um MITM provocaria.</li>
-                                    <li><strong>Validade:</strong> dentro do período <code>notBefore…notAfter</code>; expirado é recusado.</li>
+                                    <li><strong>Validade:</strong> dentro do período <code translate="no">notBefore…notAfter</code>; expirado é recusado.</li>
                                     <li><strong>Cadeia:</strong> a assinatura sobe até uma CA raiz confiável; autoassinado não sobe.</li>
                                     <li><strong>Protocolo:</strong> TLS 1.3 ideal, 1.2 aceitável; 1.0/1.1/SSL são obsoletos.</li>
                                     <li><strong>Cipher:</strong> AEAD (GCM/CHACHA20) forte; CBC atenção; RC4/3DES/NULL quebrados.</li>
                                 </ol>
-                                <p class="tls-ref-nota"><span class="material-symbols-outlined" aria-hidden="true">lightbulb</span> O veredito geral é o <strong>pior</strong> estado entre as cinco — uma falha recusa a conexão, como no navegador.</p>
+                                <p class="tls-ref-nota"><span class="material-symbols-outlined" aria-hidden="true" translate="no">lightbulb</span> O veredito geral é o <strong>pior</strong> estado entre as cinco — uma falha recusa a conexão, como no navegador.</p>
                             </div>
                         </div>
                     </div>
@@ -226,13 +226,13 @@
                     <div class="aed-card h-100 d-flex flex-column">
                         <div class="card-header bg-transparent border-0 pb-0">
                             <h5 class="d-flex align-items-center gap-2 mb-0 text-white" style="color: var(--aed-risk-safe) !important;">
-                                <span class="material-symbols-outlined">fact_check</span>
+                                <span class="material-symbols-outlined" translate="no" aria-hidden="true">fact_check</span>
                                 Veredito da Inspeção
                             </h5>
                         </div>
                         <div class="card-body flex-grow-1" id="tlsResultado">
                             <div class="text-muted text-center d-flex flex-column align-items-center justify-content-center h-100">
-                                <span class="material-symbols-outlined" style="font-size: 4rem; opacity: 0.2;">lock</span>
+                                <span class="material-symbols-outlined" style="font-size: 4rem; opacity: 0.2;" translate="no" aria-hidden="true">lock</span>
                                 <p class="mt-3">Preencha os atributos da conexão e veja o que um navegador aprovaria, alertaria ou recusaria.</p>
                             </div>
                         </div>
@@ -254,13 +254,13 @@
                         hx-get="/seguranca/api/estado?cenario={c.id}"
                         hx-target="#estadoResultado" hx-swap="innerHTML"
                         title="Simular: {c.titulo}">
-                    <span class="material-symbols-outlined">alt_route</span><span>{c.titulo}</span>
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">alt_route</span><span>{c.titulo}</span>
                 </button>
                 {/for}
             </div>
             <div id="estadoResultado">
                 <div class="text-muted text-center d-flex flex-column align-items-center justify-content-center py-5">
-                    <span class="material-symbols-outlined" style="font-size: 4rem; opacity: 0.2;">alt_route</span>
+                    <span class="material-symbols-outlined" style="font-size: 4rem; opacity: 0.2;" translate="no" aria-hidden="true">alt_route</span>
                     <p class="mt-3">Escolha um cenário acima para ver os dois firewalls lado a lado.</p>
                 </div>
             </div>
@@ -278,13 +278,13 @@
                         hx-get="/seguranca/api/tls-handshake?cenario={c.id}"
                         hx-target="#handshakeResultado" hx-swap="innerHTML"
                         title="Simular: {c.titulo}">
-                    <span class="material-symbols-outlined">handshake</span><span>{c.titulo}</span>
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">handshake</span><span>{c.titulo}</span>
                 </button>
                 {/for}
             </div>
             <div id="handshakeResultado">
                 <div class="text-muted text-center d-flex flex-column align-items-center justify-content-center py-5">
-                    <span class="material-symbols-outlined" style="font-size: 4rem; opacity: 0.2;">handshake</span>
+                    <span class="material-symbols-outlined" style="font-size: 4rem; opacity: 0.2;" translate="no" aria-hidden="true">handshake</span>
                     <p class="mt-3">Escolha um cenário acima para percorrer o handshake passo a passo.</p>
                 </div>
             </div>
@@ -302,13 +302,13 @@
                         hx-get="/seguranca/api/fluxo?cenario={c.id}"
                         hx-target="#fluxoResultado" hx-swap="innerHTML"
                         title="Diagnosticar: {c.titulo}">
-                    <span class="material-symbols-outlined">route</span><span>{c.titulo}</span>
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">route</span><span>{c.titulo}</span>
                 </button>
                 {/for}
             </div>
             <div id="fluxoResultado">
                 <div class="text-muted text-center d-flex flex-column align-items-center justify-content-center py-5">
-                    <span class="material-symbols-outlined" style="font-size: 4rem; opacity: 0.2;">route</span>
+                    <span class="material-symbols-outlined" style="font-size: 4rem; opacity: 0.2;" translate="no" aria-hidden="true">route</span>
                     <p class="mt-3">Escolha um cenário acima para diagnosticar a alcançabilidade do fluxo.</p>
                 </div>
             </div>
@@ -318,21 +318,21 @@
         <div class="tab-panel" data-tab-panel="topologia">
             <p class="small text-secondary mb-2">
                 Monte a topologia (um item por linha), edite à vontade e teste se um fluxo alcança o
-                destino. Formato: <code>host H1 vlan=10 gw=R1</code>, <code>switchl3 R1 vlans=10,20</code>,
-                <code>firewall FW deny=tcp/23</code>, <code>server S1 vlan=20 porta=443</code>,
-                <code>link A B</code>.
+                destino. Formato: <code translate="no">host H1 vlan=10 gw=R1</code>, <code translate="no">switchl3 R1 vlans=10,20</code>,
+                <code translate="no">firewall FW deny=tcp/23</code>, <code translate="no">server S1 vlan=20 porta=443</code>,
+                <code translate="no">link A B</code>.
             </p>
             <div class="aed-mode-grid mb-2" role="group" aria-label="Inserir equipamento">
                 <button type="button" class="aed-btn aed-btn-neutral" data-topo-add="host H1 vlan=10 gw=R1">
-                    <span class="material-symbols-outlined">computer</span> + Host</button>
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">computer</span> + Host</button>
                 <button type="button" class="aed-btn aed-btn-neutral" data-topo-add="switchl3 R1 vlans=10,20">
-                    <span class="material-symbols-outlined">lan</span> + Switch L3</button>
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">lan</span> + Switch L3</button>
                 <button type="button" class="aed-btn aed-btn-neutral" data-topo-add="firewall FW deny=tcp/23">
-                    <span class="material-symbols-outlined">security</span> + Firewall</button>
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">security</span> + Firewall</button>
                 <button type="button" class="aed-btn aed-btn-neutral" data-topo-add="server S1 vlan=20 porta=443">
-                    <span class="material-symbols-outlined">dns</span> + Servidor</button>
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">dns</span> + Servidor</button>
                 <button type="button" class="aed-btn aed-btn-neutral" data-topo-add="link A B">
-                    <span class="material-symbols-outlined">cable</span> + Enlace</button>
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">cable</span> + Enlace</button>
             </div>
             <form hx-post="/seguranca/api/topologia" hx-target="#topoResultado" hx-swap="innerHTML"
                   hx-disabled-elt="find button[type='submit']" autocomplete="off">
@@ -347,26 +347,26 @@ link R1 FW
 link FW S1</textarea>
                 <div class="row g-2 mt-2">
                     <div class="col-sm-4">
-                        <label class="form-label small text-secondary" for="topo-origem"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">call_made</span> Origem (host)</label>
+                        <label class="form-label small text-secondary" for="topo-origem"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">call_made</span> Origem (host)</label>
                         <input id="topo-origem" name="origem" value="H1" class="form-control form-control-sm bg-dark text-light border-secondary">
                     </div>
                     <div class="col-sm-4">
-                        <label class="form-label small text-secondary" for="topo-destino"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">call_received</span> Destino</label>
+                        <label class="form-label small text-secondary" for="topo-destino"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">call_received</span> Destino</label>
                         <input id="topo-destino" name="destino" value="S1" class="form-control form-control-sm bg-dark text-light border-secondary">
                     </div>
                     <div class="col-sm-4">
-                        <label class="form-label small text-secondary" for="topo-porta"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">tag</span> Porta</label>
+                        <label class="form-label small text-secondary" for="topo-porta"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">tag</span> Porta</label>
                         <input id="topo-porta" name="porta" value="443" class="form-control form-control-sm bg-dark text-light border-secondary">
                     </div>
                 </div>
                 <button type="submit" class="aed-btn aed-btn-teal mt-3"
                         title="Avaliar se o fluxo alcança o destino nesta topologia">
                     <span class="spinner-border spinner-border-sm htmx-indicator" role="status" aria-hidden="true"></span>
-                    <span class="material-symbols-outlined" aria-hidden="true">route</span> Testar fluxo
+                    <span class="material-symbols-outlined" aria-hidden="true" translate="no">route</span> Testar fluxo
                 </button>
                 <button type="button" class="aed-btn aed-btn-neutral" data-limpar
                         title="Esvaziar os campos e apagar o resultado">
-                    <span class="material-symbols-outlined">delete_sweep</span> Limpar
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">delete_sweep</span> Limpar
                 </button>
             </form>
             <div id="topoResultado" class="mt-3" aria-live="polite"></div>
@@ -381,19 +381,19 @@ link FW S1</textarea>
             </p>
             <div class="aed-mode-grid mb-2" role="group" aria-label="Inserir equipamento no canvas">
                 <button type="button" class="aed-btn aed-btn-neutral" data-canvas-add="host">
-                    <span class="material-symbols-outlined">computer</span> + Host</button>
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">computer</span> + Host</button>
                 <button type="button" class="aed-btn aed-btn-neutral" data-canvas-add="switchl3">
-                    <span class="material-symbols-outlined">lan</span> + Switch L3</button>
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">lan</span> + Switch L3</button>
                 <button type="button" class="aed-btn aed-btn-neutral" data-canvas-add="firewall">
-                    <span class="material-symbols-outlined">security</span> + Firewall</button>
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">security</span> + Firewall</button>
                 <button type="button" class="aed-btn aed-btn-neutral" data-canvas-add="server">
-                    <span class="material-symbols-outlined">dns</span> + Servidor</button>
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">dns</span> + Servidor</button>
                 <button type="button" class="aed-btn aed-btn-neutral" id="canvas-ligar" aria-pressed="false"
                         title="Modo ligar: clique em dois equipamentos para criar um enlace">
-                    <span class="material-symbols-outlined">cable</span> Ligar</button>
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">cable</span> Ligar</button>
                 <button type="button" class="aed-btn aed-btn-neutral" id="canvas-limpar"
                         title="Remover todos os equipamentos e enlaces do canvas">
-                    <span class="material-symbols-outlined">delete_sweep</span> Limpar</button>
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">delete_sweep</span> Limpar</button>
             </div>
             <div class="topo-canvas-wrap">
                 <svg id="topo-canvas" class="topo-canvas" viewBox="0 0 900 460" role="img"
@@ -402,7 +402,7 @@ link FW S1</textarea>
                     <g data-canvas-nodes></g>
                 </svg>
                 <p id="canvas-dica" class="small text-secondary mt-1 mb-0">
-                    <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">info</span>
+                    <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">info</span>
                     Comece adicionando equipamentos acima.
                 </p>
             </div>
@@ -411,38 +411,38 @@ link FW S1</textarea>
                 <div class="row g-2 align-items-end">
                     <div class="col-6 col-sm-3">
                         <label class="form-label small text-secondary" for="cp-id">
-                            <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">badge</span> Nome</label>
+                            <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">badge</span> Nome</label>
                         <input id="cp-id" class="form-control form-control-sm bg-dark text-light border-secondary" autocomplete="off">
                     </div>
                     <div class="col-6 col-sm-3" data-prop="vlan">
                         <label class="form-label small text-secondary" for="cp-vlan">
-                            <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">tag</span> VLAN</label>
+                            <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">tag</span> VLAN</label>
                         <input id="cp-vlan" class="form-control form-control-sm bg-dark text-light border-secondary" inputmode="numeric" autocomplete="off">
                     </div>
                     <div class="col-6 col-sm-3" data-prop="gw">
                         <label class="form-label small text-secondary" for="cp-gw">
-                            <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">router</span> Gateway</label>
+                            <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">router</span> Gateway</label>
                         <input id="cp-gw" class="form-control form-control-sm bg-dark text-light border-secondary" autocomplete="off">
                     </div>
                     <div class="col-6 col-sm-3" data-prop="vlans">
                         <label class="form-label small text-secondary" for="cp-vlans">
-                            <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">lan</span> VLANs roteadas</label>
+                            <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">lan</span> VLANs roteadas</label>
                         <input id="cp-vlans" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="10,20" autocomplete="off">
                     </div>
                     <div class="col-6 col-sm-3" data-prop="deny">
                         <label class="form-label small text-secondary" for="cp-deny">
-                            <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">block</span> Nega (deny)</label>
+                            <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">block</span> Nega (deny)</label>
                         <input id="cp-deny" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="tcp/23" autocomplete="off">
                     </div>
                     <div class="col-6 col-sm-3" data-prop="porta">
                         <label class="form-label small text-secondary" for="cp-porta">
-                            <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">tag</span> Porta aberta</label>
+                            <span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">tag</span> Porta aberta</label>
                         <input id="cp-porta" class="form-control form-control-sm bg-dark text-light border-secondary" inputmode="numeric" autocomplete="off">
                     </div>
                     <div class="col-6 col-sm-3">
                         <button type="button" class="aed-btn aed-btn-neutral w-100" id="cp-remover"
                                 title="Remover este equipamento e seus enlaces">
-                            <span class="material-symbols-outlined">delete</span> Remover
+                            <span class="material-symbols-outlined" translate="no" aria-hidden="true">delete</span> Remover
                         </button>
                     </div>
                 </div>
@@ -450,26 +450,26 @@ link FW S1</textarea>
 
             <div class="row g-2 mt-2">
                 <div class="col-sm-4">
-                    <label class="form-label small text-secondary" for="canvas-origem"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">call_made</span> Origem (host)</label>
+                    <label class="form-label small text-secondary" for="canvas-origem"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">call_made</span> Origem (host)</label>
                     <input id="canvas-origem" class="form-control form-control-sm bg-dark text-light border-secondary" autocomplete="off">
                 </div>
                 <div class="col-sm-4">
-                    <label class="form-label small text-secondary" for="canvas-destino"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">call_received</span> Destino</label>
+                    <label class="form-label small text-secondary" for="canvas-destino"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">call_received</span> Destino</label>
                     <input id="canvas-destino" class="form-control form-control-sm bg-dark text-light border-secondary" autocomplete="off">
                 </div>
                 <div class="col-sm-4">
-                    <label class="form-label small text-secondary" for="canvas-porta"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">tag</span> Porta</label>
+                    <label class="form-label small text-secondary" for="canvas-porta"><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">tag</span> Porta</label>
                     <input id="canvas-porta" value="443" class="form-control form-control-sm bg-dark text-light border-secondary" autocomplete="off">
                 </div>
             </div>
             <button type="button" class="aed-btn aed-btn-teal mt-3" id="canvas-avaliar"
                     title="Serializar o canvas e avaliar se o fluxo alcança o destino (mesmo motor do montador em texto)">
                 <span class="spinner-border spinner-border-sm" id="canvas-spin" role="status" aria-hidden="true" hidden></span>
-                <span class="material-symbols-outlined" aria-hidden="true">route</span> Testar fluxo
+                <span class="material-symbols-outlined" aria-hidden="true" translate="no">route</span> Testar fluxo
             </button>
             <details class="mt-2">
                 <summary class="small text-secondary">Ver o texto equivalente (o que o canvas gera)</summary>
-                <pre id="canvas-texto" class="small text-light bg-dark border-secondary rounded p-2 mt-1 mb-0" style="white-space:pre-wrap;"></pre>
+                <pre id="canvas-texto" class="small text-light bg-dark border-secondary rounded p-2 mt-1 mb-0" style="white-space:pre-wrap;" translate="no"></pre>
             </details>
             <div id="canvasResultado" class="mt-3" aria-live="polite"></div>
         </div>
@@ -481,6 +481,6 @@ link FW S1</textarea>
 <script src="/web/js/aed-tabs.js?v=20260710"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 <script src="/web/js/seguranca-topologia.js?v=20260908"></script>
-<script src="/web/js/seguranca-canvas.js?v=20260909"></script>
+<script src="/web/js/seguranca-canvas.js?v=20260925"></script>
 {/extraScripts}
 {/include}

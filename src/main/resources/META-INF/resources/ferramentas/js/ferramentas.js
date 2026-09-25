@@ -80,7 +80,7 @@
             ul.className = "small text-light mb-0 cmd-flags-list";
             ativos.forEach(function (o) {
                 var li = document.createElement("li");
-                li.innerHTML = '<code class="aprof-inline">' + o.flag + "</code> — " + o.exp;
+                li.innerHTML = '<code class="aprof-inline" translate="no">' + o.flag + "</code> — " + o.exp;
                 ul.appendChild(li);
             });
             flagsBox.appendChild(ul);
@@ -140,7 +140,7 @@
             try {
                 await navigator.clipboard.writeText(document.getElementById("cmd-saida").textContent);
                 var original = copiar.innerHTML;
-                copiar.innerHTML = '<span class="material-symbols-outlined">check</span> Copiado';
+                copiar.innerHTML = '<span class="material-symbols-outlined" translate="no" aria-hidden="true">check</span> Copiado';
                 setTimeout(function () { copiar.innerHTML = original; }, 1500);
             } catch (e) { copiar.textContent = "Falhou"; }
         });

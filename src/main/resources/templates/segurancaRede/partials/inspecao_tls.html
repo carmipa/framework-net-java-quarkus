@@ -1,6 +1,6 @@
 <div class="w-100 tls-inspecao">
     <div class="tls-veredito tls-veredito-{tls.vereditoCor} mb-3">
-        <span class="material-symbols-outlined icon-animated" aria-hidden="true">
+        <span class="material-symbols-outlined icon-animated" aria-hidden="true" translate="no">
             {#if tls.vereditoCor == 'success'}verified{#else if tls.vereditoCor == 'warning'}gpp_maybe{#else}gpp_bad{/if}
         </span>
         <div>
@@ -12,7 +12,7 @@
     <ul class="tls-checagens">
         {#for c in tls.checagens}
         <li class="tls-checagem tls-checagem-{c.estadoCor}">
-            <span class="material-symbols-outlined tls-check-icone text-{c.estadoCor}" aria-hidden="true">{c.icone}</span>
+            <span class="material-symbols-outlined tls-check-icone text-{c.estadoCor}" aria-hidden="true" translate="no">{c.icone}</span>
             <div class="tls-check-corpo">
                 <div class="tls-check-cabeca">
                     <span class="tls-check-nome">{c.nome}</span>

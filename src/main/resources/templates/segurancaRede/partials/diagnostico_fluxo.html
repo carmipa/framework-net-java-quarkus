@@ -1,6 +1,6 @@
 <div class="w-100">
     <h5 class="d-flex flex-wrap align-items-center gap-2 text-white mb-1">
-        <span class="material-symbols-outlined">route</span> {fluxo.titulo}
+        <span class="material-symbols-outlined" translate="no" aria-hidden="true">route</span> {fluxo.titulo}
         {#if fluxo.alcanca}
         <span class="badge bg-success">alcança o destino</span>
         {#else}
@@ -8,8 +8,8 @@
         {/if}
     </h5>
     <p class="small text-secondary mb-3">
-        Origem <code class="text-info">{fluxo.origem}</code> &rarr;
-        destino <code class="text-info">{fluxo.destino}</code>. {fluxo.resumo}
+        Origem <code class="text-info" translate="no">{fluxo.origem}</code> &rarr;
+        destino <code class="text-info" translate="no">{fluxo.destino}</code>. {fluxo.resumo}
     </p>
 
     <div class="d-flex flex-column gap-2">
@@ -18,9 +18,9 @@
              style="background-color: rgba(0,0,0,0.2);{#if !s.ok} border-left: 3px solid #f87171;{/if}">
             <span class="text-muted small">{s.ordem}</span>
             {#if s.ok}
-            <span class="material-symbols-outlined resultado-permit" title="passou">check_circle</span>
+            <span class="material-symbols-outlined resultado-permit" title="passou" translate="no" aria-hidden="true">check_circle</span>
             {#else}
-            <span class="material-symbols-outlined resultado-deny" title="bloqueado aqui">block</span>
+            <span class="material-symbols-outlined resultado-deny" title="bloqueado aqui" translate="no" aria-hidden="true">block</span>
             {/if}
             <strong class="text-white">{s.no}</strong>
             <span class="badge bg-secondary">{s.camada}</span>

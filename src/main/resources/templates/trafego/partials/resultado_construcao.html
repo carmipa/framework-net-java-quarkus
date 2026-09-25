@@ -2,7 +2,7 @@
 <div class="aed-card mt-3">
     <div class="card-body">
         <h5 class="d-flex flex-wrap align-items-center gap-2 text-white mb-2">
-            <span class="material-symbols-outlined">construction</span>
+            <span class="material-symbols-outlined" translate="no" aria-hidden="true">construction</span>
             Pacote {sim.protocolo} &middot; {sim.totalBytes} bytes
             {#if sim.checksumValido}
             <span class="badge bg-success">checksum válido</span>
@@ -25,7 +25,7 @@
                     hx-target="#construtor-decodificado"
                     hx-swap="innerHTML"
                     title="Decodificar de volta os bytes recém-montados (a ida e a volta)">
-                <span class="material-symbols-outlined" aria-hidden="true">memory</span>
+                <span class="material-symbols-outlined" aria-hidden="true" translate="no">memory</span>
                 Decodificar estes bytes
             </button>
         </div>
@@ -35,7 +35,7 @@
 </div>
 {#else}
 <div class="alert alert-danger mt-3" role="alert">
-    <span class="material-symbols-outlined align-middle" aria-hidden="true">error</span>
+    <span class="material-symbols-outlined align-middle" aria-hidden="true" translate="no">error</span>
     {sim.erro}
 </div>
 {/if}

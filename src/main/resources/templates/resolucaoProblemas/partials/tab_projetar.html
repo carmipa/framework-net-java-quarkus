@@ -2,7 +2,7 @@
     Conteudo movido sem alteracao da pagina original; a casca virou resolucao_problemas.html. !}
 
     <p class="small text-secondary mb-2">
-        Página dedicada para cenários de prova/laboratório: cálculo VLSM, planejamento WAN (prefixo configurável, típico <code class="text-secondary">/30</code>),
+        Página dedicada para cenários de prova/laboratório: cálculo VLSM, planejamento WAN (prefixo configurável, típico <code class="text-secondary" translate="no">/30</code>),
         roteamento <strong class="text-light">EIGRP</strong> e <strong class="text-light">OSPF</strong> com os números da planilha FIAP (cada aluno informa o seu), comandos Cisco e topologia para Packet Tracer.
         O formulário abre <strong class="text-light">em branco</strong>.
         <a href="/resolucao-problemas?demo=fiap" class="link-info text-decoration-none">Checkpoint FIAP</a>
@@ -13,7 +13,7 @@
         <a href="/resolucao-problemas?demo=1" class="link-info text-decoration-none">exemplo didático genérico</a>.
     </p>
     <p class="small mb-3 py-2 px-3 rounded aed-card card-tech border border-warning border-opacity-50">
-        <span class="material-symbols-outlined text-warning align-middle" style="font-size:1rem;">warning</span>
+        <span class="material-symbols-outlined text-warning align-middle" style="font-size:1rem;" translate="no" aria-hidden="true">warning</span>
         <strong class="text-warning">Packet Tracer — equipamento padrão:</strong>
         roteadores <strong class="text-light">Cisco 2911</strong> e switches
         <strong class="text-light">Cisco 2960</strong>.
@@ -24,7 +24,7 @@
         <div class="mt-2 mb-0">
             <p class="mb-2">
                 <strong class="text-info">AS EIGRP</strong> (ex.: 71) é só o <em>número do processo</em> no roteador
-                (<code>router eigrp 71</code>). Em prova, o professor pode pedir outro AS (100, 65001, etc.) —
+                (<code translate="no">router eigrp 71</code>). Em prova, o professor pode pedir outro AS (100, 65001, etc.) —
                 você altera só esse campo; não muda o tamanho das sub-redes IP.
             </p>
             <p class="mb-2">
@@ -33,22 +33,22 @@
             </p>
             <p class="mb-0">
                 <strong class="text-success">CIDR da rede base</strong> (ex.: /16 em 172.19.0.0/16) é o bloco IP do enunciado.
-                O EIGRP depois usa <code>network &lt;rede&gt; &lt;wildcard&gt;</code> para «ligar» cada interface ao processo —
+                O EIGRP depois usa <code translate="no">network &lt;rede&gt; &lt;wildcard&gt;</code> para «ligar» cada interface ao processo —
                 não confunda com o número do AS.
             </p>
         </div>
     </details>
     <div class="mb-3">
-        <span class="shield-badge"><span class="material-symbols-outlined icon">memory</span>VLSM Dinâmico</span>
-        <span class="shield-badge"><span class="material-symbols-outlined icon">public</span>WAN /30</span>
-        <span class="shield-badge"><span class="material-symbols-outlined icon">terminal</span>Cisco CLI</span>
-        <span class="shield-badge"><span class="material-symbols-outlined icon">account_tree</span>Topologia Mermaid</span>
+        <span class="shield-badge"><span class="material-symbols-outlined icon" translate="no" aria-hidden="true">memory</span>VLSM Dinâmico</span>
+        <span class="shield-badge"><span class="material-symbols-outlined icon" translate="no" aria-hidden="true">public</span>WAN /30</span>
+        <span class="shield-badge"><span class="material-symbols-outlined icon" translate="no" aria-hidden="true">terminal</span>Cisco CLI</span>
+        <span class="shield-badge"><span class="material-symbols-outlined icon" translate="no" aria-hidden="true">account_tree</span>Topologia Mermaid</span>
     </div>
 
     <div class="aed-card card-tech problem-box p-3 mb-3">
         <span class="aed-eyebrow">Cenário</span>
         <h5 class="text-light mb-3 problem-title d-flex align-items-center gap-2">
-            <span class="material-symbols-outlined text-info">input</span><span>Cenário de entrada</span>
+            <span class="material-symbols-outlined text-info" translate="no" aria-hidden="true">input</span><span>Cenário de entrada</span>
         </h5>
         <form method="POST" action="/resolucao-problemas" id="resolucao-form">
             <div class="row g-3 align-items-end">
@@ -69,7 +69,7 @@
                         title="Rede principal. Digite o IPv4 completo ou já com barra CIDR (172.19.0.0/16); neste caso o campo CIDR ao lado pode ficar vazio."
                         required
                     >
-                    <div class="form-text text-secondary">IPv4 completo com pontos (ex.: <code>172.19.0.0</code>) ou com barra <code>/16</code>.</div>
+                    <div class="form-text text-secondary">IPv4 completo com pontos (ex.: <code translate="no">172.19.0.0</code>) ou com barra <code translate="no">/16</code>.</div>
                 </div>
                 <div class="col-lg-2 col-md-6">
                     <label class="form-label text-secondary">CIDR da rede base</label>
@@ -184,14 +184,14 @@
                     <p class="small text-secondary mb-0">
                         <strong class="text-warning">Obrigatório:</strong> rede base (IP) e localidades.
                         <strong class="text-light">AS EIGRP</strong> e
-                        <strong class="text-light">processo OSPF</strong> são opcionais — preencha com os valores da planilha quando o enunciado pedir; se vazios, usam-se <code>71</code> e <code>1</code> nos scripts.
+                        <strong class="text-light">processo OSPF</strong> são opcionais — preencha com os valores da planilha quando o enunciado pedir; se vazios, usam-se <code translate="no">71</code> e <code translate="no">1</code> nos scripts.
                         <strong class="text-light">Checkpoint só EIGRP:</strong> escolha <em>Somente EIGRP</em> na distribuição.
                     </p>
                 </div>
             </div>
             <hr class="border-secondary">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-                <h6 class="text-warning mb-0 problem-title"><span class="material-symbols-outlined">apartment</span><span>Localidades dinâmicas (N cenários)</span></h6>
+                <h6 class="text-warning mb-0 problem-title"><span class="material-symbols-outlined" translate="no" aria-hidden="true">apartment</span><span>Localidades dinâmicas (N cenários)</span></h6>
                 <button
                     type="button"
                     class="aed-btn aed-btn-indigo btn-sm"
@@ -199,7 +199,7 @@
                     data-bs-toggle="tooltip"
                     data-bs-placement="top"
                     title="Adiciona uma nova linha de localidade com nome e quantidade de hosts."
-                ><span class="material-symbols-outlined">add</span> Adicionar localidade</button>
+                ><span class="material-symbols-outlined" translate="no" aria-hidden="true">add</span> Adicionar localidade</button>
             </div>
             <div class="small text-secondary mb-2">
                 Dica: mantenha o nome da localidade e informe a quantidade de hosts. Você pode adicionar quantas linhas precisar.
@@ -244,7 +244,7 @@
                             data-bs-toggle="tooltip"
                             data-bs-placement="top"
                             title="Remove esta localidade do cenário."
-                        ><span class="material-symbols-outlined">delete</span> Remover</button>
+                        ><span class="material-symbols-outlined" translate="no" aria-hidden="true">delete</span> Remover</button>
                     </div>
                 </div>
                 {/for}
@@ -259,7 +259,7 @@
                         data-bs-toggle="tooltip"
                         data-bs-placement="top"
                         title="Processa o cenário e monta LANs, WANs, CLI e topologia."
-                    ><span class="material-symbols-outlined">calculate</span> Calcular cenário</button>
+                    ><span class="material-symbols-outlined" translate="no" aria-hidden="true">calculate</span> Calcular cenário</button>
                     <button
                         type="button"
                         class="aed-btn aed-btn-danger px-4"
@@ -267,7 +267,7 @@
                         data-bs-toggle="tooltip"
                         data-bs-placement="top"
                         title="Apaga resultados e reinicia o formulário em branco (uma linha de localidade vazia)."
-                    ><span class="material-symbols-outlined">delete_sweep</span> Limpar tela</button>
+                    ><span class="material-symbols-outlined" translate="no" aria-hidden="true">delete_sweep</span> Limpar tela</button>
                 </div>
             </div>
         </form>
@@ -276,12 +276,12 @@
     <div class="aed-card card-tech problem-box p-3 mb-3">
         <span class="aed-eyebrow aed-eyebrow-amber">Turma</span>
         <h5 class="text-warning mb-2 problem-title d-flex align-items-center gap-2">
-            <span class="material-symbols-outlined">groups</span><span>Importar turma (Excel → ZIP por aluno)</span>
+            <span class="material-symbols-outlined" translate="no" aria-hidden="true">groups</span><span>Importar turma (Excel → ZIP por aluno)</span>
         </h5>
         <p class="small text-secondary mb-2">
             Cole dados da planilha FIAP (Ctrl+C no Excel → Ctrl+V). Cada linha vira um cenário independente:
             <strong class="text-light">Nome | Rede base | Hosts1 | Hosts2</strong> (separados por TAB).
-            O ZIP gerado contém <code class="text-secondary">por_aluno/&lt;aluno&gt;/</code> com guia, consolidado, configs e Mermaid.
+            O ZIP gerado contém <code class="text-secondary" translate="no">por_aluno/&lt;aluno&gt;/</code> com guia, consolidado, configs e Mermaid.
         </p>
         <form method="POST" action="/resolucao-problemas" class="row g-3">
             <input type="hidden" name="topology_type" value="{formData.topologyType}">
@@ -311,7 +311,7 @@
                     data-bs-toggle="tooltip"
                     data-bs-placement="top"
                     title="Gera pacote_turma_packet_tracer.zip com um laboratório por aluno."
-                ><span class="material-symbols-outlined">folder_zip</span> Exportar ZIP da turma</button>
+                ><span class="material-symbols-outlined" translate="no" aria-hidden="true">folder_zip</span> Exportar ZIP da turma</button>
             </div>
         </form>
     </div>
@@ -359,7 +359,7 @@
     </div>
 
     <div class="problem-box p-3 mb-3">
-        <h5 class="text-warning mb-2 problem-title"><span class="material-symbols-outlined">route</span><span>Resumo do planejamento</span></h5>
+        <h5 class="text-warning mb-2 problem-title"><span class="material-symbols-outlined" translate="no" aria-hidden="true">route</span><span>Resumo do planejamento</span></h5>
         <p class="mb-1 text-light">Rede base: <strong>{scenario.baseNetwork}</strong></p>
         <p class="mb-1 text-light">Total de hosts solicitados: <strong>{scenario.totalHostsRequested}</strong></p>
         <p class="mb-1 text-light">Total de hosts suportados (LANs): <strong>{scenario.totalHostsSupported}</strong> | Eficiência geral: <strong>{scenario.overallEfficiencyPct}%</strong></p>
@@ -375,24 +375,24 @@
         <p class="mb-0 small text-warning">Fronteira (redistribuição): {#for name in scenario.routingPlan.boundaryLocationNames}{#if name_index > 1}, {/if}{name}{/for}</p>
         {/if}
         <div class="result-strip">
-            <span class="section-chip chip-info"><span class="material-symbols-outlined">dns</span> Base {scenario.baseNetwork}</span>
-            <span class="section-chip chip-success"><span class="material-symbols-outlined">group</span> Hosts {scenario.totalHostsRequested}</span>
-            <span class="section-chip chip-warning"><span class="material-symbols-outlined">apartment</span> Locais {scenario.totalLocations}</span>
-            <span class="section-chip chip-success"><span class="material-symbols-outlined">trending_up</span> Eficiência {scenario.overallEfficiencyPct}%</span>
+            <span class="section-chip chip-info"><span class="material-symbols-outlined" translate="no" aria-hidden="true">dns</span> Base {scenario.baseNetwork}</span>
+            <span class="section-chip chip-success"><span class="material-symbols-outlined" translate="no" aria-hidden="true">group</span> Hosts {scenario.totalHostsRequested}</span>
+            <span class="section-chip chip-warning"><span class="material-symbols-outlined" translate="no" aria-hidden="true">apartment</span> Locais {scenario.totalLocations}</span>
+            <span class="section-chip chip-success"><span class="material-symbols-outlined" translate="no" aria-hidden="true">trending_up</span> Eficiência {scenario.overallEfficiencyPct}%</span>
             {#if scenario.topologyType == 'mesh'}
-            <span class="section-chip chip-danger"><span class="material-symbols-outlined">hub</span> Topologia MESH</span>
+            <span class="section-chip chip-danger"><span class="material-symbols-outlined" translate="no" aria-hidden="true">hub</span> Topologia MESH</span>
             {#else if scenario.topologyType == 'star'}
-            <span class="section-chip chip-success"><span class="material-symbols-outlined">star</span> Topologia STAR</span>
+            <span class="section-chip chip-success"><span class="material-symbols-outlined" translate="no" aria-hidden="true">star</span> Topologia STAR</span>
             {#else if scenario.topologyType == 'extended_star'}
-            <span class="section-chip chip-warning"><span class="material-symbols-outlined">star</span> Topologia ESTRELA ESTENDIDA</span>
+            <span class="section-chip chip-warning"><span class="material-symbols-outlined" translate="no" aria-hidden="true">star</span> Topologia ESTRELA ESTENDIDA</span>
             {#else}
-            <span class="section-chip chip-info"><span class="material-symbols-outlined">public</span> {scenario.topologyType.toUpperCase()}</span>
+            <span class="section-chip chip-info"><span class="material-symbols-outlined" translate="no" aria-hidden="true">public</span> {scenario.topologyType.toUpperCase()}</span>
             {/if}
         </div>
     </div>
 
     <div class="problem-box p-3 mb-3">
-        <h5 class="text-info mb-3 problem-title"><span class="material-symbols-outlined">memory</span><span>Explicação do cálculo VLSM</span></h5>
+        <h5 class="text-info mb-3 problem-title"><span class="material-symbols-outlined" translate="no" aria-hidden="true">memory</span><span>Explicação do cálculo VLSM</span></h5>
         <div class="row g-3">
             {#for lan in scenario.lanBlocks}
             <div class="col-12 col-lg-6">
@@ -410,19 +410,19 @@
     </div>
 
     <div class="problem-box p-3 mb-3">
-        <h5 class="text-info mb-3 problem-title"><span class="material-symbols-outlined">straighten</span><span>LANs (VLSM)</span></h5>
+        <h5 class="text-info mb-3 problem-title"><span class="material-symbols-outlined" translate="no" aria-hidden="true">straighten</span><span>LANs (VLSM)</span></h5>
         <div class="table-responsive">
             <table class="table table-dark table-bordered table-sm mb-0">
                 <thead>
                     <tr>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">place</span>Local</th>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">hub</span>Rede</th>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">grid_view</span>Máscara</th>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">flip</span>Wildcard</th>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">router</span>Gateway</th>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">linear_scale</span>Faixa de hosts</th>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">group</span>Necessário/Suportado</th>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">percent</span>Eficiência</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">place</span>Local</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">hub</span>Rede</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">grid_view</span>Máscara</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">flip</span>Wildcard</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">router</span>Gateway</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">linear_scale</span>Faixa de hosts</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">group</span>Necessário/Suportado</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">percent</span>Eficiência</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -455,7 +455,7 @@
     </div>
 
     <div class="problem-box p-3 mb-3">
-        <h5 class="text-warning mb-2 problem-title"><span class="material-symbols-outlined">route</span><span>Sugestão de topologia WAN</span></h5>
+        <h5 class="text-warning mb-2 problem-title"><span class="material-symbols-outlined" translate="no" aria-hidden="true">route</span><span>Sugestão de topologia WAN</span></h5>
         <p class="small text-secondary mb-2">{scenario.topologyInsights.recommendedReason}</p>
         <p class="small mb-2">
             Recomendação: <strong class="text-info">{scenario.topologyInsights.recommended.toUpperCase()}</strong> |
@@ -470,10 +470,10 @@
             <table class="table table-dark table-bordered table-sm mb-0">
                 <thead>
                     <tr>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">straighten</span>Métrica</th>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">account_tree</span>STAR</th>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">account_tree</span>ESTRELA EST.</th>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">account_tree</span>MESH</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">straighten</span>Métrica</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">account_tree</span>STAR</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">account_tree</span>ESTRELA EST.</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">account_tree</span>MESH</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -512,16 +512,16 @@
     </div>
 
     <div class="problem-box p-3 mb-3">
-        <h5 class="text-info mb-3 problem-title"><span class="material-symbols-outlined">trending_up</span><span>Projeção de crescimento (25%, 50%, 100%)</span></h5>
+        <h5 class="text-info mb-3 problem-title"><span class="material-symbols-outlined" translate="no" aria-hidden="true">trending_up</span><span>Projeção de crescimento (25%, 50%, 100%)</span></h5>
         <div class="table-responsive">
             <table class="table table-dark table-bordered table-sm mb-0">
                 <thead>
                     <tr>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">place</span>Localidade</th>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">today</span>Atual</th>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">trending_up</span>+25%</th>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">trending_up</span>+50%</th>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">trending_up</span>+100%</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">place</span>Localidade</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">today</span>Atual</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">trending_up</span>+25%</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">trending_up</span>+50%</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">trending_up</span>+100%</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -533,9 +533,9 @@
                         <td>
                             /{g.requiredPrefix} · {g.futureHosts} hosts
                             {#if g.fitsCurrent}
-                            <span class="text-success"><span class="material-symbols-outlined align-middle" style="font-size:1rem;">check</span> cabe</span>
+                            <span class="text-success"><span class="material-symbols-outlined align-middle" style="font-size:1rem;" translate="no" aria-hidden="true">check</span> cabe</span>
                             {#else}
-                            <span class="text-danger"><span class="material-symbols-outlined align-middle" style="font-size:1rem;">close</span> não cabe</span>
+                            <span class="text-danger"><span class="material-symbols-outlined align-middle" style="font-size:1rem;" translate="no" aria-hidden="true">close</span> não cabe</span>
                             {/if}
                         </td>
                         {/for}
@@ -547,15 +547,15 @@
     </div>
 
     <div class="problem-box p-3 mb-3">
-        <h5 class="text-info mb-3 problem-title"><span class="material-symbols-outlined">link</span><span>Links WAN /30</span></h5>
+        <h5 class="text-info mb-3 problem-title"><span class="material-symbols-outlined" translate="no" aria-hidden="true">link</span><span>Links WAN /30</span></h5>
         <div class="table-responsive">
             <table class="table table-dark table-bordered table-sm mb-0">
                 <thead>
                     <tr>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">cable</span>Link</th>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">hub</span>Rede</th>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">settings_ethernet</span>Lado A</th>
-                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">settings_ethernet</span>Lado B</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">cable</span>Link</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">hub</span>Rede</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">settings_ethernet</span>Lado A</th>
+                        <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">settings_ethernet</span>Lado B</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -573,13 +573,13 @@
     </div>
 
     <div class="problem-box p-3 mb-3">
-        <h5 class="text-success mb-2 problem-title"><span class="material-symbols-outlined">list_alt</span><span>Tabelas por roteador — Packet Tracer (IP e máscara)</span></h5>
+        <h5 class="text-success mb-2 problem-title"><span class="material-symbols-outlined" translate="no" aria-hidden="true">list_alt</span><span>Tabelas por roteador — Packet Tracer (IP e máscara)</span></h5>
         <p class="small text-secondary mb-3">
             Para cada <strong class="text-light">roteador</strong>, configure as interfaces com os valores abaixo (iguais ao script CLI).
-            Os <strong class="text-light">PCs</strong> obtêm endereço por <strong class="text-light">DHCP</strong>; o gateway de cada LAN é o IP da linha <code class="text-info">GigabitEthernet0/0</code>.
+            Os <strong class="text-light">PCs</strong> obtêm endereço por <strong class="text-light">DHCP</strong>; o gateway de cada LAN é o IP da linha <code class="text-info" translate="no">GigabitEthernet0/0</code>.
         </p>
         <p class="small text-warning border-start border-warning border-2 ps-2 mb-3">
-            <strong>Packet Tracer:</strong> o DHCP no <strong class="text-light">roteador</strong> só passa a funcionar na LAN quando essa interface (<code class="text-info">GigabitEthernet0/0</code>) já tem o IP do gateway e está <em>up/up</em>.
+            <strong>Packet Tracer:</strong> o DHCP no <strong class="text-light">roteador</strong> só passa a funcionar na LAN quando essa interface (<code class="text-info" translate="no">GigabitEthernet0/0</code>) já tem o IP do gateway e está <em>up/up</em>.
             Sem IP na LAN, o roteador não atende pedidos DHCP dos PCs — aplique o script na ordem gerada ou configure a LAN antes de «Obter endereço automaticamente».
             Os valores do <strong class="text-light">default-router</strong> e da rede do pool estão na <strong class="text-light">última linha</strong> de cada tabela abaixo (papel <span class="text-info">DHCP</span>).
         </p>
@@ -590,18 +590,18 @@
                 <table class="table table-dark table-bordered table-sm mb-0">
                     <thead>
                         <tr>
-                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">settings_input_component</span>Interface</th>
-                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">language</span>Endereço IP</th>
-                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">grid_view</span>Máscara</th>
-                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">lan</span>CIDR</th>
-                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">badge</span>Papel</th>
-                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">notes</span>Descrição</th>
+                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">settings_input_component</span>Interface</th>
+                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">language</span>Endereço IP</th>
+                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">grid_view</span>Máscara</th>
+                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">lan</span>CIDR</th>
+                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">badge</span>Papel</th>
+                            <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">notes</span>Descrição</th>
                         </tr>
                     </thead>
                     <tbody>
                         {#for row in pt.rows}
                         <tr>
-                            <td><code class="text-info">{row.interface}</code></td>
+                            <td><code class="text-info" translate="no">{row.interface}</code></td>
                             <td>{row.ip}</td>
                             <td>{row.mask}</td>
                             <td>{row.cidr}</td>
@@ -617,18 +617,18 @@
     </div>
 
     <div class="problem-box p-3 mb-3">
-        <h5 class="text-warning mb-2 problem-title"><span class="material-symbols-outlined">map</span><span>Desenho da arquitetura (WAN + LAN)</span></h5>
+        <h5 class="text-warning mb-2 problem-title"><span class="material-symbols-outlined" translate="no" aria-hidden="true">map</span><span>Desenho da arquitetura (WAN + LAN)</span></h5>
         <div class="topology-card mb-2">
             <div class="mb-2">
-                <span class="section-chip chip-info"><span class="material-symbols-outlined">lan</span> Diagrama lógico automático</span>
-                <span class="section-chip chip-success"><span class="material-symbols-outlined">science</span> Pronto para Packet Tracer</span>
+                <span class="section-chip chip-info"><span class="material-symbols-outlined" translate="no" aria-hidden="true">lan</span> Diagrama lógico automático</span>
+                <span class="section-chip chip-success"><span class="material-symbols-outlined" translate="no" aria-hidden="true">science</span> Pronto para Packet Tracer</span>
             </div>
         </div>
         <div class="topology-wrap mb-2">
-            <pre class="mermaid mb-0">{scenario.topologyMermaid}</pre>
+            <pre class="mermaid mb-0" translate="no">{scenario.topologyMermaid}</pre>
         </div>
         <div class="problem-box p-2 mt-2">
-            <div class="small text-info fw-bold mb-1 d-flex align-items-center gap-2"><span class="material-symbols-outlined">search</span> Detalhes do elemento selecionado</div>
+            <div class="small text-info fw-bold mb-1 d-flex align-items-center gap-2"><span class="material-symbols-outlined" translate="no" aria-hidden="true">search</span> Detalhes do elemento selecionado</div>
             <div id="topology-detail-box" class="small text-secondary">
                 Clique em um roteador ou nó WAN no diagrama para visualizar os detalhes aqui.
             </div>
@@ -640,7 +640,7 @@
     </div>
 
     <div class="problem-box p-3 mb-3">
-        <h5 class="text-info mb-3 problem-title"><span class="material-symbols-outlined">science</span><span>Sequência sugerida no Packet Tracer</span></h5>
+        <h5 class="text-info mb-3 problem-title"><span class="material-symbols-outlined" translate="no" aria-hidden="true">science</span><span>Sequência sugerida no Packet Tracer</span></h5>
         <ol class="mb-0">
             {#for step in scenario.packetTracerSteps}
             <li class="mb-1">{step}</li>
@@ -659,11 +659,11 @@
         {#for entry in scenario.routerCommands.entrySet()}
         <div class="col-12 col-md-6 col-xl-4">
             <div class="problem-box p-3 h-100 cli-box">
-                <h6 class="text-warning mb-2 problem-title"><span class="material-symbols-outlined">terminal</span><span>CLI {entry.key.toUpperCase()}</span></h6>
+                <h6 class="text-warning mb-2 problem-title"><span class="material-symbols-outlined" translate="no" aria-hidden="true">terminal</span><span>CLI {entry.key.toUpperCase()}</span></h6>
                 <div class="mb-2">
-                    <span class="section-chip chip-warning"><span class="material-symbols-outlined">content_copy</span> Script pronto para copiar</span>
+                    <span class="section-chip chip-warning"><span class="material-symbols-outlined" translate="no" aria-hidden="true">content_copy</span> Script pronto para copiar</span>
                 </div>
-                <pre class="small mb-0"><code>{entry.value}</code></pre>
+                <pre class="small mb-0" translate="no"><code translate="no">{entry.value}</code></pre>
                 {#if scenario.routerCliExplanations.containsKey(entry.key)}
                 <div class="mt-2">
                     <div class="small text-info fw-bold mb-1">Explicação rápida do bloco</div>
@@ -680,7 +680,7 @@
     </div>
 
     <div class="problem-box p-3 mb-3">
-        <h5 class="text-success mb-2 problem-title"><span class="material-symbols-outlined">inventory_2</span><span>Área de Exportação do Laboratório</span></h5>
+        <h5 class="text-success mb-2 problem-title"><span class="material-symbols-outlined" translate="no" aria-hidden="true">inventory_2</span><span>Área de Exportação do Laboratório</span></h5>
         <p class="small text-secondary mb-2">
             Estas três exportações só aparecem <strong class="text-light">depois de Calcular cenário</strong> e usam exatamente os mesmos dados do resultado na tela
             (VLSM, WAN, EIGRP/OSPF, scripts CLI e topologia).
@@ -716,7 +716,7 @@
                 data-bs-toggle="tooltip"
                 data-bs-placement="top"
                 title="Baixa um arquivo .txt consolidado com os comandos para o Packet Tracer."
-            ><span class="material-symbols-outlined">download</span> Exportar Lab (.txt)</button>
+            ><span class="material-symbols-outlined" translate="no" aria-hidden="true">download</span> Exportar Lab (.txt)</button>
             <button
                 type="submit"
                 name="action_type"
@@ -725,7 +725,7 @@
                 data-bs-toggle="tooltip"
                 data-bs-placement="top"
                 title="Baixa um .zip com guia de montagem, consolidado, configs individuais, topologia e README."
-            ><span class="material-symbols-outlined">folder_zip</span> Exportar Lab (.zip)</button>
+            ><span class="material-symbols-outlined" translate="no" aria-hidden="true">folder_zip</span> Exportar Lab (.zip)</button>
             <button
                 type="submit"
                 name="action_type"
@@ -734,7 +734,7 @@
                 data-bs-toggle="tooltip"
                 data-bs-placement="top"
                 title="Baixa um .txt com resumo, LANs, WANs, topologia Mermaid, passos e todos os scripts CLI."
-            ><span class="material-symbols-outlined">description</span> Exportar entrega (.txt)</button>
+            ><span class="material-symbols-outlined" translate="no" aria-hidden="true">description</span> Exportar entrega (.txt)</button>
             <span class="section-chip chip-success export-status-chip" role="status">Pronto para colar no CLI dos roteadores</span>
         </form>
     </div>

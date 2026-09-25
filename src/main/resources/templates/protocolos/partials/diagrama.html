@@ -5,13 +5,13 @@
     {#include protocolos/partials/diagrama.html diagrama=conteudo.diagrama /} !}
 {#if diagrama}
 <section id="diagrama" class="aprof-secao">
-    <h3 class="aprof-secao-titulo"><span class="material-symbols-outlined" aria-hidden="true">account_tree</span> {diagrama.titulo}</h3>
+    <h3 class="aprof-secao-titulo"><span class="material-symbols-outlined" aria-hidden="true" translate="no">account_tree</span> {diagrama.titulo}</h3>
     <div class="card-tech p-3 aprof-diagrama-caixa">
-        <pre class="mermaid aprof-mermaid">{diagrama.definicao}</pre>
+        <pre class="mermaid aprof-mermaid" translate="no">{diagrama.definicao}</pre>
     </div>
     {#if diagrama.legenda}
     <p class="small text-secondary mt-2 mb-0 aprof-legenda">
-        <span class="material-symbols-outlined" aria-hidden="true">info</span> {diagrama.legenda}
+        <span class="material-symbols-outlined" aria-hidden="true" translate="no">info</span> {diagrama.legenda}
     </p>
     {/if}
 </section>

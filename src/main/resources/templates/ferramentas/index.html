@@ -15,17 +15,17 @@
     {#include ferramentas/partials/subnav.html /}
 
     <header class="text-center mb-4">
-        <div class="aprof-hero-icone" aria-hidden="true"><span class="material-symbols-outlined">terminal</span></div>
+        <div class="aprof-hero-icone" aria-hidden="true"><span class="material-symbols-outlined" translate="no" aria-hidden="true">terminal</span></div>
         <span class="aed-eyebrow aed-eyebrow-teal">Ferramentas</span>
         <h2 class="mb-2" style="font-family:var(--aed-font-display);">Ferramentas de rede (CLI)</h2>
         <p class="text-secondary small mx-auto" style="max-width:48rem;">{conteudo.resumo}</p>
         <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
-            <a href="/diagnostico" class="aed-btn aed-btn-neutral btn-sm" title="Rodar (simulado) ping, dns, traceroute, varredura"><span class="material-symbols-outlined" aria-hidden="true">play_circle</span> Diagnóstico (ao vivo)</a>
+            <a href="/diagnostico" class="aed-btn aed-btn-neutral btn-sm" title="Rodar (simulado) ping, dns, traceroute, varredura"><span class="material-symbols-outlined" aria-hidden="true" translate="no">play_circle</span> Diagnóstico (ao vivo)</a>
         </div>
     </header>
 
     <section class="aprof-secao">
-        <h3 class="aprof-secao-titulo"><span class="material-symbols-outlined" aria-hidden="true">build</span> Construtor de comando</h3>
+        <h3 class="aprof-secao-titulo"><span class="material-symbols-outlined" aria-hidden="true" translate="no">build</span> Construtor de comando</h3>
         <p class="small text-secondary">Escolha a ferramenta e as opções: o comando é montado ao vivo e cada flag é explicada. (Educacional — rode só em redes próprias ou autorizadas.)</p>
         <div class="card-tech p-3">
             <div class="row g-2 align-items-end mb-3">
@@ -40,10 +40,10 @@
             </div>
             <div id="cmd-opcoes" class="d-flex flex-wrap gap-3 mb-3"></div>
             <label class="form-label small text-secondary">Comando</label>
-            <pre id="cmd-saida" class="aprof-codigo mb-2"></pre>
+            <pre id="cmd-saida" class="aprof-codigo mb-2" translate="no"></pre>
             <div class="d-flex justify-content-end gap-2 mb-3">
-                <button type="button" id="cmd-limpar" class="aed-btn aed-btn-neutral btn-sm" title="Esvaziar o alvo e desmarcar as opções"><span class="material-symbols-outlined" aria-hidden="true">delete_sweep</span> Limpar</button>
-                <button type="button" id="cmd-copiar" class="aed-btn aed-btn-neutral btn-sm" title="Copiar o comando"><span class="material-symbols-outlined" aria-hidden="true">content_copy</span> Copiar</button>
+                <button type="button" id="cmd-limpar" class="aed-btn aed-btn-neutral btn-sm" title="Esvaziar o alvo e desmarcar as opções"><span class="material-symbols-outlined" aria-hidden="true" translate="no">delete_sweep</span> Limpar</button>
+                <button type="button" id="cmd-copiar" class="aed-btn aed-btn-neutral btn-sm" title="Copiar o comando"><span class="material-symbols-outlined" aria-hidden="true" translate="no">content_copy</span> Copiar</button>
             </div>
             <div id="cmd-flags"></div>
         </div>
@@ -53,6 +53,6 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/ferramentas/js/ferramentas.js?v=20260909"></script>
+<script src="/ferramentas/js/ferramentas.js?v=20260925"></script>
 {/extraScripts}
 {/include}

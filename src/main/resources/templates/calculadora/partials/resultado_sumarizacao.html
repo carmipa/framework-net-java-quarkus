@@ -1,7 +1,7 @@
 <div class="calc-resultado">
     <div class="calc-resumo-head">
         <h5 class="mb-1">
-            <span class="material-symbols-outlined text-info" aria-hidden="true">merge</span>
+            <span class="material-symbols-outlined text-info" aria-hidden="true" translate="no">merge</span>
             Rota resumo: {resultado.resumo}/{resultado.prefixoResumo}
         </h5>
         <span class="calc-badge {#if resultado.exata}calc-badge-ok{#else}calc-badge-atencao{/if}">
@@ -33,7 +33,7 @@
     </div>
 
     <p class="calc-explicacao">
-        <span class="material-symbols-outlined" aria-hidden="true">school</span>
+        <span class="material-symbols-outlined" aria-hidden="true" translate="no">school</span>
         {#if resultado.exata}
         As redes informadas preenchem o bloco resumo por completo: anunciar
         <strong>{resultado.resumo}/{resultado.prefixoResumo}</strong> equivale exatamente a anunciar todas elas.
@@ -45,7 +45,7 @@
     </p>
 
     <h6 class="calc-secao-titulo">
-        <span class="material-symbols-outlined" aria-hidden="true">list_alt</span>
+        <span class="material-symbols-outlined" aria-hidden="true" translate="no">list_alt</span>
         Redes agregadas
         <span class="calc-contador">{resultado.entradas.size()}</span>
     </h6>
@@ -53,11 +53,11 @@
         <table class="table table-dark table-sm table-bordered mb-0 calc-tabela">
             <thead>
             <tr>
-                <th title="Ordem da rede informada"><span class="material-symbols-outlined" aria-hidden="true">tag</span>#</th>
-                <th title="Endereço de rede informado"><span class="material-symbols-outlined" aria-hidden="true">hub</span>Rede</th>
-                <th title="Máscara de sub-rede em decimal"><span class="material-symbols-outlined" aria-hidden="true">grid_view</span>Máscara</th>
-                <th title="Faixa de endereços que a rede cobre"><span class="material-symbols-outlined" aria-hidden="true">linear_scale</span>Faixa</th>
-                <th title="Quantidade de endereços da rede"><span class="material-symbols-outlined" aria-hidden="true">tag</span>Endereços</th>
+                <th title="Ordem da rede informada"><span class="material-symbols-outlined" aria-hidden="true" translate="no">tag</span>#</th>
+                <th title="Endereço de rede informado"><span class="material-symbols-outlined" aria-hidden="true" translate="no">hub</span>Rede</th>
+                <th title="Máscara de sub-rede em decimal"><span class="material-symbols-outlined" aria-hidden="true" translate="no">grid_view</span>Máscara</th>
+                <th title="Faixa de endereços que a rede cobre"><span class="material-symbols-outlined" aria-hidden="true" translate="no">linear_scale</span>Faixa</th>
+                <th title="Quantidade de endereços da rede"><span class="material-symbols-outlined" aria-hidden="true" translate="no">tag</span>Endereços</th>
             </tr>
             </thead>
             <tbody>
@@ -75,12 +75,12 @@
     </div>
 
     <h6 class="calc-secao-titulo mt-4">
-        <span class="material-symbols-outlined" aria-hidden="true">terminal</span>
+        <span class="material-symbols-outlined" aria-hidden="true" translate="no">terminal</span>
         Como anunciar
         <button type="button" class="aed-btn aed-btn-neutral btn-sm calc-copiar" data-alvo="cliResumo">
-            <span class="material-symbols-outlined">content_copy</span> Copiar
+            <span class="material-symbols-outlined" translate="no" aria-hidden="true">content_copy</span> Copiar
         </button>
     </h6>
-    <pre class="calc-cli" id="cliResumo">{#for linha in resultado.comandosCisco}{linha}
+    <pre class="calc-cli" id="cliResumo" translate="no">{#for linha in resultado.comandosCisco}{linha}
 {/for}</pre>
 </div>

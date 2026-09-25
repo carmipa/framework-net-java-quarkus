@@ -572,7 +572,7 @@
         }
         var original = botao.innerHTML;
         botao.disabled = true;
-        botao.innerHTML = '<span class="material-symbols-outlined">progress_activity</span> Publicando...';
+        botao.innerHTML = '<span class="material-symbols-outlined" translate="no" aria-hidden="true">progress_activity</span> Publicando...';
         try {
             var r = await fetch("/telemetria/api/dataset/sincronizar", { method: "POST" });
             var d = await r.json();

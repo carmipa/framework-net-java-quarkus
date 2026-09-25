@@ -1,6 +1,6 @@
 <div class="w-100">
     <h5 class="d-flex flex-wrap align-items-center gap-2 text-white mb-1">
-        <span class="material-symbols-outlined">handshake</span> {hs.titulo}
+        <span class="material-symbols-outlined" translate="no" aria-hidden="true">handshake</span> {hs.titulo}
         {#if hs.sucesso}
         <span class="badge bg-success">conexão estabelecida</span>
         {#else}
@@ -18,11 +18,11 @@
                 <strong class="text-white">{p.mensagem}</strong>
                 {#if p.cifrado}
                 <span class="badge bg-dark border border-secondary" title="já viaja sob as chaves de sessão">
-                    <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle;">lock</span> cifrado
+                    <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle;" translate="no" aria-hidden="true">lock</span> cifrado
                 </span>
                 {#else}
                 <span class="badge bg-warning text-dark" title="ainda em texto claro">
-                    <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle;">lock_open</span> claro
+                    <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle;" translate="no" aria-hidden="true">lock_open</span> claro
                 </span>
                 {/if}
                 {#if p.falha}<span class="resultado-deny fw-bold">✕ aborta aqui</span>{/if}

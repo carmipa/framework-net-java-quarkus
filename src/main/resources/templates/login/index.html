@@ -16,8 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+    <link rel="stylesheet" href="/web/css/material-symbols.css?v=20260925">
     <link rel="stylesheet" href="/login/css/login.css?v=20260811d">
 </head>
 
@@ -73,7 +72,7 @@
                             <div class="key-rings" aria-hidden="true">
                                 <span class="ring ring-1 ring-amber"></span>
                                 <span class="ring ring-2 ring-amber-static"></span>
-                                <span class="material-symbols-outlined key-ic">vpn_key</span>
+                                <span class="material-symbols-outlined key-ic" translate="no" aria-hidden="true">vpn_key</span>
                             </div>
                             <h1 class="title title-sm">Acesso de Contingência</h1>
                             <p class="lede lede-center">
@@ -84,7 +83,7 @@
 
                         {#if erro}
                         <div class="alerta" role="alert">
-                            <span class="material-symbols-outlined" aria-hidden="true">gpp_bad</span>
+                            <span class="material-symbols-outlined" aria-hidden="true" translate="no">gpp_bad</span>
                             <span>{erro}</span>
                         </div>
                         {/if}
@@ -92,23 +91,23 @@
                         <form method="post" action="/login/chave" autocomplete="off">
                             <label class="field-lbl" for="adminKey">Chave de API administrativa</label>
                             <div class="field">
-                                <span class="material-symbols-outlined field-ic" aria-hidden="true">key</span>
+                                <span class="material-symbols-outlined field-ic" aria-hidden="true" translate="no">key</span>
                                 <input id="adminKey" name="adminKey" type="password"
                                        placeholder="X-Admin-Api-Key" autocomplete="off" spellcheck="false">
                                 <button class="eye-btn" type="button" data-olho="adminKey"
                                         title="Mostrar ou ocultar o texto da chave" aria-label="Mostrar ou ocultar a chave">
-                                    <span class="material-symbols-outlined">visibility</span>
+                                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">visibility</span>
                                 </button>
                             </div>
                             <button class="btn btn-amber" type="submit"
                                     title="Validar chave e acessar o painel de telemetria">
-                                <span class="material-symbols-outlined" aria-hidden="true">login</span>
+                                <span class="material-symbols-outlined" aria-hidden="true" translate="no">login</span>
                                 Acessar Telemetria
                             </button>
                         </form>
 
                         <div class="note-amber">
-                            <span class="material-symbols-outlined" aria-hidden="true">info</span>
+                            <span class="material-symbols-outlined" aria-hidden="true" translate="no">info</span>
                             <span>A chave não é gravada em disco nem versionada — ela vive só na
                                 variável de ambiente do servidor, e a sessão que ela abre expira em 4 horas.</span>
                         </div>
@@ -116,7 +115,7 @@
                         <div class="foot-links foot-center">
                             <a class="flink" href="/login"
                                title="Alternar para o método de login padrão via GitHub OAuth">
-                                <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+                                <span class="material-symbols-outlined" aria-hidden="true" translate="no">arrow_back</span>
                                 Voltar ao login com GitHub
                             </a>
                         </div>
@@ -135,7 +134,7 @@
                     <div class="card-aura" aria-hidden="true"></div>
                     <div class="card-in">
                         <div class="badge">
-                            <span class="material-symbols-outlined badge-ic" aria-hidden="true">shield_lock</span>
+                            <span class="material-symbols-outlined badge-ic" aria-hidden="true" translate="no">shield_lock</span>
                             <span>ACESSO À TELEMETRIA</span>
                         </div>
 
@@ -148,7 +147,7 @@
 
                         {#if erro}
                         <div class="alerta" role="alert">
-                            <span class="material-symbols-outlined" aria-hidden="true">gpp_bad</span>
+                            <span class="material-symbols-outlined" aria-hidden="true" translate="no">gpp_bad</span>
                             <span>{erro}</span>
                         </div>
                         {/if}
@@ -163,13 +162,13 @@
                         </a>
 
                         <div class="owner-note">
-                            <span class="material-symbols-outlined" aria-hidden="true">verified_user</span>
+                            <span class="material-symbols-outlined" aria-hidden="true" translate="no">verified_user</span>
                             <span>Autorizado apenas para <span class="mono owner">{dono}</span>
                                 · OAuth 2.0 sobre TLS</span>
                         </div>
                         {#else}
                         <div class="alerta" role="alert">
-                            <span class="material-symbols-outlined" aria-hidden="true">link_off</span>
+                            <span class="material-symbols-outlined" aria-hidden="true" translate="no">link_off</span>
                             <span>Login pelo GitHub não está configurado neste ambiente. Use o acesso
                                 de contingência.</span>
                         </div>
@@ -177,13 +176,13 @@
 
                         <div class="foot-links">
                             <a class="flink" href="/" title="Retornar à página inicial da aplicação">
-                                <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+                                <span class="material-symbols-outlined" aria-hidden="true" translate="no">arrow_back</span>
                                 Voltar ao Framework
                             </a>
                             <span class="fsep" aria-hidden="true"></span>
                             <a class="flink flink-dim" href="/login/?modo=contingencia"
                                title="Alternar para acesso emergencial via chave de API administrativa">
-                                <span class="material-symbols-outlined" aria-hidden="true">vpn_key</span>
+                                <span class="material-symbols-outlined" aria-hidden="true" translate="no">vpn_key</span>
                                 Acesso de contingência
                             </a>
                         </div>
@@ -200,7 +199,7 @@
                                 <div class="core-rings" aria-hidden="true">
                                     <span class="ring ring-1"></span>
                                     <span class="ring ring-2"></span>
-                                    <span class="material-symbols-outlined core-ic">lock_person</span>
+                                    <span class="material-symbols-outlined core-ic" translate="no" aria-hidden="true">lock_person</span>
                                 </div>
                                 <div class="core-tag">CANAL CRIPTOGRAFADO</div>
                                 <div class="core-sub">OAUTH 2.0 · TLS · SHA-256</div>
@@ -209,15 +208,15 @@
                     </div>
                     <div class="seals">
                         <div class="seal">
-                            <span class="material-symbols-outlined" style="color:#2dd4bf">https</span>
+                            <span class="material-symbols-outlined" style="color:#2dd4bf" translate="no" aria-hidden="true">https</span>
                             <div class="seal-t">TLS</div>
                         </div>
                         <div class="seal">
-                            <span class="material-symbols-outlined" style="color:#818cf8">fingerprint</span>
+                            <span class="material-symbols-outlined" style="color:#818cf8" translate="no" aria-hidden="true">fingerprint</span>
                             <div class="seal-t">OAUTH 2.0</div>
                         </div>
                         <div class="seal">
-                            <span class="material-symbols-outlined" style="color:#f59e0b">policy</span>
+                            <span class="material-symbols-outlined" style="color:#f59e0b" translate="no" aria-hidden="true">policy</span>
                             <div class="seal-t">OWNER ONLY</div>
                         </div>
                     </div>
@@ -234,7 +233,7 @@
             Desenvolvido por: <strong>Paulo André Carminati</strong>
         </div>
         <div class="foot-2">
-            <span class="material-symbols-outlined" aria-hidden="true">code</span>
+            <span class="material-symbols-outlined" aria-hidden="true" translate="no">code</span>
             <a href="https://github.com/carmipa" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;" title="Ver perfil e repositórios do autor no GitHub">github.com/carmipa</a> · <span class="mono">Java + Quarkus</span>
         </div>
     </footer>
@@ -249,10 +248,10 @@
      a UNICA porta quando o OAuth do GitHub esta indisponivel — fica inutilizavel.
      Medido em 2026-08-11: 403 "Token CSRF invalido ou ausente". O /admin/login,
      que inclui a base, sempre funcionou — e a diferenca entre os dois. -->
-<script src="/web/js/csrf-client.js?v=20260811e"></script>
+<script src="/web/js/csrf-client.js?v=20260925e"></script>
 <script src="/web/js/field-tooltips.js?v=20260811d"></script>
 <script src="/login/js/login.js?v=20260811"></script>
-<script src="/web/js/i18n-translate.js?v=20260710"></script>
+<script src="/web/js/i18n-translate.js?v=20260925"></script>
 <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 

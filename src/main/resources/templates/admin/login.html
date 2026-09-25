@@ -25,12 +25,12 @@
                        autocomplete="current-password" required {#if !enforcementActive}disabled{/if}>
             </div>
             <button type="submit" class="aed-btn aed-btn-amber w-100" {#if !enforcementActive}disabled{/if}>
-                <span class="material-symbols-outlined">login</span> Entrar
+                <span class="material-symbols-outlined" translate="no" aria-hidden="true">login</span> Entrar
             </button>
         </form>
 
         <p class="small text-secondary mt-3 mb-0">
-            Para scripts, envie o header <code class="text-info">X-Admin-Api-Key</code> em cada requisição.
+            Para scripts, envie o header <code class="text-info" translate="no">X-Admin-Api-Key</code> em cada requisição.
         </p>
     </div>
 </div>

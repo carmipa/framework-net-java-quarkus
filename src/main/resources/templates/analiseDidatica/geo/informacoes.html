@@ -5,7 +5,7 @@
     {#include shared/main_menu.html activeMainMenu='analise' /}
     {#include shared/project_header.html /}
 
-    <h2 class="text-info mb-2 d-flex align-items-center gap-2"><span class="material-symbols-outlined">travel_explore</span> Região geográfica</h2>
+    <h2 class="text-info mb-2 d-flex align-items-center gap-2"><span class="material-symbols-outlined" translate="no" aria-hidden="true">travel_explore</span> Região geográfica</h2>
     <p class="small text-secondary mb-4">
         Nesta área tens apenas o painel de <strong>região geográfica</strong> (IP da tua ligação ou outro endereço que indiques).
         A base local <span class="text-info">GeoLite2</span> é usada por defeito; há <strong>fallback</strong> HTTP apenas quando o país não é identificado localmente.
@@ -15,7 +15,7 @@
         <h5 class="text-warning mb-3">Região geográfica (GeoIP)</h5>
         <p class="small text-secondary mb-3">
             Podes <strong>indicar qualquer IPv4/IPv6</strong> para localizar a região, ou usar o IP aparente
-            da tua ligação (<code>X-Forwarded-For</code> / <code>X-Real-IP</code> / remoto). Só se chama
+            da tua ligação (<code translate="no">X-Forwarded-For</code> / <code translate="no">X-Real-IP</code> / remoto). Só se chama
             o serviço externo para endereços <strong>públicos</strong>.
         </p>
 

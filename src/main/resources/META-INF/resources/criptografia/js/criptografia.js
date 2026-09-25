@@ -96,7 +96,7 @@
         var dados = FORCA[sel.value] || ["info", "—", ""];
         var cor = dados[0];
         out.className = "p-3 rounded border border-" + cor + " text-" + cor + " cripto-forca-box";
-        out.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true">' +
+        out.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true" translate="no">' +
             (cor === "success" ? "verified" : cor === "warning" ? "warning" : cor === "danger" ? "gpp_bad" : "info") +
             '</span> <strong>' + dados[1] + '</strong> — <span class="text-light">' + dados[2] + '</span>';
     }

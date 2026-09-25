@@ -103,7 +103,7 @@
         const header = document.createElement("div");
         header.className = "fn-ih-header";
         header.innerHTML =
-            '<span class="material-symbols-outlined">history</span><span>Últimas pesquisas</span>';
+            '<span class="material-symbols-outlined" translate="no" aria-hidden="true">history</span><span>Últimas pesquisas</span>';
         panel.appendChild(header);
 
         items.forEach((value) => {
@@ -124,7 +124,7 @@
             del.type = "button";
             del.className = "fn-ih-del";
             del.setAttribute("aria-label", "Remover do histórico");
-            del.innerHTML = '<span class="material-symbols-outlined">close</span>';
+            del.innerHTML = '<span class="material-symbols-outlined" translate="no" aria-hidden="true">close</span>';
             del.addEventListener("mousedown", (ev) => {
                 ev.preventDefault();
                 ev.stopPropagation();

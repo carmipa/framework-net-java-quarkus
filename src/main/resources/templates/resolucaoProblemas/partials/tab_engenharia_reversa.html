@@ -7,11 +7,11 @@
     e reconstrói LANs, enlaces, tabelas por roteador e o desenho da topologia.
 </p>
 <p class="small mb-3 py-2 px-3 rounded aed-card card-tech border border-info border-opacity-50">
-    <span class="material-symbols-outlined text-info align-middle" style="font-size:1rem;">lightbulb</span>
+    <span class="material-symbols-outlined text-info align-middle" style="font-size:1rem;" translate="no" aria-hidden="true">lightbulb</span>
     <strong class="text-info">Como a correção é derivada:</strong>
-    cada roteador declara onde o <em>outro</em> está (<code>neighbor &lt;ip&gt; remote-as &lt;as&gt;</code>).
-    Isso forma um sistema de conferência cruzada: se A diz que B mora em <code>.2</code>, então B tem
-    de possuir <code>.2</code>. Quando não possui, o erro fica localizado e a correção sai do próprio
+    cada roteador declara onde o <em>outro</em> está (<code translate="no">neighbor &lt;ip&gt; remote-as &lt;as&gt;</code>).
+    Isso forma um sistema de conferência cruzada: se A diz que B mora em <code translate="no">.2</code>, então B tem
+    de possuir <code translate="no">.2</code>. Quando não possui, o erro fica localizado e a correção sai do próprio
     texto — nunca de convenção. Sem evidência suficiente, a ferramenta aponta e para.
     <a href="/resolucao-problemas?aba=reversa&amp;demo=bgp" class="link-warning text-decoration-none">
         Carregar cenário de exemplo (3 AS em eBGP, com erros)</a>.
@@ -21,7 +21,7 @@
     <input type="hidden" name="aba" value="reversa">
     <span class="aed-eyebrow">Entrada</span>
     <h5 class="text-light mb-3 problem-title d-flex align-items-center gap-2">
-        <span class="material-symbols-outlined">content_paste</span><span>Configuração Cisco</span>
+        <span class="material-symbols-outlined" translate="no" aria-hidden="true">content_paste</span><span>Configuração Cisco</span>
     </h5>
     <label for="config_paste" class="form-label small text-secondary">
         Scripts dos roteadores (separe-os com uma linha de traços, se quiser)
@@ -33,11 +33,11 @@
         <button type="submit" name="action_type" value="reverse" class="aed-btn aed-btn-execute"
                 data-bs-toggle="tooltip" data-bs-placement="top"
                 title="Lê o texto, audita a coerência entre os scripts e reconstrói o projeto.">
-            <span class="material-symbols-outlined">play_arrow</span> Executar
+            <span class="material-symbols-outlined" translate="no" aria-hidden="true">play_arrow</span> Executar
         </button>
         <button type="submit" name="action_type" value="reverse_limpar" class="aed-btn aed-btn-danger"
                 data-bs-toggle="tooltip" data-bs-placement="top" title="Esvazia a área de texto.">
-            <span class="material-symbols-outlined">delete_sweep</span> Limpar
+            <span class="material-symbols-outlined" translate="no" aria-hidden="true">delete_sweep</span> Limpar
         </button>
         <span class="small text-secondary">
             O seu texto não é sobrescrito: o script corrigido sai ao lado, como material novo.
@@ -48,11 +48,11 @@
 {#if cenario}
 {#if cenario.vazio}
 <div class="aed-card card-tech problem-box p-3 mb-3 border border-warning border-opacity-50">
-    <span class="material-symbols-outlined text-warning align-middle">report</span>
+    <span class="material-symbols-outlined text-warning align-middle" translate="no" aria-hidden="true">report</span>
     <strong class="text-warning">Nada reconhecido no texto colado.</strong>
     <span class="small text-secondary">
-        O interpretador procura por <code>hostname</code>, <code>interface</code> e
-        <code>router</code>. Confira se o conteúdo colado é mesmo uma configuração Cisco.
+        O interpretador procura por <code translate="no">hostname</code>, <code translate="no">interface</code> e
+        <code translate="no">router</code>. Confira se o conteúdo colado é mesmo uma configuração Cisco.
     </span>
 </div>
 {#else}
@@ -84,7 +84,7 @@
     </div>
     <div class="reversa-kpi {#if cenario.resumo.cenarioConsistente}is-ok{#else}is-erro{/if}">
         <span class="reversa-kpi-valor">
-            <span class="material-symbols-outlined">{#if cenario.resumo.cenarioConsistente}check_circle{#else}pending{/if}</span>
+            <span class="material-symbols-outlined" translate="no" aria-hidden="true">{#if cenario.resumo.cenarioConsistente}check_circle{#else}pending{/if}</span>
         </span>
         <span class="reversa-kpi-rotulo">{#if cenario.resumo.cenarioConsistente}cenário fecha{#else}cenário incompleto{/if}</span>
     </div>
@@ -93,7 +93,7 @@
 {#if cenario.achados.size > 0}
 <div class="aed-card card-tech problem-box p-3 mb-3">
     <h5 class="text-warning mb-2 problem-title">
-        <span class="material-symbols-outlined">fact_check</span><span>Auditoria da configuração</span>
+        <span class="material-symbols-outlined" translate="no" aria-hidden="true">fact_check</span><span>Auditoria da configuração</span>
     </h5>
     <p class="small text-secondary mb-3">
         Erro corrigido traz sempre a evidência que sustenta a correção. Erro sem correção
@@ -103,11 +103,11 @@
         <table class="table table-dark table-sm align-middle mb-0 reversa-tabela">
             <thead>
                 <tr>
-                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">priority_high</span>Grau</th>
-                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">place</span>Onde</th>
-                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">error</span>O que está errado</th>
-                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">sync_alt</span>Antes → depois</th>
-                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">fact_check</span>Evidência</th>
+                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">priority_high</span>Grau</th>
+                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">place</span>Onde</th>
+                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">error</span>O que está errado</th>
+                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">sync_alt</span>Antes → depois</th>
+                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">fact_check</span>Evidência</th>
                 </tr>
             </thead>
             <tbody>
@@ -115,7 +115,7 @@
                 <tr>
                     <td class="text-nowrap">
                         <span class="badge bg-dark border border-{achado.corSeveridade} text-{achado.corSeveridade}">
-                            <span class="material-symbols-outlined reversa-badge-icone">{achado.iconeSeveridade}</span>
+                            <span class="material-symbols-outlined reversa-badge-icone" translate="no" aria-hidden="true">{achado.iconeSeveridade}</span>
                             {achado.rotuloSeveridade}
                         </span>
                     </td>
@@ -127,12 +127,12 @@
                     <td class="small text-light">{achado.descricao}</td>
                     <td class="small">
                         {#if achado.temCorrecao}
-                        <code class="reversa-antes">{achado.original}</code>
+                        <code class="reversa-antes" translate="no">{achado.original}</code>
                         <span class="reversa-seta">→</span>
-                        <code class="reversa-depois">{achado.corrigido}</code>
+                        <code class="reversa-depois" translate="no">{achado.corrigido}</code>
                         {#else}
                         {#if achado.original.isEmpty()}<span class="text-secondary">—</span>
-                        {#else}<code class="reversa-antes">{achado.original}</code>{/if}
+                        {#else}<code class="reversa-antes" translate="no">{achado.original}</code>{/if}
                         {/if}
                     </td>
                     <td class="small text-secondary">{achado.evidencia}</td>
@@ -147,7 +147,7 @@
 {#if cenario.pendencias.size > 0}
 <div class="aed-card card-tech problem-box p-3 mb-3 border border-info border-opacity-50">
     <h5 class="text-info mb-2 problem-title">
-        <span class="material-symbols-outlined">help</span><span>O que falta para fechar o cenário</span>
+        <span class="material-symbols-outlined" translate="no" aria-hidden="true">help</span><span>O que falta para fechar o cenário</span>
     </h5>
     <p class="small text-secondary mb-2">
         A ferramenta não completa isto por conta própria — preencher a lacuna com convenção
@@ -167,15 +167,15 @@
 {#if cenario.lans.size > 0}
 <div class="aed-card card-tech problem-box p-3 mb-3">
     <h5 class="text-info mb-3 problem-title">
-        <span class="material-symbols-outlined">straighten</span><span>LANs reconstruídas</span>
+        <span class="material-symbols-outlined" translate="no" aria-hidden="true">straighten</span><span>LANs reconstruídas</span>
     </h5>
     <div class="table-responsive border border-secondary border-opacity-25 rounded">
         <table class="table table-dark table-sm align-middle mb-0 reversa-tabela">
             <thead>
                 <tr>
-                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">router</span>Roteador</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">settings_input_component</span>Interface</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">hub</span>Rede</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">grid_view</span>Máscara</th>
-                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">flip</span>Wildcard</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">router</span>Gateway</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">linear_scale</span>Faixa útil</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">campaign</span>Broadcast</th>
-                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">group</span>Hosts</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">publish</span>Anunciada</th>
+                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">router</span>Roteador</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">settings_input_component</span>Interface</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">hub</span>Rede</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">grid_view</span>Máscara</th>
+                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">flip</span>Wildcard</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">router</span>Gateway</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">linear_scale</span>Faixa útil</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">campaign</span>Broadcast</th>
+                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">group</span>Hosts</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">publish</span>Anunciada</th>
                 </tr>
             </thead>
             <tbody>
@@ -205,14 +205,14 @@
 {#if cenario.enlaces.size > 0}
 <div class="aed-card card-tech problem-box p-3 mb-3">
     <h5 class="text-warning mb-3 problem-title">
-        <span class="material-symbols-outlined">link</span><span>Enlaces ponto a ponto</span>
+        <span class="material-symbols-outlined" translate="no" aria-hidden="true">link</span><span>Enlaces ponto a ponto</span>
     </h5>
     <div class="table-responsive border border-secondary border-opacity-25 rounded">
         <table class="table table-dark table-sm align-middle mb-0 reversa-tabela">
             <thead>
                 <tr>
-                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">cable</span>Enlace</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">hub</span>Rede</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">grid_view</span>Máscara</th>
-                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">settings_ethernet</span>Ponta A</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">settings_ethernet</span>Ponta B</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">schedule</span>DCE (clock rate)</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">info</span>Situação</th>
+                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">cable</span>Enlace</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">hub</span>Rede</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">grid_view</span>Máscara</th>
+                    <th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">settings_ethernet</span>Ponta A</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">settings_ethernet</span>Ponta B</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">schedule</span>DCE (clock rate)</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">info</span>Situação</th>
                 </tr>
             </thead>
             <tbody>
@@ -242,7 +242,7 @@
 {#if cenario.tabelas.size > 0}
 <div class="aed-card card-tech problem-box p-3 mb-3">
     <h5 class="text-success mb-3 problem-title">
-        <span class="material-symbols-outlined">list_alt</span><span>Tabelas por roteador</span>
+        <span class="material-symbols-outlined" translate="no" aria-hidden="true">list_alt</span><span>Tabelas por roteador</span>
     </h5>
     <div class="row g-3">
         {#for tabela in cenario.tabelas}
@@ -254,7 +254,7 @@
                 <div class="table-responsive">
                     <table class="table table-dark table-sm align-middle mb-0 reversa-tabela">
                         <thead>
-                            <tr><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">settings_input_component</span>Interface</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">language</span>IP</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">grid_view</span>Máscara</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">lan</span>CIDR</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">badge</span>Papel</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">notes</span>Nota</th></tr>
+                            <tr><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">settings_input_component</span>Interface</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">language</span>IP</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">grid_view</span>Máscara</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">lan</span>CIDR</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">badge</span>Papel</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">notes</span>Nota</th></tr>
                         </thead>
                         <tbody>
                             {#for linha in tabela.linhas}
@@ -281,10 +281,10 @@
 {#else}
 <div class="aed-card card-tech problem-box p-3 mb-3">
     <h5 class="text-warning mb-2 problem-title">
-        <span class="material-symbols-outlined">map</span><span>Desenho reconstruído</span>
+        <span class="material-symbols-outlined" translate="no" aria-hidden="true">map</span><span>Desenho reconstruído</span>
     </h5>
     <div class="topology-wrap">
-        <pre class="mermaid mb-0">{cenario.mermaid}</pre>
+        <pre class="mermaid mb-0" translate="no">{cenario.mermaid}</pre>
     </div>
 </div>
 {/if}
@@ -292,10 +292,10 @@
 {#if cenario.scripts.size > 0}
 <div class="aed-card card-tech problem-box p-3 mb-3">
     <h5 class="text-success mb-2 problem-title">
-        <span class="material-symbols-outlined">terminal</span><span>Scripts corrigidos</span>
+        <span class="material-symbols-outlined" translate="no" aria-hidden="true">terminal</span><span>Scripts corrigidos</span>
     </h5>
     <p class="small text-secondary mb-3">
-        Cada linha alterada vem precedida de <code>! CORRIGIDO:</code> com o valor original e o
+        Cada linha alterada vem precedida de <code translate="no">! CORRIGIDO:</code> com o valor original e o
         motivo — script corrigido sem marca vira configuração aplicada às cegas.
     </p>
     <div class="row g-3">
@@ -308,11 +308,11 @@
                         {#if script.alterado}{script.correcoes} correção(ões){#else}sem alteração{/if}
                     </span>
                 </div>
-                <pre class="reversa-codigo" id="reversa-script-{script_count}">{script.conteudo}</pre>
+                <pre class="reversa-codigo" id="reversa-script-{script_count}" translate="no">{script.conteudo}</pre>
                 <div class="d-flex justify-content-end">
                     <button type="button" class="aed-btn aed-btn-neutral btn-sm"
                             data-copiar-reversa="reversa-script-{script_count}">
-                        <span class="material-symbols-outlined">content_copy</span> Copiar
+                        <span class="material-symbols-outlined" translate="no" aria-hidden="true">content_copy</span> Copiar
                     </button>
                 </div>
             </div>
@@ -325,7 +325,7 @@
 {#if cenario.linhasNaoInterpretadas.size > 0}
 <div class="aed-card card-tech problem-box p-3 mb-3">
     <h5 class="text-secondary mb-2 problem-title">
-        <span class="material-symbols-outlined">rule</span><span>Linhas que o interpretador não usou</span>
+        <span class="material-symbols-outlined" translate="no" aria-hidden="true">rule</span><span>Linhas que o interpretador não usou</span>
     </h5>
     <p class="small text-secondary mb-2">
         Listadas de propósito: interpretador que ignora linha em silêncio desenha errado com
@@ -333,12 +333,12 @@
     </p>
     <div class="table-responsive border border-secondary border-opacity-25 rounded">
         <table class="table table-dark table-sm align-middle mb-0 reversa-tabela">
-            <thead><tr><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">tag</span>Linha</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">article</span>Conteúdo</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">help</span>Motivo</th></tr></thead>
+            <thead><tr><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">tag</span>Linha</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">article</span>Conteúdo</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">help</span>Motivo</th></tr></thead>
             <tbody>
                 {#for linha in cenario.linhasNaoInterpretadas}
                 <tr>
                     <td class="small text-secondary">{linha.numero}</td>
-                    <td class="small"><code>{linha.conteudo}</code></td>
+                    <td class="small"><code translate="no">{linha.conteudo}</code></td>
                     <td class="small text-secondary">{linha.motivo}</td>
                 </tr>
                 {/for}
@@ -350,7 +350,7 @@
 
 <div class="aed-card card-tech problem-box p-3 mb-3 reversa-exportacao">
     <h5 class="text-success mb-2 problem-title">
-        <span class="material-symbols-outlined">inventory_2</span><span>Exportação e impressão</span>
+        <span class="material-symbols-outlined" translate="no" aria-hidden="true">inventory_2</span><span>Exportação e impressão</span>
     </h5>
     <form method="post" action="/resolucao-problemas" class="d-flex flex-wrap gap-2 align-items-center">
         <input type="hidden" name="aba" value="reversa">
@@ -358,17 +358,17 @@
         <button type="submit" name="action_type" value="reverse_export_scripts" class="aed-btn aed-btn-execute"
                 data-bs-toggle="tooltip" data-bs-placement="top"
                 title="Baixa um .txt com os scripts corrigidos de todos os roteadores.">
-            <span class="material-symbols-outlined">download</span> Scripts corrigidos (.txt)
+            <span class="material-symbols-outlined" translate="no" aria-hidden="true">download</span> Scripts corrigidos (.txt)
         </button>
         <button type="submit" name="action_type" value="reverse_export_relatorio" class="aed-btn aed-btn-amber"
                 data-bs-toggle="tooltip" data-bs-placement="top"
                 title="Baixa um .txt com a auditoria, as LANs, os enlaces, as tabelas e a topologia.">
-            <span class="material-symbols-outlined">description</span> Relatório (.txt)
+            <span class="material-symbols-outlined" translate="no" aria-hidden="true">description</span> Relatório (.txt)
         </button>
         <button type="button" class="aed-btn aed-btn-indigo" data-imprimir-reversa
                 data-bs-toggle="tooltip" data-bs-placement="top"
                 title="Abre a janela de impressão do navegador com o resultado desta aba.">
-            <span class="material-symbols-outlined">print</span> Imprimir
+            <span class="material-symbols-outlined" translate="no" aria-hidden="true">print</span> Imprimir
         </button>
         <span class="section-chip chip-success export-status-chip" role="status">
             Pronto para colar no CLI dos roteadores

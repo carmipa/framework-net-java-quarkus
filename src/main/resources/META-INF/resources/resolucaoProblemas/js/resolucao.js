@@ -130,7 +130,7 @@
             '</div>' +
             '<div class="col-lg-2 col-md-6 d-grid">' +
             '<label class="form-label text-secondary spacer-label d-none d-md-block" aria-hidden="true">&nbsp;</label>' +
-            '<button type="button" class="aed-btn aed-btn-danger btn-remove-location" data-bs-toggle="tooltip" data-bs-placement="top" title="Remove esta localidade do cenário."><span class="material-symbols-outlined">delete</span> Remover</button>' +
+            '<button type="button" class="aed-btn aed-btn-danger btn-remove-location" data-bs-toggle="tooltip" data-bs-placement="top" title="Remove esta localidade do cenário."><span class="material-symbols-outlined" translate="no" aria-hidden="true">delete</span> Remover</button>' +
             '</div>';
         return row;
     }

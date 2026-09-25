@@ -72,7 +72,7 @@
             const name = r.dataset.servico || r.dataset.descricao || "";
             return `${id} | ${name} | ${r.dataset.transporte || r.dataset.camada || ""} | ${r.dataset.risco || r.dataset.nivel || ""}`;
         });
-        popup.document.write(`<pre>${gridId.toUpperCase()}\n\n${lines.join("\n")}</pre>`);
+        popup.document.write(`<pre translate="no">${gridId.toUpperCase()}\n\n${lines.join("\n")}</pre>`);
         popup.document.close();
         popup.print();
     };

@@ -36,6 +36,9 @@ const PRE_CACHE = [
   '/web/css/app.css',
   '/web/css/aed-command-center.css',
   '/pwa/icone-192.png',
+  // Fonte de ícones local: sem ela, offline, o glifo aparece como a palavra do nome.
+  '/web/css/material-symbols.css?v=20260925',
+  '/web/fonts/material-symbols-outlined.woff2?v=20260925',
 ];
 
 /* Prefixos que nunca entram no cache — conteudo autenticado ou volatil. */

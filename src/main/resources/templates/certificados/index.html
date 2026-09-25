@@ -15,7 +15,7 @@
     {#include certificados/partials/subnav.html /}
 
     <header class="text-center mb-4">
-        <div class="aprof-hero-icone" aria-hidden="true"><span class="material-symbols-outlined">workspace_premium</span></div>
+        <div class="aprof-hero-icone" aria-hidden="true"><span class="material-symbols-outlined" translate="no" aria-hidden="true">workspace_premium</span></div>
         <span class="aed-eyebrow aed-eyebrow-teal">Catálogo</span>
         <h2 class="mb-2" style="font-family:var(--aed-font-display);">Certificados Digitais (X.509 / PKI)</h2>
         <p class="text-secondary small mx-auto" style="max-width:48rem;">
@@ -25,27 +25,27 @@
         </p>
         <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
             <a href="/certificados/x509" class="aed-btn aed-btn-teal btn-sm" title="O certificado por dentro: TBSCertificate e a estrutura binária ASN.1/DER">
-                <span class="material-symbols-outlined" aria-hidden="true">badge</span> Anatomia do X.509
+                <span class="material-symbols-outlined" aria-hidden="true" translate="no">badge</span> Anatomia do X.509
             </a>
             <a href="/protocolos/tls" class="aed-btn aed-btn-neutral btn-sm" title="O protocolo que usa os certificados">
-                <span class="material-symbols-outlined" aria-hidden="true">lock</span> Protocolo TLS
+                <span class="material-symbols-outlined" aria-hidden="true" translate="no">lock</span> Protocolo TLS
             </a>
             <a href="/seguranca" class="aed-btn aed-btn-neutral btn-sm" title="Inspetor TLS: teste você mesmo a validação de um certificado">
-                <span class="material-symbols-outlined" aria-hidden="true">policy</span> Inspetor TLS
+                <span class="material-symbols-outlined" aria-hidden="true" translate="no">policy</span> Inspetor TLS
             </a>
         </div>
     </header>
 
     <section id="formatos" class="aprof-secao">
-        <h3 class="aprof-secao-titulo"><span class="material-symbols-outlined" aria-hidden="true">description</span> Formatos e extensões de arquivo</h3>
+        <h3 class="aprof-secao-titulo"><span class="material-symbols-outlined" aria-hidden="true" translate="no">description</span> Formatos e extensões de arquivo</h3>
         <p class="small text-secondary">A "chave decodificadora": qual arquivo guarda o quê, em que codificação e com qual ferramenta.</p>
         <div class="table-responsive border border-secondary border-opacity-25 rounded">
             <table class="table table-dark table-sm align-middle mb-0 aprof-tabela">
-                <thead><tr><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">description</span>Extensão</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">code</span>Codificação</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">article</span>Conteúdo</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">task_alt</span>Uso típico</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">build</span>Ferramenta</th></tr></thead>
+                <thead><tr><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">description</span>Extensão</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">code</span>Codificação</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">article</span>Conteúdo</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">task_alt</span>Uso típico</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">build</span>Ferramenta</th></tr></thead>
                 <tbody>
                     {#for f in catalogo.formatos}
                     <tr>
-                        <td class="fw-bold text-info text-nowrap"><code class="aprof-inline">{f.extensao}</code></td>
+                        <td class="fw-bold text-info text-nowrap"><code class="aprof-inline" translate="no">{f.extensao}</code></td>
                         <td class="small">{f.codificacao}</td>
                         <td class="small text-light">{f.conteudo}</td>
                         <td class="small text-light">{f.uso}</td>
@@ -58,17 +58,17 @@
     </section>
 
     <section id="campos" class="aprof-secao">
-        <h3 class="aprof-secao-titulo"><span class="material-symbols-outlined" aria-hidden="true">list_alt</span> Campos de um certificado X.509</h3>
+        <h3 class="aprof-secao-titulo"><span class="material-symbols-outlined" aria-hidden="true" translate="no">list_alt</span> Campos de um certificado X.509</h3>
         <p class="small text-secondary">O que existe dentro de um certificado — do serial às extensões v3. A régua binária (ASN.1/DER) está na <a href="/certificados/x509" class="text-info">Anatomia do X.509</a>.</p>
         <div class="table-responsive border border-secondary border-opacity-25 rounded">
             <table class="table table-dark table-sm align-middle mb-0 aprof-tabela">
-                <thead><tr><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">label</span>Campo</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">help</span>O que é</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">terminal</span>Exemplo</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">notes</span>Nota</th></tr></thead>
+                <thead><tr><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">label</span>Campo</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">help</span>O que é</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">terminal</span>Exemplo</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">notes</span>Nota</th></tr></thead>
                 <tbody>
                     {#for c in catalogo.campos}
                     <tr>
                         <td class="fw-bold text-info text-nowrap">{c.campo}</td>
                         <td class="small text-light">{c.oque}</td>
-                        <td class="small"><code class="aprof-inline">{c.exemplo}</code></td>
+                        <td class="small"><code class="aprof-inline" translate="no">{c.exemplo}</code></td>
                         <td class="small text-secondary">{c.nota}</td>
                     </tr>
                     {/for}
@@ -78,11 +78,11 @@
     </section>
 
     <section id="tipos" class="aprof-secao">
-        <h3 class="aprof-secao-titulo"><span class="material-symbols-outlined" aria-hidden="true">category</span> Tipos de certificado</h3>
+        <h3 class="aprof-secao-titulo"><span class="material-symbols-outlined" aria-hidden="true" translate="no">category</span> Tipos de certificado</h3>
         <p class="small text-secondary">Por validação (DV/OV/EV) e por uso (servidor, cliente, code signing, S/MIME). Detalhe em <a href="/certificados/tipos" class="text-info">Tipos de certificado</a>.</p>
         <div class="table-responsive border border-secondary border-opacity-25 rounded">
             <table class="table table-dark table-sm align-middle mb-0 aprof-tabela">
-                <thead><tr><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">category</span>Tipo</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">verified</span>O que valida</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">task_alt</span>Uso</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true">notes</span>Observação</th></tr></thead>
+                <thead><tr><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">category</span>Tipo</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">verified</span>O que valida</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">task_alt</span>Uso</th><th><span class="material-symbols-outlined aed-inline-icon" aria-hidden="true" translate="no">notes</span>Observação</th></tr></thead>
                 <tbody>
                     {#for t in catalogo.tipos}
                     <tr>

@@ -28,9 +28,9 @@
             const original = botao.innerHTML;
             try {
                 await navigator.clipboard.writeText(texto);
-                botao.innerHTML = '<span class="material-symbols-outlined">check</span> Copiado';
+                botao.innerHTML = '<span class="material-symbols-outlined" translate="no" aria-hidden="true">check</span> Copiado';
             } catch (err) {
-                botao.innerHTML = '<span class="material-symbols-outlined">error</span> Falhou';
+                botao.innerHTML = '<span class="material-symbols-outlined" translate="no" aria-hidden="true">error</span> Falhou';
                 console.warn("Cópia recusada pelo navegador", err);
             }
             setTimeout(function () {
