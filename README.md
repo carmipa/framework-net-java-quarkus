@@ -16,21 +16,32 @@ Cobre análise de IPv4/IPv6, CIDR, máscaras, wildcard, VLSM, topologia WAN, scr
 |--------|------|-----------|
 | Início | `/` | Página inicial (landing) com visão geral e atalhos para os módulos |
 | Análise Didática | `/analise` | CIDR, máscara, wildcard, auto-CIDR, domínio, IPv6, comparador |
+| Calculadora (IPv4) | `/calculadora` | Sub-redes e VLANs: dividir blocos, plano de VLAN, sumarização e faixa para CIDR |
 | Análise Didática IPv6 | `/ipv6/analise` | 128 bits célula-a-célula, tipo IANA, aplicação do prefixo, comparador, domínio (AAAA), Nibbles e Conceitos; export JSON/PDF |
 | Calculadora IPv6 | `/ipv6` | Sub-redes (2^n), EUI-64/SLAAC, ULA (fd00::/8), Sumarizar, Faixa → CIDR e **VLANs** (LAN /64 por VLAN + SVI + trunk 802.1Q) |
 | Resolução IPv6 | `/ipv6/resolucao` | **Projetar** (delegação de prefixo, WAN /127, CLI OSPFv3/EIGRP e diagrama) e **Engenharia Reversa** (config Cisco → interfaces/rotas) |
 | Localização | `/localizacao` | **GeoIP por IP** (região/ISP/risco, movido da Análise Didática) + **CEP** (ViaCEP) em mapa OpenStreetMap |
+| Laboratórios | `/laboratorios` | Laboratórios interativos passo a passo: `/laboratorios/camadas` e `/laboratorios/aneis-e-rede` |
+| Certificados | `/certificados` | Certificados digitais X.509 / PKI: formatos, campos, tipos e aprofundamentos |
+| Camadas | `/camadas` | Modelo OSI × TCP/IP: PDUs, dispositivos e encapsulamento |
+| Criptografia | `/criptografia` | Algoritmos, forças, hash, assinatura e playground (WebCrypto) |
+| Wi-Fi | `/wifi` | 802.11: padrões, canais, segurança (WPA) e planejador de canais |
+| Ferramentas | `/ferramentas` | Ferramentas de rede (CLI): catálogo, aprofundamentos e construtor de comando (`/ferramentas/rede`) |
+| Diagnóstico | `/diagnostico` | Simulador de ferramentas de diagnóstico (ping, traceroute, DNS) — didático, sem rede real |
+| Segurança | `/seguranca` | Testador de regras de Firewall/ACL, firewall com/sem estado, handshake TLS e alcançabilidade |
 | Tráfego | `/trafego` | Dashboard de tráfego **ao vivo** (gráficos estilo Wireshark + Wi-Fi/Bluetooth, modo demo) e decodificador didático de pacotes (hex dump → Ethernet/IP/TCP/UDP/ICMP) |
 | GeoIP (página) | `/informacoes` | Página autônoma de geolocalização de IP (MaxMind + fallback) |
 | Portas | `/portas` | Catálogo interativo TCP/UDP |
 | Protocolos | `/protocolos` | Catálogo + troubleshooting de roteamento (aba **Geral**) |
 | Protocolos — BGP | `/protocolos/bgp` | Aprofundamento do **BGP-4**: atributos, ordem de seleção de melhor rota, máquina de estados da sessão, route reflector, filtros/`maximum-prefix`/RPKI, lab Cisco e troubleshooting |
+| Protocolos — DNS e TLS | `/protocolos/dns`, `/protocolos/tls` | Aprofundamentos no mesmo padrão do BGP/SSH |
 | Protocolos — SSH | `/protocolos/ssh` | Aprofundamento do **SSH**: TOFU e `known_hosts`, camadas do SSH-2, métodos de autenticação, chaves, túneis `-L/-R/-D/-J/-A` e hardening do `sshd_config` |
 | Resolução VLSM | `/resolucao-problemas` | Aba **Projetar**: cenários VLSM/WAN, demos, exports e **ZIP da turma** |
 | Resolução — reversa | `/resolucao-problemas?aba=reversa` | Aba **Engenharia reversa**: cola a configuração Cisco pronta, **acha e corrige os erros com evidência** e reconstrói LANs, enlaces, tabelas e o desenho |
 | Páginas de erro | qualquer rota que falhe | Página única servindo **12 códigos** (400…504) no desenho do app, com `trace_id` real, animação Matrix de pacotes e atalhos de volta |
 | Telemetria | `/telemetria` | Dashboard de eventos e console ao vivo |
 | Documentação | `/documentacao` | README técnico renderizado |
+| Sobre | `/sobre` | O projeto, o autor e as tecnologias usadas |
 | Administração | `/admin/login` | Autenticação para rotas sensíveis (`/export/*`) |
 
 ## 📸 Telas do sistema
@@ -45,18 +56,23 @@ Cobre análise de IPv4/IPv6, CIDR, máscaras, wildcard, VLSM, topologia WAN, scr
 
 ## Arquitetura
 
-**Monólito modular** em Java 25 + Quarkus: implantação em um único artefato (fast-jar), com o código organizado por **domínios autocontidos**. Cada domínio de negócio (`analiseDidatica`, `portas`, `protocolos`, `resolucaoProblemas`) segue camadas `presentation → application → domain → infrastructure` (DDD-lite / hexagonal), e há módulos transversais (`security`, `telemetria`, `web`, `shared`). Endpoints em JAX-RS (`quarkus-rest`) e views em Qute.
+**Monólito modular** em Java 25 + Quarkus: implantação em um único artefato (fast-jar), com o código organizado por **domínios autocontidos**. Cada domínio de negócio (`analiseDidatica`, `calculadora`, `ipv6`, `resolucaoProblemas`, `portas`, `protocolos`, `certificados`, `camadas`, `criptografia`, `wifi`, `ferramentas`, `ferramentasDiagnostico`, `segurancaRede`, `simuladores`, `analiseTrafego`, `localizacao`, `laboratorios`, `paginaErros`) segue camadas `presentation → application → domain → infrastructure` (DDD-lite / hexagonal), e há módulos transversais (`security`, `telemetria`, `web`, `shared`). Endpoints em JAX-RS (`quarkus-rest`) e views em Qute.
 
 Diagramas completos (filtros, VLSM, telemetria, `shared`, exceções e deploy Docker): veja `/documentacao` ou `src/main/resources/README.md`.
 
 ```text
 org/framework/net/
 ├── analiseDidatica/     # presentation · application · domain/kernel · infrastructure (dns/geo/historico) · support
-├── localizacao/         # presentation · application · infrastructure (ViaCEP · Nominatim/OSM)
-├── analiseTrafego/      # presentation · application (decoder) · domain/model
-├── portas/              # presentation · application · domain · exception
-├── protocolos/          # presentation · application · domain · exception
+├── calculadora/         # sub-redes, VLAN, sumarização, faixa → CIDR (IPv4)
+├── ipv6/                # análise, calculadora e resolução IPv6
 ├── resolucaoProblemas/  # presentation · application (export/importing/normalization/planning/routing) · domain (kernel/model)
+├── portas/ · protocolos/ · certificados/ · camadas/ · criptografia/ · wifi/ · ferramentas/
+│                        # catálogos + aprofundamentos (modelo ProtocoloAprofundamento compartilhado)
+├── ferramentasDiagnostico/ · segurancaRede/ · simuladores/   # simuladores didáticos
+├── analiseTrafego/      # presentation · application (decoder/construtor) · domain/model
+├── localizacao/         # presentation · application · infrastructure (ViaCEP · Nominatim/OSM)
+├── laboratorios/        # laboratórios interativos
+├── paginaErros/         # página única para os códigos HTTP de erro
 ├── security/            # Admin API key · CSRF · rate limit · sensitive APIs
 ├── telemetria/          # store · dashboard · filter · presentation
 ├── shared/              # sanitizers · guards · normalizadores de entrada

@@ -82,8 +82,10 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | IPv6 (API) | `/ipv6/api/{calcular,nibbles,dividir,eui64,ula,sumarizar,faixa,vlan,comparar,dominio,resolver,projetar,engenharia}` | POST | Fragmento HTML de cada ferramenta IPv6 (contagem `2^n`, EUI-64/SLAAC, ULA, supernet, faixa→CIDR, plano de VLANs, comparador, AAAA, projeto de rede, engenharia reversa) |
 | IPv6 (export) | `/ipv6/export/{json,pdf}` | GET | Exporta a última análise IPv6 (JSON/PDF) — **protegido** (admin) |
 | Laboratórios | `/laboratorios` | GET | Visão geral dos laboratórios interativos (só experiências disponíveis) |
+| Laboratórios | `/laboratorios/aneis-e-rede` | GET | Experiência "Anéis e Rede": níveis de privilégio (Protection Rings) × camadas de rede |
 | Laboratórios | `/laboratorios/camadas` | GET | Experiência "Camadas em ação": encapsulamento/desencapsulamento (UDP/IP/Ethernet) entre dois hosts e um switch, passo a passo, com animação e explicações |
 | Localização | `/localizacao` | GET | Localização por IP e por CEP no mapa |
+| Localização (API) | `/localizacao/api/gps`, `/localizacao/api/inspecao` | GET | JSON: endereço reverso das coordenadas do GPS (Nominatim, com cache e freio de 1 req/s) / cadeia de cabeçalhos e IP visto pelo servidor (teste de privacidade) |
 | Localização (API) | `/localizacao/api/ip`, `/localizacao/api/cep` | GET | JSON: geolocalização por IP / endereço por CEP (ViaCEP + OSM) |
 | Tráfego | `/trafego` | GET | Sub-abas: painel ao vivo (simulação), decodificador (hex), encapsulamento, handshake TCP, **anomalias TCP** (SYN flood, sequestro de sequência), **construtor de pacotes** e **lab DNS/ICMP** |
 | Tráfego (API) | `/trafego/api/decodificar` | POST | JSON: camadas Ethernet/IP/TCP/UDP/ICMP decodificadas |
@@ -121,7 +123,8 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Resolução — reversa | `/resolucao-problemas?aba=reversa` | GET/POST | Aba **Engenharia reversa**: interpreta configuração Cisco colada, audita, corrige e reconstrói o projeto |
 | Páginas de erro | qualquer rota que falhe | — | Página única em `paginaErros/erro.html` servindo os 12 códigos (400…504) |
 | Telemetria | `/telemetria` | GET | Dashboard de eventos, console e **origem do tráfego** (por módulo, rotas, país e bots × pessoas — sem IP) |
-| Telemetria (API) | `/telemetria/api/*` | GET/POST | `resumo`, `dashboard`, `console`, `console/limpar`, `exportar`, `pasta` |
+| Telemetria (API) | `/telemetria/api/*` | GET/POST | `resumo`, `dashboard`, `console`, `console/limpar`, `exportar`, `pasta`, `dataset/estado`, `dataset/sincronizar` — as que alteram estado ou extraem dado são só do dono |
+| Login da telemetria | `/login/`, `/login/chave`, `/login/github`, `/login/github/callback`, `/login/sair` | GET/POST | Login pelo GitHub (OAuth) e acesso de contingência por chave (`/login/?modo=contingencia`) |
 | Documentação | `/documentacao` | GET | Este README renderizado |
 | Sobre | `/sobre` | GET | O projeto, o autor e as tecnologias |
 | Robôs de busca | `/robots.txt` | GET | Estático em `META-INF/resources/`. Política pública: páginas didáticas abertas, coletor de IA e robô de SEO fora, rotas caras e de API fechadas |
@@ -131,6 +134,7 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Histórico catálogo | `/history/catalog` | POST | Registra consulta de portas/protocolos |
 | Exportação análise | `/export/json`, `/export/pdf` | GET | 🔒 Protegido por chave administrativa |
 | Login administrativo | `/admin/login`, `/admin/logout` | GET/POST | Autenticação para rotas sensíveis |
+| Manifesto PWA | `/manifest.webmanifest` | GET | Manifesto do app instalável (servido com `application/manifest+json`) |
 
 ---
 
@@ -844,7 +848,7 @@ Implementado:
 - eventos estruturados (`TelemetriaLogger.logEvent` / `logException`);
 - buffer em memória + arquivo compartilhado (`TelemetriaStore`);
 - console ao vivo e exportação JSON (`/telemetria/api/exportar`);
-- logs em console e arquivo com rotação (`quarkus.log.file.*`);
+- logs no console (stdout), com rotação feita pelo Docker (`logging` do `docker-compose.yml`: 3 arquivos de 10 MB); o log em arquivo do Quarkus fica desligado de propósito;
 - a sonda `/health` do container **não** é registrada — antes o healthcheck consultava
   `/` a cada 30 s (~2.880 acessos/dia) e era indistinguível de visitas reais.
 
@@ -980,8 +984,8 @@ um caso de uso:
   `domain` passar a conhecer HTTP/Qute/camadas externas, se `application` importar
   `presentation`, se dois módulos de negócio se acoplarem sem registro explícito, ou
   se um `@Path` aparecer fora de `presentation`.
-- **`MenuRotasHttpTest`** — abre as 13 rotas do menu, confere que cada uma se marca
-  como ativa e navega para as demais. Conta os itens no HTML renderizado: **item novo
+- **`MenuRotasHttpTest`** — abre as 22 rotas do menu, confere que o link de cada uma
+  se marca como ativo (e que outro link não) e navega para as demais. Conta os itens no HTML renderizado: **item novo
   no menu sem teste correspondente quebra o build**.
 - **`ModuloDePathTest`** — trava a tabela que atribui cada rota a um módulo no
   dashboard. Existe porque o `default` do switch apontava para "Análise Didática", e
