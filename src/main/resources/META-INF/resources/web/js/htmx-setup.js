@@ -14,16 +14,58 @@
     // devolvem o fragmento de erro já renderizado quando a requisição vem do
     // htmx, então o 400 também deve ser trocado no alvo.
     document.body.addEventListener("htmx:beforeSwap", (event) => {
-        if (event.detail.xhr && event.detail.xhr.status === 400) {
+        const status = event.detail.xhr ? event.detail.xhr.status : 0;
+        if (status === 400) {
             event.detail.shouldSwap = true;
             event.detail.isError = false;
+            return;
+        }
+        // 403/429/5xx eram descartados em silêncio (padrão do htmx 2): o spinner piscava e o
+        // resultado ANTERIOR ficava na tela ao lado da entrada nova — o aluno copiava o errado.
+        // Agora o alvo recebe um aviso, o que também tira da tela o resultado velho.
+        const mensagem = mensagemDeErro(status);
+        if (mensagem) {
+            event.detail.shouldSwap = true;
+            event.detail.serverResponse = avisoHtml(mensagem, status);
         }
     });
+
+    // Sem resposta (rede caiu, servidor fora): htmx não troca nada — o aviso é posto à mão.
+    document.body.addEventListener("htmx:sendError", (event) => {
+        const alvo = event.detail.target;
+        if (alvo) {
+            alvo.innerHTML = avisoHtml("Sem conexão com o servidor. Nada foi calculado — verifique a rede e tente de novo.", 0);
+        }
+    });
+
+    function mensagemDeErro(status) {
+        if (status === 403) {
+            return "A proteção do formulário expirou e acabou de ser renovada. Envie de novo.";
+        }
+        if (status === 429) {
+            return "Muitas requisições seguidas desta rede. Aguarde um minuto e envie de novo.";
+        }
+        if (status >= 500) {
+            return "Erro no servidor. Nada foi calculado — tente de novo em instantes.";
+        }
+        return "";
+    }
+
+    // Só texto fixo e código numérico entram aqui: nada vindo da resposta vira HTML.
+    function avisoHtml(texto, status) {
+        const codigo = status ? " (código " + Number(status) + ")" : "";
+        return '<div class="alert alert-warning d-flex align-items-center gap-2 mb-0" role="alert">'
+            + '<span class="material-symbols-outlined" aria-hidden="true" translate="no">warning</span>'
+            + "<span>" + texto + codigo + "</span></div>";
+    }
 
     // Reinicializa tooltips e popovers em fragmentos HTML injetados dinamicamente via HTMX.
     document.body.addEventListener("htmx:afterSwap", (event) => {
         if (w.FieldTooltips && w.FieldTooltips.init) {
             w.FieldTooltips.init(event.detail.target || document);
+        }
+        if (w.FormInputs && w.FormInputs.init) {
+            w.FormInputs.init(event.detail.target || document);
         }
     });
 })(window);

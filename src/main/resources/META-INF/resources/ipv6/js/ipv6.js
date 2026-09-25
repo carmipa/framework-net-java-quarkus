@@ -61,6 +61,17 @@
         }
     });
 
+    // Linha criada depois do carregamento não passou pelo FormInputs/FieldTooltips: sem isto o
+    // VLAN ID aceitava letras e o erro só aparecia no servidor.
+    function ativarLinha(row) {
+        if (window.FormInputs && window.FormInputs.init) {
+            window.FormInputs.init(row);
+        }
+        if (window.FieldTooltips && window.FieldTooltips.init) {
+            window.FieldTooltips.init(row);
+        }
+    }
+
     // Localidades dinâmicas do Projetar: adicionar/remover linhas (como no IPv4).
     function novaLinhaLocal() {
         var row = document.createElement("div");
@@ -69,7 +80,7 @@
             '<div class="col-lg-10 col-9"><input type="text" name="local" class="aed-input form-control" ' +
             'placeholder="Nome da localidade / VLAN" autocomplete="off" required></div>' +
             '<div class="col-lg-2 col-3 d-grid"><button type="button" class="aed-btn aed-btn-danger btn-sm proj-remove-local" ' +
-            'title="Remover esta localidade"><span class="material-symbols-outlined">delete</span></button></div>';
+            'title="Remover esta localidade"><span class="material-symbols-outlined" aria-hidden="true" translate="no">delete</span></button></div>';
         return row;
     }
 
@@ -80,6 +91,7 @@
             if (cont) {
                 var row = novaLinhaLocal();
                 cont.appendChild(row);
+                ativarLinha(row);
                 var inp = row.querySelector("input");
                 if (inp) {
                     inp.focus();
@@ -148,7 +160,7 @@
             '<div class="col-lg-7 col-6"><input type="text" name="vlanNome" class="aed-input form-control" ' +
             'placeholder="Nome da VLAN" autocomplete="off" required></div>' +
             '<div class="col-lg-2 col-2 d-grid"><button type="button" class="aed-btn aed-btn-danger btn-sm vlan-remove" ' +
-            'title="Remover"><span class="material-symbols-outlined">delete</span></button></div>';
+            'title="Remover"><span class="material-symbols-outlined" aria-hidden="true" translate="no">delete</span></button></div>';
         return row;
     }
 
@@ -159,6 +171,7 @@
             if (cont) {
                 var row = novaLinhaVlan();
                 cont.appendChild(row);
+                ativarLinha(row);
                 var inp = row.querySelector("input");
                 if (inp) {
                     inp.focus();
