@@ -105,12 +105,15 @@ class WebIntegrationTest {
 
     @Test
     void iconeDeveResponderPngOu404() {
-        given()
+        // F23: aceitar 404 deixava o ícone da marca sumir de toda página com o teste verde.
+        byte[] png = given()
                 .when().get("/icone.png")
                 .then()
-                .statusCode(org.hamcrest.Matchers.anyOf(
-                        org.hamcrest.Matchers.equalTo(200),
-                        org.hamcrest.Matchers.equalTo(404)));
+                .statusCode(200)
+                .contentType(containsString("image/png"))
+                .extract().asByteArray();
+        org.junit.jupiter.api.Assertions.assertTrue(png.length > 8 && (png[0] & 0xFF) == 0x89 && png[1] == 'P'
+                && png[2] == 'N' && png[3] == 'G', "corpo não é PNG");
     }
 
     @Test

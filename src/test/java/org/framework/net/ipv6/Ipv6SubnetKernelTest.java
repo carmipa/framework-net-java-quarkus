@@ -102,11 +102,12 @@ class Ipv6SubnetKernelTest {
     @Test
     void solicitedNodeParaTodoUnicast() {
         // Unicast global: ff02::1:ff + 24 bits baixos (RFC 4291 §2.7.1).
-        assertTrue(kernel.analisar("2606:4700:4700::1111").solicitedNode().startsWith("ff02::1:ff"));
+        // Gabarito: Python ipaddress — ff02::1:ff00:0 | (endereço & 0xFFFFFF).
+        assertEquals("ff02::1:ff00:1111", kernel.analisar("2606:4700:4700::1111").solicitedNode());
         // Link-local É unicast e TEM solicited-node (usado no DAD/NDP) — gabarito RFC 4291.
         assertEquals("ff02::1:ff00:1", kernel.analisar("fe80::1").solicitedNode());
         // ULA também.
-        assertTrue(kernel.analisar("fd00::abcd").solicitedNode().startsWith("ff02::1:ff"));
+        assertEquals("ff02::1:ff00:abcd", kernel.analisar("fd00::abcd").solicitedNode());
         // Multicast, não-especificado e loopback NÃO têm solicited-node.
         assertEquals("—", kernel.analisar("ff02::1").solicitedNode());
         assertEquals("—", kernel.analisar("::").solicitedNode());
@@ -190,6 +191,13 @@ class Ipv6SubnetKernelTest {
         assertTrue(u.ula48().endsWith("/48"));
         assertTrue(u.ula64().endsWith("/64"));
         assertEquals(10, u.globalId().length()); // 40 bits = 10 dígitos hex
+        // RFC 4193: /48 = fd + Global ID; /64 = /48 + Subnet ID. Conferido com a biblioteca, bit a bit.
+        java.math.BigInteger v48 = new java.math.BigInteger(1, new inet.ipaddr.IPAddressString(u.ula48())
+                .getAddress().getLower().getBytes());
+        java.math.BigInteger v64 = new java.math.BigInteger(1, new inet.ipaddr.IPAddressString(u.ula64())
+                .getAddress().getLower().getBytes());
+        assertEquals(new java.math.BigInteger(u.globalId(), 16), v48.shiftRight(80).and(java.math.BigInteger.ONE.shiftLeft(40).subtract(java.math.BigInteger.ONE)));
+        assertEquals(v48.or(java.math.BigInteger.ONE.shiftLeft(64)), v64, "ula64 = ula48 com Subnet ID 1");
     }
 
     @Test

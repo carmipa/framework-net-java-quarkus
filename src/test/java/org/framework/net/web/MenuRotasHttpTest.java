@@ -85,7 +85,7 @@ class MenuRotasHttpTest {
             "/sobre,                  Sobre"
     })
     void rotaDoMenuAbreComOMenuERotuloCorreto(String rota, String rotulo) {
-        given()
+        String html = given()
                 .header("Cookie", cookieDeDono())
                 .when().get(rota)
                 .then()
@@ -93,7 +93,24 @@ class MenuRotasHttpTest {
                 .contentType(containsString("text/html"))
                 .body(containsString("aed-topnav"))
                 .body(containsString(rotulo))
-                .body(not(containsString("Internal Server Error")));
+                .body(not(containsString("Internal Server Error")))
+                .extract().asString();
+        // F23: o rótulo aparece no menu de TODA página, então conferi-lo não provava nada. O que prova
+        // é o link desta rota marcado como ativo — e outro link NÃO marcado (A1).
+        org.junit.jupiter.api.Assertions.assertTrue(classeDoLinkDoMenu(html, rota).contains("is-active"),
+                rota + " não se marca como ativa no menu");
+        String outra = "/sobre".equals(rota) ? "/portas" : "/sobre";
+        org.junit.jupiter.api.Assertions.assertFalse(classeDoLinkDoMenu(html, outra).contains("is-active"),
+                rota + " marcou também " + outra + " como ativa");
+    }
+
+    /** Classe do link {@code <a href="rota" class="aed-nav-link ...">} do menu (vazio se ausente). */
+    private static String classeDoLinkDoMenu(String html, String rota) {
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile(
+                "<a\\s+href=\"" + java.util.regex.Pattern.quote(rota) + "\"[^>]*?\\sclass=\"(aed-nav-link[^\"]*)\"")
+                .matcher(html);
+        org.junit.jupiter.api.Assertions.assertTrue(m.find(), "link do menu para " + rota + " não encontrado: instrumento cego");
+        return m.group(1);
     }
 
     @ParameterizedTest(name = "{0} expõe todos os demais itens do menu")

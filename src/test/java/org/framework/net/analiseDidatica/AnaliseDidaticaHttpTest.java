@@ -87,7 +87,8 @@ class AnaliseDidaticaHttpTest {
                 .when().post("/analise")
                 .then()
                 .statusCode(200)
-                .body(anyOf(containsString("inválido"), containsString("invalido"), containsString("Domínio")));
+                // F23: "Domínio" é texto fixo da página; só a mensagem de validação prova a recusa.
+                .body(containsString("Domínio/hostname inválido"));
     }
 
     @Test
@@ -111,7 +112,10 @@ class AnaliseDidaticaHttpTest {
                 .when().post("/analise")
                 .then()
                 .statusCode(200)
-                .body(anyOf(containsString("IPv6"), containsString("2001")));
+                // F23: "IPv6" está no menu e "2001" é eco da entrada. A expansão e a classificação só
+                // existem se o cálculo rodou (gabarito: RFC 4291 / RFC 3849).
+                .body(containsString("2001:0db8:0000:0000:0000:0000:0000:0001"))
+                .body(containsString("Documentação"));
     }
 
     @Test
