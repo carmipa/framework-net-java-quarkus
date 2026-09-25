@@ -60,10 +60,12 @@
 
     // securityLevel "strict" (mantido: defesa contra rótulo malicioso) DESLIGA as diretivas `click`
     // do Mermaid — o painel "clique em um roteador" nunca abria. O clique é ligado aqui, depois da
-    // renderização, pelo id do nó (flowchart-<id>-<n>), só para ids que têm detalhe no mapa.
+    // renderização, pelo id do nó (…flowchart-<id>-<n>), só para ids que têm detalhe no mapa.
     function ligarCliquesDaTopologia() {
         document.querySelectorAll(".topology-wrap .mermaid svg g.node").forEach((node) => {
-            const bruto = (node.getAttribute("id") || "").replace(/^flowchart-/, "").replace(/-\d+$/, "");
+            // Mermaid 10: "flowchart-R_1-0"; Mermaid 11: "mermaid-<ts>-flowchart-R_1-0".
+            const achado = /flowchart-(.+)-\d+$/.exec(node.getAttribute("id") || "");
+            const bruto = achado ? achado[1] : "";
             if (!bruto || !topologyDetails[bruto] || node.dataset.cliqueLigado === "1") return;
             node.dataset.cliqueLigado = "1";
             node.style.cursor = "pointer";

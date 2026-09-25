@@ -118,7 +118,7 @@ class AcessoTelemetriaHttpTest {
                 .when().get("/login/github/callback?code=qualquer&state=forjado")
                 .then()
                 .statusCode(303)
-                .header("Location", containsString("/login?erro="));
+                .header("Location", containsString("/login/?erro="));
     }
 
     @Test

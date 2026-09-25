@@ -98,7 +98,7 @@ public class LoginTelemetriaResource {
     public Response iniciar() {
         if (!gitHubOAuthService.configurado()) {
             return Response.seeOther(
-                    URI.create("/login?erro=" + codificar("Login pelo GitHub não configurado."))).build();
+                    URI.create("/login/?erro=" + codificar("Login pelo GitHub não configurado."))).build();
         }
         String state = novoState();
         return Response.seeOther(URI.create(gitHubOAuthService.urlDeAutorizacao(state)))
@@ -120,7 +120,7 @@ public class LoginTelemetriaResource {
         if (esperado.isEmpty() || state == null || !constante(esperado, state)) {
             registrar("warn", "login_github", "state_invalido", "");
             return Response.seeOther(
-                            URI.create("/login?erro=" + codificar("Sessão de login expirada. Tente de novo.")))
+                            URI.create("/login/?erro=" + codificar("Sessão de login expirada. Tente de novo.")))
                     .cookie(cookieDeState("", 0))
                     .build();
         }
@@ -146,7 +146,7 @@ public class LoginTelemetriaResource {
         }
 
         registrar("warn", "login_github", "falha", "");
-        return Response.seeOther(URI.create("/login?erro=" + codificar(resultado.motivo())))
+        return Response.seeOther(URI.create("/login/?erro=" + codificar(resultado.motivo())))
                 .cookie(cookieDeState("", 0))
                 .build();
     }
