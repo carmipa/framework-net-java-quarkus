@@ -77,4 +77,23 @@ class RateLimitHttpTest {
             assertTrue(st != 429, "rota comum abaixo do teto não pode receber 429 (requisição " + (i + 1) + ")");
         }
     }
+
+    @Test
+    void calculoIpv6LocalNaoEhPesadoMasResolucaoDnsE() {
+        // Revisão de boa-fé (A1, mesma família /ipv6/api/): o cálculo local fica no limite comum — uma turma
+        // atrás de NAT não pode travar em 30/min no exercício mais barato —, a resolução DNS continua pesada.
+        for (int i = 0; i < POR_ROTA; i++) {
+            int st = given().formParam("endereco", "2001:db8::1").when().post("/ipv6/api/calcular")
+                    .then().extract().statusCode();
+            assertTrue(st != 429, "cálculo IPv6 local limitado como pesado (requisição " + (i + 1) + ")");
+        }
+        int limitados = 0;
+        for (int i = 0; i < POR_ROTA; i++) {
+            if (given().formParam("dominio", "invalido..").when().post("/ipv6/api/dominio")
+                    .then().extract().statusCode() == 429) {
+                limitados++;
+            }
+        }
+        assertTrue(limitados > 0, "resolução DNS IPv6 tem de continuar pesada");
+    }
 }

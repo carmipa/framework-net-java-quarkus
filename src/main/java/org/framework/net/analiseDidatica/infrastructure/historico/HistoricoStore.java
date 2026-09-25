@@ -44,8 +44,8 @@ import java.util.UUID;
  * (4) PRIVACIDADE (decisão de Paulo, 2026-08-04): cada registro pertence a uma sessão de navegador
  * ({@link SessaoHistorico}); leitura, paginação e replay só enxergam a própria sessão. Teto por sessão =
  * {@code framework.app.max-history}; teto do arquivo = {@link #MAX_TOTAL}. Registros legados sem sessão
- * (o antigo balde global com IP de terceiros) são descartados na carga. Só {@link #listarTodos()} — usado
- * pelo export protegido por chave de admin — vê todas as sessões.
+ * (o antigo balde global com IP de terceiros) são descartados na carga. {@link #listarTodos()} vê todas
+ * as sessões e NÃO é exposto por HTTP (nem o export: ele usa a sessão, como a tela).
  *
  * COMPORTAMENTO EM CASO DE FALHA: erro de E/S ao gravar lança {@link HistoricoPersistenciaException}
  * (o chamador registra e segue); carga ilegível não lança. Sem requisição ativa (sem sessão), a
@@ -232,7 +232,7 @@ public class HistoricoStore {
         }
     }
 
-    /** Todas as sessões — SÓ para o export protegido por chave de administrador. */
+    /** Todas as sessões, com a chave de sessão — uso interno (testes de persistência); nunca sai por HTTP. */
     public List<Map<String, Object>> listarTodos() {
         synchronized (trava) {
             List<Map<String, Object>> copia = new ArrayList<>(historyStore.size());

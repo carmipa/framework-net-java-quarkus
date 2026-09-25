@@ -40,7 +40,8 @@ public class RequestRateLimiter {
      * INVARIANTES: dois baldes por requisição — (cliente, ROTA) e (cliente, global). A rota é a
      * identidade do endpoint resolvido (classe#método), nunca o caminho bruto: com o caminho, cada
      * {@code /protocolos/<slug>} ganhava balde próprio — limite inexistente e mapa crescendo com a
-     * escolha do atacante. O número de chaves fica limitado a clientes × endpoints.
+     * escolha do atacante. O número de chaves fica limitado a clientes × endpoints. Só a requisição
+     * aprovada pela rota consome o global — recusa não drena o teto dos outros módulos.
      * FALHA: não lança; limitador desligado devolve sempre true.
      */
     public boolean allow(ContainerRequestContext ctx, String routeKey, boolean heavy) {
@@ -57,9 +58,13 @@ public class RequestRateLimiter {
         if (windowMinute != previousPrune && lastPruneMinute.compareAndSet(previousPrune, windowMinute)) {
             prune();
         }
-        boolean global = incrementar(client + "|*", windowMinute) <= globalLimitPerMinute;
-        boolean rota = incrementar(key, windowMinute) <= limit;
-        return global && rota;
+        // A rota decide primeiro e só a aprovada conta no global. Revisão de boa-fé: contando também as
+        // recusadas, um painel em polling (Tráfego ao vivo, 1/s) aberto por meia turma atrás do mesmo NAT
+        // esgotava o global em segundos e derrubava TODOS os módulos da turma até a janela virar.
+        if (incrementar(key, windowMinute) > limit) {
+            return false;
+        }
+        return incrementar(client + "|*", windowMinute) <= globalLimitPerMinute;
     }
 
     private int incrementar(String key, long windowMinute) {

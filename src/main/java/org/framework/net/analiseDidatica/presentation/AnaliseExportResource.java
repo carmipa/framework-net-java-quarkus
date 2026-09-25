@@ -18,6 +18,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Exporta, em JSON ou PDF, o histórico de análises de QUEM CLICOU no botão.
+ *
+ * <p><b>PROPÓSITO DE NEGÓCIO:</b> o aluno/professor baixa a evidência do próprio cálculo para a aula.
+ *
+ * <p><b>INVARIANTES DO DOMÍNIO:</b> o export enxerga exatamente o que a tela de histórico mostra — a
+ * sessão do navegador ({@link HistoricoStore#listar()}). Revisão pós-implementação (lente de boa-fé):
+ * depois do F07 a tela passou a ser por sessão e o export ficou em todas as sessões, então o PDF saía
+ * com a última consulta de QUALQUER visitante (IP e geolocalização de terceiro) sem o admin perceber.
+ *
+ * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> sessão sem histórico no PDF redireciona (303) para "/"; o
+ * JSON devolve a lista vazia. Erro ao gerar o PDF propaga {@link IOException} (500 pelo mapper padrão).
+ */
 @Path("/export")
 public class AnaliseExportResource {
 
@@ -30,7 +43,7 @@ public class AnaliseExportResource {
     public Map<String, Object> exportarJson() {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("generated_at", Instant.now().toString());
-        payload.put("history", historicoStore.listarTodos());
+        payload.put("history", historicoStore.listar());
         Object requestId = MDC.get(TelemetriaKeys.REQUEST_ID);
         payload.put("last_request_id", requestId == null ? "-" : String.valueOf(requestId));
         return payload;
@@ -39,7 +52,7 @@ public class AnaliseExportResource {
     @GET
     @Path("/pdf")
     public Response exportarPdf() throws IOException {
-        List<Map<String, Object>> history = historicoStore.listarTodos();
+        List<Map<String, Object>> history = historicoStore.listar();
         if (history.isEmpty()) {
             return Response.seeOther(URI.create("/")).build();
         }

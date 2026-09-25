@@ -27,15 +27,19 @@ public class RateLimitFilter implements ContainerRequestFilter {
             // Tentativa em serie contra a chave de contingencia da Telemetria.
             "/login/chave",
             // Regrava o arquivo de historico a cada chamada.
-            "/history/catalog"
+            "/history/catalog",
+            // IPv6: so o que custa. DNS (resolver, dominio) e CPU sobre entrada grande (projetar, engenharia,
+            // dividir). Os calculos locais (calcular, nibbles, eui64, ula...) ficam no limite comum: com o
+            // prefixo /ipv6/api/ inteiro, uma turma atras do mesmo NAT batia 30/min no exercicio mais barato.
+            "/ipv6/api/resolver",
+            "/ipv6/api/dominio",
+            "/ipv6/api/projetar",
+            "/ipv6/api/engenharia",
+            "/ipv6/api/dividir"
     );
 
-    /**
-     * Prefixos cujo custo e alto: Projetar/dominio IPv6 (CPU e DNS), Localizacao (DNS e APIs
-     * externas com cota global: ip-api 45/min, Nominatim 1 req/s).
-     */
+    /** Prefixo cujo custo e alto: Localizacao (APIs externas com cota global: ip-api 45/min, Nominatim 1 req/s). */
     private static final java.util.List<String> HEAVY_PREFIXES = java.util.List.of(
-            "/ipv6/api/",
             "/localizacao/api/"
     );
 
