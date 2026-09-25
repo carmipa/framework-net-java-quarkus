@@ -24,7 +24,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * <a href="https://nominatim.org/release-docs/latest/api/Search/">Nominatim/OpenStreetMap</a>.
  *
  * <p>A política de uso do Nominatim exige um {@code User-Agent} identificável e no máximo
- * ~1 req/s; por isso os resultados são cacheados agressivamente (endereços são estáticos).
+ * ~1 req/s NO TOTAL — é o IP da VPS inteira que pode ser banido. Por isso: busca e reverso têm cache
+ * (memória + L2) e toda chamada externa passa por um freio GLOBAL de uma por segundo; chamada freada
+ * devolve {@code Optional.empty()} (o chamador já mostra "sem endereço disponível") em vez de
+ * furar a política.
  */
 @ApplicationScoped
 public class NominatimGeocoder {
@@ -54,6 +57,24 @@ public class NominatimGeocoder {
     private final Map<String, Map<String, Object>> cache = new ConcurrentHashMap<>();
     private volatile HttpClient httpClient;
 
+    /** Instante (nanoTime) da última chamada externa autorizada — freio global de 1 req/s. */
+    private final java.util.concurrent.atomic.AtomicLong ultimaChamada =
+            new java.util.concurrent.atomic.AtomicLong(System.nanoTime() - 2_000_000_000L);
+
+    /** Reserva a janela de 1 s para uma chamada externa; false se outra saiu há menos de 1 s. */
+    private boolean reservarJanela() {
+        while (true) {
+            long anterior = ultimaChamada.get();
+            long agora = System.nanoTime();
+            if (agora - anterior < 1_000_000_000L) {
+                return false;
+            }
+            if (ultimaChamada.compareAndSet(anterior, agora)) {
+                return true;
+            }
+        }
+    }
+
     /** Geocodifica a consulta (livre) restrita ao Brasil; {@code Optional.empty()} se nada for encontrado. */
     public Optional<Map<String, Object>> geocodificar(String query) {
         if (query == null || query.isBlank()) {
@@ -69,6 +90,10 @@ public class NominatimGeocoder {
         Optional<Map<String, Object>> doL2 = lerDoCacheDistribuido(chave);
         if (doL2.isPresent()) {
             return doL2;
+        }
+        if (!reservarJanela()) {
+            LOG.debug("Nominatim: busca freada (política de 1 req/s).");
+            return Optional.empty();
         }
         try {
             String uri = nominatimUrl + "?format=jsonv2&limit=1&addressdetails=0&countrycodes=br&q="
@@ -110,6 +135,23 @@ public class NominatimGeocoder {
 
     /** Geocodificação reversa (coordenadas → endereço), usada pela localização via GPS do navegador. */
     public Optional<Map<String, Object>> reverse(double lat, double lon) {
+        if (!Double.isFinite(lat) || !Double.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+            return Optional.empty();
+        }
+        // ~11 m de resolução: o mesmo ponto (ou vizinho imediato) não volta ao Nominatim.
+        String chave = String.format(java.util.Locale.ROOT, "rev|%.4f|%.4f", lat, lon);
+        Map<String, Object> cached = cache.get(chave);
+        if (cached != null) {
+            return Optional.of(new LinkedHashMap<>(cached));
+        }
+        Optional<Map<String, Object>> doL2 = lerDoCacheDistribuido(chave);
+        if (doL2.isPresent()) {
+            return doL2;
+        }
+        if (!reservarJanela()) {
+            LOG.debug("Nominatim: reverso freado (política de 1 req/s).");
+            return Optional.empty();
+        }
         try {
             String base = nominatimUrl.contains("/search")
                     ? nominatimUrl.replace("/search", "/reverse")
@@ -142,7 +184,8 @@ public class NominatimGeocoder {
             out.put("uf", addr.path("state").asText(""));
             out.put("cep", addr.path("postcode").asText(""));
             out.put("fonte", "OpenStreetMap/Nominatim (reverse)");
-            return Optional.of(out);
+            guardarCache(chave, out);
+            return Optional.of(new LinkedHashMap<>(out));
         } catch (Exception ex) {
             LOG.warnf("Falha no reverse geocoding Nominatim (%s, %s): %s", lat, lon, ex.getMessage());
             return Optional.empty();
