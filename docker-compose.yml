@@ -48,6 +48,13 @@ services:
     memswap_limit: ${MEM_LIMIT:-768m}
     mem_reservation: 256m
     restart: unless-stopped
+    # O log vai para o stdout (json-file do Docker). Sem teto ele cresce sem limite no disco que a
+    # VPS divide com outros serviços (auditoria F27): 3 arquivos de 10 MB por container.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - nginx-proxy-network
       - framework-net-interna
@@ -69,6 +76,11 @@ services:
     mem_limit: 64m
     memswap_limit: 64m
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - framework-net-interna
 
