@@ -49,6 +49,47 @@ class Ipv6SubnetKernelTest {
         assertEquals("2001:db8::", r.rede());
     }
 
+    /**
+     * Prefixo com host zerado (o valor PADRÃO da tela) é o endereço de rede, não uma faixa com "*".
+     * Gabarito: Python ipaddress ip_network('2001:db8::/48').network_address / .exploded / reverse_pointer.
+     * Fronteira (A1): host com bits ligados sob o mesmo prefixo continua sendo aquele host.
+     */
+    @Test
+    void prefixoComHostZeradoMostraEnderecoDeRedeSemCuringa() {
+        AnaliseIpv6 r = kernel.analisar("2001:db8::/48");
+        assertEquals("2001:db8::", r.comprimido());
+        assertEquals("2001:0db8:0000:0000:0000:0000:0000:0000", r.expandido());
+        assertEquals("0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.d.0.1.0.0.2.ip6.arpa", r.reversePtr());
+        assertEquals("::", kernel.analisar("::/0").comprimido());
+        assertEquals("fe80::", kernel.analisar("fe80::/10").comprimido());
+
+        AnaliseIpv6 host = kernel.analisar("2001:db8::5/48");
+        assertEquals("2001:db8::5", host.comprimido());
+        assertEquals("2001:db8::", host.rede());
+    }
+
+    /**
+     * RFC 5952 §4.2.2: "::" NÃO substitui um único hexteto zero; §4.2.3: empate vai para o mais à
+     * esquerda. Gabarito: Python ipaddress .compressed (mesmos valores).
+     */
+    @Test
+    void formaCanonicaRfc5952NaoComprimeHextetoZeroIsolado() {
+        assertEquals("2001:db8:0:1:1:1:1:1", kernel.analisar("2001:db8:0:1:1:1:1:1").comprimido());
+        assertEquals("2001:db8:0:1:ffff:ffff:ffff:ffff",
+                kernel.analisar("2001:db8:0:1:ffff:ffff:ffff:ffff").comprimido());
+        // Fronteira (A1): dois ou mais zeros continuam comprimidos, e o empate é à esquerda.
+        assertEquals("2001:db8::1", kernel.analisar("2001:db8:0:0:0:0:0:1").comprimido());
+        assertEquals("2001:db8::1:0:0:1", kernel.analisar("2001:db8:0:0:1:0:0:1").comprimido());
+        assertEquals("1::", kernel.analisar("1:0:0:0:0:0:0:0").comprimido());
+    }
+
+    @Test
+    void nibblesAceitaEntradaComPrefixo() {
+        NibblesIpv6 n = kernel.nibbles("2001:db8::/64");
+        assertEquals(32, n.nibbles().size());
+        assertEquals("2001:0db8:0000:0000:0000:0000:0000:0000", n.expandido());
+    }
+
     @Test
     void classificaPorFaixaEspecialIana() {
         assertEquals("Loopback", kernel.analisar("::1").tipo());
@@ -133,7 +174,7 @@ class Ipv6SubnetKernelTest {
         Eui64Result e = kernel.eui64("2001:db8:0:1::/64", "00:1a:2b:3c:4d:5e");
         assertEquals("021a:2bff:fe3c:4d5e", e.interfaceId());
         // Forma canônica da lib (seancfoley) — comprime o grupo-zero único como "::".
-        assertEquals("2001:db8::1:21a:2bff:fe3c:4d5e", e.enderecoSlaac());
+        assertEquals("2001:db8:0:1:21a:2bff:fe3c:4d5e", e.enderecoSlaac());   // RFC 5952 §4.2.2
         assertEquals("2001:db8:0:1::/64", e.prefixoRede());
     }
 

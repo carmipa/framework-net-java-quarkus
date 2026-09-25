@@ -75,16 +75,19 @@ public class Ipv6SubnetKernel {
         boolean temPrefixo = prefixoInformado != null;
         int prefixo = temPrefixo ? prefixoInformado : 128;
 
-        IPv6Address host = addr.withoutPrefixLength();
+        // Prefixo com host zerado ("2001:db8::/48") a biblioteca trata como BLOCO; withoutPrefixLength()
+        // manteria a faixa inteira e a tela mostraria "2001:db8::*:*:*:*:*". getLower() devolve o endereço
+        // de rede nesse caso e o próprio host quando há bits de host ("2001:db8::5/48").
+        IPv6Address host = addr.getLower().withoutPrefixLength();
         IPv6Address bloco = prefixoBloco(host, prefixo);
 
-        String comprimido = host.toCompressedString();
+        String comprimido = host.toCanonicalString();
         String expandido = host.toFullString();
         // getLower()/getUpper() de um bloco prefixado carregam o /n; withoutPrefixLength() tira o
         // sufixo para exibir só o endereço (senão "rede" sairia como "2001:db8::/48").
-        String rede = bloco.getLower().withoutPrefixLength().toCompressedString();
-        String primeiro = bloco.getLower().withoutPrefixLength().toCompressedString();
-        String ultimo = bloco.getUpper().withoutPrefixLength().toCompressedString();
+        String rede = bloco.getLower().withoutPrefixLength().toCanonicalString();
+        String primeiro = bloco.getLower().withoutPrefixLength().toCanonicalString();
+        String ultimo = bloco.getUpper().withoutPrefixLength().toCanonicalString();
         BigInteger total = bloco.getCount();
 
         FaixaEspecial faixa = classificar(host);
@@ -155,15 +158,15 @@ public class Ipv6SubnetKernel {
             IPv6Address rede = new IPv6Address(paraBytes16(valor));
             subredes.add(new SubredeIpv6(
                     i + 1,
-                    rede.toCompressedString(),
+                    rede.toCanonicalString(),
                     "/" + prefixoAlvo,
-                    rede.toCompressedString(),
+                    rede.toCanonicalString(),
                     ultimoDoBloco(valor, passo)));
         }
         boolean truncado = quantidade.compareTo(BigInteger.valueOf(limite)) > 0;
 
         return new DivisaoIpv6(
-                baseBloco.getLower().withoutPrefixLength().toCompressedString() + "/" + prefixoBase,
+                baseBloco.getLower().withoutPrefixLength().toCanonicalString() + "/" + prefixoBase,
                 prefixoBase,
                 prefixoAlvo,
                 quantidade.toString(),
@@ -267,8 +270,8 @@ public class Ipv6SubnetKernel {
             iidGrade.add(new Ipv6AnaliseRica.HextetoGrade(h + 1, String.format("%04x", hextet), cel));
         }
 
-        return new Eui64Result(macNorm, iid, addr.toCompressedString(),
-                new IPv6Address(rede).toCompressedString() + "/64", passos, iidGrade);
+        return new Eui64Result(macNorm, iid, addr.toCanonicalString(),
+                new IPv6Address(rede).toCanonicalString() + "/64", passos, iidGrade);
     }
 
     /**
@@ -298,8 +301,8 @@ public class Ipv6SubnetKernel {
         }
         String explic = "fd (prefixo ULA, L=1) + Global ID de 40 bits pseudo-aleatório (" + gidHex
                 + ") + Subnet ID de 16 bits (" + sid + "). Gerado por SecureRandom, conforme RFC 4193.";
-        return new UlaResult(new IPv6Address(p48).toCompressedString() + "/48",
-                new IPv6Address(p64).toCompressedString() + "/64", gidHex.toString(), explic);
+        return new UlaResult(new IPv6Address(p48).toCanonicalString() + "/48",
+                new IPv6Address(p64).toCanonicalString() + "/64", gidHex.toString(), explic);
     }
 
     /**
@@ -418,15 +421,15 @@ public class Ipv6SubnetKernel {
         for (int i = 0; i < limite; i++) {
             BigInteger valor = inicio.add(passo.multiply(BigInteger.valueOf(i)));
             IPv6Address rede = new IPv6Address(paraBytes16(valor));
-            String gw = new IPv6Address(paraBytes16(valor.add(BigInteger.ONE))).toCompressedString();
-            alocacoes.add(new AlocacaoLan(i + 1, limpos.get(i), rede.toCompressedString(),
-                    "/" + prefixoAlvo, rede.toCompressedString(), ultimoDoBloco(valor, passo), gw));
+            String gw = new IPv6Address(paraBytes16(valor.add(BigInteger.ONE))).toCanonicalString();
+            alocacoes.add(new AlocacaoLan(i + 1, limpos.get(i), rede.toCanonicalString(),
+                    "/" + prefixoAlvo, rede.toCanonicalString(), ultimoDoBloco(valor, passo), gw));
         }
         boolean truncado = limpos.size() > limite;
         String enunciado = "Um /" + prefixoBase + " comporta " + capacidade + " sub-redes /" + prefixoAlvo
                 + "; este plano usa " + limpos.size() + ". Em IPv6 cada /64 já tem 2^64 endereços via SLAAC,"
                 + " então dimensiona-se por quantidade de redes, não por hosts.";
-        return new DelegacaoPlano(baseBloco.getLower().withoutPrefixLength().toCompressedString() + "/" + prefixoBase,
+        return new DelegacaoPlano(baseBloco.getLower().withoutPrefixLength().toCanonicalString() + "/" + prefixoBase,
                 prefixoBase, prefixoAlvo, capacidade.toString(), limpos.size(), truncado, alocacoes, enunciado);
     }
 
@@ -497,9 +500,9 @@ public class Ipv6SubnetKernel {
         String explic = "Alinhamento de bits: o supernet /" + prefixoSupernet + " é o maior prefixo comum a"
                 + " todas as entradas. Diferente do IPv4, não há máscara decimal — só a fronteira de bit.";
         return new SumarizacaoIpv6(
-                supernet.getLower().withoutPrefixLength().toCompressedString() + "/" + prefixoSupernet,
-                supernet.getLower().withoutPrefixLength().toCompressedString(),
-                supernet.getUpper().withoutPrefixLength().toCompressedString(),
+                supernet.getLower().withoutPrefixLength().toCanonicalString() + "/" + prefixoSupernet,
+                supernet.getLower().withoutPrefixLength().toCanonicalString(),
+                supernet.getUpper().withoutPrefixLength().toCanonicalString(),
                 supernet.getCount().toString(),
                 blocos.size(), mesclados, explic, umContemOutro, relacao);
     }
@@ -520,8 +523,8 @@ public class Ipv6SubnetKernel {
         BigInteger vi = new BigInteger(1, ini.getBytes());
         BigInteger vf = new BigInteger(1, fimA.getBytes());
         if (vi.compareTo(vf) > 0) {
-            throw new Ipv6Exception("Faixa invertida: o início (" + ini.toCompressedString()
-                    + ") é maior que o fim (" + fimA.toCompressedString() + "). Troque a ordem.");
+            throw new Ipv6Exception("Faixa invertida: o início (" + ini.toCanonicalString()
+                    + ") é maior que o fim (" + fimA.toCanonicalString() + "). Troque a ordem.");
         }
         IPv6Address[] blocos = ini.spanWithPrefixBlocks(fimA);
         int limite = Math.min(blocos.length, Math.max(1, maxLinhas));
@@ -531,7 +534,7 @@ public class Ipv6SubnetKernel {
         }
         String explic = "A faixa foi decomposta em " + blocos.length + " bloco(s) CIDR alinhado(s) a bit."
                 + " Cada bloco é o maior prefixo que cabe a partir do ponto atual sem ultrapassar o fim.";
-        return new FaixaCidrIpv6(ini.toCompressedString(), fimA.toCompressedString(),
+        return new FaixaCidrIpv6(ini.toCanonicalString(), fimA.toCanonicalString(),
                 blocos.length, lista, explic);
     }
 
@@ -559,9 +562,9 @@ public class Ipv6SubnetKernel {
         Integer pfx = bloco.getNetworkPrefixLength();
         int p = pfx == null ? 128 : pfx;
         return new BlocoSumario(
-                bloco.getLower().withoutPrefixLength().toCompressedString() + "/" + p,
-                bloco.getLower().withoutPrefixLength().toCompressedString(),
-                bloco.getUpper().withoutPrefixLength().toCompressedString(),
+                bloco.getLower().withoutPrefixLength().toCanonicalString() + "/" + p,
+                bloco.getLower().withoutPrefixLength().toCanonicalString(),
+                bloco.getUpper().withoutPrefixLength().toCanonicalString(),
                 bloco.getCount().toString());
     }
 
@@ -640,9 +643,9 @@ public class Ipv6SubnetKernel {
         for (int i = 0; i < n; i++) {
             BigInteger v = inicio.add(passoLan.multiply(BigInteger.valueOf(i)));
             IPv6Address rede = new IPv6Address(paraBytes16(v));
-            String gw = new IPv6Address(paraBytes16(v.add(BigInteger.ONE))).toCompressedString();
-            lans.add(new ProjetoLan(i + 1, nomes.get(i), rede.toCompressedString(), "/" + prefixoLan,
-                    gw, new IPv6Address(paraBytes16(v.add(BigInteger.ONE))).toCompressedString(),
+            String gw = new IPv6Address(paraBytes16(v.add(BigInteger.ONE))).toCanonicalString();
+            lans.add(new ProjetoLan(i + 1, nomes.get(i), rede.toCanonicalString(), "/" + prefixoLan,
+                    gw, new IPv6Address(paraBytes16(v.add(BigInteger.ONE))).toCanonicalString(),
                     ultimoDoBloco(v, passoLan), BigInteger.TWO.pow(128 - prefixoLan).toString()));
         }
 
@@ -675,10 +678,10 @@ public class Ipv6SubnetKernel {
         for (int k = 0; k < pares.size(); k++) {
             BigInteger v = wanBase.add(passoWan.multiply(BigInteger.valueOf(k)));
             IPv6Address rede = new IPv6Address(paraBytes16(v));
-            String ipA = new IPv6Address(paraBytes16(v.add(BigInteger.valueOf(offset)))).toCompressedString();
-            String ipB = new IPv6Address(paraBytes16(v.add(BigInteger.valueOf(offset + 1L)))).toCompressedString();
+            String ipA = new IPv6Address(paraBytes16(v.add(BigInteger.valueOf(offset)))).toCanonicalString();
+            String ipB = new IPv6Address(paraBytes16(v.add(BigInteger.valueOf(offset + 1L)))).toCanonicalString();
             wans.add(new ProjetoWan(k + 1, nomes.get(pares.get(k)[0]) + " ↔ " + nomes.get(pares.get(k)[1]),
-                    rede.toCompressedString(), "/" + prefixoWan, ipA, ipB,
+                    rede.toCanonicalString(), "/" + prefixoWan, ipA, ipB,
                     nomes.get(pares.get(k)[0]), nomes.get(pares.get(k)[1])));
         }
 
@@ -773,7 +776,7 @@ public class Ipv6SubnetKernel {
         }
         String planoTexto = txt.toString();
 
-        return new ProjetoRede(baseBloco.getLower().withoutPrefixLength().toCompressedString() + "/" + prefixoBase,
+        return new ProjetoRede(baseBloco.getLower().withoutPrefixLength().toCanonicalString() + "/" + prefixoBase,
                 prefixoBase, prefixoLan, prefixoWan, topo, n, totalLinks, capLan.toString(),
                 lans, wans, roteadores, rotas, ospfv3, eigrp, passos, enunciado, mermaid, planoTexto);
     }
@@ -911,8 +914,9 @@ public class Ipv6SubnetKernel {
             lista.add(new NibbleInfo(i + 1, hex.charAt(i), bin, (i / 4) + 1));
         }
         String explic = "Expandido tem 8 hextetos × 4 dígitos = 32 nibbles (128 bits). A compressão RFC 5952"
-                + " remove zeros à esquerda de cada hexteto e substitui a MAIOR sequência de hextetos zero por"
-                + " '::' (uma única vez). O reverso ip6.arpa é a lista dos 32 nibbles, do último ao primeiro.";
+                + " remove zeros à esquerda de cada hexteto e substitui a MAIOR sequência de DOIS ou mais"
+                + " hextetos zero por '::' (uma única vez; no empate, a mais à esquerda). Um hexteto zero"
+                + " isolado fica como '0'. O reverso ip6.arpa é a lista dos 32 nibbles, do último ao primeiro.";
         return new NibblesIpv6(base.comprimido(), base.expandido(), base.reversePtr(), lista, explic);
     }
 
@@ -986,7 +990,7 @@ public class Ipv6SubnetKernel {
         for (int i = 0; i < limite; i++) {
             BigInteger v = inicio.add(passo.multiply(BigInteger.valueOf(i)));
             IPv6Address rede = new IPv6Address(paraBytes16(v));
-            String gw = new IPv6Address(paraBytes16(v.add(BigInteger.ONE))).toCompressedString();
+            String gw = new IPv6Address(paraBytes16(v.add(BigInteger.ONE))).toCanonicalString();
             String cli = "vlan " + idLimpos.get(i) + "\n name " + nomeLimpos.get(i)
                     + "\ninterface Vlan" + idLimpos.get(i)
                     + "\n ipv6 address " + gw + "/" + prefixoLan
@@ -995,7 +999,7 @@ public class Ipv6SubnetKernel {
                         ? "\n ipv6 nd managed-config-flag\n ipv6 dhcp server VLAN" + idLimpos.get(i)
                         : "\n ipv6 nd other-config-flag") // SLAAC por padrão
                     + "\n no shutdown";
-            linhas.add(new VlanLinha(idLimpos.get(i), nomeLimpos.get(i), rede.toCompressedString(),
+            linhas.add(new VlanLinha(idLimpos.get(i), nomeLimpos.get(i), rede.toCanonicalString(),
                     "/" + prefixoLan, gw, cli));
             if (ids82.length() > 0) {
                 ids82.append(',');
@@ -1009,7 +1013,7 @@ public class Ipv6SubnetKernel {
                 : "SLAAC (padrão): o RA anuncia o prefixo /64 e os hosts se autoconfiguram (sem servidor).";
         String enunciado = n + " VLAN(s), cada uma com uma LAN /" + prefixoLan + " contígua em " + bruto
                 + ". Em IPv6 a VLAN é L2; o /64 e o SVI (interface VlanN) fazem o roteamento inter-VLAN.";
-        return new VlanPlano(baseBloco.getLower().withoutPrefixLength().toCompressedString() + "/" + prefixoBase,
+        return new VlanPlano(baseBloco.getLower().withoutPrefixLength().toCanonicalString() + "/" + prefixoBase,
                 prefixoBase, prefixoLan, n, cap.toString(), linhas, trunk, dhcpNota, enunciado);
     }
 
@@ -1020,7 +1024,7 @@ public class Ipv6SubnetKernel {
         if (idx >= 0) {
             bruto = bruto.substring(0, idx).strip();
         }
-        return new IPAddressString(bruto).getAddress().toIPv6().withoutPrefixLength();
+        return new IPAddressString(bruto).getAddress().toIPv6().getLower().withoutPrefixLength();
     }
 
     /** Quantidade de bits iniciais idênticos entre dois endereços de 128 bits (0–128). */
@@ -1170,7 +1174,7 @@ public class Ipv6SubnetKernel {
 
     /** Próximas {@code n} sub-redes contíguas do mesmo prefixo (régua), a partir do bloco base. */
     private List<SubredeIpv6> reguaSubredes(String entrada, int prefixo, int n) {
-        IPv6Address addr = new IPAddressString(hostDe(entrada).toCompressedString() + "/" + prefixo)
+        IPv6Address addr = new IPAddressString(hostDe(entrada).toCanonicalString() + "/" + prefixo)
                 .getAddress().toIPv6().toPrefixBlock();
         BigInteger inicio = new BigInteger(1, addr.getLower().getBytes());
         BigInteger passo = BigInteger.TWO.pow(128 - prefixo);
@@ -1182,8 +1186,8 @@ public class Ipv6SubnetKernel {
                 break;
             }
             IPv6Address rede = new IPv6Address(paraBytes16(valor));
-            out.add(new SubredeIpv6(i + 1, rede.toCompressedString(), "/" + prefixo,
-                    rede.toCompressedString(), ultimoDoBloco(valor, passo)));
+            out.add(new SubredeIpv6(i + 1, rede.toCanonicalString(), "/" + prefixo,
+                    rede.toCanonicalString(), ultimoDoBloco(valor, passo)));
         }
         return out;
     }
@@ -1292,7 +1296,7 @@ public class Ipv6SubnetKernel {
     private String gatewaySugerido(String rede, int prefixo) {
         BigInteger inicio = new BigInteger(1, new IPAddressString(rede + "/" + prefixo)
                 .getAddress().toIPv6().toPrefixBlock().getLower().getBytes());
-        return new IPv6Address(paraBytes16(inicio.add(BigInteger.ONE))).toCompressedString();
+        return new IPv6Address(paraBytes16(inicio.add(BigInteger.ONE))).toCanonicalString();
     }
 
     private DelegacaoInfo delegacaoLinha(int prefixoBase, int alvo, String uso) {
@@ -1312,7 +1316,7 @@ public class Ipv6SubnetKernel {
     }
 
     private IPv6Address prefixoBloco(IPv6Address host, int prefixo) {
-        return new IPAddressString(host.toCompressedString() + "/" + prefixo)
+        return new IPAddressString(host.toCanonicalString() + "/" + prefixo)
                 .getAddress().toIPv6().toPrefixBlock();
     }
 
@@ -1354,7 +1358,7 @@ public class Ipv6SubnetKernel {
         sn[13] = b[13];
         sn[14] = b[14];
         sn[15] = b[15];
-        return new IPv6Address(sn).toCompressedString();
+        return new IPv6Address(sn).toCanonicalString();
     }
 
     private List<String> binarioHextetos(IPv6Address host) {
@@ -1370,7 +1374,7 @@ public class Ipv6SubnetKernel {
 
     private String ultimoDoBloco(BigInteger inicio, BigInteger passo) {
         BigInteger fim = inicio.add(passo).subtract(BigInteger.ONE);
-        return new IPv6Address(paraBytes16(fim)).toCompressedString();
+        return new IPv6Address(paraBytes16(fim)).toCanonicalString();
     }
 
     /** Converte um valor de até 128 bits para o array de 16 bytes (big-endian) que a lib aceita. */

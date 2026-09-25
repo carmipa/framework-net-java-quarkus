@@ -216,4 +216,33 @@ class VlsmServiceTest {
                 .getAddress().toIPv4().toPrefixBlock();
         return new long[]{a.getLower().longValue(), a.getUpper().longValue()};
     }
+
+    /**
+     * PROPÓSITO: o aluno cola o script no Packet Tracer; a máscara do IOS é pontuada pura.
+     * INVARIANTE: toda linha "ip address A M" e "network A M" traz M como máscara contígua sem "/NN".
+     * FALHA: a regressão "255.255.255.128/25" faz o IOS recusar toda interface e pool DHCP.
+     */
+    @Test
+    void cliCiscoUsaMascaraPontuadaSemPrefixo() {
+        NetworkScenarioResult s = solveDemo(VlsmNormalizationService.FIAP_CHECKPOINT_DEMO);
+        String txt = exportTxtService.generatePacketTracerScript(s) + "\n"
+                + String.join("\n", s.getRouterCommands().values());
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("(?m)^\\s*(?:ip address|network) \\d+\\.\\d+\\.\\d+\\.\\d+ (\\S+)\\s*$")
+                .matcher(txt);
+        int linhas = 0;
+        java.util.List<String> invalidas = new java.util.ArrayList<>();
+        while (m.find()) {
+            linhas++;
+            if (!m.group(1).matches("\\d+\\.\\d+\\.\\d+\\.\\d+")) {
+                invalidas.add(m.group().strip());
+            }
+        }
+        assertTrue(linhas > 0, "nenhuma linha ip address/network encontrada: instrumento cego");
+        assertEquals(java.util.List.of(), invalidas);
+        for (var lan : s.getLanBlocks()) {
+            assertEquals(lan.getNetmask().replaceAll("/\\d+$", ""), lan.getNetmask(),
+                    "netmask da LAN com sufixo");
+        }
+    }
 }

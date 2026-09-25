@@ -202,4 +202,44 @@ class Ipv4KernelTest {
         Ipv4Kernel.PrivacidadeResult p = kernel.privacidadeRfc1918(new int[]{10, 0, 0, 1});
         assertTrue(p.tipo().contains("Privado"));
     }
+
+    /**
+     * Gabarito independente (A3): registro IANA IPv4 Special-Purpose (RFC 6890) — 100.64.0.0/10
+     * (RFC 6598, CGNAT), 192.0.2.0/24 · 198.51.100.0/24 · 203.0.113.0/24 (RFC 5737), 198.18.0.0/15
+     * (RFC 2544). Python ipaddress .is_global = False para todos. Fronteira (A1): os vizinhos
+     * imediatos 100.63.255.255, 100.128.0.0 e 198.20.0.0 continuam públicos.
+     */
+    @Test
+    void faixasEspeciaisNaoSaoRotuladasComoPublicas() {
+        assertEquals("CGNAT (RFC 6598)", kernel.privacidadeRfc1918(new int[]{100, 64, 0, 1}).tipo());
+        assertEquals("CGNAT (RFC 6598)", kernel.privacidadeRfc1918(new int[]{100, 127, 255, 254}).tipo());
+        assertEquals("Documentação (RFC 5737)", kernel.privacidadeRfc1918(new int[]{192, 0, 2, 10}).tipo());
+        assertEquals("Documentação (RFC 5737)", kernel.privacidadeRfc1918(new int[]{198, 51, 100, 7}).tipo());
+        assertEquals("Documentação (RFC 5737)", kernel.privacidadeRfc1918(new int[]{203, 0, 113, 9}).tipo());
+        assertEquals("Benchmark (RFC 2544)", kernel.privacidadeRfc1918(new int[]{198, 18, 0, 1}).tipo());
+        assertEquals("Benchmark (RFC 2544)", kernel.privacidadeRfc1918(new int[]{198, 19, 255, 255}).tipo());
+
+        assertEquals("Público", kernel.privacidadeRfc1918(new int[]{100, 63, 255, 255}).tipo());
+        assertEquals("Público", kernel.privacidadeRfc1918(new int[]{100, 128, 0, 0}).tipo());
+        assertEquals("Público", kernel.privacidadeRfc1918(new int[]{198, 20, 0, 0}).tipo());
+        assertEquals("Público", kernel.privacidadeRfc1918(new int[]{8, 8, 8, 8}).tipo());
+    }
+
+    /** O "Aviso de Borda: IP Público" só aparece para IP público — nunca junto de "Especial"/"Broadcast". */
+    @Test
+    void avisoDeIpPublicoSoParaIpPublico() {
+        for (String ip : new String[]{"0.0.0.0", "255.255.255.255", "100.64.0.1", "192.0.2.10"}) {
+            assertTrue(!dicasTexto(kernel.processar(ip, 32)).contains("IP Público"), ip);
+        }
+        assertTrue(dicasTexto(kernel.processar("8.8.8.8", 32)).contains("IP Público"), "controle positivo");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static String dicasTexto(Map<String, Object> res) {
+        StringBuilder sb = new StringBuilder();
+        for (Map<String, Object> d : (java.util.List<Map<String, Object>>) res.get("seguranca_dicas")) {
+            sb.append(d).append(' ');
+        }
+        return sb.toString();
+    }
 }

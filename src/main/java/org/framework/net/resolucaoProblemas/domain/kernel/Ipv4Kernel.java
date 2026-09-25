@@ -103,12 +103,23 @@ public class Ipv4Kernel {
         return Math.max(count.intValue() - 2, 0);
     }
 
+    /**
+     * PROPÓSITO: máscara pontuada que o aluno cola no IOS/Packet Tracer ({@code ip address A M}).
+     * INVARIANTES: sempre quatro octetos puros; nunca carrega o sufixo {@code /NN} que a biblioteca
+     * anexa à máscara de um bloco com prefixo (o IOS recusa {@code 255.255.255.128/25}).
+     * FALHA: não lança; {@code network} sem prefixo devolve a máscara /32.
+     */
     public String netmask(IPv4Address network) {
-        return network.getNetworkMask().toCanonicalString();
+        return network.getNetworkMask().withoutPrefixLength().toCanonicalString();
     }
 
+    /**
+     * PROPÓSITO: wildcard (máscara invertida) usada em ACL e {@code network} do OSPF/EIGRP.
+     * INVARIANTES: quatro octetos puros, sem sufixo {@code /NN}.
+     * FALHA: não lança.
+     */
     public String wildcard(IPv4Address network) {
-        return network.getHostMask().toCanonicalString();
+        return network.getHostMask().withoutPrefixLength().toCanonicalString();
     }
 
     public String gateway(IPv4Address network) {

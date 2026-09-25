@@ -52,13 +52,42 @@ class Ipv6CalculatorTest {
         assertFalse(rede64.contains("5678"), "host nao foi zerado: " + rede64);
     }
 
+    /**
+     * Gabarito independente (A3): registro IANA de endereços IPv6 de propósito especial, RFC 3849
+     * (2001:db8::/32 é documentação, não roteável), RFC 4291 (2000::/3 é o espaço global atribuído),
+     * RFC 3879 (fec0::/10 site-local obsoleto). Python ipaddress .is_global concorda em todos.
+     * Fronteira (A1): 2606:4700:4700::1111 e 2001:db8::1 dividem o 2000::/3 — só o primeiro é global.
+     */
     @Test
-    void classificaLinkLocalUlaEGlobal() {
+    void classificaLinkLocalUlaGlobalEDocumentacao() {
         assertEquals("Link-local", calc.processar("fe80::1").get("tipo"));
         assertEquals("ULA/Privado", calc.processar("fc00::1").get("tipo"));
-        Map<String, Object> global = calc.processar("2001:db8::1");
+
+        Map<String, Object> global = calc.processar("2606:4700:4700::1111");
         assertEquals("Global unicast", global.get("tipo"));
+        assertEquals("2000::/3", global.get("faixa"));
         assertEquals("Sim", global.get("roteavel"));
+
+        Map<String, Object> doc = calc.processar("2001:db8::1");
+        assertEquals("Documentação", doc.get("tipo"));
+        assertEquals("2001:db8::/32", doc.get("faixa"));
+        assertEquals("Não", doc.get("roteavel"));
+
+        for (String foraDe2000 : new String[]{"4000::1", "::2", "fec0::1", "64:ff9b::1"}) {
+            Map<String, Object> r = calc.processar(foraDe2000);
+            assertEquals("Outro/Reservado", r.get("tipo"), foraDe2000);
+            assertEquals("Não", r.get("roteavel"), foraDe2000);
+        }
+        assertEquals("Não especificado", calc.processar("::").get("tipo"));
+    }
+
+    /** ::ffff:0:0/96 é IPv6 válido (RFC 4291 §2.5.5.2); antes caía em ClassCastException. */
+    @Test
+    void ipv4MapeadoEhAceitoEClassificado() {
+        Map<String, Object> r = calc.processar("::ffff:192.0.2.1");
+        assertEquals("IPv4-mapeado", r.get("tipo"));
+        assertEquals("::ffff:0:0/96", r.get("faixa"));
+        assertEquals("Não", r.get("roteavel"));
     }
 
     @Test

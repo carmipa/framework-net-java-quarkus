@@ -201,6 +201,19 @@ public class Ipv4Kernel {
         if (o1 == 192 && o2 == 168) {
             return new PrivacidadeResult("Privado (RFC 1918)", "Faixa privada 192.168.0.0 - 192.168.255.255");
         }
+        if (o1 == 100 && o2 >= 64 && o2 <= 127) {
+            return new PrivacidadeResult("CGNAT (RFC 6598)",
+                    "Faixa 100.64.0.0 - 100.127.255.255 (espaço compartilhado do provedor; não roteável na Internet)");
+        }
+        if ((o1 == 192 && o2 == 0 && o3 == 2) || (o1 == 198 && o2 == 51 && o3 == 100)
+                || (o1 == 203 && o2 == 0 && o3 == 113)) {
+            return new PrivacidadeResult("Documentação (RFC 5737)",
+                    "TEST-NET: 192.0.2.0/24, 198.51.100.0/24 e 203.0.113.0/24 (exemplos; nunca roteados)");
+        }
+        if (o1 == 198 && (o2 == 18 || o2 == 19)) {
+            return new PrivacidadeResult("Benchmark (RFC 2544)",
+                    "Faixa 198.18.0.0 - 198.19.255.255 (testes de desempenho de equipamentos)");
+        }
         if (o1 >= 224 && o1 <= 239) {
             return new PrivacidadeResult("Multicast", "Faixa 224.0.0.0 - 239.255.255.255 (não host unicast)");
         }
@@ -840,11 +853,19 @@ public class Ipv4Kernel {
                     "Rede Especial (0.x.x.x). Usado como rede atual ou default route (0.0.0.0), não aplicável como host normal."));
             case "Broadcast Limitado" -> dicas.add(dica("danger", "📣",
                     "Broadcast Limitado (255.255.255.255). Envia pacotes a todos os hosts da mesma rede local, não é roteado além do roteador."));
+            case "CGNAT (RFC 6598)" -> dicas.add(dica("info", "🏢",
+                    "CGNAT (100.64.0.0/10). Endereço do lado interno do NAT da operadora: não é alcançável da Internet e "
+                            + "vários clientes compartilham o mesmo IP público na saída."));
+            case "Documentação (RFC 5737)" -> dicas.add(dica("info", "📘",
+                    "Faixa de documentação (TEST-NET). Serve para exemplos em livros e provas; nunca aparece como destino real."));
+            case "Benchmark (RFC 2544)" -> dicas.add(dica("info", "🧪",
+                    "Faixa de benchmark (198.18.0.0/15). Reservada para testes de desempenho entre equipamentos em laboratório."));
             default -> { }
         }
 
-        if (!ipTipoPrivacidade.contains("Privado")
-                && !Set.of("Loopback", "APIPA", "Multicast", "Reservado/Experimental", "—").contains(ipTipoPrivacidade)) {
+        // Lista POSITIVA: só "Público" recebe o aviso de borda. A lista negativa anterior deixava
+        // "Especial" (0.0.0.0) e "Broadcast Limitado" com os dois avisos contraditórios.
+        if ("Público".equals(ipTipoPrivacidade)) {
             dicas.add(dica("primary", "🌍",
                     "Aviso de Borda: Este é um IP Público. Pode estar voltado à internet. "
                             + "Garanta que o Firewall esteja setado como Inbound Deny All por padrão."));

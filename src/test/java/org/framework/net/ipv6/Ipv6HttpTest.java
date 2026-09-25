@@ -187,7 +187,7 @@ class Ipv6HttpTest {
                 .when().post("/ipv6/api/eui64")
                 .then()
                 .statusCode(200)
-                .body(containsString("2001:db8::1:21a:2bff:fe3c:4d5e"))
+                .body(containsString("2001:db8:0:1:21a:2bff:fe3c:4d5e"))   // RFC 5952 §4.2.2
                 .body(containsString("EUI-64"));
     }
 
