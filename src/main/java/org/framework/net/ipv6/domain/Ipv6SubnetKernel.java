@@ -5,6 +5,7 @@ import inet.ipaddr.IPAddressString;
 import inet.ipaddr.ipv6.IPv6Address;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.framework.net.ipv6.exception.Ipv6Exception;
+import org.framework.net.shared.InputLimits;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -270,8 +271,11 @@ public class Ipv6SubnetKernel {
             iidGrade.add(new Ipv6AnaliseRica.HextetoGrade(h + 1, String.format("%04x", hextet), cel));
         }
 
+        // O prefixo exibido é o /64 do SLAAC: só os 64 bits altos (os mesmos copiados para o endereço).
+        byte[] prefixo64 = new byte[16];
+        System.arraycopy(rede, 0, prefixo64, 0, 8);
         return new Eui64Result(macNorm, iid, addr.toCanonicalString(),
-                new IPv6Address(rede).toCanonicalString() + "/64", passos, iidGrade);
+                new IPv6Address(prefixo64).toCanonicalString() + "/64", passos, iidGrade);
     }
 
     /**
@@ -497,14 +501,26 @@ public class Ipv6SubnetKernel {
 
         Integer pfx = supernet.getNetworkPrefixLength();
         int prefixoSupernet = pfx == null ? 128 : pfx;
+        // Espaço coberto = soma dos blocos mesclados (sem contar sobreposição duas vezes); o que o
+        // supernet tem a mais é espaço arrastado que não pertence a nenhuma entrada (como no IPv4).
+        BigInteger cobertos = BigInteger.ZERO;
+        for (IPv6Address b : merged) {
+            cobertos = cobertos.add(b.getCount());
+        }
+        BigInteger extras = supernet.getCount().subtract(cobertos);
+        boolean exata = extras.signum() == 0;
         String explic = "Alinhamento de bits: o supernet /" + prefixoSupernet + " é o maior prefixo comum a"
-                + " todas as entradas. Diferente do IPv4, não há máscara decimal — só a fronteira de bit.";
+                + " todas as entradas. Diferente do IPv4, não há máscara decimal — só a fronteira de bit."
+                + (exata ? " As entradas preenchem o supernet por completo: anunciá-lo equivale a anunciar todas."
+                        : " Atenção: o supernet cobre " + extras + " endereço(s) que não pertencem a nenhuma entrada;"
+                                + " anunciá-lo atrairia tráfego para redes que você não tem.");
         return new SumarizacaoIpv6(
                 supernet.getLower().withoutPrefixLength().toCanonicalString() + "/" + prefixoSupernet,
                 supernet.getLower().withoutPrefixLength().toCanonicalString(),
                 supernet.getUpper().withoutPrefixLength().toCanonicalString(),
                 supernet.getCount().toString(),
-                blocos.size(), mesclados, explic, umContemOutro, relacao);
+                blocos.size(), mesclados, explic, umContemOutro, relacao,
+                exata, cobertos.toString(), extras.toString());
     }
 
     /**
@@ -609,6 +625,10 @@ public class Ipv6SubnetKernel {
             throw new Ipv6Exception("O prefixo de WAN /" + prefixoWan + " deve ser igual ou mais específico que a LAN /"
                     + prefixoLan + " (enlace ponto-a-ponto usa /127).");
         }
+        if (prefixoWan > 127) {
+            throw new Ipv6Exception("WAN /128 tem um único endereço e não comporta os dois roteadores do enlace;"
+                    + " use /127 (RFC 6164) ou /64.");
+        }
         List<String> nomes = new ArrayList<>();
         if (locais != null) {
             for (String n : locais) {
@@ -619,6 +639,12 @@ public class Ipv6SubnetKernel {
         }
         if (nomes.isEmpty()) {
             throw new Ipv6Exception("Informe ao menos uma localidade (uma por linha).");
+        }
+        // Teto de entrada (mesmo do Projetar IPv4): sem ele, ~1000 localidades em malha geram ~500 mil
+        // enlaces e o laço do CLI é O(n³) — uma requisição anônima de ~8 KB esgotava a memória da JVM.
+        if (nomes.size() > InputLimits.MAX_LOCATION_ROWS) {
+            throw new Ipv6Exception("Máximo de " + InputLimits.MAX_LOCATION_ROWS + " localidades por plano; você informou "
+                    + nomes.size() + ".");
         }
         String topo = topologia == null ? "estrela" : topologia.strip().toLowerCase();
         int n = nomes.size();
@@ -653,6 +679,15 @@ public class Ipv6SubnetKernel {
         BigInteger apos = inicio.add(passoLan.multiply(BigInteger.valueOf(n)));
         BigInteger resto = apos.mod(passoWan);
         BigInteger wanBase = resto.signum() == 0 ? apos : apos.add(passoWan.subtract(resto));
+        // As WANs também precisam caber na base: antes só as LANs eram checadas, e o enlace saía em
+        // espaço que o aluno não possui (ou dava a volta em ::).
+        BigInteger fimBase = inicio.add(BigInteger.TWO.pow(128 - prefixoBase));
+        BigInteger fimWans = wanBase.add(passoWan.multiply(BigInteger.valueOf(totalLinks)));
+        if (fimWans.compareTo(fimBase) > 0) {
+            throw new Ipv6Exception("A base /" + prefixoBase + " não comporta " + n + " LAN(s) /" + prefixoLan
+                    + " e mais " + totalLinks + " enlace(s) /" + prefixoWan + ". Use uma base maior (prefixo menor)"
+                    + " ou menos localidades.");
+        }
 
         // Pares de enlace (índices de localidade) conforme a topologia.
         List<int[]> pares = new ArrayList<>();
@@ -968,6 +1003,14 @@ public class Ipv6SubnetKernel {
             if (id == null || id < 1 || id > 4094) {
                 throw new Ipv6Exception("VLAN ID inválido na linha " + (i + 1) + ": use um número de 1 a 4094.");
             }
+            if (id >= 1002 && id <= 1005) {
+                throw new Ipv6Exception("VLAN " + id + " (linha " + (i + 1) + ") é reservada pela Cisco para FDDI/Token Ring"
+                        + " (1002–1005): o switch não deixa criá-la nem renomeá-la.");
+            }
+            if (idLimpos.contains(id)) {
+                throw new Ipv6Exception("VLAN " + id + " repetida na linha " + (i + 1) + ": cada VLAN tem um único SVI"
+                        + " e uma única LAN no plano.");
+            }
             idLimpos.add(id);
             nomeLimpos.add(nome == null || nome.strip().isEmpty() ? ("VLAN" + id) : nome.strip());
         }
@@ -991,13 +1034,19 @@ public class Ipv6SubnetKernel {
             BigInteger v = inicio.add(passo.multiply(BigInteger.valueOf(i)));
             IPv6Address rede = new IPv6Address(paraBytes16(v));
             String gw = new IPv6Address(paraBytes16(v.add(BigInteger.ONE))).toCanonicalString();
-            String cli = "vlan " + idLimpos.get(i) + "\n name " + nomeLimpos.get(i)
-                    + "\ninterface Vlan" + idLimpos.get(i)
+            // VLAN 1 é a default do switch: já existe e não pode ser renomeada — só o SVI é configurado.
+            String declaracao = idLimpos.get(i) == 1
+                    ? "! VLAN 1 é a default do switch (já existe; o IOS não permite renomeá-la)\n"
+                    : "vlan " + idLimpos.get(i) + "\n name " + nomeLimpos.get(i) + "\n";
+            // SLAAC puro: o RA anuncia o prefixo com M=0 e O=0 (RFC 4861 §4.2) — nenhum flag extra.
+            // other-config-flag (O=1) seria DHCPv6 stateless, não SLAAC puro.
+            String cli = declaracao
+                    + "interface Vlan" + idLimpos.get(i)
                     + "\n ipv6 address " + gw + "/" + prefixoLan
                     + "\n ipv6 enable"
                     + (dhcpv6
                         ? "\n ipv6 nd managed-config-flag\n ipv6 dhcp server VLAN" + idLimpos.get(i)
-                        : "\n ipv6 nd other-config-flag") // SLAAC por padrão
+                        : "")
                     + "\n no shutdown";
             linhas.add(new VlanLinha(idLimpos.get(i), nomeLimpos.get(i), rede.toCanonicalString(),
                     "/" + prefixoLan, gw, cli));
@@ -1096,11 +1145,9 @@ public class Ipv6SubnetKernel {
                         "/" + prefixo + " — " + prefixo + " bits 1 seguidos de " + (128 - prefixo) + " bits 0",
                         "and-row-mask"),
                 new Ipv6AnaliseRica.LinhaPrefixo("Rede (endereço & prefixo)", base.rede(), "and-row-result"),
-                new Ipv6AnaliseRica.LinhaPrefixo("Bits de interface (& complemento)",
-                        base.interfaceId(), "and-row-ip"),
-                new Ipv6AnaliseRica.LinhaPrefixo("Fronteira rede/interface",
-                        "após o bit " + prefixo + " (hexteto " + (Math.min(7, prefixo / 16) + 1)
-                                + ", nibble " + (((prefixo % 16) / 4) + 1) + ")", "and-row-wild"));
+                new Ipv6AnaliseRica.LinhaPrefixo("Bits de interface (endereço & ~prefixo)",
+                        parteDeHost(entrada, prefixo), "and-row-ip"),
+                new Ipv6AnaliseRica.LinhaPrefixo("Fronteira rede/interface", fronteira(prefixo), "and-row-wild"));
 
         List<Ipv6AnaliseRica.PassoWizard> wizard = List.of(
                 new Ipv6AnaliseRica.PassoWizard("🧭", "Tipo e escopo", "Classificar pela faixa IANA",
@@ -1331,6 +1378,29 @@ public class Ipv6SubnetKernel {
         return new FaixaEspecial("", "Reservado/Outro", "Fora das faixas especiais mapeadas");
     }
 
+    /**
+     * PROPÓSITO: a parte de host que o PREFIXO digitado deixa livre (endereço AND complemento da
+     * máscara), para a linha "aplicação do prefixo" — num /48 são 80 bits, não os 64 baixos fixos.
+     * INVARIANTES: forma canônica RFC 5952; /128 devolve "::" (não há bits de host).
+     * FALHA: não lança; a entrada já foi validada por {@link #analisar}.
+     */
+    private String parteDeHost(String entrada, int prefixo) {
+        BigInteger v = new BigInteger(1, hostDe(entrada).getBytes());
+        BigInteger mascaraHost = BigInteger.ONE.shiftLeft(128 - prefixo).subtract(BigInteger.ONE);
+        return new IPv6Address(paraBytes16(v.and(mascaraHost))).toCanonicalString();
+    }
+
+    /** Texto da fronteira rede/interface; nos extremos /0 e /128 não há fronteira dentro do endereço. */
+    private static String fronteira(int prefixo) {
+        if (prefixo >= 128) {
+            return "sem fronteira: /128 é um único endereço (todos os 128 bits são de rede)";
+        }
+        if (prefixo <= 0) {
+            return "sem fronteira: /0 é o espaço inteiro (todos os 128 bits são de interface)";
+        }
+        return "após o bit " + prefixo + " (hexteto " + (prefixo / 16 + 1) + ", nibble " + (((prefixo % 16) / 4) + 1) + ")";
+    }
+
     private String interfaceId(IPv6Address host) {
         byte[] b = host.getLower().getBytes();
         StringBuilder sb = new StringBuilder();
@@ -1416,7 +1486,8 @@ public class Ipv6SubnetKernel {
     /** Resultado da sumarização: supernet, blocos mesclados mínimos e relação de contenção. */
     public record SumarizacaoIpv6(String supernet, String supernetPrimeiro, String supernetUltimo,
             String supernetEnderecos, int entradas, List<BlocoSumario> blocosMesclados,
-            String explicacao, boolean umContemOutro, String relacao) { }
+            String explicacao, boolean umContemOutro, String relacao,
+            boolean exata, String enderecosCobertos, String enderecosExtras) { }
 
     /** Resultado de faixa→CIDR: início, fim e a lista mínima de blocos CIDR que a cobre. */
     public record FaixaCidrIpv6(String inicio, String fim, int quantidadeBlocos,

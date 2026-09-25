@@ -284,6 +284,45 @@ class Ipv6SubnetKernelTest {
         assertEquals("2001:db8::/32", s.supernet());
     }
 
+    /**
+     * F46: como no IPv4, a sumarização avisa quando o supernet arrasta espaço que não pertence a
+     * nenhuma entrada. Gabarito: Python — ip_network('2001:db8::/47').num_addresses = 2^81, e as
+     * duas /64 somam 2^65; extra = 2^81 − 2^65. Quatro /64 contíguas = /62 exato (extra 0).
+     */
+    @Test
+    void sumarizarInformaEspacoExtraArrastado() {
+        SumarizacaoIpv6 s = kernel.sumarizar(java.util.List.of("2001:db8:0::/64", "2001:db8:1::/64"));
+        assertEquals("2001:db8::/47", s.supernet());
+        assertFalse(s.exata());
+        assertEquals(java.math.BigInteger.TWO.pow(65).toString(), s.enderecosCobertos());
+        assertEquals(java.math.BigInteger.TWO.pow(81).subtract(java.math.BigInteger.TWO.pow(65)).toString(),
+                s.enderecosExtras());
+
+        SumarizacaoIpv6 exato = kernel.sumarizar(java.util.List.of(
+                "2001:db8:0:0::/64", "2001:db8:0:1::/64", "2001:db8:0:2::/64", "2001:db8:0:3::/64"));
+        assertTrue(exato.exata());
+        assertEquals("0", exato.enderecosExtras());
+    }
+
+    /**
+     * F46: a linha "bits de interface" é endereço AND complemento do PREFIXO digitado (não os 64 bits
+     * baixos fixos); no /128 não há fronteira. Gabarito: Python
+     * ip_address(int(ip_address('2001:db8:1:2::')) & ((1 << 80) - 1)) → '0:0:0:2::'.
+     */
+    @Test
+    void aplicacaoDoPrefixoUsaOPrefixoDigitado() {
+        var r48 = kernel.analisarRica("2001:db8:1:2::/48", 4);
+        String iface = r48.aplicacaoPrefixo().stream()
+                .filter(l -> l.campo().startsWith("Bits de interface")).findFirst().orElseThrow().valor();
+        assertEquals("0:0:0:2::", iface);
+
+        var r128 = kernel.analisarRica("2001:db8::1", 4);
+        String fronteira = r128.aplicacaoPrefixo().stream()
+                .filter(l -> l.campo().startsWith("Fronteira")).findFirst().orElseThrow().valor();
+        assertTrue(fronteira.contains("/128"), fronteira);
+        assertFalse(fronteira.contains("após o bit 128"), fronteira);
+    }
+
     @Test
     void sumarizarRejeitaListaVazia() {
         assertThrows(Ipv6Exception.class, () -> kernel.sumarizar(java.util.List.of()));
@@ -336,6 +375,53 @@ class Ipv6SubnetKernelTest {
     void projetarRejeitaLanNaoMaisEspecifica() {
         assertThrows(Ipv6Exception.class, () -> kernel.projetarRede("2001:db8::/48", 48, 127, "estrela",
                 java.util.List.of("A"), 100, 1));
+    }
+
+    /**
+     * F40: as WANs precisam caber na base. /62 = 4 blocos /64 (gabarito: 2^(64−62)). Com 4 LANs não
+     * sobra espaço para enlace; com 3, o /127 cabe no 4º /64. Fronteira (A1) + contenção medida com a
+     * biblioteca (não com a lógica sob teste).
+     */
+    @Test
+    void projetarExigeQueAsWansCaibamNaBase() {
+        assertThrows(Ipv6Exception.class, () -> kernel.projetarRede("2001:db8::/62", 64, 127, "estrela",
+                java.util.List.of("A", "B", "C", "D"), 100, 1));
+
+        ProjetoRede ok = kernel.projetarRede("2001:db8::/62", 64, 127, "estrela",
+                java.util.List.of("A", "B", "C"), 100, 1);
+        inet.ipaddr.IPAddress base = new inet.ipaddr.IPAddressString("2001:db8::/62").getAddress();
+        for (var w : ok.wans()) {
+            assertTrue(base.contains(new inet.ipaddr.IPAddressString(w.rede() + w.prefixoStr()).getAddress()),
+                    "WAN fora da base: " + w.rede() + w.prefixoStr());
+        }
+        assertEquals(2, ok.wans().size());
+    }
+
+    /** Um /128 tem um endereço só: não serve para enlace de dois roteadores (RFC 6164 usa /127). */
+    @Test
+    void projetarRejeitaWan128() {
+        assertThrows(Ipv6Exception.class, () -> kernel.projetarRede("2001:db8::/48", 64, 128, "estrela",
+                java.util.List.of("A", "B", "C"), 100, 1));
+        assertEquals(2, kernel.projetarRede("2001:db8::/48", 64, 127, "estrela",
+                java.util.List.of("A", "B", "C"), 100, 1).wans().size());
+    }
+
+    /**
+     * F01: sem teto, 990 localidades em malha estouravam a memória (medido). O teto é o mesmo do
+     * IPv4 (InputLimits.MAX_LOCATION_ROWS = 50). Fronteira: 50 passa (malha = 1225 enlaces), 51 não.
+     */
+    @Test
+    void projetarLimitaQuantidadeDeLocalidades() {
+        java.util.List<String> cinquenta = new java.util.ArrayList<>();
+        for (int i = 1; i <= 50; i++) {
+            cinquenta.add("L" + i);
+        }
+        assertEquals(1225, kernel.projetarRede("2001:db8::/48", 64, 127, "malha",
+                cinquenta, 100, 1).wans().size());
+        java.util.List<String> cinquentaEUma = new java.util.ArrayList<>(cinquenta);
+        cinquentaEUma.add("L51");
+        assertThrows(Ipv6Exception.class, () -> kernel.projetarRede("2001:db8::/48", 64, 127, "malha",
+                cinquentaEUma, 100, 1));
     }
 
     @Test
@@ -407,10 +493,12 @@ class Ipv6SubnetKernelTest {
         assertEquals("2001:db8:0:2::", v.vlans().get(2).rede());
         assertEquals(10, v.vlans().get(0).vlanId());
         assertEquals("/64", v.vlans().get(0).prefixoStr());
-        // SVI: interface VlanN + endereço do gateway + SLAAC (other-config-flag)
+        // SVI: interface VlanN + endereço do gateway. SLAAC puro = RA com o prefixo e M=0/O=0
+        // (RFC 4861 §4.2): other-config-flag (O=1) mandaria o host buscar DHCPv6 stateless.
         assertTrue(v.vlans().get(0).cisco().contains("interface Vlan10"));
         assertTrue(v.vlans().get(0).cisco().contains("ipv6 address 2001:db8::1/64"));
-        assertTrue(v.vlans().get(0).cisco().contains("ipv6 nd other-config-flag"));
+        assertFalse(v.vlans().get(0).cisco().contains("other-config-flag"));
+        assertFalse(v.vlans().get(0).cisco().contains("managed-config-flag"));
         // trunk 802.1Q com as VLANs permitidas
         assertTrue(v.trunkCli().contains("switchport trunk allowed vlan 10,20,30"));
     }
@@ -432,6 +520,42 @@ class Ipv6SubnetKernelTest {
                 java.util.List.of(5000), java.util.List.of("estoura"), false, 100));
         assertThrows(Ipv6Exception.class, () -> kernel.planejarVlans("2001:db8::/48", 64,
                 java.util.List.of(), java.util.List.of(), false, 100));
+    }
+
+    /**
+     * F44: o IOS recusa dois "interface Vlan10" com endereços distintos no mesmo plano e não permite
+     * criar/renomear as VLANs 1002–1005 (Cisco, FDDI/Token Ring) nem renomear a VLAN 1 (default).
+     * Mesmo contrato do gêmeo IPv4 (calculadora.VlanService). Fronteira (A1): 1001 e 1006 passam.
+     */
+    @Test
+    void planejarVlansRejeitaIdRepetidoEReservadoCisco() {
+        assertThrows(Ipv6Exception.class, () -> kernel.planejarVlans("2001:db8::/48", 64,
+                java.util.List.of(10, 10), java.util.List.of("A", "B"), false, 100));
+        for (int reservado : new int[]{1002, 1005}) {
+            assertThrows(Ipv6Exception.class, () -> kernel.planejarVlans("2001:db8::/48", 64,
+                    java.util.List.of(reservado), java.util.List.of("X"), false, 100), "VLAN " + reservado);
+        }
+        assertEquals(2, kernel.planejarVlans("2001:db8::/48", 64,
+                java.util.List.of(1001, 1006), java.util.List.of("A", "B"), false, 100).total());
+
+        // VLAN 1 existe sempre: o plano configura o SVI, mas não tenta "vlan 1 / name".
+        String cli1 = kernel.planejarVlans("2001:db8::/48", 64,
+                java.util.List.of(1), java.util.List.of("gerencia"), false, 100).vlans().get(0).cisco();
+        assertTrue(cli1.contains("interface Vlan1"));
+        assertFalse(cli1.contains("vlan 1\n"), cli1);
+    }
+
+    /**
+     * F45: o "prefixo de rede" exibido é sempre o /64 do SLAAC (64 bits altos, resto zero), qualquer
+     * que seja a forma digitada. Gabarito: Python ip_network('2001:db8:0:1::5/64', strict=False).
+     */
+    @Test
+    void eui64MostraSempreOSlash64DoPrefixo() {
+        String mac = "00:1a:2b:3c:4d:5e";
+        assertEquals("2001:db8:0:1::/64", kernel.eui64("2001:db8:0:1::/64", mac).prefixoRede());
+        assertEquals("2001:db8:0:1::/64", kernel.eui64("2001:db8:0:1::5", mac).prefixoRede());
+        assertEquals("2001:db8:0:1::/64", kernel.eui64("2001:db8:0:1:ffff::/80", mac).prefixoRede());
+        assertEquals("2001:db8:0:1:21a:2bff:fe3c:4d5e", kernel.eui64("2001:db8:0:1::5", mac).enderecoSlaac());
     }
 
     @Test

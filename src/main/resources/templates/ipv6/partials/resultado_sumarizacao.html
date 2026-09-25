@@ -2,6 +2,10 @@
     <div class="calc-resumo-head">
         <span class="aed-eyebrow">Sumarização</span>
         <h5 class="mb-1"><span class="material-symbols-outlined text-info" aria-hidden="true">merge</span> Supernet de {s.entradas} prefixo(s)</h5>
+        <span class="calc-badge {#if s.exata}calc-badge-ok{#else}calc-badge-atencao{/if}"
+              title="{#if s.exata}O supernet contém só endereços das entradas{#else}O supernet inclui endereços que não pertencem a nenhuma entrada{/if}">
+            {#if s.exata}Agregação exata{#else}Cobre espaço extra{/if}
+        </span>
     </div>
 
     <div class="calc-kpis">
@@ -19,6 +23,11 @@
             <span class="calc-kpi-label">Endereços</span>
             <strong class="calc-kpi-valor">{s.supernetEnderecos}</strong>
             <span class="calc-kpi-nota">no supernet</span>
+        </div>
+        <div class="calc-kpi {#if !s.exata}calc-kpi-alerta{/if}">
+            <span class="calc-kpi-label">Espaço extra arrastado</span>
+            <strong class="calc-kpi-valor">{s.enderecosExtras}</strong>
+            <span class="calc-kpi-nota">não pertence a nenhuma entrada</span>
         </div>
     </div>
 
