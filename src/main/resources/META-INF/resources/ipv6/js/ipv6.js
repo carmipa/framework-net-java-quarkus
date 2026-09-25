@@ -264,7 +264,15 @@
             var form = document.getElementById("formCalc");
             var btn = form && form.querySelector('button[type="submit"]');
             if (btn) {
-                btn.click();
+                // Com uma análise ainda em andamento o botão está desabilitado (hx-disabled-elt) e o
+                // clique se perdia: o campo mostrava o endereço do replay e a tela, o resultado anterior.
+                if (btn.disabled) {
+                    document.addEventListener("htmx:afterRequest", function () {
+                        setTimeout(function () { btn.click(); }, 0);
+                    }, { once: true });
+                } else {
+                    btn.click();
+                }
             }
             return;
         }
@@ -280,10 +288,12 @@
             renderizarMermaid(e.target);
         }
         if (e.target && e.target.id === "saidaCalc") {
-            var campo = document.getElementById("ipv6Endereco");
-            // só registra quando o fragmento é um resultado (não o erro/placeholder)
-            if (campo && campo.value && /contextual-block|calc-resultado/.test(e.target.innerHTML)) {
-                histSalvar(campo.value.trim());
+            // Registra o endereço que o SERVIDOR analisou (vem no próprio fragmento), não o que está
+            // no campo agora — o aluno pode ter digitado outro enquanto a resposta chegava.
+            var analisado = e.target.querySelector(".texto-copia-oculto");
+            var endereco = analisado ? (analisado.getAttribute("data-endereco") || "").trim() : "";
+            if (endereco) {
+                histSalvar(endereco);
                 histRender();
             }
         }
@@ -296,7 +306,7 @@
             return;
         }
         btn.addEventListener("click", function () {
-            var el = document.getElementById("texto-copia-oculto");
+            var el = resultadoDaAbaAtiva();
             var texto = el ? el.value : "";
             if (!texto) {
                 btn.textContent = "Sem resultado";
@@ -311,15 +321,24 @@
         });
     }
 
-    // Mantém os links de Exportar JSON/PDF apontando para o endereço analisado no momento.
+    /** Resultado (textarea oculta) da aba visível; sem resultado nela, o da aba Análise. */
+    function resultadoDaAbaAtiva() {
+        var ativo = document.querySelector(".ipv6-wrap .tab-panel.active .texto-copia-oculto");
+        return ativo || document.querySelector('.ipv6-wrap .tab-panel[data-tab-panel="analise"] .texto-copia-oculto');
+    }
+
+    // Mantém os links de Exportar JSON/PDF apontando para o endereço do resultado que o aluno está
+    // vendo (antes: sempre o campo da aba Análise, mesmo na aba Domínio).
     function sincronizarExport() {
-        var campo = document.getElementById("ipv6Endereco");
         var linkJson = document.getElementById("ipv6-export-json");
         var linkPdf = document.getElementById("ipv6-export-pdf");
-        if (!campo || (!linkJson && !linkPdf)) {
+        if (!linkJson && !linkPdf) {
             return;
         }
-        var valor = encodeURIComponent(campo.value || "");
+        var resultado = resultadoDaAbaAtiva();
+        var campo = document.getElementById("ipv6Endereco");
+        var endereco = resultado ? resultado.getAttribute("data-endereco") : (campo ? campo.value : "");
+        var valor = encodeURIComponent(endereco || "");
         if (linkJson) {
             linkJson.setAttribute("href", "/ipv6/export/json?endereco=" + valor);
         }
@@ -328,9 +347,12 @@
         }
     }
 
-    document.addEventListener("htmx:afterSwap", function (e) {
-        if (e.target && e.target.id === "saidaCalc") {
-            sincronizarExport();
+    document.addEventListener("htmx:afterSwap", function () {
+        sincronizarExport();
+    });
+    document.addEventListener("click", function (e) {
+        if (e.target.closest(".ipv6-wrap .tab-trigger")) {
+            setTimeout(sincronizarExport, 0);
         }
     });
 

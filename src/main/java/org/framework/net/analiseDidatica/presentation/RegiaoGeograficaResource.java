@@ -66,7 +66,13 @@ public class RegiaoGeograficaResource {
             payload.putAll((Map<String, Object>) geoMap);
         }
         try {
-            return objectMapper.writeValueAsString(payload);
+            // Vai CRU (.raw) para <script type="application/json">, onde entidade HTML não é
+            // decodificada. <, > e & viram escapes JSON (válidos só dentro de string, único lugar em
+            // que aparecem): "</script>" digitado pelo visitante não fecha o bloco.
+            return objectMapper.writeValueAsString(payload)
+                    .replace("<", "\\u003c")
+                    .replace(">", "\\u003e")
+                    .replace("&", "\\u0026");
         } catch (JsonProcessingException ex) {
             return "{}";
         }

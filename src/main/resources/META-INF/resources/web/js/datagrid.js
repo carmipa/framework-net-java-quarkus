@@ -295,10 +295,14 @@
             }
             if (detailsBtn && detailsModal) {
                 const d = row.dataset;
+                // dataset devolve o texto JÁ decodificado: sem escapar, "<PROCESS_ID>" da sintaxe
+                // virava tag e sumia (o aluno copiava "router ospf | network area").
+                const esc = (v) => (window.HtmlEscape ? window.HtmlEscape.esc(v) : String(v == null ? "" : v)
+                    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"));
                 if (catalogModo === "protocolos") {
                     // Catálogo de protocolos: campos de roteamento (não de porta)
                     detailsTitle.textContent = d.nome || "Protocolo";
-                    const linha = (rotulo, valor) => (valor ? `<p><strong>${rotulo}:</strong> ${valor}</p>` : "");
+                    const linha = (rotulo, valor) => (valor ? `<p><strong>${rotulo}:</strong> ${esc(valor)}</p>` : "");
                     detailsBody.innerHTML = [
                         linha("Camada", d.camada),
                         linha("IGP/EGP", d.alcance ? d.alcance.toUpperCase() : ""),
@@ -313,7 +317,7 @@
                         linha("Convergência", d.convergencia),
                         linha("ECMP", d.ecmp),
                         linha("Dica didática", d.dica),
-                        d.sintaxe ? `<p><strong>Sintaxe base:</strong> <code>${d.sintaxe}</code></p>` : "",
+                        d.sintaxe ? `<p><strong>Sintaxe base:</strong> <code translate="no">${esc(d.sintaxe)}</code></p>` : "",
                         linha("Problemas comuns", d.problemas),
                         linha("Mitigações", d.mitigacoes),
                     ].join("") || "<p class=\"text-secondary\">Sem detalhes adicionais.</p>";
@@ -323,11 +327,11 @@
                     const title = d.servico || d.nome || "";
                     detailsTitle.textContent = `${label} - ${title}`;
                     detailsBody.innerHTML = `
-                        <p><strong>Categoria:</strong> ${d.categoria || d.camada || ""}</p>
-                        <p><strong>Transporte:</strong> ${d.transporte || "—"}</p>
-                        <p><strong>Risco:</strong> ${d.risco || d.nivel || ""}</p>
-                        <p><strong>Recomendação:</strong> ${d.recomendacao || ""}</p>
-                        <p><strong>Alternativa segura:</strong> ${d.alternativa || ""}</p>
+                        <p><strong>Categoria:</strong> ${esc(d.categoria || d.camada || "")}</p>
+                        <p><strong>Transporte:</strong> ${esc(d.transporte || "—")}</p>
+                        <p><strong>Risco:</strong> ${esc(d.risco || d.nivel || "")}</p>
+                        <p><strong>Recomendação:</strong> ${esc(d.recomendacao || "")}</p>
+                        <p><strong>Alternativa segura:</strong> ${esc(d.alternativa || "")}</p>
                     `;
                 }
                 detailsModal.show();

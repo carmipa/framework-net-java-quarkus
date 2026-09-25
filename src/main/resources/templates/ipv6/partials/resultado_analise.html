@@ -310,5 +310,6 @@
 
     </div>
 
-    <textarea id="texto-copia-oculto" class="d-none" readonly>{r.textoCopia}</textarea>
+    {! Classe, não id: este parcial também entra no resultado da aba Domínio, e id repetido fazia "Copiar" pegar o da outra aba. data-endereco = o endereço que ESTE resultado analisou. !}
+    <textarea class="d-none texto-copia-oculto" data-endereco="{r.base.entrada}" readonly>{r.textoCopia}</textarea>
 </div>

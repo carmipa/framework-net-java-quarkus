@@ -64,7 +64,7 @@
 {/content}
 {#extraScripts}
 <script src="/analiseDidatica/js/geo_report.js?v=20260710"></script>
-<script id="geo-initial-payload" type="application/json">{geoPayloadJson}</script>
+<script id="geo-initial-payload" type="application/json">{geoPayloadJson.raw}</script>
 <script>
 (function () {
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => new bootstrap.Tooltip(el));
@@ -148,8 +148,8 @@
     if (payloadEl && payloadEl.textContent) {
         try {
             applyPayload(JSON.parse(payloadEl.textContent));
-        } catch (_) {
-            /* ignora payload inválido */
+        } catch (e) {
+            console.warn("geo-initial-payload ilegível; o relatório inicial não foi exibido:", e);
         }
     }
 

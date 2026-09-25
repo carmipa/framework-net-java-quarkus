@@ -1,12 +1,22 @@
 (function (w) {
     "use strict";
 
+    // Mesmo contrato do servidor: 4 octetos de 1 a 3 dígitos decimais. Number("") valia 0 e
+    // Number("0x10")/("1e2") eram aceitos — "255.255..0" virava 255.255.0.0 só aqui no navegador.
     function parseIPv4(value) {
         const parts = String(value || "").trim().split(".");
-        if (parts.length !== 4) return null;
+        if (parts.length !== 4 || parts.some((p) => !/^\d{1,3}$/.test(p))) return null;
         const nums = parts.map((p) => Number(p));
-        if (nums.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return null;
+        if (nums.some((n) => n > 255)) return null;
         return nums;
+    }
+
+    // Máscara de sub-rede é 1s seguidos de 0s. "255.0.255.0" tem 16 bits 1 mas NÃO é máscara
+    // (o servidor recusa); contar os 1s dava "/16" com toda a confiança.
+    function mascaraContigua(nums) {
+        const valor = ((nums[0] << 24) | (nums[1] << 16) | (nums[2] << 8) | nums[3]) >>> 0;
+        const invertido = (~valor) >>> 0;
+        return ((invertido & (invertido + 1)) >>> 0) === 0;
     }
 
     function toDotted(nums) {
@@ -71,9 +81,15 @@
             const bins = nums.map((n) => n.toString(2).padStart(8, "0"));
             const ones = bins.join("").split("").filter((b) => b === "1").length;
             const zeros = 32 - ones;
-            meta.innerHTML = "Prefixo estimado: <strong class=\"text-info\">/" + ones
-                + "</strong> | Bits de rede: <strong class=\"text-light\">" + ones
-                + "</strong> | Bits de host: <strong class=\"text-light\">" + zeros + "</strong>";
+            if (!mascaraContigua(nums)) {
+                meta.innerHTML = '<span class="text-danger">Máscara não contígua: os bits 1 precisam vir todos'
+                    + " seguidos, antes dos 0. Isto não é uma máscara de sub-rede válida (não existe prefixo /N"
+                    + " para ela).</span>";
+            } else {
+                meta.innerHTML = "Prefixo: <strong class=\"text-info\">/" + ones
+                    + "</strong> | Bits de rede: <strong class=\"text-light\">" + ones
+                    + "</strong> | Bits de host: <strong class=\"text-light\">" + zeros + "</strong>";
+            }
             rows.innerHTML = bins.map((bin, idx) => {
                 const colored = bin.split("").map((b) => (
                     b === "1"
@@ -116,8 +132,9 @@
 
         const renderFromMask = () => {
             const m = parseIPv4(maskInput.value);
-            if (!m) {
-                meta.innerHTML = '<span class="text-danger">Máscara inválida para conversão.</span>';
+            if (!m || !mascaraContigua(m)) {
+                meta.innerHTML = '<span class="text-danger">Máscara inválida para conversão'
+                    + (m ? " (não contígua: bits 1 seguidos, depois bits 0)" : "") + ".</span>";
                 return;
             }
             const inv = invertOctets(m);
@@ -134,6 +151,11 @@
                 return;
             }
             const m = invertOctets(wild);
+            if (!mascaraContigua(m)) {
+                meta.innerHTML = '<span class="text-danger">Wildcard não contígua: não corresponde a nenhuma máscara'
+                    + " de sub-rede (em ACL ela é permitida, mas não vira /N).</span>";
+                return;
+            }
             maskInput.value = toDotted(m);
             const prefix = prefixFromMask(m);
             meta.innerHTML = "/" + prefix + ' | Wildcard <strong class="text-warning">' + toDotted(wild)
@@ -142,13 +164,10 @@
 
         maskInput.addEventListener("input", renderFromMask);
         wildcardInput.addEventListener("input", renderFromWildcard);
+        // Trocar os VALORES de um par máscara/wildcard nunca dá um par válido (0.0.0.255 não é
+        // máscara). O botão faz o caminho inverso: recalcula a máscara a partir da wildcard.
         if (swapBtn) {
-            swapBtn.addEventListener("click", () => {
-                const tmp = maskInput.value;
-                maskInput.value = wildcardInput.value;
-                wildcardInput.value = tmp;
-                renderFromMask();
-            });
+            swapBtn.addEventListener("click", renderFromWildcard);
         }
         renderFromMask();
     }
