@@ -78,6 +78,13 @@ public class BulkClassImportService {
                 throw new EntradaInvalidaException(
                         "Linha " + lineNo + " (" + studentName + "): informe ao menos dois valores de hosts.");
             }
+            // Cada coluna de hosts vira uma localidade: o teto do formulário vale aqui também, senão
+            // uma linha com centenas de colunas em malha travava um núcleo por horas.
+            if (hostValues.size() > InputLimits.MAX_LOCATION_ROWS) {
+                throw new EntradaInvalidaException(
+                        "Linha " + lineNo + " (" + studentName + "): máximo de " + InputLimits.MAX_LOCATION_ROWS
+                                + " localidades (colunas de hosts); encontradas " + hostValues.size() + ".");
+            }
 
             List<String> locationNames = locLabels;
             if (hostValues.size() != locLabels.size()) {

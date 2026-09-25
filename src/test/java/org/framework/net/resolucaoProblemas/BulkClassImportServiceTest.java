@@ -35,6 +35,22 @@ class BulkClassImportServiceTest {
         assertTrue(rows.get(0).getFolderSlug() != null && !rows.get(0).getFolderSlug().isBlank());
     }
 
+    /**
+     * F02: cada coluna de hosts vira uma localidade; sem teto, 200 colunas travavam um núcleo por
+     * horas. O teto é o mesmo do formulário (InputLimits.MAX_LOCATION_ROWS = 50). Fronteira: 50 passa.
+     */
+    @Test
+    void limitaColunasDeHostsAoTetoDeLocalidades() {
+        StringBuilder cinquenta = new StringBuilder("Aluno;10.0.0.0/8");
+        for (int i = 0; i < 50; i++) {
+            cinquenta.append(";10");
+        }
+        assertEquals(50, bulkClassImportService.parseClassRosterPaste(cinquenta.toString())
+                .get(0).getLocations().size());
+        assertThrows(EntradaInvalidaException.class,
+                () -> bulkClassImportService.parseClassRosterPaste(cinquenta + ";10"));
+    }
+
     @Test
     void parseClassRosterPasteVazioFalha() {
         assertThrows(EntradaInvalidaException.class, () -> bulkClassImportService.parseClassRosterPaste("  "));

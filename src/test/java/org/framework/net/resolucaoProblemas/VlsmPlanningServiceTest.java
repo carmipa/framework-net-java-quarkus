@@ -110,6 +110,141 @@ class VlsmPlanningServiceTest {
         assertEquals(0, links.size());
     }
 
+    /**
+     * F02: a alocação precisa continuar sendo EXATAMENTE o first-fit de antes. Oráculo independente
+     * (A3): first-fit ingênuo escrito aqui, varrendo todos os blocos alinhados da biblioteca e
+     * testando sobreposição contra tudo — o algoritmo que a produção usava, sem otimização.
+     * 60 cenários com semente fixa, incluindo "sem espaço" (os dois lados têm de falhar juntos).
+     */
+    @Test
+    void alocacaoIgualAoFirstFitIngenuo() {
+        java.util.Random rnd = new java.util.Random(20260924L);
+        String[] bases = {"10.0.0.0/16", "172.16.0.0/20", "192.168.0.0/22", "192.168.10.0/24"};
+        String[] topos = {"star", "extended_star", "mesh"};
+        int comparados = 0;
+        int semEspaco = 0;
+        for (int cenario = 0; cenario < 60; cenario++) {
+            String baseTxt = bases[rnd.nextInt(bases.length)];
+            String topo = topos[rnd.nextInt(topos.length)];
+            int n = 1 + rnd.nextInt(8);
+            int[] hosts = new int[n];
+            for (int i = 0; i < n; i++) {
+                hosts[i] = 1 + rnd.nextInt(rnd.nextBoolean() ? 30 : 400);
+            }
+            List<String> keys = new ArrayList<>();
+            List<LanBlock> lans = new ArrayList<>();
+            for (int i = 0; i < n; i++) {
+                LanBlock l = new LanBlock();
+                l.setLocationKey("loc_" + (i + 1));
+                l.setLocationName("L" + (i + 1));
+                l.setHostsRequired(hosts[i]);
+                lans.add(l);
+                keys.add("loc_" + (i + 1));
+            }
+            IPv4Address base = ipv4Kernel.parseNetwork(baseTxt, "base");
+
+            List<String> esperado;
+            try {
+                esperado = firstFitIngenuo(baseTxt, hosts, planningService.buildWanLinks(
+                        ipv4Kernel.parseNetwork("10.0.0.0/8", "base"), new ArrayList<>(), keys, topo, 30).size());
+            } catch (IllegalStateException semLugar) {
+                esperado = null;
+            }
+            List<String> obtido;
+            try {
+                VlsmPlanningService.PlanningResult pr = planningService.buildLanBlocks(base, lans);
+                obtido = new ArrayList<>();
+                for (LanBlock l : pr.locations()) {
+                    obtido.add(l.getNetwork() + "/" + l.getPrefix());
+                }
+                for (WanLink w : planningService.buildWanLinks(base, new ArrayList<>(pr.usedSubnets()), keys, topo, 30)) {
+                    obtido.add(w.getNetwork() + "/" + w.getPrefix());
+                }
+            } catch (EntradaInvalidaException semLugar) {
+                obtido = null;
+            }
+            assertEquals(esperado, obtido, "cenário " + cenario + " base " + baseTxt + " " + topo);
+            if (esperado == null) {
+                semEspaco++;
+            } else {
+                comparados++;
+            }
+        }
+        assertTrue(comparados > 30, "poucos cenários com solução: instrumento pouco exigente (" + comparados + ")");
+        assertTrue(semEspaco > 0, "nenhum cenário sem espaço: o ramo de erro não foi exercitado");
+    }
+
+    /** First-fit de referência: LANs por hosts decrescente (ordem estável), depois WANs /30. */
+    private static List<String> firstFitIngenuo(String baseTxt, int[] hosts, int wans) {
+        inet.ipaddr.ipv4.IPv4Address base = new inet.ipaddr.IPAddressString(baseTxt).getAddress().toIPv4().toPrefixBlock();
+        int basePrefix = base.getNetworkPrefixLength();
+        List<inet.ipaddr.ipv4.IPv4Address> usados = new ArrayList<>();
+        Integer[] ordem = new Integer[hosts.length];
+        for (int i = 0; i < hosts.length; i++) {
+            ordem[i] = i;
+        }
+        java.util.Arrays.sort(ordem, (a, b) -> Integer.compare(hosts[b], hosts[a]));
+        String[] porLocal = new String[hosts.length];
+        for (int idx : ordem) {
+            int bits = 32 - Integer.numberOfLeadingZeros(hosts[idx] + 2 - 1);
+            int prefixo = Math.min(30, 32 - bits);
+            if (prefixo < basePrefix) {
+                throw new IllegalStateException("não cabe");
+            }
+            inet.ipaddr.ipv4.IPv4Address bloco = primeiroLivre(base, prefixo, usados);
+            usados.add(bloco);
+            porLocal[idx] = bloco.getLower().withoutPrefixLength().toCanonicalString() + "/" + prefixo;
+        }
+        List<String> out = new ArrayList<>(List.of(porLocal));
+        for (int k = 0; k < wans; k++) {
+            if (30 < basePrefix) {
+                throw new IllegalStateException("não cabe");
+            }
+            inet.ipaddr.ipv4.IPv4Address bloco = primeiroLivre(base, 30, usados);
+            usados.add(bloco);
+            out.add(bloco.getLower().withoutPrefixLength().toCanonicalString() + "/30");
+        }
+        return out;
+    }
+
+    private static inet.ipaddr.ipv4.IPv4Address primeiroLivre(inet.ipaddr.ipv4.IPv4Address base, int prefixo,
+            List<inet.ipaddr.ipv4.IPv4Address> usados) {
+        Iterator<inet.ipaddr.ipv4.IPv4Address> it = base.setPrefixLength(prefixo, false).prefixBlockIterator();
+        while (it.hasNext()) {
+            inet.ipaddr.ipv4.IPv4Address c = it.next();
+            if (usados.stream().noneMatch(c::overlaps)) {
+                return c;
+            }
+        }
+        throw new IllegalStateException("não cabe");
+    }
+
+    /**
+     * F02: o custo do first-fit antigo crescia ~n^6 (medido: 60 localidades em malha = 9,6 s). Três
+     * planos de 50 localidades em malha (1275 sub-redes cada) têm de caber em poucos segundos.
+     */
+    @Test
+    void malhaDeCinquentaLocalidadesEhRapida() {
+        org.junit.jupiter.api.Assertions.assertTimeoutPreemptively(java.time.Duration.ofSeconds(4), () -> {
+            for (int rep = 0; rep < 3; rep++) {
+                List<String> keys = new ArrayList<>();
+                List<LanBlock> lans = new ArrayList<>();
+                for (int i = 0; i < 50; i++) {
+                    LanBlock l = new LanBlock();
+                    l.setLocationKey("loc_" + (i + 1));
+                    l.setLocationName("L" + (i + 1));
+                    l.setHostsRequired(10 + i);
+                    lans.add(l);
+                    keys.add("loc_" + (i + 1));
+                }
+                IPv4Address base = ipv4Kernel.parseNetwork("10.0.0.0/8", "base");
+                VlsmPlanningService.PlanningResult pr = planningService.buildLanBlocks(base, lans);
+                assertEquals(1225, planningService.buildWanLinks(base, new ArrayList<>(pr.usedSubnets()),
+                        keys, "mesh", 30).size());
+            }
+        });
+    }
+
     @Test
     void buildWanLinksTopologiaInvalida() {
         IPv4Address base = ipv4Kernel.parseNetwork("172.19.0.0/16", "base");

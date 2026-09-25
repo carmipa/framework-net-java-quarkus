@@ -280,21 +280,43 @@ public class VlsmPlanningService {
         counts.merge("loc_" + (b + 1), 1, Integer::sum);
     }
 
+    /**
+     * PROPÓSITO DE NEGÓCIO: first-fit do VLSM — o primeiro bloco /prefix alinhado, em ordem de
+     * endereço dentro da base, que não se sobrepõe a nenhum bloco já alocado.
+     *
+     * INVARIANTES DO DOMÍNIO: resultado idêntico ao first-fit ingênuo (testar candidato a candidato
+     * contra todos os usados — travado por teste com oráculo). Quando o candidato colide com um bloco
+     * usado, todo candidato até o fim daquele bloco também colide; por isso salta direto para o
+     * próximo endereço alinhado após ele. Custo O(k·log n) por alocação em vez de O(candidatos·n): o
+     * ingênuo levava ~10 s para 60 localidades em malha e horas para a importação de turma.
+     *
+     * COMPORTAMENTO EM CASO DE FALHA: prefixo mais amplo que a base ou base sem espaço lançam
+     * {@link EntradaInvalidaException}.
+     */
     private IPv4Address findNextAvailableSubnet(
             IPv4Address baseNetwork, int prefix, List<IPv4Address> usedSubnets) {
-        Iterator<? extends IPv4Address> candidates = ipv4Kernel.iterateSubnets(baseNetwork, prefix);
-        while (candidates.hasNext()) {
-            IPv4Address candidate = candidates.next();
-            boolean overlaps = false;
-            for (IPv4Address used : usedSubnets) {
-                if (ipv4Kernel.overlaps(candidate, used)) {
-                    overlaps = true;
-                    break;
-                }
+        IPv4Address base = baseNetwork.toPrefixBlock();
+        int basePrefix = ipv4Kernel.prefixLength(base);
+        if (prefix < basePrefix) {
+            throw new EntradaInvalidaException(
+                    "Prefixo /" + prefix + " é mais amplo que a rede base /" + basePrefix + ".");
+        }
+        java.util.TreeMap<Long, Long> ocupados = new java.util.TreeMap<>();
+        for (IPv4Address used : usedSubnets) {
+            ocupados.put(used.getLower().longValue(), used.getUpper().longValue());
+        }
+        long fimBase = base.getUpper().longValue();
+        long tamanho = 1L << (32 - prefix);
+        long inicio = base.getLower().longValue();
+        while (inicio + tamanho - 1 <= fimBase) {
+            long fim = inicio + tamanho - 1;
+            Map.Entry<Long, Long> anterior = ocupados.floorEntry(fim);
+            if (anterior != null && anterior.getValue() >= inicio) {
+                long depois = anterior.getValue() + 1;
+                inicio = ((depois + tamanho - 1) / tamanho) * tamanho;
+                continue;
             }
-            if (!overlaps) {
-                return candidate;
-            }
+            return new IPv4Address((int) inicio, prefix).toPrefixBlock();
         }
         throw new EntradaInvalidaException(
                 "Não há espaço suficiente na rede base para acomodar todas as LANs e links WAN."
