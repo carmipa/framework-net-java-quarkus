@@ -14,9 +14,11 @@ import org.framework.net.telemetria.TelemetriaLogger;
 import org.jboss.logging.Logger;
 
 import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -28,6 +30,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * PROPÓSITO DE NEGÓCIO: histórico das consultas da Análise Didática (lista, paginação e replay),
+ * persistido em arquivo JSON no volume para sobreviver a reinício.
+ *
+ * INVARIANTES DO DOMÍNIO: (1) arquivo ilegível NUNCA aborta o boot — é dado didático, então a falha é
+ * aberta: o arquivo vai para quarentena ({@code .corrompido-<epoch>}) com log ERROR e o histórico sobe
+ * vazio; (2) toda leitura e escrita do deque passa pela mesma trava, e a gravação é atômica
+ * (temporário + move), então crash no meio preserva o arquivo anterior; (3) quem lê recebe CÓPIA dos
+ * registros — nada fora desta classe muta o que está guardado.
+ *
+ * COMPORTAMENTO EM CASO DE FALHA: erro de E/S ao gravar lança {@link HistoricoPersistenciaException}
+ * (o chamador registra e segue); carga ilegível não lança.
+ */
 @ApplicationScoped
 public class HistoricoStore {
 
@@ -49,6 +64,9 @@ public class HistoricoStore {
 
     private final Deque<Map<String, Object>> historyStore = new ArrayDeque<>();
 
+    /** Guarda o deque e o arquivo: sem ela, duas gravações truncavam o mesmo arquivo ao mesmo tempo. */
+    private final Object trava = new Object();
+
     void onStart(@Observes @Priority(1) StartupEvent event) {
         carregar();
     }
@@ -58,32 +76,64 @@ public class HistoricoStore {
         if (!Files.exists(file)) {
             return;
         }
-        try {
-            List<Map<String, Object>> raw = objectMapper.readValue(file.toFile(), new TypeReference<>() {});
-            if (raw != null) {
-                int start = Math.max(0, raw.size() - config.maxHistory());
-                for (Map<String, Object> item : raw.subList(start, raw.size())) {
-                    historyStore.addLast(item);
+        synchronized (trava) {
+            try {
+                List<Map<String, Object>> raw = objectMapper.readValue(file.toFile(), new TypeReference<>() {});
+                if (raw != null) {
+                    int start = Math.max(0, raw.size() - config.maxHistory());
+                    for (Map<String, Object> item : raw.subList(start, raw.size())) {
+                        historyStore.addLast(item);
+                    }
                 }
+                LOG.infof("Histórico carregado: %d registros", historyStore.size());
+                telemetriaLogger.logEvent("info", "analiseDidatica", "history_load",
+                        Map.of("status", "ok", "total", historyStore.size()));
+            } catch (IOException ex) {
+                quarentena(file, ex);
             }
-            LOG.infof("Histórico carregado: %d registros", historyStore.size());
-            telemetriaLogger.logEvent("info", "analiseDidatica", "history_load",
-                    Map.of("status", "ok", "total", historyStore.size()));
-        } catch (IOException ex) {
-            throw new HistoricoPersistenciaException("Falha ao carregar histórico local.", ex);
         }
     }
 
-    public void persistir() {
+    /**
+     * Tira do caminho um arquivo ilegível (preservando o conteúdo para investigação) e sobe vazio:
+     * antes, a exceção saía do observer de StartupEvent, abortava o Quarkus e o container entrava
+     * em reinício infinito — um histórico didático derrubando o site inteiro.
+     */
+    private void quarentena(Path file, IOException causa) {
+        historyStore.clear();
+        Path destino = file.resolveSibling(file.getFileName() + ".corrompido-" + Instant.now().getEpochSecond());
         try {
-            Files.createDirectories(historyFile().getParent());
-            objectMapper.writerWithDefaultPrettyPrinter()
-                    .writeValue(historyFile().toFile(), new ArrayList<>(historyStore));
-            LOG.infof("Histórico persistido: %d registros", historyStore.size());
-            telemetriaLogger.logEvent("info", "analiseDidatica", "history_persist",
-                    Map.of("status", "ok", "total", historyStore.size()));
-        } catch (IOException ex) {
-            throw new HistoricoPersistenciaException("Falha ao persistir histórico local.", ex);
+            Files.move(file, destino, StandardCopyOption.REPLACE_EXISTING);
+            LOG.errorf(causa, "Histórico ilegível movido para %s; iniciando vazio.", destino);
+        } catch (IOException moveEx) {
+            LOG.errorf(moveEx, "Histórico ilegível em %s e não foi possível movê-lo; iniciando vazio.", file);
+        }
+        telemetriaLogger.logEvent("error", "analiseDidatica", "history_load",
+                Map.of("status", "quarentena", "motivo", causa.getClass().getSimpleName()));
+    }
+
+    public void persistir() {
+        synchronized (trava) {
+            Path destino = historyFile();
+            try {
+                Files.createDirectories(destino.getParent());
+                Path temp = Files.createTempFile(destino.getParent(), "consulta_history", ".tmp");
+                try {
+                    objectMapper.writerWithDefaultPrettyPrinter().writeValue(temp.toFile(), new ArrayList<>(historyStore));
+                    try {
+                        Files.move(temp, destino, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                    } catch (AtomicMoveNotSupportedException semAtomico) {
+                        Files.move(temp, destino, StandardCopyOption.REPLACE_EXISTING);
+                    }
+                } finally {
+                    Files.deleteIfExists(temp);
+                }
+                LOG.debugf("Histórico persistido: %d registros", historyStore.size());
+                telemetriaLogger.logEvent("info", "analiseDidatica", "history_persist",
+                        Map.of("status", "ok", "total", historyStore.size()));
+            } catch (IOException ex) {
+                throw new HistoricoPersistenciaException("Falha ao persistir histórico local.", ex);
+            }
         }
     }
 
@@ -109,16 +159,25 @@ public class HistoricoStore {
         if (gc instanceof Map<?, ?> geoMap) {
             registro.put("geo_consulta", geoMap);
         }
-        historyStore.addFirst(registro);
-        while (historyStore.size() > config.maxHistory()) {
-            historyStore.removeLast();
+        synchronized (trava) {
+            historyStore.addFirst(registro);
+            while (historyStore.size() > config.maxHistory()) {
+                historyStore.removeLast();
+            }
+            LOG.infof("Histórico append modo=%s id=%s", registro.get("modo"), registro.get("id"));
+            persistir();
         }
-        LOG.infof("Histórico append modo=%s id=%s", registro.get("modo"), registro.get("id"));
-        persistir();
     }
 
+    /** Cópia rasa de cada registro: quem lê pode anotar campos de exibição sem mexer no guardado. */
     public List<Map<String, Object>> listar() {
-        return new ArrayList<>(historyStore);
+        synchronized (trava) {
+            List<Map<String, Object>> copia = new ArrayList<>(historyStore.size());
+            for (Map<String, Object> item : historyStore) {
+                copia.add(new LinkedHashMap<>(item));
+            }
+            return copia;
+        }
     }
 
     public Map<String, Object> paginar(String historyLimitPre, String historyPagePre) {
