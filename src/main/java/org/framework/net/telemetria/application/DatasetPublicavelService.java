@@ -153,7 +153,7 @@ public class DatasetPublicavelService {
         atributo(atributos, "event.name", evento.evento());
         atributo(atributos, "framework.status", evento.status());
         atributo(atributos, "http.request.method", evento.httpMethod());
-        atributo(atributos, "http.route", evento.httpPath());
+        atributo(atributos, "http.route", rotaPublicavel(evento.httpPath()));
         if (evento.httpStatus() != null) {
             atributo(atributos, "http.response.status_code", String.valueOf(evento.httpStatus()));
         }
@@ -295,6 +295,36 @@ public class DatasetPublicavelService {
             return;
         }
         destino.add(Map.of("key", chave, "value", Map.of("stringValue", valor)));
+    }
+
+    /** Segmento "estático": palavra minúscula com hífen e no máximo 2 dígitos no fim (ipv6) — sem ponto, @ ou tamanho livre. */
+    private static final java.util.regex.Pattern SEGMENTO_ESTATICO =
+            java.util.regex.Pattern.compile("^[a-z][a-z-]{0,37}[0-9]{0,2}$");
+
+    /**
+     * PROPÓSITO: a rota que vai para o dataset PÚBLICO.
+     * INVARIANTES: nunca publica o caminho cru — segmento que não é palavra estática vira
+     * {@code {param}}. Sem isso qualquer visitante injetava texto livre no dataset (IP, e-mail) e,
+     * como a auditoria final reprova IP público, travava a publicação do dono.
+     * FALHA: não lança; {@code null} vira texto vazio.
+     */
+    static String rotaPublicavel(String caminho) {
+        if (caminho == null || caminho.isBlank()) {
+            return "";
+        }
+        String[] partes = caminho.split("/", -1);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < partes.length; i++) {
+            if (i > 0) {
+                sb.append('/');
+            }
+            String p = partes[i];
+            if (p.isEmpty()) {
+                continue;
+            }
+            sb.append(SEGMENTO_ESTATICO.matcher(p).matches() ? p : "{param}");
+        }
+        return sb.toString();
     }
 
     private boolean ehRuido(String rota) {
