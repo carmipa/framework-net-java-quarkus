@@ -23,7 +23,9 @@ class DiagnosticoHttpTest {
                 .contentType(containsString("text/html"))
                 .body(containsString("8.8.8.8"))
                 .body(containsString("Simulado"))
-                .body(containsString("<pre><code>"))
+                // <pre>/<code> carimbados com translate="no" (regra de i18n): o que importa é o bloco
+                // de saída existir, não a ausência de atributos.
+                .body(org.hamcrest.Matchers.matchesPattern("(?s).*<pre[^>]*><code[^>]*>.*"))
                 .body(not(containsString("<!DOCTYPE html>")));
     }
 

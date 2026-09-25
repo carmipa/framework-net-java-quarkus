@@ -72,6 +72,12 @@ class PaginaErroProxyGeneratorTest {
     /** Recursos do próprio app que precisam ser embutidos, senão dariam 502 junto. */
     private static final Pattern CSS_DO_APP =
             Pattern.compile("<link rel=\"stylesheet\" href=\"/paginaErros/css/erro\\.css[^\"]*\">");
+    /**
+     * Fonte de ícones LOCAL do app (regra de UX: nunca CDN). A página do proxy aparece com o app
+     * fora do ar, então o CSS vai embutido e a fonte vai em {@code data:} — nem CDN, nem app.
+     */
+    private static final Pattern CSS_ICONES =
+            Pattern.compile("<link rel=\"stylesheet\" href=\"/web/css/material-symbols\\.css[^\"]*\">");
     private static final Pattern JS_MATRIX =
             Pattern.compile("<script src=\"/paginaErros/js/erro-matrix\\.js[^\"]*\"></script>");
 
@@ -124,6 +130,8 @@ class PaginaErroProxyGeneratorTest {
 
             html = CSS_DO_APP.matcher(html)
                     .replaceAll(Matcher.quoteReplacement("<style>\n" + css + "\n</style>"));
+            html = CSS_ICONES.matcher(html)
+                    .replaceAll(Matcher.quoteReplacement("<style>\n" + cssIconesEmbutido() + "\n</style>"));
             html = JS_MATRIX.matcher(html)
                     .replaceAll(Matcher.quoteReplacement("<script>\n" + matrix + "\n</script>"));
             html = FAVICON_DO_APP.matcher(html)
@@ -221,6 +229,19 @@ class PaginaErroProxyGeneratorTest {
             Files.createDirectories(DESTINO);
         } catch (IOException e) {
             throw new UncheckedIOException("Não consegui criar " + DESTINO.toAbsolutePath(), e);
+        }
+    }
+
+    /** material-symbols.css com a URL da fonte trocada pelo próprio WOFF2 em base64. */
+    private static String cssIconesEmbutido() {
+        try {
+            byte[] fonte = Files.readAllBytes(RAIZ_ESTATICOS.resolve("web/fonts/material-symbols-outlined.woff2"));
+            String dados = "data:font/woff2;base64," + java.util.Base64.getEncoder().encodeToString(fonte);
+            return lerEstatico("web/css/material-symbols.css")
+                    .replaceAll("url\\('[^']*material-symbols-outlined\\.woff2[^']*'\\)",
+                            Matcher.quoteReplacement("url('" + dados + "')"));
+        } catch (IOException e) {
+            throw new UncheckedIOException("Não consegui embutir a fonte de ícones", e);
         }
     }
 

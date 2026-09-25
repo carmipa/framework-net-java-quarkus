@@ -10,6 +10,14 @@ COPY gradlew gradlew.bat settings.gradle build.gradle gradle.properties ./
 RUN sed -i 's/\r$//' gradlew && chmod +x gradlew
 
 COPY src src
+# O teste das páginas de erro do proxy (502/503/504) gera e confere os arquivos em scripts/erro-proxy.
+COPY scripts/erro-proxy scripts/erro-proxy
+# A suíte (guardas de arquitetura, robots/sitemap, i18n/ícones, SRI, testes de comportamento) BARRA a
+# imagem: sem esta etapa o deploy fazia `build -x test` e commit com teste vermelho ia para produção
+# (auditoria F21). Etapa separada e antes do build de produção: os testes rodam no perfil de teste,
+# e o artefato de produção só é montado se passarem. Testes que dependem de internet se ignoram
+# sozinhos quando não há rede (Assumptions), em vez de reprovar por causa ambiental.
+RUN ./gradlew test --no-daemon
 RUN ./gradlew build -x test --no-daemon -Dquarkus.package.jar.type=fast-jar -Dquarkus.profile=prod
 
 FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24
