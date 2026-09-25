@@ -47,7 +47,19 @@ public class DnsResolver {
     private static final int MAX_CACHE = 1_000;
 
     private final Map<String, CacheEntry> cache = new ConcurrentHashMap<>();
-    private final ExecutorService executor = Executors.newFixedThreadPool(2);
+    /** Threads de resolução: getaddrinfo e dnsjava bloqueiam e não são interrompíveis. */
+    static final int THREADS = 4;
+    /** Fila curta e LIMITADA: saturado, recusa na hora em vez de acumular espera para todo mundo. */
+    static final int FILA = 8;
+    private final ExecutorService executor = new java.util.concurrent.ThreadPoolExecutor(
+            THREADS, THREADS, 0L, TimeUnit.MILLISECONDS,
+            new java.util.concurrent.ArrayBlockingQueue<>(FILA),
+            r -> {
+                Thread t = new Thread(r, "dns-resolver");
+                t.setDaemon(true);
+                return t;
+            },
+            new java.util.concurrent.ThreadPoolExecutor.AbortPolicy());
 
     public String resolverComCache(String hostname) {
         String h = normalizar(hostname);
@@ -134,11 +146,10 @@ public class DnsResolver {
     private String resolverAaaaLive(String hostname) {
         long started = System.nanoTime();
         try {
-            var future = executor.submit(() -> consultarAaaa(hostname));
             // Teto folgado: o ExtendedResolver pode tentar vários servidores em sequência, cada um com
             // o timeout da config; o future só corta um travamento total, não o fallback normal.
             long tetoSegundos = Math.max(10L, dnsConfig.resolveTimeoutSeconds() * 4L + 2L);
-            String ip = future.get(tetoSegundos, TimeUnit.SECONDS);
+            String ip = executar(() -> consultarAaaa(hostname), tetoSegundos);
             long elapsedMs = (System.nanoTime() - started) / 1_000_000;
             Map<String, Object> fields = new LinkedHashMap<>();
             fields.put("status", "ok");
@@ -206,12 +217,11 @@ public class DnsResolver {
     private String resolverLive(String hostname) {
         long started = System.nanoTime();
         try {
-            var future = executor.submit(() -> {
+            String ip = executar(() -> {
                 InetAddress resolved = InetAddress.getByName(hostname);
                 NetworkAddressGuard.rejectNonPublicAddress(resolved, "resolução DNS");
                 return resolved.getHostAddress();
-            });
-            String ip = future.get(dnsConfig.resolveTimeoutSeconds(), TimeUnit.SECONDS);
+            }, dnsConfig.resolveTimeoutSeconds());
             long elapsedMs = (System.nanoTime() - started) / 1_000_000;
             Map<String, Object> fields = new LinkedHashMap<>();
             fields.put("status", "ok");
@@ -232,6 +242,8 @@ public class DnsResolver {
                         "Não foi possível resolver o domínio/hostname informado: " + hostname, cause);
             }
             throw new DnsResolucaoException("Erro interno ao resolver DNS. Tente novamente.", ex);
+        } catch (DnsResolucaoException ex) {
+            throw ex;   // saturação do pool: a mensagem específica chega ao aluno (não vira "erro interno")
         } catch (Exception ex) {
             throw new DnsResolucaoException("Erro interno ao resolver DNS. Tente novamente.", ex);
         }
@@ -258,6 +270,31 @@ public class DnsResolver {
         Resolver resolver = new ExtendedResolver(servidores.toArray(new String[0]));
         resolver.setTimeout(Duration.ofSeconds(Math.max(1, dnsConfig.resolveTimeoutSeconds())));
         return resolver;
+    }
+
+    /**
+     * PROPÓSITO: executa uma resolução DNS com teto de tempo sem deixar um nome lento derrubar a
+     * resolução de todos os visitantes.
+     * INVARIANTES: pool e fila LIMITADOS; saturado, recusa na hora (DnsResolucaoException) — nunca
+     * espera na fila; ao estourar o tempo, a tarefa é cancelada (sai da fila se ainda não começou).
+     * FALHA: saturação vira {@link DnsResolucaoException}; timeout propaga {@link TimeoutException}
+     * para o chamador traduzir.
+     */
+    <T> T executar(java.util.concurrent.Callable<T> tarefa, long timeoutSegundos)
+            throws TimeoutException, ExecutionException, InterruptedException {
+        java.util.concurrent.Future<T> future;
+        try {
+            future = executor.submit(tarefa);
+        } catch (java.util.concurrent.RejectedExecutionException saturado) {
+            throw new DnsResolucaoException(
+                    "Muitas resoluções DNS em andamento agora. Tente novamente em alguns segundos.", saturado);
+        }
+        try {
+            return future.get(timeoutSegundos, TimeUnit.SECONDS);
+        } catch (TimeoutException | InterruptedException ex) {
+            future.cancel(true);
+            throw ex;
+        }
     }
 
     private static String normalizar(String hostname) {
