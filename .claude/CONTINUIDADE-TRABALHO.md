@@ -43,12 +43,13 @@ PROXIMA ACAO EXECUTAVEL EXATA:
 - Nenhuma no codigo. Aguarda Paulo: push, deploy e a pasta C:\deployments (movimentacao negada pelo classificador).
 
 INFORMAR PAULO NO FECHAMENTO:
-- PID 15668 (java de subagente) segurava build/quarkus-app e C:\deployments; nao matei.
+- PID 15668 ja nao existe (maquina reiniciada). C:\deployments (residuo de execucao local com perfil prod:
+  um log de 1,9 KB) segue la: a movimentacao foi negada pelo classificador de permissao.
 - Docker Desktop iniciado por mim; imagem framework-net:auditoria-teste ficou local.
 - Paginas do proxy (scripts/erro-proxy) regeneradas: vao a VPS pelo script proprio, nao pelo deploy.
 - Nada foi empurrado.
 
 NAO REPETIR:
 - Heredoc do bash corrompe \\n e \\. em Java/JS: usar Edit/Write ou script Python em arquivo.
-- `gradlew clean` falha com o PID 15668 vivo: usar `test --rerun-tasks`.
+- `gradlew clean` falhou em 24/09 com um java de subagente vivo segurando build/: usar `test --rerun-tasks`.
 - Qute {|...|} remove as chaves externas: usar {|{ ... }|} quando o JSON precisa delas.
