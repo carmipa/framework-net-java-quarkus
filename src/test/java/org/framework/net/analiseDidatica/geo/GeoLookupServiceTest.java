@@ -56,7 +56,14 @@ class GeoLookupServiceTest {
     @Test
     void ipPublicoRetornaCamposEnriquecidos() {
         Map<String, Object> out = geoLookupService.lookupRegiaoGeografica("8.8.8.8");
-        assertTrue(Boolean.TRUE.equals(out.get("ok")));
+        // F25: sem .mmdb local o lookup vai ao ip-api (45 req/min, internet). Falha DE REDE/COTA é
+        // estado "não verificado" (ignorado), não reprovação por causa ambiental (A2). Se o serviço
+        // respondeu, o enriquecimento tem de estar completo — isso continua reprovando.
+        String motivo = String.valueOf(out.get("motivo"));
+        boolean falhaDeLogica = java.util.Set.of("private_or_local", "invalid", "empty").contains(motivo);
+        org.junit.jupiter.api.Assumptions.assumeFalse(!Boolean.TRUE.equals(out.get("ok")) && !falhaDeLogica,
+                "ip-api indisponível/limitado neste ambiente (motivo=" + motivo + ") — não verificado");
+        assertTrue(Boolean.TRUE.equals(out.get("ok")), "resposta sem ok: " + out);
         assertNotNull(out.get("pais"));
         assertNotNull(out.get("pais_codigo"));
         assertNotNull(out.get("risco_badge"));

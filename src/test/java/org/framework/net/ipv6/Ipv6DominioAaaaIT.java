@@ -7,7 +7,6 @@ import org.framework.net.ipv6.application.Ipv6CidrService.DominioAaaaResult;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
-import java.net.InetAddress;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -18,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * <p><b>Propósito:</b> os demais testes IPv6 são herméticos (sem rede). Este exercita o caminho
  * completo — {@link Ipv6CidrService#resolverDominio} → {@code DnsResolver.resolverAaaaComCache} →
- * {@code getAllByName} → filtro {@code Inet6Address} → guarda SSRF → {@code kernel.analisar} — que
+ * consulta AAAA via dnsjava → guarda SSRF → {@code kernel.analisar} — que
  * nenhum teste hermético cobre (A1: o legítimo é aceito e classificado, não só o defeito rejeitado).</p>
  *
  * <p><b>Sem rede não é reprovação:</b> se o ambiente não tiver DNS/saída (CI offline), o teste é
@@ -48,10 +47,19 @@ class Ipv6DominioAaaaIT {
                 "AAAA público deve ser classificado como global unicast: " + r.enderecoAaaa());
     }
 
+    /**
+     * Sonda pelo MESMO caminho da produção (dnsjava, UDP direto a um resolver público). A sonda antiga
+     * usava getaddrinfo: com UDP/53 bloqueado e o resolver do SO funcionando, o teste falhava por
+     * causa ambiental em vez de ser ignorado (auditoria F25).
+     */
     private boolean temResolucaoDeRede() {
         try {
-            InetAddress.getByName("cloudflare.com");
-            return true;
+            org.xbill.DNS.Lookup l = new org.xbill.DNS.Lookup("cloudflare.com", org.xbill.DNS.Type.AAAA);
+            org.xbill.DNS.SimpleResolver r = new org.xbill.DNS.SimpleResolver("1.1.1.1");
+            r.setTimeout(java.time.Duration.ofSeconds(3));
+            l.setResolver(r);
+            l.run();
+            return l.getResult() == org.xbill.DNS.Lookup.SUCCESSFUL;
         } catch (Exception e) {
             return false;
         }
