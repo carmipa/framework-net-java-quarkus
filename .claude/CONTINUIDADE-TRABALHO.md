@@ -48,13 +48,17 @@ TAREFA ATUAL (Paulo, 2026-09-24): "corrija todos uma a um". Commits locais, SEM 
 Metodo por item: teste vermelho pela causa (A2) com gabarito RFC/Python (A3) -> fix -> verde -> varrer classe.
 
 FECHADO COM ARTEFATO (commits locais, sem push):
-- 8864b2c F35 F36 F37 F38 F39 | a8acc2f F01 F40 F44 F45 F46 | 12f3918 F15 F41 F42 F43
-- 5d474d9 F02 | 57a74a0 F06 | fa326de F07 | 3b5d0a2 F03 | 8a25e53 F04 | 6ce1d54 F05 | (este) F29
+- 8864b2c F35-F39 | a8acc2f F01 F40 F44 F45 F46 | 12f3918 F15 F41 F42 F43 | 5d474d9 F02 | 57a74a0 F06
+- fa326de F07 | 3b5d0a2 F03 | 8a25e53 F04 | 6ce1d54 F05 | e496db5 F29 | 647235f F08 | ae5f11a F30
+- 2296a95 F34 (+ renovacao CSRF) | e2c37f2 F09 F11 F12 F13 | 8b9f08d F14 + UI-14 | a9a6ab2 F10 F31 F32
+- f54de79 F17 F18 F19 | a7c0e77 F20 | 0a7ba29 fixes achados no navegador + scripts/verificar-auditoria-frontend.mjs (14/14)
+- App dev rodando em :8089 (quarkusDev em background, task bavadtvrg) para a verificacao em navegador.
 
 FILA (ordem):
-- privacidade: F08 http.route sanitizado; F30 sw.js; F34 cookie __Host- em prod
-- frontend: F09 informacoes .raw; F11 datagrid escape; F12 ipv6 export/copiar por aba; F13 widget mascara; F14 htmx 403/429/500; F10 mermaid click; F31 console limpar; F32 privacidade dual-stack; F17 fonte local; F18 translate=no; F19 aria-hidden; F20 SRI/pin
-- testes/build/ops/docs: F16 moduloDePath+teste derivado; F22 ArquiteturaCamadasTest (+ item 7 DnsResolucaoException->shared); F23 assercoes; F24 403 dono; F25 Assumptions rede; F26 csp/sitemap/robots; F21 Dockerfile com testes; F27 logging compose+README; F28 stream re-teste; F33 README
+- F16 moduloDePath + teste derivado dos @Path; F22 ArquiteturaCamadasTest (+ item 7 DnsResolucaoException->shared);
+  F23 assercoes; F24 403 dono; F25 Assumptions rede; F26 csp/sitemap/robots; F21 Dockerfile com testes;
+  F27 logging compose+README; F28 stream re-teste; F33 README
+- Final: gradlew clean build completo + verificar-auditoria-frontend.mjs + registro no vault
 
 PROXIMA ACAO EXECUTAVEL EXATA:
-- F08: teste em DatasetPublicavelService — evento com rota /protocolos/8.8.8.8 nao pode bloquear a publicacao; http.route deve sair pelo template/rota, nao cru (DatasetPublicavelService.java:156)
+- F16: TelemetriaDashboardService.moduloDePath (linhas ~272-299) + ModuloDePathTest derivado dos @Path reais
