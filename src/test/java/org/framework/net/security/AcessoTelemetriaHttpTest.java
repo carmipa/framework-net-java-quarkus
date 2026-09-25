@@ -169,6 +169,24 @@ class AcessoTelemetriaHttpTest {
                     .when().get(acao)
                     .then().statusCode(403);
         }
+        // F24: as duas ações que MUDAM estado (uma destrutiva) não tinham teste — tirar uma delas de
+        // ACOES_DE_DONO daria ao leitor o poder de apagar o console com a suíte verde.
+        for (String acao : new String[]{"/telemetria/api/console/limpar", "/telemetria/api/dataset/sincronizar"}) {
+            given().header("Cookie", cookie).header("Accept", "application/json")
+                    .when().post(acao)
+                    .then().statusCode(403);
+        }
+    }
+
+    @Test
+    @DisplayName("controle: o dono limpa o console (a recusa do leitor é pelo papel, não pela rota)")
+    void donoLimpaOConsole() {
+        String cookie = SessaoTelemetriaService.COOKIE_NAME + "=" + sessao.emitirValor(
+                "carmipa", SessaoTelemetriaService.ORIGEM_GITHUB, SessaoTelemetriaService.PAPEL_DONO);
+        int status = given().header("Cookie", cookie).header("Accept", "application/json")
+                .when().post("/telemetria/api/console/limpar")
+                .then().extract().statusCode();
+        org.junit.jupiter.api.Assertions.assertTrue(status >= 200 && status < 300, "dono recebeu " + status);
     }
 
     @Test
