@@ -1,64 +1,46 @@
-TAREFA ORIGINAL: Corrigir os 12 achados confirmados da auditoria completa do framework-net-java-quarkus.
-OBJETIVO FINAL: Todos os achados fechados com artefato (teste calibrado vermelho->verde, build verde) ou declarados como risco residual com motivo.
-CRITÉRIO DE ENCERRAMENTO: `gradle build` verde + cada correção com teste caso-controle + commit por onda.
-BRANCH / COMMIT BASE: main @ db31b43
-SHA-256 DO DOCUMENTO-REGRA: portão ABERTO nesta sessao (d249b4c6-9de9-40f0-9102-e0ae887012fb)
+TAREFA ORIGINAL (Paulo, 2026-09-24): "corrija todos uma a um" — os 46 achados (F01-F46) da auditoria completa.
+OBJETIVO FINAL: todo achado fechado com artefato (teste vermelho pela causa -> verde, A1/A2/A3) ou declarado
+como risco residual com motivo; revisao pos-implementacao nas tres lentes (adversarial, boa-fe, operacional).
+CRITERIO DE ENCERRAMENTO: suite completa verde com --rerun-tasks + roteiro de navegador + CSP + registro no vault.
+BRANCH / COMMIT BASE: main @ 60678fa (865 testes). Commits locais, SEM push (git push exige confirmacao de Paulo).
+PORTAO: sessao 51d37306-73ee-436e-a9bc-1e12fdd0de47, recarimbado em 2026-09-25 apos releitura integral
+(ENGENHARIA 1136, REGRA-DO-DOCKER 2402, regra 25 341, regras 21-24, tres revisoes, indice, java-quarkus-qute 893).
 
-FILA ORDENADA DO ESCOPO:
-Onda 1 (rede de seguranca do nucleo):
-- [ ] 1. Teste de nao-sobreposicao VLSM (blocos LAN+WAN disjuntos + comportam hosts)
-- [ ] 2. Ipv6CalculatorTest com valores concretos (compressao/expansao/prefixo)
-- [ ] 3. parseIpv4Parts nos DOIS Ipv4Kernel: guarda de comprimento -> EntradaInvalidaException; split("\\.",-1); + testes
-Onda 2 (robustez/hardening):
-- [ ] 4. Decoder auto: desempatar por versao de IP antes do EtherType + teste IPv4 cru
-- [ ] 5. trusted-proxies frageis (rede docker external) — avaliar fix robusto
-- [ ] 6. Piso quarkus >= 3.37.0 no build + .env/.env.* no .dockerignore
-Onda 3 (divida arquitetura):
-- [ ] 7. Mover DnsResolucaoException (ou generica de rede) para shared/
-- [ ] 8. Corrigir assercoes auto-anuladas + rele de PDF/ZIP nos testes
-- [ ] 9. Extrair validacao de ResolucaoProblemasResource; avaliar ProtocoloAprofundamento->shared
-Onda 4 (anti-XSS):
-- [ ] 10. Remover <script> inline dos templates + nonce/hash no CSP (maior risco: Google Translate)
+AUDITORIA: C:\cerebro_de_ia\cerebro_de_ia\chats\2026-09-24_claude-framework-net-auditoria-completa.md
+Scratchpad da sessao: achados.md (F01-F46), res.py (resumo de resultados de teste).
 
-FECHADO COM ARTEFATO (gradle build = 784 testes, 0 falhas):
-- 1. Teste nao-sobreposicao VLSM (VlsmServiceTest.blocosVlsmNaoSobrepoem...) — FEITO
-- 2. Ipv6CalculatorTest (novo) — FEITO
-- 3. parseIpv4Parts guarda comprimento + split(-1) nos DOIS kernels + testes — FEITO
-- 4. Decoder resolverInicio desempata IP cru antes do EtherType + teste A1 — FEITO
-- 6. Piso quarkus>=3.37.0 (build.gradle) + .env no .dockerignore — FEITO
-- 8. Assercao auto-anulada corrigida (invariante real de alocacao) + rele PDF/ZIP — FEITO
-
-DECLARADO (decisao de Paulo / refator maior — NAO defeito de comportamento):
-- 5. trusted-proxies CIDR fixo: risco residual JA declarado; fix robusto toca nginx de 3 dominios (fora deste repo) = decisao de Paulo. App ja correto.
-- 7. Mover DnsResolucaoException->shared: viola fatia mas SEM dano visivel; move quebra o mapeamento HTTP (AnaliseDidaticaExceptionMapper) em varios modulos. Refator com risco -> aguardando OK de Paulo.
-- 8-arq/ProtocoloAprofundamento->shared: ACOPLAMENTO ACEITO documentado (ACOPLAMENTOS_ACEITOS). Decisao de arquitetura, nao bug.
-- 9. Extrair validacao de ResolucaoProblemasResource (759L): refator de manutenibilidade sem defeito -> aguardando OK de Paulo.
-- 10. CSP unsafe-inline: 🟡 aceito ha meses pela dependencia do Google Translate. Fechar = trocar/remover Translate = decisao de Paulo.
-
-EM ANDAMENTO AGORA:
-- Nada. Ondas 1-3 COMMITADAS em c48eb11 (2026-09-15). Reconciliado em 2026-09-24 (sessao 51d37306):
-  o texto anterior dizia "aguardando decisao sobre commits", e o git mostra o contrario
-  (`git log db31b43..HEAD` = 21 commits; origin/main...HEAD = 0 0). Depois disso vieram as frentes IPv6.
-
-AUDITORIA COMPLETA 2026-09-24 (HEAD 60678fa, 865 testes verdes):
-- Relatorio: C:\cerebro_de_ia\cerebro_de_ia\chats6-09-24_claude-framework-net-auditoria-completa.md
-- Scratchpad da sessao 51d37306: achados.md (F01-F46) e res.py (resumo de resultados de teste)
-
-TAREFA ATUAL (Paulo, 2026-09-24): "corrija todos uma a um". Commits locais, SEM push.
-Metodo por item: teste vermelho pela causa (A2) com gabarito RFC/Python (A3) -> fix -> verde -> varrer classe.
-
-FECHADO COM ARTEFATO (commits locais, sem push):
+FECHADO COM ARTEFATO (commits locais):
 - 8864b2c F35-F39 | a8acc2f F01 F40 F44 F45 F46 | 12f3918 F15 F41 F42 F43 | 5d474d9 F02 | 57a74a0 F06
 - fa326de F07 | 3b5d0a2 F03 | 8a25e53 F04 | 6ce1d54 F05 | e496db5 F29 | 647235f F08 | ae5f11a F30
-- 2296a95 F34 (+ renovacao CSRF) | e2c37f2 F09 F11 F12 F13 | 8b9f08d F14 + UI-14 | a9a6ab2 F10 F31 F32
-- f54de79 F17 F18 F19 | a7c0e77 F20 | 0a7ba29 fixes achados no navegador + scripts/verificar-auditoria-frontend.mjs (14/14)
-- App dev rodando em :8089 (quarkusDev em background, task bavadtvrg) para a verificacao em navegador.
+- 2296a95 F34 | e2c37f2 F09 F11 F12 F13 | 8b9f08d F14 + UI-14 | a9a6ab2 F10 F31 F32
+- f54de79 F17 F18 F19 | a7c0e77 F20 | 0a7ba29 fixes do navegador + scripts/verificar-auditoria-frontend.mjs (14/14)
+- b694879 F16 | 3f72453 F22 | e669b87 F23 | c204508 F24 | 1eb05cb F25 | a6fa7a2 F26 | 560fba9 F28
+- 284c5fb F27 | b0c9b4f F33 | 44883e7 F21 (imagem Docker so monta com a suite verde; 2 efeitos colaterais corrigidos)
+Revisao pos-implementacao (lente adversarial, 7 achados):
+- f26d750 #1 cookie __Host-fnet_hist em producao (fixacao de sessao)
+- 116b73e #6 sw.js v3 nao cacheia /analise e /informacoes (A2: mutacao reprovou por /analise)
+- ab0bbce #2 freio do Nominatim espera o slot (fallback cidade/UF voltou); A2 nos dois lados da fronteira
+- bb64583 #4 rate limit por rota x global em perfis separados; 3 mutacoes, cada uma reprova so o seu teste
+- #3 global 600/min atras de NAT de laboratorio, #5 heavy x matriz ';', #7 dataset aceita texto livre curto:
+  RISCO RESIDUAL a declarar no relatorio (sem correcao nesta frente)
 
-FILA (ordem):
-- F16 moduloDePath + teste derivado dos @Path; F22 ArquiteturaCamadasTest (+ item 7 DnsResolucaoException->shared);
-  F23 assercoes; F24 403 dono; F25 Assumptions rede; F26 csp/sitemap/robots; F21 Dockerfile com testes;
-  F27 logging compose+README; F28 stream re-teste; F33 README
-- Final: gradlew clean build completo + verificar-auditoria-frontend.mjs + registro no vault
+EM ANDAMENTO AGORA:
+- Lentes de boa-fe e de falha operacional sobre `git diff 60678fa..HEAD` rodando em subagentes isolados.
 
 PROXIMA ACAO EXECUTAVEL EXATA:
-- F16: TelemetriaDashboardService.moduloDePath (linhas ~272-299) + ModuloDePathTest derivado dos @Path reais
+- Ao chegar cada lente: julgar cada achado com as tres lentes de conclusao (correcao / impacto / ja resolvido),
+  corrigir os confirmados (teste A2 + commit), registrar os refutados com motivo.
+- Depois: ./gradlew.bat test --rerun-tasks (suite completa); subir quarkusDev na 8089 com
+  -Dframework.dev.open-browser=false; node scripts/verificar-auditoria-frontend.mjs; node scripts/verificar-csp.mjs.
+- Registro no vault: chats/2026-09-25_... + 00-INDICE + projetos/framework-net-java-quarkus.md, commit no vault.
+
+INFORMAR PAULO NO FECHAMENTO:
+- PID 15668 (java de subagente) segurava build/quarkus-app e C:\deployments; nao matei.
+- Docker Desktop iniciado por mim; imagem framework-net:auditoria-teste ficou local.
+- Paginas do proxy (scripts/erro-proxy) regeneradas: vao a VPS pelo script proprio, nao pelo deploy.
+- Nada foi empurrado.
+
+NAO REPETIR:
+- Heredoc do bash corrompe \\n e \\. em Java/JS: usar Edit/Write ou script Python em arquivo.
+- `gradlew clean` falha com o PID 15668 vivo: usar `test --rerun-tasks`.
+- Qute {|...|} remove as chaves externas: usar {|{ ... }|} quando o JSON precisa delas.
