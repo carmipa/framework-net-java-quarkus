@@ -262,6 +262,22 @@ class Ipv6HttpTest {
                 .body(containsString("Informe um domínio"));
     }
 
+    /**
+     * F22: a recusa do kernel (shared.EnderecoBloqueadoException) é traduzida na fronteira do módulo;
+     * o aluno continua recebendo 400 didático com o MOTIVO (A7 — a causa não vira "erro interno").
+     */
+    @Test
+    void hostnameInternoVolta400ComMotivo() {
+        given()
+                .contentType(FORM)
+                .header("HX-Request", "true")
+                .formParam("dominio", "metadata.google.internal")
+                .when().post("/ipv6/api/dominio")
+                .then()
+                .statusCode(400)
+                .body(containsString("não permitido"));
+    }
+
     @Test
     void exportJsonDaAnaliseIpv6() {
         given()

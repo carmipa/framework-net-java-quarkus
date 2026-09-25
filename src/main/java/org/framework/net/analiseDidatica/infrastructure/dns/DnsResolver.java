@@ -72,7 +72,7 @@ public class DnsResolver {
         }
         telemetriaLogger.logEvent("info", "analiseDidatica", "dns_cache",
                 Map.of("status", "miss", "hostname", h));
-        NetworkAddressGuard.rejectBlockedHostname(h);
+        recusarHostnameBloqueado(h);
         String ip = resolverLive(h);
         guardarCache(h, ip, now);
         return ip;
@@ -137,7 +137,7 @@ public class DnsResolver {
         }
         telemetriaLogger.logEvent("info", "ipv6", "dns_cache",
                 Map.of("status", "miss", "hostname", h, "tipo", "AAAA"));
-        NetworkAddressGuard.rejectBlockedHostname(h);
+        recusarHostnameBloqueado(h);
         String ip = resolverAaaaLive(h);
         guardarCache(key, ip, now);
         return ip;
@@ -204,7 +204,7 @@ public class DnsResolver {
         for (Record registro : registros) {
             if (registro instanceof AAAARecord aaaa) {
                 InetAddress addr = aaaa.getAddress();
-                NetworkAddressGuard.rejectNonPublicAddress(addr, "resolução AAAA");
+                recusarNaoPublico(addr, "resolução AAAA");
                 String ip = addr.getHostAddress();
                 int pct = ip.indexOf('%');
                 return pct >= 0 ? ip.substring(0, pct) : ip;
@@ -219,7 +219,7 @@ public class DnsResolver {
         try {
             String ip = executar(() -> {
                 InetAddress resolved = InetAddress.getByName(hostname);
-                NetworkAddressGuard.rejectNonPublicAddress(resolved, "resolução DNS");
+                recusarNaoPublico(resolved, "resolução DNS");
                 return resolved.getHostAddress();
             }, dnsConfig.resolveTimeoutSeconds());
             long elapsedMs = (System.nanoTime() - started) / 1_000_000;
@@ -294,6 +294,24 @@ public class DnsResolver {
         } catch (TimeoutException | InterruptedException ex) {
             future.cancel(true);
             throw ex;
+        }
+    }
+
+    // Fronteira do módulo: a recusa do kernel (shared) vira a exceção da Análise Didática, que o
+    // mapper HTTP já conhece — mesma mensagem, mesma causa, mesmo status de antes.
+    private static void recusarHostnameBloqueado(String hostname) {
+        try {
+            NetworkAddressGuard.rejectBlockedHostname(hostname);
+        } catch (org.framework.net.shared.EnderecoBloqueadoException ex) {
+            throw new DnsResolucaoException(ex.getMessage(), ex);
+        }
+    }
+
+    private static void recusarNaoPublico(InetAddress endereco, String contexto) {
+        try {
+            NetworkAddressGuard.rejectNonPublicAddress(endereco, contexto);
+        } catch (org.framework.net.shared.EnderecoBloqueadoException ex) {
+            throw new DnsResolucaoException(ex.getMessage(), ex);
         }
     }
 

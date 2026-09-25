@@ -45,7 +45,8 @@ class ArquiteturaCamadasTest {
 
     private static final Path RAIZ_FONTES = Path.of("src", "main", "java", "org", "framework", "net");
 
-    private static final Pattern IMPORT = Pattern.compile("^\\s*import\\s+(static\\s+)?([\\w.]+)\\s*;");
+    // Aceita também import com curinga (a.b.*): antes ele escapava da varredura inteira.
+    private static final Pattern IMPORT = Pattern.compile("^\\s*import\\s+(static\\s+)?([\\w.]+(?:\\.\\*)?)\\s*;");
 
     /** Pacotes transversais que qualquer módulo pode usar. */
     private static final Set<String> TRANSVERSAIS = Set.of("shared", "telemetria", "security", "web");
@@ -81,6 +82,39 @@ class ArquiteturaCamadasTest {
             // guardas — pior para segurança. Reúso deliberado de infraestrutura, como o GeoIP da
             // Localização acima; registrado para aparecer em revisão e travar acoplamento NOVO.
             "ipv6", Set.of("analiseDidatica"));
+
+    /**
+     * Para os acoplamentos mais largos, a aceitação é por CLASSE, não por módulo inteiro: aceitar
+     * "ipv6 → analiseDidatica" deixava entrar qualquer classe daquele módulo sem revisão (o
+     * PdfSimplesService entrou assim, sem constar na justificativa — auditoria F22).
+     */
+    private static final Map<String, Set<String>> CLASSES_ACEITAS = Map.of(
+            "ipv6", Set.of(
+                    "org.framework.net.analiseDidatica.infrastructure.dns.DnsResolver",
+                    "org.framework.net.analiseDidatica.exception.DnsResolucaoException",
+                    // Gerador de PDF simples sem biblioteca externa; o export IPv6 reusa em vez de duplicar.
+                    "org.framework.net.analiseDidatica.support.PdfSimplesService"));
+
+    @Test
+    @DisplayName("acoplamento aceito por classe não admite classe nova sem revisão")
+    void acoplamentoPorClasseNaoCresceCalado() {
+        List<String> violacoes = new ArrayList<>();
+        for (ArquivoJava arquivo : fontes()) {
+            Set<String> aceitas = CLASSES_ACEITAS.get(arquivo.modulo());
+            if (aceitas == null) {
+                continue;
+            }
+            for (String imp : arquivo.imports()) {
+                String outro = imp.startsWith("org.framework.net.") ? moduloDoImport(imp) : "";
+                if (!outro.isEmpty() && !outro.equals(arquivo.modulo()) && !TRANSVERSAIS.contains(outro)
+                        && !aceitas.contains(imp)) {
+                    violacoes.add(arquivo.caminho() + " importa " + imp + " (fora da lista por classe)");
+                }
+            }
+        }
+        assertTrue(violacoes.isEmpty(), () -> mensagem(
+                "Registre a classe em CLASSES_ACEITAS com o motivo, ou extraia para shared.", violacoes));
+    }
 
     /** Tipos de camada que o domínio jamais pode enxergar. */
     private static final Set<String> CAMADAS_PROIBIDAS_NO_DOMINIO =
@@ -173,6 +207,41 @@ class ArquiteturaCamadasTest {
 
         assertTrue(violacoes.isEmpty(), () -> mensagem(
                 "Cada módulo é um pacote autocontido; o que for comum vive em shared.", violacoes));
+    }
+
+    /**
+     * O kernel compartilhado não depende de módulo de negócio (auditoria F22 / item 7 anterior):
+     * shared/NetworkAddressGuard importava uma exceção da Análise Didática, e a regra acima pula
+     * pacotes transversais como IMPORTADORES — a inversão era invisível. web/telemetria/security
+     * continuam livres para agregar módulos (menu, painel, filtros); shared não.
+     */
+    @Test
+    @DisplayName("shared não depende de nenhum módulo de negócio")
+    void sharedNaoDependeDeModuloDeNegocio() {
+        List<String> violacoes = new ArrayList<>();
+        for (ArquivoJava arquivo : fontes()) {
+            if (!"shared".equals(arquivo.modulo())) {
+                continue;
+            }
+            for (String imp : arquivo.imports()) {
+                String moduloImportado = imp.startsWith("org.framework.net.") ? moduloDoImport(imp) : "";
+                if (!moduloImportado.isEmpty() && !TRANSVERSAIS.contains(moduloImportado)) {
+                    violacoes.add(arquivo.caminho() + " importa " + imp);
+                }
+            }
+        }
+        assertTrue(violacoes.isEmpty(), () -> mensagem(
+                "shared é o kernel: quem depende dele são os módulos, nunca o contrário.", violacoes));
+    }
+
+    /** Piso anti-cegueira: varredura vazia (raiz errada, filtro quebrado) não pode aprovar as regras. */
+    @Test
+    @DisplayName("a varredura enxerga os fontes do projeto")
+    void varreduraEnxergaOsFontes() {
+        List<ArquivoJava> todos = fontes();
+        assertTrue(todos.size() > 200, "só " + todos.size() + " fontes lidos: instrumento cego");
+        assertTrue(todos.stream().anyMatch(a -> "presentation".equals(a.camada())), "nenhuma camada presentation lida");
+        assertTrue(todos.stream().mapToLong(a -> a.imports().size()).sum() > 500, "quase nenhum import lido");
     }
 
     @Test

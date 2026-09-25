@@ -1,6 +1,5 @@
 package org.framework.net.shared;
 
-import org.framework.net.analiseDidatica.exception.DnsResolucaoException;
 
 import java.net.InetAddress;
 import java.net.Inet4Address;
@@ -31,32 +30,32 @@ public final class NetworkAddressGuard {
             return;
         }
         if (BLOCKED_HOSTNAMES.contains(h)) {
-            throw new DnsResolucaoException("Hostname não permitido para resolução DNS: " + hostname);
+            throw new EnderecoBloqueadoException("Hostname não permitido para resolução DNS: " + hostname);
         }
         if (h.endsWith(".local") || h.endsWith(".internal") || h.endsWith(".localhost")) {
-            throw new DnsResolucaoException("Hostname interno não permitido: " + hostname);
+            throw new EnderecoBloqueadoException("Hostname interno não permitido: " + hostname);
         }
     }
 
     public static void rejectNonPublicAddress(InetAddress address, String context) {
         if (address == null) {
-            throw new DnsResolucaoException("Endereço inválido em " + context + ".");
+            throw new EnderecoBloqueadoException("Endereço inválido em " + context + ".");
         }
         if (address.isLoopbackAddress()
                 || address.isLinkLocalAddress()
                 || address.isSiteLocalAddress()
                 || address.isMulticastAddress()
                 || address.isAnyLocalAddress()) {
-            throw new DnsResolucaoException(
+            throw new EnderecoBloqueadoException(
                     "Endereço privado, reservado ou local não permitido em " + context + ": "
                             + address.getHostAddress());
         }
         if (address instanceof Inet4Address inet4 && isIpv4NonPublic(inet4)) {
-            throw new DnsResolucaoException(
+            throw new EnderecoBloqueadoException(
                     "Endereço IPv4 não público não permitido em " + context + ": " + address.getHostAddress());
         }
         if (address instanceof Inet6Address inet6 && isIpv6NonPublic(inet6)) {
-            throw new DnsResolucaoException(
+            throw new EnderecoBloqueadoException(
                     "Endereço IPv6 não público não permitido em " + context + ": " + address.getHostAddress());
         }
     }
