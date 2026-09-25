@@ -8,7 +8,7 @@
  * são reaproveitados sem tocar no backend.
  *
  * Invariantes: nenhum handler inline (compatível com a CSP); o POST leva o token
- * CSRF (cookie XSRF-TOKEN) no cabeçalho X-CSRF-Token; a serialização usa a mesma
+ * CSRF (cookie __Host-XSRF-TOKEN em produção, XSRF-TOKEN em dev) no cabeçalho X-CSRF-Token; a serialização usa a mesma
  * gramática que o parser aceita (host/switchl3/firewall/server/link).
  *
  * Comportamento em caso de falha: erro de rede ou 4xx do servidor não quebram a
@@ -284,7 +284,7 @@
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
-                "X-CSRF-Token": cookie("XSRF-TOKEN")
+                "X-CSRF-Token": cookie("__Host-XSRF-TOKEN") || cookie("XSRF-TOKEN")
             },
             body: corpo
         }).then(function (resp) {

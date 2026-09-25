@@ -30,7 +30,9 @@ public class CsrfResponseFilter implements ContainerResponseFilter {
             return;
         }
         String existing = csrfTokenService.tokenFromCookie(requestContext.getHeaderString("Cookie"));
-        String token = csrfTokenService.isValid(existing) ? existing : csrfTokenService.issueToken();
+        String token = csrfTokenService.isValid(existing) && !csrfTokenService.precisaRenovar(existing)
+                ? existing
+                : csrfTokenService.issueToken();
         NewCookie cookie = new NewCookie.Builder(csrfTokenService.cookieName())
                 .value(token)
                 .path("/")

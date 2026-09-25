@@ -6,8 +6,13 @@
         return match ? decodeURIComponent(match[2]) : "";
     }
 
+    // Produção (HTTPS) usa __Host-XSRF-TOKEN (subdomínio irmão não consegue plantar); dev usa o nome comum.
+    function tokenCsrf() {
+        return getCookie("__Host-XSRF-TOKEN") || getCookie("XSRF-TOKEN");
+    }
+
     function ensureFormToken(form) {
-        const token = getCookie("XSRF-TOKEN");
+        const token = tokenCsrf();
         if (!token) {
             return;
         }
@@ -31,7 +36,7 @@
         const opts = options || {};
         const method = (opts.method || "GET").toUpperCase();
         if (method !== "GET" && method !== "HEAD" && method !== "OPTIONS") {
-            const token = getCookie("XSRF-TOKEN");
+            const token = tokenCsrf();
             if (token) {
                 const headers = new Headers(opts.headers || {});
                 if (!headers.has("X-CSRF-Token")) {
@@ -51,5 +56,5 @@
     }, true);
 
     document.addEventListener("DOMContentLoaded", () => bindForms(document));
-    w.CsrfClient = { bindForms, getToken: () => getCookie("XSRF-TOKEN") };
+    w.CsrfClient = { bindForms, getToken: () => tokenCsrf() };
 })(window);

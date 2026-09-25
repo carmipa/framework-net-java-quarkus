@@ -15,6 +15,8 @@ import java.util.Base64;
 public class CsrfTokenService {
 
     private static final String COOKIE_NAME = "XSRF-TOKEN";
+    /** Em HTTPS: o navegador só aceita __Host- com Secure, Path=/ e sem Domain — subdomínio irmão não planta. */
+    private static final String COOKIE_NAME_HOST = "__Host-XSRF-TOKEN";
     private static final long TTL_SECONDS = 3600;
 
     @ConfigProperty(name = "framework.security.csrf-enabled", defaultValue = "true")
@@ -23,14 +25,40 @@ public class CsrfTokenService {
     @ConfigProperty(name = "framework.security.csrf-secret", defaultValue = "framework-net-dev-csrf-secret")
     String csrfSecret;
 
+    @ConfigProperty(name = "framework.security.cookie-secure", defaultValue = "false")
+    boolean cookieSecure;
+
     private final SecureRandom random = new SecureRandom();
 
     public boolean isEnabled() {
         return csrfEnabled;
     }
 
+    /**
+     * PROPÓSITO: nome do cookie do token CSRF (double submit).
+     * INVARIANTES: com cookie Secure (produção) é {@code __Host-XSRF-TOKEN} e o servidor só lê esse
+     * nome — cookie sem prefixo, que um subdomínio irmão consegue plantar, é ignorado. Sem HTTPS (dev)
+     * o navegador recusaria o prefixo, então vale o nome comum.
+     * FALHA: não lança.
+     */
     public String cookieName() {
-        return COOKIE_NAME;
+        return cookieSecure ? COOKIE_NAME_HOST : COOKIE_NAME;
+    }
+
+    /**
+     * Token válido que já passou da metade da validade: o filtro de resposta emite um novo. Sem isso
+     * o token vencia 1 h após a emissão mesmo com a página em uso, e o próximo POST levava 403.
+     */
+    public boolean precisaRenovar(String token) {
+        if (token == null || token.isBlank()) {
+            return false;
+        }
+        try {
+            long expiry = Long.parseLong(token.strip().split("\\.", -1)[0]);
+            return expiry - Instant.now().getEpochSecond() < TTL_SECONDS / 2;
+        } catch (NumberFormatException ex) {
+            return false;
+        }
     }
 
     public String issueToken() {
@@ -66,10 +94,11 @@ public class CsrfTokenService {
         if (cookieHeader == null || cookieHeader.isBlank()) {
             return "";
         }
+        String nome = cookieName() + "=";
         for (String chunk : cookieHeader.split(";")) {
             String trimmed = chunk.strip();
-            if (trimmed.startsWith(COOKIE_NAME + "=")) {
-                return trimmed.substring(COOKIE_NAME.length() + 1);
+            if (trimmed.startsWith(nome)) {
+                return trimmed.substring(nome.length());
             }
         }
         return "";
