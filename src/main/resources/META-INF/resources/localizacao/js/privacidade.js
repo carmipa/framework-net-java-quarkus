@@ -21,7 +21,9 @@
 
     function classificarCandidato(addr, tipo) {
         if (/\.local$/i.test(addr)) return { grupo: "local", rotulo: "Rede local (protegida por mDNS)", cor: "ok" };
-        if (/^fe80:/i.test(addr)) return { grupo: "local", rotulo: "IPv6 link-local", cor: "ok" };
+        if (/^fe[89ab][0-9a-f]:/i.test(addr)) return { grupo: "local", rotulo: "IPv6 link-local", cor: "ok" };
+        if (/^f[cd][0-9a-f]{2}:/i.test(addr)) return { grupo: "privado", rotulo: "IPv6 privado (ULA) exposto", cor: "warn" };
+        if (addr === "::1") return { grupo: "local", rotulo: "Loopback IPv6", cor: "ok" };
         if (/^[0-9.]+$/.test(addr) && ehPrivadoV4(addr)) return { grupo: "privado", rotulo: "IP da rede local exposto", cor: "warn" };
         return { grupo: "publico", rotulo: "IP público (via STUN)" + (tipo ? " · " + tipo : ""), cor: "risk" };
     }
@@ -180,12 +182,18 @@
         var proxyFlag = geo.proxy === true;
         var publicos = rtc.candidatos.filter(function (c) { return c.classe.grupo === "publico"; });
         var privados = rtc.candidatos.filter(function (c) { return c.classe.grupo === "privado"; });
-        var ipWebrtcPublico = publicos.length ? publicos[0].addr : null;
+        // Compara só endereços da MESMA família: em pilha dupla (comum no Brasil) o servidor vê o
+        // IPv4 e o WebRTC mostra o IPv6 — isso não é VPN, e a comparação crua acusava vazamento.
+        var familia = function (ip) { return String(ip).indexOf(":") >= 0 ? 6 : 4; };
+        var mesmaFamilia = publicos.filter(function (c) { return familia(c.addr) === familia(ipServidor); });
+        var ipWebrtcPublico = mesmaFamilia.length ? mesmaFamilia[0].addr : null;
+        var outraFamilia = publicos.filter(function (c) { return familia(c.addr) !== familia(ipServidor); });
 
         // veredito
         var alertas = [];
         if (proxyFlag) alertas.push("O provedor sinaliza <strong>Proxy/VPN</strong> para o IP público.");
-        if (ipWebrtcPublico && ipServidor && ipWebrtcPublico !== ipServidor && ipServidor !== "127.0.0.1") {
+        if (ipWebrtcPublico && ipServidor && ipWebrtcPublico !== ipServidor
+                && ipServidor !== "127.0.0.1" && ipServidor !== "::1") {
             alertas.push("<strong>Divergência de IP público</strong>: o servidor vê <code>" + esc(ipServidor) +
                 "</code> e o WebRTC revela <code>" + esc(ipWebrtcPublico) + "</code> — típico de VPN/proxy com vazamento WebRTC.");
         }
@@ -216,9 +224,15 @@
             '<div class="loc-result-grid">' +
             item("Servidor vê (IP real)", ipServidor, true) +
             item("ip-api vê", ipPublico, true) +
-            item("WebRTC (STUN) revela", ipWebrtcPublico || "não revelou", true) +
+            item("WebRTC (STUN) revela", ipWebrtcPublico
+                || (outraFamilia.length ? outraFamilia[0].addr + " (outra família de IP)" : "não revelou"), true) +
             item("Proxy/VPN pelo provedor", proxyFlag ? "sim" : "não") +
             "</div>";
+        if (!ipWebrtcPublico && outraFamilia.length) {
+            det += '<p class="small text-secondary mb-2">Pilha dupla: o servidor viu um endereço ' +
+                (familia(ipServidor) === 4 ? "IPv4" : "IPv6") + " e o WebRTC revelou um " +
+                (familia(ipServidor) === 4 ? "IPv6" : "IPv4") + ". Isso é normal em conexões com IPv4 e IPv6 e não indica VPN.</p>";
+        }
 
         det += '<h6 class="priv-sec"><span class="material-symbols-outlined">lan</span> Candidatos WebRTC</h6>';
         if (!rtc.suportado) {

@@ -432,10 +432,22 @@
         });
         document.querySelectorAll('.btn-clear-console').forEach(btn => {
             btn.addEventListener('click', async () => {
-                try { await fetch('/telemetria/api/console/limpar', { method: 'POST' }); } catch (_) { /* ignore */ }
-                consoleLinhas = [];
                 const alvo = $(btn.dataset.target);
-                if (alvo) alvo.textContent = 'Console limpo. Aguardando novos eventos...';
+                // Só diz "limpo" se o servidor limpou: um leitor recebe 403 e as linhas voltariam no
+                // próximo refresh, depois de a tela afirmar o contrário.
+                let status = 0;
+                try {
+                    const resp = await fetch('/telemetria/api/console/limpar', { method: 'POST' });
+                    status = resp.status;
+                } catch (_) { status = 0; }
+                if (status >= 200 && status < 300) {
+                    consoleLinhas = [];
+                    if (alvo) alvo.textContent = 'Console limpo. Aguardando novos eventos...';
+                } else if (alvo) {
+                    alvo.textContent = status === 403
+                        ? 'Não limpo: só o dono da telemetria pode limpar o console (código 403).'
+                        : 'Não foi possível limpar o console agora' + (status ? ' (código ' + status + ').' : ' (sem conexão).');
+                }
             });
         });
         const nivel = $('t-console-nivel');

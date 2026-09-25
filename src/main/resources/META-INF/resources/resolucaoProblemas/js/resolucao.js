@@ -58,9 +58,34 @@
             '<div>Lado B: <strong>' + esc(detail.endpoint_b) + '</strong></div>';
     };
 
+    // securityLevel "strict" (mantido: defesa contra rótulo malicioso) DESLIGA as diretivas `click`
+    // do Mermaid — o painel "clique em um roteador" nunca abria. O clique é ligado aqui, depois da
+    // renderização, pelo id do nó (flowchart-<id>-<n>), só para ids que têm detalhe no mapa.
+    function ligarCliquesDaTopologia() {
+        document.querySelectorAll(".topology-wrap .mermaid svg g.node").forEach((node) => {
+            const bruto = (node.getAttribute("id") || "").replace(/^flowchart-/, "").replace(/-\d+$/, "");
+            if (!bruto || !topologyDetails[bruto] || node.dataset.cliqueLigado === "1") return;
+            node.dataset.cliqueLigado = "1";
+            node.style.cursor = "pointer";
+            node.setAttribute("tabindex", "0");
+            node.setAttribute("role", "button");
+            node.setAttribute("aria-label", "Detalhes de " + bruto);
+            node.addEventListener("click", () => window.showTopologyDetail(bruto));
+            node.addEventListener("keydown", (ev) => {
+                if (ev.key === "Enter" || ev.key === " ") {
+                    ev.preventDefault();
+                    window.showTopologyDetail(bruto);
+                }
+            });
+        });
+        applySelectedTopologyNode();
+    }
+
     if (typeof mermaid !== "undefined") {
-        mermaid.initialize({ startOnLoad: true, theme: "dark", securityLevel: "strict" });
-        setTimeout(applySelectedTopologyNode, 250);
+        mermaid.initialize({ startOnLoad: false, theme: "dark", securityLevel: "strict" });
+        Promise.resolve(mermaid.run({ querySelector: ".topology-wrap .mermaid" }))
+            .then(ligarCliquesDaTopologia)
+            .catch((erro) => console.warn("Diagrama de topologia não renderizou:", erro));
     }
 
     const container = document.getElementById("locations-container");
