@@ -14,9 +14,11 @@
  *       primaria.
  *     - So intercepta GET de MESMA ORIGEM. Requisicao a CDN, a API externa ou
  *       com qualquer outro metodo passa direto, sem o service worker no meio.
- *     - NUNCA cacheia rota autenticada nem dado de telemetria: /telemetria,
- *       /admin, /export e /history ficam de fora, porque o cache do browser
- *       sobrevive ao logout e guardaria conteudo protegido no disco.
+ *     - NUNCA cacheia rota autenticada, dado de telemetria nem pagina com dado
+ *       da sessao/visitante: NUNCA_CACHEAR (prefixos) e NUNCA_CACHEAR_TRECHOS
+ *       (toda /api/ e todo export de modulo) ficam de fora, porque o cache do
+ *       browser sobrevive ao logout e ao fechar a janela e guardaria no disco
+ *       conteudo protegido ou o historico/IP de quem usou o PC antes.
  *     - Cada versao usa um nome de cache proprio; caches antigos sao apagados no
  *       activate, entao o deploy nao deixa lixo acumulado.
  *
@@ -25,8 +27,8 @@
  *     /offline.html para navegacao e um erro 503 sintetico para o resto. Nenhuma
  *     falha do service worker impede a aplicacao de funcionar online.
  */
-/* v2: expurga caches da v1, que guardavam export/API de dado pessoal (auditoria F30). */
-const VERSAO = 'framework-net-v2';
+/* v3: expurga caches anteriores, que guardavam export/API e páginas com dado pessoal da sessão. */
+const VERSAO = 'framework-net-v3';
 const CACHE_ESTATICO = `${VERSAO}-estatico`;
 const PAGINA_OFFLINE = '/offline.html';
 
@@ -42,7 +44,10 @@ const PRE_CACHE = [
 ];
 
 /* Prefixos que nunca entram no cache — conteudo autenticado ou volatil. */
-const NUNCA_CACHEAR = ['/telemetria', '/admin', '/login', '/export', '/history', '/health'];
+// /analise renderiza o histórico da SESSÃO e /informacoes o IP/geo do visitante: no Cache Storage
+// eles sobreviveriam ao fechar o navegador num PC compartilhado de laboratório.
+const NUNCA_CACHEAR = ['/telemetria', '/admin', '/login', '/export', '/history', '/health',
+  '/analise', '/informacoes'];
 
 /* Trechos em QUALQUER posicao do caminho: toda API e todo export de modulo (ex.: /ipv6/export,
    /localizacao/api/inspecao com IP e cabecalhos). Regra por familia, nao lista de rotas: rota nova

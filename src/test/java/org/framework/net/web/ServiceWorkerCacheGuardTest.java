@@ -49,7 +49,7 @@ class ServiceWorkerCacheGuardTest {
 
         for (String sensivel : List.of("/telemetria", "/admin/x", "/history", "/export/pdf",
                 "/ipv6/export/pdf", "/calculadora/export/divisao.csv", "/api/informacoes/geo",
-                "/localizacao/api/inspecao", "/localizacao/api/ip")) {
+                "/localizacao/api/inspecao", "/localizacao/api/ip", "/analise", "/analise?replay=abc", "/informacoes")) {
             assertTrue(protegida(sensivel, prefixos, trechos), "entraria no cache do navegador: " + sensivel);
         }
         // Controle legítimo (A1): páginas e estáticos continuam cacheáveis (é o que faz o offline existir).
