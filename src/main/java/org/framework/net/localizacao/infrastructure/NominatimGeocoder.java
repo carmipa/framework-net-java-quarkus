@@ -25,9 +25,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>A política de uso do Nominatim exige um {@code User-Agent} identificável e no máximo
  * ~1 req/s NO TOTAL — é o IP da VPS inteira que pode ser banido. Por isso: busca e reverso têm cache
- * (memória + L2) e toda chamada externa passa por um freio GLOBAL de uma por segundo; chamada freada
- * devolve {@code Optional.empty()} (o chamador já mostra "sem endereço disponível") em vez de
- * furar a política.
+ * (memória + L2) e toda chamada externa passa por um freio GLOBAL de uma por segundo, que ESPERA pelo
+ * próximo slot livre até um teto curto; além do teto a chamada devolve {@code Optional.empty()} (o
+ * chamador já mostra "sem endereço disponível") em vez de furar a política.
  */
 @ApplicationScoped
 public class NominatimGeocoder {
@@ -57,20 +57,60 @@ public class NominatimGeocoder {
     private final Map<String, Map<String, Object>> cache = new ConcurrentHashMap<>();
     private volatile HttpClient httpClient;
 
-    /** Instante (nanoTime) da última chamada externa autorizada — freio global de 1 req/s. */
-    private final java.util.concurrent.atomic.AtomicLong ultimaChamada =
-            new java.util.concurrent.atomic.AtomicLong(System.nanoTime() - 2_000_000_000L);
+    private static final long JANELA_NANOS = 1_000_000_000L;
 
-    /** Reserva a janela de 1 s para uma chamada externa; false se outra saiu há menos de 1 s. */
+    @ConfigProperty(name = "framework.localizacao.nominatim-espera-maxima-ms", defaultValue = "1200")
+    long esperaMaximaMs = 1200;
+
+    /** Costuras de teste: relógio monotônico e sono. Produção usa {@code System.nanoTime} e parkNanos real. */
+    interface Dormidor {
+        void dormir(long nanos) throws InterruptedException;
+    }
+
+    java.util.function.LongSupplier relogio = System::nanoTime;
+    Dormidor dormidor = nanos -> java.util.concurrent.TimeUnit.NANOSECONDS.sleep(nanos);
+
+    /** Instante (nanoTime) do último slot de 1 s já reservado — freio global de 1 req/s. */
+    private final java.util.concurrent.atomic.AtomicLong ultimaChamada =
+            new java.util.concurrent.atomic.AtomicLong(System.nanoTime() - 2 * JANELA_NANOS);
+
+    /**
+     * Reserva o próximo slot livre de 1 s para uma chamada externa ao Nominatim e espera até ele.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> cumprir a política de uso do Nominatim (~1 req/s no total, sob pena
+     * de o IP da VPS ser banido e o mapa sumir para todos) sem descartar a segunda chamada legítima que
+     * chega no mesmo segundo — o fallback cidade/UF do CEP é exatamente esse caso.
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> dois slots reservados distam sempre ≥ 1 s (CAS sobre o último
+     * slot, então chamadas concorrentes recebem slots sucessivos, nunca o mesmo); a espera de uma chamada
+     * nunca passa de {@code esperaMaximaMs} — rajada que exigiria fila maior é recusada, não enfileirada
+     * sem fim prendendo threads de trabalho.
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> devolve {@code false} quando o próximo slot livre fica além
+     * da espera máxima, ou quando a thread é interrompida durante a espera (a interrupção é restaurada e o
+     * slot reservado se perde, o que só reduz a vazão, nunca a excede). Não lança.
+     */
     private boolean reservarJanela() {
+        long limite = Math.max(0, esperaMaximaMs) * 1_000_000L;
         while (true) {
             long anterior = ultimaChamada.get();
-            long agora = System.nanoTime();
-            if (agora - anterior < 1_000_000_000L) {
+            long agora = relogio.getAsLong();
+            long slot = Math.max(agora, anterior + JANELA_NANOS);
+            long espera = slot - agora;
+            if (espera > limite) {
                 return false;
             }
-            if (ultimaChamada.compareAndSet(anterior, agora)) {
-                return true;
+            if (ultimaChamada.compareAndSet(anterior, slot)) {
+                if (espera <= 0) {
+                    return true;
+                }
+                try {
+                    dormidor.dormir(espera);
+                    return true;
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
             }
         }
     }
