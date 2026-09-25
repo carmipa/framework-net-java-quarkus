@@ -260,7 +260,9 @@ public class TelemetriaDashboardService {
      * gera número errado, que é pior, porque ninguém desconfia.</p>
      *
      * <p><b>Invariantes do domínio:</b> todo primeiro segmento de rota real do
-     * projeto está mapeado explicitamente. O {@code default} devolve
+     * projeto está mapeado explicitamente — travado por
+     * {@code ModuloDePathTest.todoPrimeiroSegmentoDeRotaRealTemModulo}, que deriva a lista dos
+     * {@code @Path} do código (a lista à mão tinha deixado 6 módulos em "Outros"). O {@code default} devolve
      * <b>"Outros"</b>, nunca um módulo concreto: antes ele apontava para
      * "Análise Didática", e com isso {@code /calculadora}, {@code /sobre},
      * {@code /admin} e {@code /simuladores} inflavam silenciosamente as
@@ -293,6 +295,12 @@ public class TelemetriaDashboardService {
             case "documentacao" -> "Documentação";
             case "informacoes" -> "GeoIP";
             case "sobre" -> "Sobre";
+            case "laboratorios" -> "Laboratórios";
+            case "certificados" -> "Certificados";
+            case "camadas" -> "Camadas";
+            case "criptografia" -> "Criptografia";
+            case "wifi" -> "Wi-Fi";
+            case "ferramentas" -> "Ferramentas";
             case "admin", "login", "logout" -> "Admin";
             case "api" -> apiModulo(p);
             default -> "Outros";

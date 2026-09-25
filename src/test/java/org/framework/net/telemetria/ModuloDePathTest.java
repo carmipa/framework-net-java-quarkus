@@ -19,6 +19,35 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DisplayName("Telemetria: atribuição de módulo por caminho HTTP")
 class ModuloDePathTest {
 
+    /**
+     * F16: a lista escrita à mão deixou 6 módulos (laboratorios, certificados, camadas, criptografia,
+     * wifi, ferramentas) caírem em "Outros". Esta verificação DERIVA os primeiros segmentos dos {@code @Path}
+     * de classe do código real — módulo novo sem mapeamento reprova o build.
+     * Isentos com motivo: infraestrutura sem módulo de negócio (health, manifest, sitemap, ícone da marca).
+     */
+    @Test
+    void todoPrimeiroSegmentoDeRotaRealTemModulo() throws java.io.IOException {
+        java.util.Set<String> isentos = java.util.Set.of("health", "manifest.webmanifest", "sitemap.xml", "icone.png");
+        java.util.regex.Pattern pathDeClasse = java.util.regex.Pattern.compile(
+                "@Path\\(\"/([^/\"{]+)[^\"]*\"\\)\\s*(?:@[\\w.]+(?:\\([^)]*\\))?\\s*)*public\\s+(?:final\\s+)?class");
+        java.util.Set<String> segmentos = new java.util.TreeSet<>();
+        try (var arquivos = java.nio.file.Files.walk(java.nio.file.Path.of("src/main/java"))) {
+            for (var p : arquivos.filter(x -> x.toString().endsWith(".java")).toList()) {
+                var m = pathDeClasse.matcher(java.nio.file.Files.readString(p));
+                while (m.find()) {
+                    segmentos.add(m.group(1));
+                }
+            }
+        }
+        org.junit.jupiter.api.Assertions.assertTrue(segmentos.size() > 15,
+                "instrumento cego: só " + segmentos.size() + " segmentos de @Path encontrados: " + segmentos);
+        java.util.List<String> semModulo = segmentos.stream()
+                .filter(s -> !isentos.contains(s))
+                .filter(s -> "Outros".equals(TelemetriaDashboardService.moduloDePath("/" + s)))
+                .toList();
+        assertEquals(java.util.List.of(), semModulo);
+    }
+
     @Test
     void rotasDeMenuTemModuloProprio() {
         assertEquals("Início", TelemetriaDashboardService.moduloDePath("/"));
