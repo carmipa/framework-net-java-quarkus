@@ -62,22 +62,57 @@ public class TelemetriaStreamRedis {
 
     private volatile Boolean disponivel;
 
-    /** O Stream está utilizável agora? Resolvido uma vez e memorizado. */
+    /** Costuras de teste: a sonda de disponibilidade e o relógio. */
+    java.util.function.BooleanSupplier sonda = this::testar;
+    java.util.function.LongSupplier relogio = System::currentTimeMillis;
+
+    /**
+     * Indisponível, o Stream volta a ser testado depois deste intervalo. Antes, uma falha só (Redis
+     * reiniciado, recriado no deploy, OOM no teto de 64 MB) o desligava até a APLICAÇÃO reiniciar.
+     * Entre um teste e outro não há sonda: o Redis não é martelado a cada evento.
+     */
+    static final long INTERVALO_RETESTE_MS = 60_000L;
+
+    private volatile long proximaTentativaMs;
+
+    /**
+     * O Stream está utilizável agora? Disponível fica memorizado; indisponível é retestado a cada
+     * {@link #INTERVALO_RETESTE_MS}. O log sai só na TROCA de estado (sem tempestade de log).
+     */
     public boolean ativo() {
         if (!habilitado) {
             return false;
         }
         Boolean cache = disponivel;
-        if (cache != null) {
+        if (cache != null && (cache || relogio.getAsLong() < proximaTentativaMs)) {
             return cache;
         }
         synchronized (this) {
-            if (disponivel == null) {
-                disponivel = testar();
-                LOG.infof("Stream de telemetria no Redis: %s (chave=%s, maxlen=%d)",
-                        disponivel ? "ativo" : "indisponivel", chave, maxLen);
+            Boolean antes = disponivel;
+            if (antes != null && (antes || relogio.getAsLong() < proximaTentativaMs)) {
+                return antes;
             }
-            return disponivel;
+            boolean agora = sonda.getAsBoolean();
+            disponivel = agora;
+            if (!agora) {
+                proximaTentativaMs = relogio.getAsLong() + INTERVALO_RETESTE_MS;
+            }
+            if (antes == null || antes != agora) {
+                LOG.infof("Stream de telemetria no Redis: %s (chave=%s, maxlen=%d)",
+                        agora ? "ativo" : "indisponivel (novo teste em 60 s)", chave, maxLen);
+            }
+            return agora;
+        }
+    }
+
+    /** Falha em uso: marca indisponível e agenda o reteste (log só na primeira da sequência). */
+    private void marcarFalha(String operacao, Exception ex) {
+        boolean estavaAtivo = Boolean.TRUE.equals(disponivel);
+        proximaTentativaMs = relogio.getAsLong() + INTERVALO_RETESTE_MS;
+        disponivel = false;
+        if (estavaAtivo) {
+            LOG.warnf("Stream de telemetria indisponivel apos falha em %s (%s); novo teste em 60 s.",
+                    operacao, ex.getClass().getSimpleName());
         }
     }
 
@@ -110,8 +145,7 @@ public class TelemetriaStreamRedis {
                     "MAXLEN", "~", String.valueOf(maxLen), "*", CAMPO, json);
             return true;
         } catch (Exception ex) {
-            disponivel = false;
-            LOG.warnf("Stream de telemetria desativado apos falha: %s", ex.getClass().getSimpleName());
+            marcarFalha("XADD", ex);
             return false;
         }
     }
@@ -135,8 +169,7 @@ public class TelemetriaStreamRedis {
                     "COUNT", String.valueOf(limite));
             return converter(resposta);
         } catch (Exception ex) {
-            disponivel = false;
-            LOG.warnf("Leitura do stream de telemetria falhou: %s", ex.getClass().getSimpleName());
+            marcarFalha("XREVRANGE", ex);
             return List.of();
         }
     }
