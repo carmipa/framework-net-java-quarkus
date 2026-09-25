@@ -88,6 +88,17 @@
         el.appendChild(p);
     }
 
+    // Resposta HTTP que não é 2xx (ex.: 429 do limite de taxa) vira {ok:false, mensagem} — sem isto o
+    // corpo {"erro":...} era desenhado como "Endereço por CEP" com todos os campos vazios.
+    function lerResposta(r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+            if (r.ok) {
+                return j;
+            }
+            return { ok: false, mensagem: (j && (j.erro || j.mensagem)) || ("Falha na consulta (HTTP " + r.status + ").") };
+        });
+    }
+
     function renderCep(data) {
         if (!data || data.ok === false) {
             var e = painel();
@@ -121,6 +132,9 @@
         g.appendChild(item("Latitude", coords.latitude.toFixed(6)));
         g.appendChild(item("Longitude", coords.longitude.toFixed(6)));
         g.appendChild(item("Precisão (m)", coords.accuracy ? Math.round(coords.accuracy) : null));
+        if (data && data.ok === false && data.mensagem) {
+            aviso(el, data.mensagem, "loc-alerta loc-erro");
+        }
         if (data && data.ok !== false) {
             g.appendChild(item("Logradouro", data.logradouro));
             g.appendChild(item("Bairro", data.bairro));
@@ -143,7 +157,7 @@
             if (status) status.textContent = "Localização obtida.";
             var c = pos.coords;
             fetch("/localizacao/api/gps?lat=" + c.latitude + "&lon=" + c.longitude, { headers: { Accept: "application/json" } })
-                .then(function (r) { return r.json(); })
+                .then(lerResposta)
                 .then(function (data) { renderGps(data, c); })
                 .catch(function () { renderGps({ ok: false }, c); });
         }, function (err) {
@@ -154,7 +168,7 @@
     function buscarCep() {
         var cep = (document.getElementById("loc-cep").value || "").trim();
         fetch("/localizacao/api/cep?cep=" + encodeURIComponent(cep), { headers: { Accept: "application/json" } })
-            .then(function (r) { return r.json(); })
+            .then(lerResposta)
             .then(renderCep)
             .catch(function () {
                 var e = painel();

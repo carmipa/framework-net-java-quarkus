@@ -247,6 +247,32 @@ try {
   await page.context().close();
 }
 
+// BF4 (revisão de boa-fé) — 429 no CEP vira aviso de erro, não "Endereço por CEP" com campos vazios.
+// Controle (A1): a resposta 200 legítima continua desenhando a ficha do endereço.
+{
+  const page = await novaPagina(browser);
+  const buscar = async (status, corpo) => {
+    await page.unroute(/\/localizacao\/api\/cep/).catch(() => {});
+    await page.route(/\/localizacao\/api\/cep/, (r) => r.fulfill({
+      status, contentType: 'application/json', body: JSON.stringify(corpo),
+    }));
+    await page.fill('#loc-cep', '07062031');
+    await page.press('#loc-cep', 'Enter');
+    await page.waitForTimeout(600);
+    return (await page.textContent('#loc-resultado')) || '';
+  };
+  await page.goto(BASE + '/localizacao', { waitUntil: 'load', timeout: 45000 });
+  await assentar(page);
+  await page.click('[data-tab="cep"]');
+  const com429 = await buscar(429, { erro: 'Muitas requisições. Aguarde um minuto e tente novamente.' });
+  const com200 = await buscar(200, { ok: true, cep: '07062-031', logradouro: 'Rua Laura', cidade: 'Guarulhos', uf: 'SP',
+    geocoded: false, aviso: 'sem mapa' });
+  registrar('BF4 429 no CEP vira aviso', /CEP não localizado/.test(com429) && /Muitas requisições/.test(com429)
+      && !/Endereço por CEP/.test(com429) && /Endereço por CEP/.test(com200) && /Rua Laura/.test(com200),
+    `429 → "${com429.trim().slice(0, 70)}" | 200 → "${com200.trim().slice(0, 40)}"`);
+  await page.context().close();
+}
+
 // F31 — "Limpar console" só diz "limpo" se o servidor limpou (403 → mensagem honesta).
 // Login com a chave do perfil DEV (pública no application.properties; não existe em produção).
 {

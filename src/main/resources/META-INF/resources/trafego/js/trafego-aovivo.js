@@ -146,10 +146,13 @@
 
     function tick() {
         fetch("/trafego/api/aovivo", { headers: { Accept: "application/json" } })
-            .then(function (r) { return r.json(); })
+            .then(function (r) {
+                if (!r.ok) { throw new Error(r.status === 429 ? "muitas requisições desta rede, aguarde" : "HTTP " + r.status); }
+                return r.json();
+            })
             .then(render)
-            .catch(function () {
-                var st = $("live-status"); if (st) { st.textContent = "erro ao consultar o servidor."; st.className = "small text-danger"; }
+            .catch(function (e) {
+                var st = $("live-status"); if (st) { st.textContent = "erro ao consultar o servidor (" + e.message + ")."; st.className = "small text-danger"; }
             });
     }
 

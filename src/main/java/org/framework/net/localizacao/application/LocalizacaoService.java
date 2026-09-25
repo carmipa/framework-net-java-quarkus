@@ -70,7 +70,8 @@ public class LocalizacaoService {
             out.put("geocoded", true);
         } else {
             out.put("geocoded", false);
-            out.put("aviso", "Endereço encontrado, mas não foi possível obter coordenadas para o mapa.");
+            out.put("aviso", "Endereço encontrado, mas o mapa não conseguiu posicioná-lo agora: o serviço de mapas pode estar "
+                    + "ocupado ou não conhecer esta rua. Tente de novo em alguns segundos.");
         }
         telemetriaLogger.logEvent("info", "localizacao", "lookup_cep",
                 Map.of("cidade", String.valueOf(out.getOrDefault("cidade", "-")),
@@ -89,7 +90,8 @@ public class LocalizacaoService {
         out.put("lon", lon);
         nominatimGeocoder.reverse(lat, lon).ifPresentOrElse(
                 out::putAll,
-                () -> out.put("aviso", "Coordenadas obtidas, mas sem endereço reverso disponível."));
+                () -> out.put("aviso", "Coordenadas obtidas, mas o endereço não pôde ser consultado agora "
+                        + "(serviço de mapas ocupado ou indisponível). Tente de novo em alguns segundos."));
         // Reforça as coordenadas exatas do GPS (o reverse pode ajustar levemente).
         out.put("lat", lat);
         out.put("lon", lon);

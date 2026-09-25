@@ -65,12 +65,22 @@
         var enc = $("hs-encerramento").checked;
         return fetch("/simuladores/api/handshake?dados=" + dados + "&encerramento=" + enc,
             { headers: { Accept: "application/json" } })
-            .then(function (r) { return r.json(); })
+            .then(function (r) {
+                if (!r.ok) { throw new Error("HTTP " + r.status); }
+                return r.json();
+            })
             .then(function (d) {
                 passos = d.passos || [];
                 visiveis = 0;
                 montarDiagrama();
                 aplicarVisiveis();
+            })
+            .catch(function (e) {
+                // Falha visível (ex.: 429 do limite de taxa) em vez de diagrama vazio e mudo.
+                passos = [];
+                visiveis = 0;
+                $("hs-diagrama").textContent = "Não foi possível carregar o handshake. Tente novamente em instantes. ("
+                    + e.message + ")";
             });
     }
 

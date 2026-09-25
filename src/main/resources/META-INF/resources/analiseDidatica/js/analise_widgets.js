@@ -108,7 +108,10 @@
         const tbody = document.getElementById("mask-ref-tbody");
         if (!tbody) return;
         fetch("/mascara-referencia")
-            .then((r) => r.json())
+            .then((r) => {
+                if (!r.ok) throw new Error("HTTP " + r.status);
+                return r.json();
+            })
             .then((data) => {
                 const rows = data.table || (Array.isArray(data) ? data : (data.items || data.rows || []));
                 if (!rows.length) return;

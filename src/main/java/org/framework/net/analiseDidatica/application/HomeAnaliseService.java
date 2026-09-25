@@ -228,6 +228,10 @@ public class HomeAnaliseService {
         }
         Map<String, Object> selected = historicoStore.buscarReplay(replayId);
         if (selected == null) {
+            // O histórico é por navegador (cookie de sessão): link de replay copiado de outra pessoa, ou de
+            // uma sessão já encerrada, cairia num formulário vazio sem explicação.
+            vm.setErro("Esta consulta do histórico não pertence a este navegador ou já expirou "
+                    + "(o histórico fica só no navegador em que foi feito e some ao fechá-lo).");
             return;
         }
         String modoReplay = String.valueOf(selected.getOrDefault("modo", "")).toLowerCase();

@@ -158,7 +158,7 @@
 
     <div class="card-tech p-3 shadow mt-4 history-box">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-            <h6 class="text-info mb-0 d-flex align-items-center gap-2"><span class="material-symbols-outlined" translate="no" aria-hidden="true">history</span> Histórico</h6>
+            <h6 class="text-info mb-0 d-flex align-items-center gap-2" title="Suas consultas ficam só neste navegador e somem ao fechá-lo; outras pessoas não as veem"><span class="material-symbols-outlined" translate="no" aria-hidden="true">history</span> Histórico deste navegador</h6>
             <form method="GET" action="/analise" class="d-flex flex-wrap align-items-center gap-2 small">
                 <input type="hidden" name="tab" value="{activeTabPre}">
                 <label class="text-secondary">Por página</label>
@@ -211,7 +211,7 @@
 {/content}
 {#extraScripts}
 <script src="/analiseDidatica/js/geo_report.js?v=20260710"></script>
-<script src="/analiseDidatica/js/analise_widgets.js?v=20260925"></script>
+<script src="/analiseDidatica/js/analise_widgets.js?v=20260925f"></script>
 <script src="/analiseDidatica/js/analise.js?v=20260710"></script>
 {/extraScripts}
 {/include}
