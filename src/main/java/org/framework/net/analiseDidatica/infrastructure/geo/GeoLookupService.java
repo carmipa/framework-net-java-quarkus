@@ -106,10 +106,17 @@ public class GeoLookupService {
 
         try {
             String entradaOriginal = normalized;
+            // Só IP LITERAL: com nome de host o getByName resolvia DNS — oráculo de nomes de container
+            // (existe × não existe) e thread presa em DNS lento. Literal não gera consulta DNS.
+            if (!looksLikeLiteralIpv4(normalized) && !looksLikeLiteralIpv6(normalized)) {
+                return enriquecerRespostaGeo(erroBase("invalid", "Endereço IP inválido.", normalized));
+            }
             InetAddress addr = InetAddress.getByName(normalized);
             normalized = addr.getHostAddress();
+            byte[] b = addr.getAddress();
+            boolean cgnat = b.length == 4 && (b[0] & 0xFF) == 100 && (b[1] & 0xC0) == 64;   // 100.64.0.0/10
             if (addr.isLoopbackAddress() || addr.isSiteLocalAddress() || addr.isLinkLocalAddress()
-                    || addr.isMulticastAddress() || addr.isAnyLocalAddress()) {
+                    || addr.isMulticastAddress() || addr.isAnyLocalAddress() || cgnat) {
                 String msg = "Endereço local ou privado (RFC 1918, loopback, etc.) — "
                         + "não há geolocalização pública para este IP.";
                 // Devolve o que o usuário digitou, NUNCA o endereço resolvido: ecoar o

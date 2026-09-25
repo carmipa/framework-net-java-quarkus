@@ -28,6 +28,23 @@ class GeoLookupServiceTest {
         assertNotNull(out.get("reservado_motivo"));
     }
 
+    /**
+     * F05: nome de host NÃO é resolvido. "localhost" resolve para 127.0.0.1 — antes respondia
+     * private_or_local e servia de oráculo de nomes de container na rede Docker (existe × não existe)
+     * e prendia thread em DNS lento. Fronteira (A1): o LITERAL 127.0.0.1 continua private_or_local.
+     */
+    @Test
+    void nomeDeHostNaoEhResolvido() {
+        assertEquals("invalid", geoLookupService.lookupRegiaoGeografica("localhost").get("motivo"));
+        assertEquals("private_or_local", geoLookupService.lookupRegiaoGeografica("127.0.0.1").get("motivo"));
+    }
+
+    /** CGNAT (RFC 6598) não tem geolocalização pública: não vai para a API externa. */
+    @Test
+    void cgnatEhTratadoComoNaoPublico() {
+        assertEquals("private_or_local", geoLookupService.lookupRegiaoGeografica("100.64.0.1").get("motivo"));
+    }
+
     @Test
     void ipInvalidoRetornaErro() {
         Map<String, Object> out = geoLookupService.lookupRegiaoGeografica("nao-e-ip");
