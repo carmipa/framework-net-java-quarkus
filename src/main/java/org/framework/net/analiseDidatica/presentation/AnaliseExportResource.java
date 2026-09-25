@@ -30,7 +30,7 @@ public class AnaliseExportResource {
     public Map<String, Object> exportarJson() {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("generated_at", Instant.now().toString());
-        payload.put("history", historicoStore.listar());
+        payload.put("history", historicoStore.listarTodos());
         Object requestId = MDC.get(TelemetriaKeys.REQUEST_ID);
         payload.put("last_request_id", requestId == null ? "-" : String.valueOf(requestId));
         return payload;
@@ -39,7 +39,7 @@ public class AnaliseExportResource {
     @GET
     @Path("/pdf")
     public Response exportarPdf() throws IOException {
-        List<Map<String, Object>> history = historicoStore.listar();
+        List<Map<String, Object>> history = historicoStore.listarTodos();
         if (history.isEmpty()) {
             return Response.seeOther(URI.create("/")).build();
         }

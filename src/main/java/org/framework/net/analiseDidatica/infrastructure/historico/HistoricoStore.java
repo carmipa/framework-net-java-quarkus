@@ -28,6 +28,7 @@ import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -40,8 +41,15 @@ import java.util.UUID;
  * (temporário + move), então crash no meio preserva o arquivo anterior; (3) quem lê recebe CÓPIA dos
  * registros — nada fora desta classe muta o que está guardado.
  *
+ * (4) PRIVACIDADE (decisão de Paulo, 2026-08-04): cada registro pertence a uma sessão de navegador
+ * ({@link SessaoHistorico}); leitura, paginação e replay só enxergam a própria sessão. Teto por sessão =
+ * {@code framework.app.max-history}; teto do arquivo = {@link #MAX_TOTAL}. Registros legados sem sessão
+ * (o antigo balde global com IP de terceiros) são descartados na carga. Só {@link #listarTodos()} — usado
+ * pelo export protegido por chave de admin — vê todas as sessões.
+ *
  * COMPORTAMENTO EM CASO DE FALHA: erro de E/S ao gravar lança {@link HistoricoPersistenciaException}
- * (o chamador registra e segue); carga ilegível não lança.
+ * (o chamador registra e segue); carga ilegível não lança. Sem requisição ativa (sem sessão), a
+ * leitura devolve vazio e a escrita é descartada — falha FECHADA para dado pessoal.
  */
 @ApplicationScoped
 public class HistoricoStore {
@@ -62,6 +70,14 @@ public class HistoricoStore {
     @ConfigProperty(name = "user.home")
     String userHome;
 
+    /** Teto do arquivo inteiro (todas as sessões): mantém a regravação por consulta pequena. */
+    static final int MAX_TOTAL = 500;
+
+    private static final String CHAVE_SESSAO = "sessao";
+
+    @Inject
+    SessaoHistorico sessaoHistorico;
+
     private final Deque<Map<String, Object>> historyStore = new ArrayDeque<>();
 
     /** Guarda o deque e o arquivo: sem ela, duas gravações truncavam o mesmo arquivo ao mesmo tempo. */
@@ -79,11 +95,20 @@ public class HistoricoStore {
         synchronized (trava) {
             try {
                 List<Map<String, Object>> raw = objectMapper.readValue(file.toFile(), new TypeReference<>() {});
+                int legados = 0;
                 if (raw != null) {
-                    int start = Math.max(0, raw.size() - config.maxHistory());
-                    for (Map<String, Object> item : raw.subList(start, raw.size())) {
-                        historyStore.addLast(item);
+                    for (Map<String, Object> item : raw) {
+                        if (item == null || !(item.get(CHAVE_SESSAO) instanceof String)) {
+                            legados++;   // balde global antigo: IP de terceiros sem dono — não volta
+                            continue;
+                        }
+                        if (historyStore.size() < MAX_TOTAL) {
+                            historyStore.addLast(item);
+                        }
                     }
+                }
+                if (legados > 0) {
+                    LOG.warnf("Histórico: %d registro(s) legado(s) sem sessão descartado(s) na carga.", legados);
                 }
                 LOG.infof("Histórico carregado: %d registros", historyStore.size());
                 telemetriaLogger.logEvent("info", "analiseDidatica", "history_load",
@@ -138,11 +163,21 @@ public class HistoricoStore {
     }
 
     public void registrarConsulta(Map<String, String> entrada, Map<String, Object> res) {
-        if (res == null || res.isEmpty()) {
+        Optional<String> sessao = sessaoAtual();
+        if (sessao.isEmpty()) {
+            LOG.debug("Histórico: consulta fora de requisição HTTP não é registrada (sem sessão).");
+            return;
+        }
+        registrarConsulta(sessao.get(), entrada, res);
+    }
+
+    public void registrarConsulta(String sessao, Map<String, String> entrada, Map<String, Object> res) {
+        if (res == null || res.isEmpty() || sessao == null || sessao.isBlank()) {
             return;
         }
         Map<String, Object> registro = new LinkedHashMap<>();
         registro.put("id", UUID.randomUUID().toString().substring(0, 8));
+        registro.put(CHAVE_SESSAO, sessao);
         registro.put("timestamp", Instant.now().toString());
         registro.put("modo", entrada.getOrDefault("modo", ""));
         registro.put("ip_entrada", entrada.getOrDefault("ip", ""));
@@ -161,7 +196,15 @@ public class HistoricoStore {
         }
         synchronized (trava) {
             historyStore.addFirst(registro);
-            while (historyStore.size() > config.maxHistory()) {
+            // Teto por sessão: remove os mais antigos DESTA sessão (o deque vai do mais novo ao mais velho).
+            int daSessao = 0;
+            for (java.util.Iterator<Map<String, Object>> it = historyStore.iterator(); it.hasNext(); ) {
+                Map<String, Object> item = it.next();
+                if (sessao.equals(item.get(CHAVE_SESSAO)) && ++daSessao > config.maxHistory()) {
+                    it.remove();
+                }
+            }
+            while (historyStore.size() > MAX_TOTAL) {
                 historyStore.removeLast();
             }
             LOG.infof("Histórico append modo=%s id=%s", registro.get("modo"), registro.get("id"));
@@ -169,8 +212,28 @@ public class HistoricoStore {
         }
     }
 
-    /** Cópia rasa de cada registro: quem lê pode anotar campos de exibição sem mexer no guardado. */
+    /** Registros da sessão da requisição atual (vazio fora de requisição). */
     public List<Map<String, Object>> listar() {
+        return sessaoAtual().map(this::listar).orElseGet(List::of);
+    }
+
+    /** Registros de uma sessão, sem a chave de sessão (que não precisa sair para o navegador). */
+    public List<Map<String, Object>> listar(String sessao) {
+        synchronized (trava) {
+            List<Map<String, Object>> copia = new ArrayList<>();
+            for (Map<String, Object> item : historyStore) {
+                if (sessao != null && sessao.equals(item.get(CHAVE_SESSAO))) {
+                    Map<String, Object> c = new LinkedHashMap<>(item);
+                    c.remove(CHAVE_SESSAO);
+                    copia.add(c);
+                }
+            }
+            return copia;
+        }
+    }
+
+    /** Todas as sessões — SÓ para o export protegido por chave de administrador. */
+    public List<Map<String, Object>> listarTodos() {
         synchronized (trava) {
             List<Map<String, Object>> copia = new ArrayList<>(historyStore.size());
             for (Map<String, Object> item : historyStore) {
@@ -180,14 +243,33 @@ public class HistoricoStore {
         }
     }
 
+    private Optional<String> sessaoAtual() {
+        if (sessaoHistorico == null) {
+            return Optional.empty();
+        }
+        io.quarkus.arc.ManagedContext ctx = io.quarkus.arc.Arc.container().requestContext();
+        if (!ctx.isActive()) {
+            return Optional.empty();
+        }
+        return Optional.of(sessaoHistorico.chave());
+    }
+
     public Map<String, Object> paginar(String historyLimitPre, String historyPagePre) {
+        return paginar(listar(), historyLimitPre, historyPagePre);
+    }
+
+    public Map<String, Object> paginar(String sessao, String historyLimitPre, String historyPagePre) {
+        return paginar(listar(sessao), historyLimitPre, historyPagePre);
+    }
+
+    private Map<String, Object> paginar(List<Map<String, Object>> historyList, String historyLimitPre,
+            String historyPagePre) {
         int historyLimitInt = parsePositive(historyLimitPre, 1);
         if (historyLimitInt > config.maxHistory()) {
             historyLimitInt = config.maxHistory();
         }
         int historyPageInt = Math.max(1, parsePositive(historyPagePre, 1));
 
-        List<Map<String, Object>> historyList = listar();
         int totalHistory = historyList.size();
         int totalHistoryPages;
         List<Map<String, Object>> historyPageItems;
@@ -222,6 +304,7 @@ public class HistoricoStore {
         return pag;
     }
 
+    /** Replay só dentro da própria sessão: id de outra sessão devolve null, como id inexistente. */
     public Map<String, Object> buscarReplay(String replayId) {
         if (replayId == null || replayId.isBlank()) {
             return null;

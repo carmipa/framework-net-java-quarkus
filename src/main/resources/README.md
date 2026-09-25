@@ -127,7 +127,7 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Robôs de busca | `/robots.txt` | GET | Estático em `META-INF/resources/`. Política pública: páginas didáticas abertas, coletor de IA e robô de SEO fora, rotas caras e de API fechadas |
 | Mapa do site | `/sitemap.xml` | GET | As páginas didáticas, incluindo **todos os aprofundamentos** (protocolos, portas, certificados, camadas, criptografia, Wi-Fi, ferramentas) derivados dos registros de cada módulo — fonte única —, com URL absoluta no host canônico (`framework.site.base-url`) |
 | Sonda de saúde | `/health` | GET | JSON `{"status":"UP"}` para o healthcheck do container; **não** registrada na telemetria |
-| Histórico (API) | `/history` | GET | Lista o histórico em JSON |
+| Histórico (API) | `/history` | GET | Lista o histórico **da sessão do navegador** em JSON |
 | Histórico catálogo | `/history/catalog` | POST | Registra consulta de portas/protocolos |
 | Exportação análise | `/export/json`, `/export/pdf` | GET | 🔒 Protegido por chave administrativa |
 | Login administrativo | `/admin/login`, `/admin/logout` | GET/POST | Autenticação para rotas sensíveis |
@@ -827,8 +827,9 @@ scripts/deploy.sh
   **Não é controle de acesso** — o arquivo é público e só vale para o robô que escolhe
   obedecer; quem fecha as rotas é o login pelo GitHub e o `AdminApiKeyFilter`. O que ele
   evita é custo e ruído: `/informacoes` dispara consulta geográfica externa a cada GET
-  (ip-api, 45 req/min), `/export` gera PDF sob demanda e `/history` expõe o IP de quem
-  consultou. Em produção, veja a nota do próprio arquivo: o nginx do proxy reverso serve um
+  (ip-api, 45 req/min), `/export` gera PDF sob demanda e `/history` só tem sentido para
+  o navegador que fez as consultas (o histórico é separado por sessão, via cookie `fnet_hist`
+  HttpOnly com identificador aleatório; o arquivo guarda só o hash dele). Em produção, veja a nota do próprio arquivo: o nginx do proxy reverso serve um
   `/robots.txt` compartilhado por match exato e a resposta não chega à aplicação.
 
 ---

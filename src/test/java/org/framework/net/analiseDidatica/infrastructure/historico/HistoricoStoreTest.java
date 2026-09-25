@@ -63,7 +63,7 @@ class HistoricoStoreTest {
 
         HistoricoStore s = novoStore(home);
         assertDoesNotThrow(s::carregar);
-        assertEquals(0, s.listar().size());
+        assertEquals(0, s.listarTodos().size());
         assertFalse(Files.exists(arquivo(home)), "o arquivo ilegível deveria ter saído do caminho");
         try (var ls = Files.list(arquivo(home).getParent())) {
             assertTrue(ls.anyMatch(p -> p.getFileName().toString().startsWith("consulta_history.json.corrompido-")),
@@ -73,18 +73,18 @@ class HistoricoStoreTest {
         // Controle positivo (A1): arquivo legítimo continua sendo carregado.
         Path home2 = Files.createTempDirectory("hist-ok");
         Files.createDirectories(arquivo(home2).getParent());
-        Files.writeString(arquivo(home2), "[{\"id\":\"abc\",\"modo\":\"ip\"}]");
+        Files.writeString(arquivo(home2), "[{\"id\":\"abc\",\"modo\":\"ip\",\"sessao\":\"s1\"}]");
         HistoricoStore ok = novoStore(home2);
         ok.carregar();
-        assertEquals(1, ok.listar().size());
+        assertEquals(1, ok.listar("s1").size());
     }
 
     @Test
     void paginarNaoMutaOsRegistrosGuardados() throws Exception {
         HistoricoStore s = novoStore(Files.createTempDirectory("hist-paginar"));
-        s.registrarConsulta(Map.of("modo", "ip", "ip", "10.0.0.1"), Map.of("rede", "10.0.0.0"));
-        s.paginar("10", "1");
-        assertFalse(s.listar().get(0).containsKey("timestamp_utc"),
+        s.registrarConsulta("s1", Map.of("modo", "ip", "ip", "10.0.0.1"), Map.of("rede", "10.0.0.0"));
+        s.paginar("s1", "10", "1");
+        assertFalse(s.listar("s1").get(0).containsKey("timestamp_utc"),
                 "paginar escreveu no mapa guardado (compartilhado entre requisições)");
     }
 
@@ -102,7 +102,7 @@ class HistoricoStoreTest {
             tarefas.add(pool.submit(() -> {
                 largada.await();
                 for (int i = 0; i < porThread; i++) {
-                    s.registrarConsulta(Map.of("modo", "ip", "ip", "10.0." + id + "." + i), Map.of("rede", "x"));
+                    s.registrarConsulta("t" + id, Map.of("modo", "ip", "ip", "10.0." + id + "." + i), Map.of("rede", "x"));
                 }
                 return null;
             }));
@@ -111,8 +111,8 @@ class HistoricoStoreTest {
             tarefas.add(pool.submit(() -> {
                 largada.await();
                 for (int i = 0; i < 200; i++) {
-                    s.paginar("60", "1");
-                    objectMapper.writeValueAsString(s.listar());
+                    s.paginar("t0", "60", "1");
+                    objectMapper.writeValueAsString(s.listarTodos());
                 }
                 return null;
             }));
@@ -124,7 +124,37 @@ class HistoricoStoreTest {
         pool.shutdown();
 
         List<Map<String, Object>> noDisco = objectMapper.readValue(arquivo(home).toFile(), new TypeReference<>() {});
-        assertEquals(Math.min(config.maxHistory(), threads * porThread), noDisco.size());
-        assertEquals(noDisco.size(), s.listar().size());
+        // 8 sessões x 40 consultas: cada sessão cabe no teto por sessão, e o total no teto do arquivo.
+        assertEquals(Math.min(HistoricoStore.MAX_TOTAL, threads * Math.min(porThread, config.maxHistory())),
+                noDisco.size());
+        assertEquals(noDisco.size(), s.listarTodos().size());
+    }
+
+    /** F07: cada sessão vê só o seu; teto por sessão não apaga o de outra; o legado global não volta. */
+    @Test
+    void sessoesSaoIsoladasComTetoProprio() throws Exception {
+        HistoricoStore s = novoStore(Files.createTempDirectory("hist-sessao"));
+        for (int i = 0; i < config.maxHistory() + 5; i++) {
+            s.registrarConsulta("A", Map.of("modo", "ip", "ip", "10.0.0." + i), Map.of("rede", "x"));
+        }
+        s.registrarConsulta("B", Map.of("modo", "ip", "ip", "192.168.0.1"), Map.of("rede", "y"));
+        assertEquals(config.maxHistory(), s.listar("A").size());
+        assertEquals(1, s.listar("B").size());
+        assertEquals("192.168.0.1", s.listar("B").get(0).get("ip_entrada"));
+        assertTrue(s.listar("A").stream().noneMatch(r -> "192.168.0.1".equals(r.get("ip_entrada"))));
+        assertFalse(s.listar("A").get(0).containsKey("sessao"), "a chave de sessão não sai para o navegador");
+        assertEquals(0, s.listar().size(), "fora de requisição não há sessão: leitura vazia (falha fechada)");
+    }
+
+    @Test
+    void registrosLegadosSemSessaoSaoDescartadosNaCarga() throws Exception {
+        Path home = Files.createTempDirectory("hist-legado");
+        Files.createDirectories(arquivo(home).getParent());
+        Files.writeString(arquivo(home), "[{\"id\":\"old\",\"ip_entrada\":\"203.0.113.9\"},"
+                + "{\"id\":\"new\",\"sessao\":\"S\",\"ip_entrada\":\"10.0.0.1\"}]");
+        HistoricoStore s = novoStore(home);
+        s.carregar();
+        assertEquals(1, s.listarTodos().size());
+        assertEquals("new", s.listarTodos().get(0).get("id"));
     }
 }
