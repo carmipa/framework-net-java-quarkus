@@ -52,7 +52,7 @@ class HistoricoStoreTest {
     }
 
     private static Path arquivo(Path home) {
-        return home.resolve(".framework-net").resolve("consulta_history.json");
+        return home.resolve(".framework-net").resolve("consulta_history.v2.json");
     }
 
     @Test
@@ -66,7 +66,7 @@ class HistoricoStoreTest {
         assertEquals(0, s.listarTodos().size());
         assertFalse(Files.exists(arquivo(home)), "o arquivo ilegível deveria ter saído do caminho");
         try (var ls = Files.list(arquivo(home).getParent())) {
-            assertTrue(ls.anyMatch(p -> p.getFileName().toString().startsWith("consulta_history.json.corrompido-")),
+            assertTrue(ls.anyMatch(p -> p.getFileName().toString().startsWith("consulta_history.v2.json.corrompido-")),
                     "o conteúdo ilegível precisa ficar preservado em quarentena");
         }
 
@@ -156,5 +156,24 @@ class HistoricoStoreTest {
         s.carregar();
         assertEquals(1, s.listarTodos().size());
         assertEquals("new", s.listarTodos().get(0).get("id"));
+    }
+
+    @Test
+    void arquivoDaVersaoAnteriorNaoRecebeHistoricoPorSessao() throws Exception {
+        // Revisão operacional: a versão anterior ao F07 lê consulta_history.json e o publica inteiro no
+        // GET /history. Num rollback, ela não pode encontrar ali o histórico de cada sessão.
+        Path home = Files.createTempDirectory("hist-rollback");
+        Path antigo = home.resolve(".framework-net").resolve("consulta_history.json");
+        Files.createDirectories(antigo.getParent());
+        String conteudoAntigo = "[{\"id\":\"pre\",\"modo\":\"ip\",\"ip_entrada\":\"198.51.100.1\"}]";
+        Files.writeString(antigo, conteudoAntigo);
+
+        HistoricoStore s = novoStore(home);
+        s.carregar();
+        s.registrarConsulta("S", Map.of("modo", "ip", "ip", "203.0.113.50"), Map.of("rede", "x"));
+
+        assertEquals(conteudoAntigo, Files.readString(antigo), "o arquivo lido pela versão anterior foi alterado");
+        assertTrue(Files.readString(arquivo(home)).contains("203.0.113.50"), "o registro novo tem de ir para o v2");
+        assertEquals(1, s.listar("S").size());
     }
 }

@@ -339,8 +339,14 @@ public class HistoricoStore {
                 .toList();
     }
 
+    /**
+     * Arquivo do histórico POR SESSÃO. O nome mudou de propósito ("v2"): a versão anterior ao F07 lê
+     * {@code consulta_history.json} e devolve tudo no {@code GET /history} público — num rollback, ela
+     * publicaria o histórico de todas as sessões. Com outro nome, a versão antiga nem o enxerga, e o
+     * arquivo antigo fica intocado com o que já era público antes da atualização.
+     */
     private Path historyFile() {
-        return Paths.get(userHome, ".framework-net", "consulta_history.json");
+        return Paths.get(userHome, ".framework-net", "consulta_history.v2.json");
     }
 
     private static int parsePositive(String value, int defaultValue) {

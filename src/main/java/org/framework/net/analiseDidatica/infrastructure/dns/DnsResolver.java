@@ -276,7 +276,7 @@ public class DnsResolver {
      * PROPÓSITO: executa uma resolução DNS com teto de tempo sem deixar um nome lento derrubar a
      * resolução de todos os visitantes.
      * INVARIANTES: pool e fila LIMITADOS; saturado, recusa na hora (DnsResolucaoException) — nunca
-     * espera na fila; ao estourar o tempo, a tarefa é cancelada (sai da fila se ainda não começou).
+     * espera na fila; ao estourar o tempo, a tarefa é cancelada E retirada da fila (não ocupa vaga).
      * FALHA: saturação vira {@link DnsResolucaoException}; timeout propaga {@link TimeoutException}
      * para o chamador traduzir.
      */
@@ -293,6 +293,12 @@ public class DnsResolver {
             return future.get(timeoutSegundos, TimeUnit.SECONDS);
         } catch (TimeoutException | InterruptedException ex) {
             future.cancel(true);
+            // cancel() só marca a tarefa: ela continuaria ocupando vaga na fila limitada até uma thread
+            // retirá-la. Com as 4 threads presas num getaddrinfo que ignora interrupção, 8 canceladas
+            // lotavam a fila e TODA resolução nova era recusada. remove() libera a vaga na hora.
+            if (executor instanceof java.util.concurrent.ThreadPoolExecutor pool && future instanceof Runnable r) {
+                pool.remove(r);
+            }
             throw ex;
         }
     }

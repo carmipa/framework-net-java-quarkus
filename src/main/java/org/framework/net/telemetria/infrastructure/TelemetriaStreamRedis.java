@@ -64,7 +64,11 @@ public class TelemetriaStreamRedis {
 
     /** Costuras de teste: a sonda de disponibilidade e o relógio. */
     java.util.function.BooleanSupplier sonda = this::testar;
-    java.util.function.LongSupplier relogio = System::currentTimeMillis;
+    // Relógio MONOTÔNICO: com o de parede, um ajuste de NTP para trás adiava o reteste por horas.
+    java.util.function.LongSupplier relogio = () -> System.nanoTime() / 1_000_000L;
+
+    /** Uma thread sonda por vez; as outras seguem com o último estado em vez de esperar o Redis. */
+    private final java.util.concurrent.locks.ReentrantLock sondando = new java.util.concurrent.locks.ReentrantLock();
 
     /**
      * Indisponível, o Stream volta a ser testado depois deste intervalo. Antes, uma falha só (Redis
@@ -78,6 +82,12 @@ public class TelemetriaStreamRedis {
     /**
      * O Stream está utilizável agora? Disponível fica memorizado; indisponível é retestado a cada
      * {@link #INTERVALO_RETESTE_MS}. O log sai só na TROCA de estado (sem tempestade de log).
+     *
+     * <p>Só UMA thread sonda por vez, e sem bloquear as outras: a sonda roda na thread da requisição (todo
+     * evento de telemetria passa aqui), e com o Redis pendurado — aceitando conexão sem responder — o PING
+     * leva até o timeout do cliente (10 s). Antes, toda requisição que chegasse no minuto do reteste
+     * esperava na fila do monitor. Quem chega durante a sonda segue com o último estado conhecido (sem
+     * estado ainda = indisponível): telemetria é best-effort e o JSONL continua sendo a fonte durável.
      */
     public boolean ativo() {
         if (!habilitado) {
@@ -87,7 +97,10 @@ public class TelemetriaStreamRedis {
         if (cache != null && (cache || relogio.getAsLong() < proximaTentativaMs)) {
             return cache;
         }
-        synchronized (this) {
+        if (!sondando.tryLock()) {
+            return Boolean.TRUE.equals(cache);
+        }
+        try {
             Boolean antes = disponivel;
             if (antes != null && (antes || relogio.getAsLong() < proximaTentativaMs)) {
                 return antes;
@@ -102,6 +115,8 @@ public class TelemetriaStreamRedis {
                         agora ? "ativo" : "indisponivel (novo teste em 60 s)", chave, maxLen);
             }
             return agora;
+        } finally {
+            sondando.unlock();
         }
     }
 

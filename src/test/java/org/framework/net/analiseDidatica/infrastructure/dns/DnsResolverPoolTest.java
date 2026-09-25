@@ -83,4 +83,56 @@ class DnsResolverPoolTest {
     void controlePositivoPoolLivreResolve() throws Exception {
         assertEquals("ok", resolver.executar(() -> "ok", 3));
     }
+
+    @Test
+    void tarefaCanceladaLiberaAVagaMesmoComThreadsPresasSemInterrupcao() throws Exception {
+        // Revisão operacional: getaddrinfo IGNORA interrupção. Com as threads presas nele, cancel() sozinho
+        // deixava as tarefas canceladas ocupando a fila e toda resolução nova era recusada na hora.
+        AtomicBoolean liberado = new AtomicBoolean(false);
+        CountDownLatch presas = new CountDownLatch(DnsResolver.THREADS);
+        List<Thread> threads = new ArrayList<>();
+        for (int i = 0; i < DnsResolver.THREADS; i++) {
+            Thread t = new Thread(() -> {
+                try {
+                    resolver.executar(() -> {
+                        presas.countDown();
+                        while (!liberado.get()) {
+                            try {
+                                Thread.sleep(10);
+                            } catch (InterruptedException ignorada) {
+                                // como o getaddrinfo: interrupção não tira a thread daqui
+                            }
+                        }
+                        return "presa";
+                    }, 1);
+                } catch (Exception esperado) {
+                    // o chamador desiste no timeout; a thread do pool continua presa
+                }
+            });
+            t.start();
+            threads.add(t);
+        }
+        try {
+            assertTrue(presas.await(5, TimeUnit.SECONDS));
+            // Enche a fila com tarefas que vão estourar o tempo e ser canceladas.
+            List<Thread> naFila = new ArrayList<>();
+            for (int i = 0; i < DnsResolver.FILA; i++) {
+                Thread t = new Thread(() -> assertThrows(TimeoutException.class, () -> resolver.executar(() -> "x", 1)));
+                t.start();
+                naFila.add(t);
+            }
+            for (Thread t : naFila) {
+                t.join(5_000);
+            }
+            // As threads continuam presas; a nova tarefa tem de ENTRAR na fila (e estourar o tempo),
+            // não ser recusada por uma fila cheia de canceladas.
+            assertThrows(TimeoutException.class, () -> resolver.executar(() -> "legitimo", 1),
+                    "fila ocupada por tarefas já canceladas: a resolução nova foi recusada");
+        } finally {
+            liberado.set(true);
+            for (Thread t : threads) {
+                t.join(5_000);
+            }
+        }
+    }
 }
