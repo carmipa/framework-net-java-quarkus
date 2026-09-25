@@ -24,15 +24,23 @@ Revisao pos-implementacao (lente adversarial, 7 achados):
 - #3 global 600/min atras de NAT de laboratorio, #5 heavy x matriz ';', #7 dataset aceita texto livre curto:
   RISCO RESIDUAL a declarar no relatorio (sem correcao nesta frente)
 
+Lente de boa-fe (6 achados; 3b refutado: slug num balde so e o F04 intencional):
+- 76cd773 export por sessao; recusa nao drena o global; IPv6 local fora do "pesado"
+- bfa6909 fetch mostra erro HTTP (CEP/GPS + 3 irmaos); "Historico deste navegador"; replay alheio avisa; avisos de mapa
+Lente operacional (4 achados):
+- 2226330 historico em consulta_history.v2.json (rollback fechado); DNS remove() apos cancel; sonda Redis tryLock + nanoTime
+- Op2 (CSRF de aba aberta durante o deploy) RESIDUAL: aceitar cookie sem __Host- desfaria a protecao.
+
+VALIDACAO FINAL (2026-09-25, HEAD 2226330):
+- ./gradlew.bat test --rerun-tasks: 939 testes, 0 falhas, 0 pulados, 0 warnings.
+- quarkusDev :8089 + scripts/verificar-auditoria-frontend.mjs: 15/15 (BF4 novo; A2 com o JS antigo reproduz o defeito).
+- scripts/verificar-csp.mjs: nenhum recurso legitimo bloqueado.
+
 EM ANDAMENTO AGORA:
-- Lentes de boa-fe e de falha operacional sobre `git diff 60678fa..HEAD` rodando em subagentes isolados.
+- Registro no vault e relatorio final.
 
 PROXIMA ACAO EXECUTAVEL EXATA:
-- Ao chegar cada lente: julgar cada achado com as tres lentes de conclusao (correcao / impacto / ja resolvido),
-  corrigir os confirmados (teste A2 + commit), registrar os refutados com motivo.
-- Depois: ./gradlew.bat test --rerun-tasks (suite completa); subir quarkusDev na 8089 com
-  -Dframework.dev.open-browser=false; node scripts/verificar-auditoria-frontend.mjs; node scripts/verificar-csp.mjs.
-- Registro no vault: chats/2026-09-25_... + 00-INDICE + projetos/framework-net-java-quarkus.md, commit no vault.
+- Nenhuma no codigo. Aguarda Paulo: push, deploy e a pasta C:\deployments (movimentacao negada pelo classificador).
 
 INFORMAR PAULO NO FECHAMENTO:
 - PID 15668 (java de subagente) segurava build/quarkus-app e C:\deployments; nao matei.
