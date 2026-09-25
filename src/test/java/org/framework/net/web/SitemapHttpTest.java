@@ -133,6 +133,60 @@ class SitemapHttpTest {
         assertTrue(quebradas.isEmpty(), () -> String.join("\n  - ", quebradas));
     }
 
+    /**
+     * F26: /laboratorios/aneis-e-rede era pública e linkada, mas fora do sitemap — o teste só cruzava
+     * os links do MENU. Esta guarda cobre a classe: todo link interno simples encontrado nas páginas
+     * do sitemap (sem query/âncora/extensão, fora de API, export e áreas fechadas) está no sitemap.
+     */
+    @Test
+    @DisplayName("página pública alcançável por link está no sitemap, mesmo fora do menu")
+    void paginaAlcancavelPorLinkEstaNoSitemap() {
+        List<String> caminhos = caminhosDoSitemap();
+        assertFalse(caminhos.isEmpty(), "O sitemap veio vazio — instrumento cego.");
+        Set<String> noSitemap = new LinkedHashSet<>(caminhos);
+        Pattern href = Pattern.compile("href=\"(/[a-z0-9][a-z0-9/-]*)\"");
+        // Exclusões vêm do próprio robots.txt (fonte única): o que está fechado para robôs não
+        // pertence ao sitemap — ex.: /informacoes, que dispara consulta externa a cada GET.
+        // Só o grupo "User-agent: *" (o dos buscadores): os grupos de robôs de IA têm "Disallow: /",
+        // que excluiria TUDO e deixaria esta guarda cega — aconteceu na primeira versão.
+        Set<String> fechadas = new LinkedHashSet<>();
+        boolean noGrupoGeral = false;
+        boolean lendoAgentes = false;
+        for (String linha : given().when().get("/robots.txt").then().extract().asString().split("\\R")) {
+            String l = linha.strip();
+            if (l.startsWith("User-agent:")) {
+                String agente = l.substring("User-agent:".length()).strip();
+                noGrupoGeral = (lendoAgentes && noGrupoGeral) || "*".equals(agente);
+                lendoAgentes = true;
+                continue;
+            }
+            lendoAgentes = false;
+            if (noGrupoGeral && l.startsWith("Disallow:")) {
+                String prefixo = l.substring("Disallow:".length()).strip();
+                if (!prefixo.isEmpty() && !"/".equals(prefixo)) {
+                    fechadas.add(prefixo);
+                }
+            }
+        }
+        assertFalse(fechadas.isEmpty(), "robots.txt sem Disallow lido: instrumento cego");
+        Set<String> faltando = new java.util.TreeSet<>();
+        int links = 0;
+        for (String pagina : caminhos) {
+            Matcher m = href.matcher(given().when().get(pagina).then().extract().asString());
+            while (m.find()) {
+                String alvo = m.group(1).replaceAll("/$", "");
+                links++;
+                boolean excluida = alvo.isEmpty() || alvo.contains("/api/") || alvo.contains("/export")
+                        || fechadas.stream().anyMatch(alvo::startsWith);
+                if (!excluida && !noSitemap.contains(alvo)) {
+                    faltando.add(alvo + "  (linkada em " + pagina + ")");
+                }
+            }
+        }
+        assertTrue(links > 100, "só " + links + " links lidos: instrumento cego");
+        assertTrue(faltando.isEmpty(), () -> "Fora do sitemap:\n  - " + String.join("\n  - ", faltando));
+    }
+
     @Test
     @DisplayName("todo aprofundamento de protocolo registrado está no sitemap (guarda anti-regressão)")
     void aprofundamentosRegistradosEstaoNoSitemap() {

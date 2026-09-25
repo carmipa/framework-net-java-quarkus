@@ -85,6 +85,7 @@ public final class PaginasPublicas {
         paginas.add("/ipv6/resolucao");
         paginas.add("/laboratorios");
         paginas.add("/laboratorios/camadas");
+        paginas.add("/laboratorios/aneis-e-rede");
         paginas.add("/portas");
         // Aprofundamentos de portas (Anatomia + famílias) — fonte única.
         PortaAprofundamento.disponiveis().forEach(item -> paginas.add(item.rota()));

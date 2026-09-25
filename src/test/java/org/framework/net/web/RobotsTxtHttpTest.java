@@ -220,7 +220,10 @@ class RobotsTxtHttpTest {
         }
 
         return rotas.stream()
-                .filter(rota -> rota.contains("/api/") || rota.endsWith("/api"))
+                // F26: além de API, todo export (gera PDF/CSV sob demanda, custo sem valor de índice)
+                // nasce fechado — antes só /api/ era descoberto sozinho e /<modulo>/export novo escapava.
+                .filter(rota -> rota.contains("/api/") || rota.endsWith("/api")
+                        || rota.contains("/export/") || rota.endsWith("/export"))
                 .distinct()
                 .sorted()
                 .toList();
