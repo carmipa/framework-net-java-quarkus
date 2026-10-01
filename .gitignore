@@ -77,3 +77,7 @@ scripts/relatorio-varredura.txt
 # Screenshots gerados pelos scripts de captura/validacao (Playwright): artefatos
 # de execucao, reproduziveis a partir do codigo; nao versionar.
 screenshots/
+
+# Anotacoes locais das sessoes de trabalho com IA (checkpoint de continuidade):
+# ficam so na maquina do autor; o repositorio e publico.
+.claude/
