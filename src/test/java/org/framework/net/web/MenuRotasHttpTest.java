@@ -53,8 +53,8 @@ class MenuRotasHttpTest {
 
     /** Rotas do menu principal, na ordem em que aparecem em shared/main_menu.html. */
     private static final List<String> ROTAS_DO_MENU = List.of(
-            "/", "/analise", "/calculadora", "/ipv6/analise", "/ipv6", "/ipv6/resolucao",
-            "/laboratorios", "/academia", "/portas", "/protocolos", "/certificados",
+            "/academia", "/", "/analise", "/calculadora", "/ipv6/analise", "/ipv6", "/ipv6/resolucao",
+            "/laboratorios", "/portas", "/protocolos", "/certificados",
             "/camadas", "/criptografia", "/wifi", "/resolucao-problemas",
             "/localizacao", "/trafego", "/ferramentas", "/diagnostico", "/seguranca", "/telemetria",
             "/documentacao", "/sobre");
@@ -126,6 +126,22 @@ class MenuRotasHttpTest {
         for (String destino : ROTAS_DO_MENU) {
             resposta.body(containsString("href=\"" + destino + "\""));
         }
+    }
+
+    /**
+     * Ordem de Paulo (01/10/2026): a Academia é o primeiro item do menu, da esquerda para a
+     * direita. A1: o legítimo parecido ("/" logo depois, também aed-nav-link) não pode ocupar o lugar.
+     */
+    @Test
+    @DisplayName("Academia é o primeiro item do menu, da esquerda para a direita")
+    void academiaEOPrimeiroItemDoMenu() {
+        String html = given().when().get("/").then().statusCode(200).extract().asString();
+        java.util.regex.Matcher primeiro = java.util.regex.Pattern
+                .compile("<a\\s+href=\"([^\"]+)\"[^>]*?\\sclass=\"aed-nav-link[ \"]").matcher(html);
+        org.junit.jupiter.api.Assertions.assertTrue(primeiro.find(), "nenhum item de menu encontrado: instrumento cego");
+        org.junit.jupiter.api.Assertions.assertEquals("/academia", primeiro.group(1));
+        org.junit.jupiter.api.Assertions.assertTrue(primeiro.find(), "o menu tem mais de um item");
+        org.junit.jupiter.api.Assertions.assertEquals("/", primeiro.group(1), "Início vem logo depois da Academia");
     }
 
     @Test

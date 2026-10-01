@@ -11,6 +11,14 @@
         </a>
     </div>
     <div class="aed-nav-tabs">
+        {! Academia primeiro, da esquerda para a direita: ordem de Paulo (01/10/2026).
+            MenuRotasHttpTest.academiaEOPrimeiroItemDoMenu congela a posição. !}
+        <a href="/academia"
+           class="aed-nav-link {#if activeMainMenu == 'academia'}is-active{/if}"
+           title="Academia: lições de redes do básico ao avançado, com animação, cálculo ao vivo e exercício corrigido">
+            <span class="material-symbols-outlined" aria-hidden="true" translate="no">school</span>
+            <span>Academia</span>
+        </a>
         <a href="/"
            class="aed-nav-link {#if activeMainMenu == 'home'}is-active{/if}"
            title="Página inicial do framework">
@@ -88,12 +96,6 @@
            title="Laboratórios interativos: acompanhe passo a passo, com animação e explicações, o que acontece numa comunicação de rede">
             <span class="material-symbols-outlined" aria-hidden="true" translate="no">science</span>
             <span>Laboratórios</span>
-        </a>
-        <a href="/academia"
-           class="aed-nav-link {#if activeMainMenu == 'academia'}is-active{/if}"
-           title="Academia: lições de redes do básico ao avançado, com animação, cálculo ao vivo e exercício corrigido">
-            <span class="material-symbols-outlined" aria-hidden="true" translate="no">school</span>
-            <span>Academia</span>
         </a>
         {! Menu suspenso "Topologia": agrupa os módulos de referência (portas,
             protocolos, certificados, camadas, criptografia, Wi-Fi) para encurtar o
