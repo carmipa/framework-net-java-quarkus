@@ -38,15 +38,23 @@
         }
     });
 
+    // 413 e os demais 4xx também eram descartados: colar uma configuração grande demais não
+    // mostrava nada e o resultado ANTERIOR continuava na tela (auditoria SEC-07).
     function mensagemDeErro(status) {
         if (status === 403) {
             return "A proteção do formulário expirou e acabou de ser renovada. Envie de novo.";
+        }
+        if (status === 413) {
+            return "O texto enviado passou do tamanho que o site aceita. Nada foi calculado — envie um trecho menor.";
         }
         if (status === 429) {
             return "Muitas requisições seguidas desta rede. Aguarde um minuto e envie de novo.";
         }
         if (status >= 500) {
             return "Erro no servidor. Nada foi calculado — tente de novo em instantes.";
+        }
+        if (status >= 401) {
+            return "O servidor recusou o pedido. Nada foi calculado — recarregue a página e tente de novo.";
         }
         return "";
     }

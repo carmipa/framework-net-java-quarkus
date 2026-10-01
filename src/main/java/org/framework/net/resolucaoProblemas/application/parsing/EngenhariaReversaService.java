@@ -11,6 +11,7 @@ import org.framework.net.resolucaoProblemas.domain.model.CenarioReconstruido.Scr
 import org.framework.net.resolucaoProblemas.domain.model.CenarioReconstruido.TabelaRoteador;
 import org.framework.net.resolucaoProblemas.domain.model.ConfiguracaoLida;
 import org.framework.net.resolucaoProblemas.domain.model.ConfiguracaoLida.RoteadorLido;
+import org.framework.net.resolucaoProblemas.exception.EntradaInvalidaException;
 import org.framework.net.telemetria.TelemetriaLogger;
 
 import java.util.LinkedHashMap;
@@ -43,6 +44,12 @@ public class EngenhariaReversaService {
     private static final String MODULO = "resolucaoProblemas";
     private static final String EVENTO = "engenharia_reversa_parse";
 
+    /**
+     * Teto de roteadores por execução. Laboratório real tem poucas dezenas; sem teto, 256 KB colados
+     * (o limite do campo) viravam ~1200 roteadores e uma resposta de 6,9 MB — 30 por minuto por IP.
+     */
+    public static final int MAX_ROTEADORES = 50;
+
     @Inject
     CiscoConfigParser parser;
 
@@ -59,10 +66,16 @@ public class EngenhariaReversaService {
      * Interpreta a configuração colada e devolve o projeto reconstruído.
      *
      * <p><b>Comportamento em caso de falha:</b> entrada nula ou em branco produz
-     * cenário vazio.</p>
+     * cenário vazio; mais de {@link #MAX_ROTEADORES} roteadores lança
+     * {@link EntradaInvalidaException} com a contagem, antes de montar tabela ou desenho.</p>
      */
     public CenarioReconstruido interpretar(String texto) {
         ConfiguracaoLida lida = parser.analisar(texto);
+        if (lida.roteadores().size() > MAX_ROTEADORES) {
+            throw new EntradaInvalidaException("A engenharia reversa lê até " + MAX_ROTEADORES
+                    + " roteadores por vez; o texto colado tem " + lida.roteadores().size()
+                    + ". Divida em partes e cole uma de cada vez.");
+        }
         AuditoriaConfiguracaoService.ResultadoAuditoria auditoria = auditoriaService.auditar(lida);
 
         List<RoteadorLido> roteadores = auditoria.roteadores();

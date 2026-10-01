@@ -342,7 +342,14 @@ public class ResolucaoProblemasResource {
             return Response.ok(renderReversa(null, "").render()).type(MediaType.TEXT_HTML).build();
         }
 
-        CenarioReconstruido cenario = engenhariaReversaService.interpretar(texto);
+        CenarioReconstruido cenario;
+        try {
+            cenario = engenhariaReversaService.interpretar(texto);
+        } catch (EntradaInvalidaException ex) {
+            // Texto grande demais volta para a tela com o motivo, sem perder o que foi colado.
+            return Response.ok(renderReversa(null, texto).data("erro", ex.getMessage()).render())
+                    .type(MediaType.TEXT_HTML).build();
+        }
 
         if ("reverse_export_scripts".equals(action)) {
             return arquivoTexto(exportEngenhariaReversaService.gerarScriptsCorrigidos(cenario),

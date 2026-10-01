@@ -31,6 +31,9 @@ import java.util.List;
 @ApplicationScoped
 public class Ipv6SubnetKernel {
 
+    /** Teto de interfaces por análise na Engenharia reversa IPv6 (um roteador real tem poucas dezenas). */
+    public static final int MAX_INTERFACES_ENGENHARIA = 200;
+
     /** Faixas especiais IANA, avaliadas em ordem (a primeira que contém o endereço vence). */
     private static final List<FaixaEspecial> FAIXAS = List.of(
             new FaixaEspecial("::1/128", "Loopback", "Host local (equivale ao 127.0.0.1 do IPv4)"),
@@ -830,13 +833,19 @@ public class Ipv6SubnetKernel {
      * INVARIANTES DO DOMÍNIO: parsing puramente textual, sem executar nada; classifica cada endereço
      * pelo tipo IANA (reusa {@link #analisar}); nunca inventa dado ausente.
      *
-     * COMPORTAMENTO EM CASO DE FALHA: configuração vazia lança {@link Ipv6Exception}; linha
-     * malformada vira achado, não exceção.
+     * COMPORTAMENTO EM CASO DE FALHA: configuração vazia lança {@link Ipv6Exception}; mais de
+     * {@link #MAX_INTERFACES_ENGENHARIA} interfaces também (o campo aceita 256 KB, o que dá milhares
+     * de interfaces e uma resposta de megabytes); linha malformada vira achado, não exceção.
      */
     public EngenhariaReversaIpv6 engenhariaReversa(String config) {
         String txt = config == null ? "" : config.strip();
         if (txt.isEmpty()) {
             throw new Ipv6Exception("Cole uma configuração Cisco IPv6 para analisar.");
+        }
+        long nInterfaces = txt.lines().filter(l -> l.strip().toLowerCase().startsWith("interface ")).count();
+        if (nInterfaces > MAX_INTERFACES_ENGENHARIA) {
+            throw new Ipv6Exception("A engenharia reversa IPv6 lê até " + MAX_INTERFACES_ENGENHARIA
+                    + " interfaces por vez; o texto colado tem " + nInterfaces + ". Divida em partes.");
         }
         String hostname = "";
         boolean unicastRouting = false;

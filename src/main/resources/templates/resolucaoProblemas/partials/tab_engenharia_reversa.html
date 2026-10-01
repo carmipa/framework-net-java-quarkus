@@ -45,6 +45,10 @@
     </div>
 </form>
 
+{#if erro}
+<div class="alert alert-danger bg-dark border-danger text-danger" role="alert">{erro}</div>
+{/if}
+
 {#if cenario}
 {#if cenario.vazio}
 <div class="aed-card card-tech problem-box p-3 mb-3 border border-warning border-opacity-50">
