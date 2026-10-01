@@ -11,19 +11,19 @@
         </a>
     </div>
     <div class="aed-nav-tabs">
-        {! Academia primeiro, da esquerda para a direita: ordem de Paulo (01/10/2026).
-            MenuRotasHttpTest.academiaEOPrimeiroItemDoMenu congela a posição. !}
-        <a href="/academia"
-           class="aed-nav-link {#if activeMainMenu == 'academia'}is-active{/if}"
-           title="Academia: lições de redes do básico ao avançado, com animação, cálculo ao vivo e exercício corrigido">
-            <span class="material-symbols-outlined" aria-hidden="true" translate="no">school</span>
-            <span>Academia</span>
-        </a>
         <a href="/"
            class="aed-nav-link {#if activeMainMenu == 'home'}is-active{/if}"
            title="Página inicial do framework">
             <span class="material-symbols-outlined" aria-hidden="true" translate="no">home</span>
             <span>Início</span>
+        </a>
+        {! Academia logo depois de Início, da esquerda para a direita: ordem de Paulo (01/10/2026,
+            corrigindo a anterior que a punha antes de Início). MenuRotasHttpTest congela a posição. !}
+        <a href="/academia"
+           class="aed-nav-link {#if activeMainMenu == 'academia'}is-active{/if}"
+           title="Academia: lições de redes do básico ao avançado, com animação, cálculo ao vivo e exercício corrigido">
+            <span class="material-symbols-outlined" aria-hidden="true" translate="no">school</span>
+            <span>Academia</span>
         </a>
         {! Menu suspenso "IPv4": agrupa as ferramentas IPv4 que eram itens soltos no topo
             (Análise, Calculadora, Resolução VLSM). Mesma mecânica de Topologia/Operações; os
