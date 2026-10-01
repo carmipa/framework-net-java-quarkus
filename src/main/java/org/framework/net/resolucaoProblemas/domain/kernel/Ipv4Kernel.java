@@ -126,22 +126,35 @@ public class Ipv4Kernel {
         return network.getLower().increment(1).withoutPrefixLength().toCanonicalString();
     }
 
-    public List<IPv4Address> usableHosts(IPv4Address network) {
-        List<IPv4Address> hosts = new ArrayList<>();
+    /**
+     * Os primeiros {@code limite} endereços atribuíveis a host de um bloco, em ordem crescente.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> dar as pontas de um enlace WAN e os PCs de exemplo do diagrama
+     * sem percorrer o bloco. A versão anterior materializava o bloco inteiro: um "Prefixo WAN" /10
+     * sobre a base 10.0.0.0/8 criava ~4 milhões de objetos e derrubava a JVM de produção
+     * ({@code ExitOnOutOfMemoryError}) com um único POST (auditoria CALC-02).</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> nunca cria mais que {@code limite} endereços, qualquer que
+     * seja o tamanho do bloco; em blocos com rede e broadcast (prefixo até /30) os dois ficam de
+     * fora; em /31 e /32 todos os endereços contam (RFC 3021); o resultado não carrega prefixo.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> {@code limite} negativo lança
+     * {@link IllegalArgumentException}; bloco com menos hosts que o pedido devolve a lista menor
+     * (quem precisa de dois decide o que fazer com um).</p>
+     */
+    public List<IPv4Address> primeirosHostsUteis(IPv4Address network, int limite) {
+        if (limite < 0) {
+            throw new IllegalArgumentException("limite negativo: " + limite);
+        }
         BigInteger count = network.getCount();
         boolean temRedeEBroadcast = count.compareTo(BigInteger.valueOf(2)) > 0;
-        BigInteger redeValor = network.getLower().getValue();
-        BigInteger broadcastValor = network.getUpper().getValue();
-        Iterator<? extends IPv4Address> it = network.iterator();
-        while (it.hasNext()) {
-            IPv4Address addr = it.next();
-            BigInteger valor = addr.getValue();
-            // Em blocos com rede + broadcast (prefixo <= /30) esses dois endereços
-            // não são atribuíveis a hosts; em /31 e /32 todos os endereços contam.
-            if (temRedeEBroadcast && (valor.equals(redeValor) || valor.equals(broadcastValor))) {
-                continue;
-            }
-            hosts.add(addr.withoutPrefixLength());
+        BigInteger disponiveis = temRedeEBroadcast ? count.subtract(BigInteger.valueOf(2)) : count;
+        int quantos = disponiveis.min(BigInteger.valueOf(limite)).intValue();
+        IPv4Address inicio = network.getLower();
+        int deslocamento = temRedeEBroadcast ? 1 : 0;
+        List<IPv4Address> hosts = new ArrayList<>(quantos);
+        for (int i = 0; i < quantos; i++) {
+            hosts.add(inicio.increment(deslocamento + i).withoutPrefixLength());
         }
         return hosts;
     }

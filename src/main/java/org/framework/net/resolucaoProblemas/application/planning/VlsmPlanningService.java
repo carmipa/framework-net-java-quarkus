@@ -127,7 +127,7 @@ public class VlsmPlanningService {
         for (List<String> pair : wanPairs) {
             IPv4Address subnet = findNextAvailableSubnet(baseNetwork, wanPrefix, usedSubnets);
             usedSubnets.add(subnet);
-            List<IPv4Address> hosts = ipv4Kernel.usableHosts(subnet);
+            List<IPv4Address> hosts = ipv4Kernel.primeirosHostsUteis(subnet, 2);
             if (hosts.size() < 2) {
                 throw new EntradaInvalidaException(
                         "A sub-rede WAN /" + wanPrefix + " nao oferece dois IPs utilizaveis "
@@ -376,7 +376,8 @@ public class VlsmPlanningService {
                 location.getNetwork() + "/" + location.getPrefix(), "LAN");
         IPv4Address gw = new inet.ipaddr.IPAddressString(location.getGateway()).getAddress().toIPv4();
         List<IPv4Address> others = new ArrayList<>();
-        for (IPv4Address host : ipv4Kernel.usableHosts(net)) {
+        // Três bastam: o gateway pode ser um deles e o diagrama usa no máximo dois PCs.
+        for (IPv4Address host : ipv4Kernel.primeirosHostsUteis(net, 3)) {
             if (!host.equals(gw)) {
                 others.add(host);
             }

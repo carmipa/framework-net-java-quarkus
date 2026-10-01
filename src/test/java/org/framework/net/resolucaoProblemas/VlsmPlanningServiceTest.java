@@ -11,6 +11,7 @@ import org.framework.net.resolucaoProblemas.domain.model.WanLink;
 import org.framework.net.resolucaoProblemas.exception.EntradaInvalidaException;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
@@ -255,10 +257,37 @@ class VlsmPlanningServiceTest {
                 || ex.getMessage().toLowerCase().contains("invalida"));
     }
 
+    /**
+     * CALC-02: "Prefixo WAN" largo sobre base larga materializava o bloco inteiro e derrubava a JVM.
+     * Um /9 tem 8 milhões de endereços; as duas pontas do enlace saem por aritmética, em milissegundos.
+     */
+    @Test
+    void wanLargaNaoPercorreOBloco() {
+        IPv4Address base = ipv4Kernel.parseNetwork("10.0.0.0/8", "base");
+        List<WanLink> links = assertTimeoutPreemptively(Duration.ofSeconds(3), () ->
+                planningService.buildWanLinks(base, new ArrayList<>(), List.of("loc_1", "loc_2"), "star", 9));
+        assertEquals(1, links.size());
+        assertEquals("10.0.0.0", links.get(0).getNetwork());
+        assertEquals(List.of("10.0.0.1", "10.0.0.2"), List.copyOf(links.get(0).getIps().values()));
+    }
+
+    @Test
+    void primeirosHostsUteisRespeitaRfc3021ELimite() {
+        // /31 e /32: todos os endereços contam (RFC 3021); /30: rede e broadcast ficam de fora.
+        assertEquals(List.of("10.0.0.0", "10.0.0.1"), ipv4Kernel.primeirosHostsUteis(
+                ipv4Kernel.parseNetwork("10.0.0.0/31", "b"), 5).stream().map(IPv4Address::toCanonicalString).toList());
+        assertEquals(List.of("10.0.0.7"), ipv4Kernel.primeirosHostsUteis(
+                ipv4Kernel.parseNetwork("10.0.0.7/32", "b"), 5).stream().map(IPv4Address::toCanonicalString).toList());
+        assertEquals(List.of("172.16.0.1"), ipv4Kernel.primeirosHostsUteis(
+                ipv4Kernel.parseNetwork("172.16.0.0/12", "b"), 1).stream().map(IPv4Address::toCanonicalString).toList());
+        assertThrows(IllegalArgumentException.class, () -> ipv4Kernel.primeirosHostsUteis(
+                ipv4Kernel.parseNetwork("10.0.0.0/30", "b"), -1));
+    }
+
     @Test
     void usableHostsExcluiRedeEBroadcast() {
         IPv4Address net30 = ipv4Kernel.parseNetwork("192.168.1.0/30", "base");
-        List<IPv4Address> hosts = ipv4Kernel.usableHosts(net30);
+        List<IPv4Address> hosts = ipv4Kernel.primeirosHostsUteis(net30, 10);
         List<String> ips = hosts.stream().map(IPv4Address::toCanonicalString).toList();
         // /30 tem 4 endereços: .0 (rede), .1, .2, .3 (broadcast) → apenas .1 e .2 são utilizáveis.
         assertEquals(2, hosts.size());
@@ -271,7 +300,7 @@ class VlsmPlanningServiceTest {
     @Test
     void usableHostsLanExcluiBroadcast() {
         IPv4Address net29 = ipv4Kernel.parseNetwork("10.0.0.0/29", "base");
-        List<IPv4Address> hosts = ipv4Kernel.usableHosts(net29);
+        List<IPv4Address> hosts = ipv4Kernel.primeirosHostsUteis(net29, 10);
         List<String> ips = hosts.stream().map(IPv4Address::toCanonicalString).toList();
         // /29 = 8 endereços; 6 utilizáveis (.1..6), sem rede (.0) nem broadcast (.7).
         assertEquals(6, hosts.size());
