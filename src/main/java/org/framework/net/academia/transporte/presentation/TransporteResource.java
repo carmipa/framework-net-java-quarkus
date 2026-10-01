@@ -1,4 +1,4 @@
-package org.framework.net.academia.ipv4.presentation;
+package org.framework.net.academia.transporte.presentation;
 
 import io.quarkus.qute.Location;
 import io.quarkus.qute.Template;
@@ -15,11 +15,12 @@ import org.framework.net.academia.trilha.domain.Licao;
 import org.framework.net.academia.trilha.domain.Nivel;
 
 /**
- * Páginas do nível IPv4: a visão do nível e as lições de máscara e de sub-redes.
+ * Páginas do nível Transporte: a visão do nível e as lições do aperto de mão e da janela.
  *
- * <p><b>PROPÓSITO DE NEGÓCIO:</b> entrega as lições em Ver · Mexer · Provar sobre a régua de 32
- * bits. Toda conta roda no navegador (R10) com as contas próprias do nível — nem a Calculadora do
- * site nem as contas de Fundamentos são usadas (D2/D3, duplicação consciente).</p>
+ * <p><b>PROPÓSITO DE NEGÓCIO:</b> entrega as lições em Ver · Mexer · Provar sobre o TCP — os
+ * números de sequência do aperto de mão em três vias e a retransmissão com janela deslizante.
+ * Toda conta roda no navegador (R10) com as contas próprias do nível; nenhuma outra fatia é
+ * usada (duplicação consciente).</p>
  *
  * <p><b>INVARIANTES DO DOMÍNIO:</b> só leitura; rotas fixas (nenhum parâmetro de caminho escolhe
  * template); título, resumo, "próxima lição" e o mapa dos níveis (para o
@@ -28,22 +29,22 @@ import org.framework.net.academia.trilha.domain.Nivel;
  * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> Academia não pronta ⇒ 503; lição ausente do catálogo ⇒
  * 404 pela página de erro padrão.</p>
  */
-@Path("/academia/ipv4")
-public class Ipv4Resource {
+@Path("/academia/transporte")
+public class TransporteResource {
 
-    private static final String NIVEL = "ipv4";
+    private static final String NIVEL = "transporte";
 
     @Inject
-    @Location("academia/ipv4/index.html")
+    @Location("academia/transporte/index.html")
     Template visao;
 
     @Inject
-    @Location("academia/ipv4/mascara.html")
-    Template mascara;
+    @Location("academia/transporte/aperto.html")
+    Template aperto;
 
     @Inject
-    @Location("academia/ipv4/subredes.html")
-    Template subredes;
+    @Location("academia/transporte/janela.html")
+    Template janela;
 
     @Inject
     AcademiaAberta academiaAberta;
@@ -55,34 +56,34 @@ public class Ipv4Resource {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance nivel() {
         academiaAberta.exigir();
-        return visao.data("activeMainMenu", "academia").data("nivel", nivelIpv4()).data("niveis", trilha.niveis());
+        return visao.data("activeMainMenu", "academia").data("nivel", nivelTransporte()).data("niveis", trilha.niveis());
     }
 
     @GET
-    @Path("/mascara")
+    @Path("/aperto")
     @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance licaoMascara() {
-        return licao(mascara, "ipv4.mascara");
+    public TemplateInstance licaoAperto() {
+        return licao(aperto, "transporte.aperto");
     }
 
     @GET
-    @Path("/subredes")
+    @Path("/janela")
     @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance licaoSubredes() {
-        return licao(subredes, "ipv4.subredes");
+    public TemplateInstance licaoJanela() {
+        return licao(janela, "transporte.janela");
     }
 
     private TemplateInstance licao(Template template, String id) {
         academiaAberta.exigir();
         Licao licao = trilha.licao(id).orElseThrow(NotFoundException::new);
         return template.data("activeMainMenu", "academia")
-                .data("nivel", nivelIpv4())
+                .data("nivel", nivelTransporte())
                 .data("niveis", trilha.niveis())
                 .data("licao", licao)
                 .data("proxima", trilha.proxima(id).orElse(null));
     }
 
-    private Nivel nivelIpv4() {
+    private Nivel nivelTransporte() {
         return trilha.nivel(NIVEL).orElseThrow(NotFoundException::new);
     }
 }

@@ -4,7 +4,7 @@
 {#title}IPv4 — Academia | Framework de Redes A&D{/title}
 {#description}Nível IPv4 da Academia de redes: máscara, prefixo CIDR e divisão em sub-redes na régua de 32 bits, com cálculo ao vivo e exercício corrigido.{/description}
 {#extraHead}
-<link rel="stylesheet" href="/academia/core/css/academia.css?v=20261001b">
+<link rel="stylesheet" href="/academia/core/css/academia.css?v=20261001e">
 {/extraHead}
 {#content}
 <div class="container py-5 acad-pagina">
@@ -14,6 +14,9 @@
         <span aria-hidden="true">›</span>
         <span aria-current="page">{nivel.titulo}</span>
     </nav>
+    {#include academia/core/mapa-niveis.html /}
+    {#include academia/core/navegacao.html atual='' /}
+    {#include academia/core/aviso-bloqueio.html /}
     <header class="mb-4">
         <span class="aed-eyebrow aed-eyebrow-teal">
             <span class="material-symbols-outlined" aria-hidden="true" translate="no">{nivel.icone}</span>
@@ -39,7 +42,8 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/academia/core/js/progresso.js?v=20261001"></script>
+<script src="/academia/core/js/progresso.js?v=20261001d"></script>
+<script src="/academia/core/js/niveis.js?v=20261001c"></script>
 <script src="/academia/core/js/selos.js?v=20261001"></script>
 {/extraScripts}
 {/include}

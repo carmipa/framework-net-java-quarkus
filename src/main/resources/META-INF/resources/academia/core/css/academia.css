@@ -12,6 +12,12 @@
     width: 100%;
 }
 
+/* [hidden] do navegador perde para o display da classe (display:flex/grid): sem esta linha, painel
+   de aba escondido e aviso escondido continuariam na tela. */
+.acad-pagina [hidden] {
+    display: none !important;
+}
+
 /* ---------- cabeçalho ---------- */
 .acad-hero {
     display: grid;
@@ -130,6 +136,156 @@
     margin-top: .35rem;
 }
 
+/* ---------- abas da trilha (desbloqueio nível a nível) ---------- */
+.acad-abas {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.acad-abas-lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+    gap: .5rem;
+}
+
+.acad-aba {
+    font-size: .85rem;
+}
+
+.acad-aba:focus-visible {
+    outline: 2px solid var(--aed-teal);
+    outline-offset: 2px;
+}
+
+.acad-aba-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    font-size: .75rem;
+    font-weight: 500;
+}
+
+.acad-aba-estado .material-symbols-outlined {
+    font-size: 1rem;
+}
+
+/* A cor reforça o estado; ícone e texto já o dizem sozinhos (cor nunca é o único sinal). */
+.acad-aba.estado-concluido .acad-aba-estado { color: var(--aed-risk-safe); }
+.acad-aba.estado-liberado .acad-aba-estado { color: var(--aed-teal); }
+.acad-aba.estado-bloqueado { border-style: dashed; }
+.acad-aba.estado-bloqueado .acad-aba-estado,
+.acad-aba.estado-em-breve .acad-aba-estado { color: var(--aed-text-secondary); }
+
+.acad-painel.bloqueado .acad-licao-link {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+.acad-licao-link[aria-disabled="true"]:hover {
+    border-color: var(--aed-border);
+}
+
+/* ---------- navegação de nível e lição (abas e sub-abas) ---------- */
+.acad-nav {
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    margin: .5rem 0 1.25rem;
+}
+
+.acad-nav-niveis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
+    gap: .5rem;
+}
+
+.acad-nav-niveis .acad-aba {
+    text-decoration: none;
+    min-height: 0;
+}
+
+.acad-nav-niveis .acad-aba[aria-disabled="true"] {
+    cursor: not-allowed;
+}
+
+.acad-nav-licoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+}
+
+.acad-subaba {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .35rem .75rem;
+    border: 1px solid var(--aed-border);
+    border-radius: 999rem;
+    color: var(--aed-text-secondary);
+    font-size: .85rem;
+    text-decoration: none;
+}
+
+.acad-subaba .material-symbols-outlined {
+    font-size: 1.1rem;
+}
+
+.acad-subaba:hover,
+.acad-subaba:focus-visible {
+    border-color: var(--aed-teal);
+    color: var(--aed-text);
+}
+
+.acad-subaba:focus-visible,
+.acad-nav-niveis .acad-aba:focus-visible {
+    outline: 2px solid var(--aed-teal);
+    outline-offset: 2px;
+}
+
+.acad-subaba.active {
+    border-color: var(--aed-teal);
+    background: var(--aed-teal-dim, rgba(45, 212, 191, .12));
+    color: var(--aed-teal);
+}
+
+.acad-subaba-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: .2rem;
+    font-size: .75rem;
+}
+
+.acad-subaba-estado:empty {
+    display: none;
+}
+
+.acad-subaba-estado.concluida {
+    color: var(--aed-risk-safe);
+}
+
+/* ---------- aviso de nível bloqueado ---------- */
+.acad-bloqueio {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem .75rem;
+    padding: .7rem .9rem;
+    margin: .75rem 0;
+    border: 1px solid var(--aed-risk-attention);
+    border-radius: .6rem;
+}
+
+.acad-bloqueio > .material-symbols-outlined {
+    color: var(--aed-risk-attention);
+}
+
+.acad-bloqueio > p,
+.acad-bloqueio > span:not(.material-symbols-outlined) {
+    flex: 1 1 18rem;
+    min-width: 0;
+}
+
 /* ---------- selo de progresso ---------- */
 .acad-selo {
     display: inline-flex;
@@ -199,6 +355,48 @@
 
 .acad-explica {
     color: var(--aed-text-secondary);
+}
+
+/* ---------- Entenda: o texto para ler ---------- */
+/* Os blocos ficam lado a lado e preenchem a largura (regra de CSS do Paulo); cada bloco tem linha de
+   leitura confortável porque divide a largura com os vizinhos, nunca por uma coluna central. */
+.acad-leitura-texto {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+    gap: 1rem 1.5rem;
+}
+
+.acad-leitura-bloco {
+    min-width: 0;
+}
+
+.acad-leitura-bloco h3 {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    font-size: 1.05rem;
+    margin: 0 0 .5rem;
+}
+
+.acad-leitura-bloco h3 .material-symbols-outlined {
+    color: var(--aed-teal);
+    font-size: 1.25rem;
+}
+
+.acad-leitura-bloco p,
+.acad-leitura-bloco li {
+    color: var(--aed-text);
+    line-height: 1.6;
+}
+
+.acad-leitura-bloco ul,
+.acad-leitura-bloco ol {
+    padding-left: 1.2rem;
+    margin-bottom: .5rem;
+}
+
+.acad-leitura-bloco li + li {
+    margin-top: .3rem;
 }
 
 /* ---------- controles da animação ---------- */

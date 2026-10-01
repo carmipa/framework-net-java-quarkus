@@ -5,7 +5,7 @@
 {#title}Sub-redes — Academia | Framework de Redes A&D{/title}
 {#description}Lição de sub-redes da Academia: divida um bloco IPv4 em partes iguais, descubra o novo prefixo, quantos hosts cabem em cada uma e o endereço de cada sub-rede.{/description}
 {#extraHead}
-<link rel="stylesheet" href="/academia/core/css/academia.css?v=20261001b">
+<link rel="stylesheet" href="/academia/core/css/academia.css?v=20261001e">
 <link rel="stylesheet" href="/academia/ipv4/css/ipv4.css?v=20261001">
 {/extraHead}
 {#content}
@@ -14,6 +14,50 @@
     {#include academia/core/cabecalho-licao.html /}
 
     <div class="acad-etapas">
+        <section class="acad-etapa acad-etapa-larga acad-leitura" id="ler" aria-labelledby="ler-titulo">
+            <h2 class="acad-etapa-titulo" id="ler-titulo">
+                <span class="material-symbols-outlined" aria-hidden="true" translate="no">menu_book</span>
+                Entenda
+            </h2>
+            <p class="acad-explica">Leia primeiro; depois veja um /24 virar quatro /26 e divida os seus próprios blocos.</p>
+            <div class="acad-leitura-texto">
+                <section class="acad-leitura-bloco">
+                    <h3><span class="material-symbols-outlined" aria-hidden="true" translate="no">lightbulb</span>Por que importa</h3>
+                    <p>Uma empresa raramente usa um bloco grande inteiro numa rede só. Dividir em <strong>sub-redes</strong> põe
+                    cada setor na sua rede, diminui o tráfego de broadcast e permite regras de segurança diferentes entre os
+                    setores. Quem planeja precisa responder: qual prefixo usar, quantas sub-redes cabem e onde cada uma começa.</p>
+                </section>
+                <section class="acad-leitura-bloco">
+                    <h3><span class="material-symbols-outlined" aria-hidden="true" translate="no">calculate</span>Como funciona</h3>
+                    <p>Dividir é <strong>emprestar bits</strong> da parte de host para a parte de rede. Cada bit emprestado
+                    <strong>dobra</strong> a quantidade de sub-redes e corta o tamanho de cada uma pela metade.</p>
+                    <p>Por quantidade: para ter pelo menos <span class="acad-valor" translate="no">n</span> sub-redes, ache o menor número de bits <span class="acad-valor" translate="no">b</span> com
+                    <span class="acad-valor" translate="no">2^b ≥ n</span>; o novo prefixo é o antigo mais <span class="acad-valor" translate="no">b</span>. Exemplo: <span class="acad-valor" translate="no">192.168.1.0/24</span> em 5 sub-redes →
+                    <span class="acad-valor" translate="no">b = 3</span> (porque 2² = 4 não basta e 2³ = 8 basta) → <span class="acad-valor" translate="no">/27</span>: 8 sub-redes de 32 endereços (30 hosts
+                    cada).</p>
+                    <p>Onde cada uma começa: a primeira é a própria base, e as seguintes andam de um bloco em um bloco. A
+                    K-ésima começa em <span class="acad-valor" translate="no">base + (K − 1) × tamanho</span>: a 4ª é <span class="acad-valor" translate="no">192.168.1.0 + 3 × 32</span> = <span class="acad-valor" translate="no">192.168.1.96</span>.</p>
+                    <p>Por hosts: para 50 hosts em cada sub-rede, ache o menor bloco com <span class="acad-valor" translate="no">2^h − 2 ≥ 50</span>: <span class="acad-valor" translate="no">h = 6</span>
+                    dá 62 hosts, então o prefixo é <span class="acad-valor" translate="no">32 − 6 = /26</span>.</p>
+                </section>
+                <section class="acad-leitura-bloco">
+                    <h3><span class="material-symbols-outlined" aria-hidden="true" translate="no">report</span>Onde se costuma errar</h3>
+                    <ul>
+                        <li>Somar a quantidade de sub-redes ao prefixo (<span class="acad-valor" translate="no">/24 + 5 = /29</span>): o que se soma são <strong>bits</strong>.</li>
+                        <li>Arredondar para baixo: 2 bits dão só 4 sub-redes, e não cabem 5.</li>
+                        <li>Pular a primeira sub-rede — ela começa no próprio endereço da base.</li>
+                    </ul>
+                </section>
+                <section class="acad-leitura-bloco">
+                    <h3><span class="material-symbols-outlined" aria-hidden="true" translate="no">bookmark</span>Para lembrar</h3>
+                    <ul>
+                        <li>Sub-redes = <span class="acad-valor" translate="no">2^(bits emprestados)</span>; hosts por sub-rede = <span class="acad-valor" translate="no">2^(bits de host) − 2</span>.</li>
+                        <li>Tamanho do bloco = <span class="acad-valor" translate="no">2^(32 − prefixo)</span>; as sub-redes andam de bloco em bloco.</li>
+                    </ul>
+                </section>
+            </div>
+        </section>
+
         <section class="acad-etapa" id="ver" aria-labelledby="ver-titulo">
             <h2 class="acad-etapa-titulo" id="ver-titulo">
                 <span class="material-symbols-outlined" aria-hidden="true" translate="no">visibility</span>
@@ -130,7 +174,8 @@
 {#extraScripts}
 <script src="/academia/core/js/normalizador.js?v=20261001"></script>
 <script src="/academia/core/js/motor.js?v=20261001"></script>
-<script src="/academia/core/js/progresso.js?v=20261001"></script>
+<script src="/academia/core/js/progresso.js?v=20261001d"></script>
+<script src="/academia/core/js/niveis.js?v=20261001c"></script>
 <script src="/academia/core/js/sinais.js?v=20261001"></script>
 <script src="/academia/ipv4/js/contas-ipv4.js?v=20261001"></script>
 <script src="/academia/ipv4/js/subredes.js?v=20261001"></script>

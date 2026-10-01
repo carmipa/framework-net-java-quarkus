@@ -21,8 +21,8 @@ import org.framework.net.academia.trilha.domain.Nivel;
  * navegador (R10) — o servidor só monta a página com o que a trilha declara sobre a lição.</p>
  *
  * <p><b>INVARIANTES DO DOMÍNIO:</b> só leitura; cada rota é fixa (nenhum parâmetro de caminho
- * escolhe arquivo de template); título, resumo e "próxima lição" vêm da trilha, nunca digitados
- * aqui; o HTML é anônimo.</p>
+ * escolhe arquivo de template); título, resumo, "próxima lição" e o mapa dos níveis (navegação e
+ * aviso de nível bloqueado) vêm da trilha, nunca digitados aqui; o HTML é anônimo.</p>
  *
  * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> Academia não pronta ⇒ 503; lição ausente do catálogo
  * (o catálogo mudou sem a página acompanhar) ⇒ 404 pela página de erro padrão, nunca página
@@ -59,7 +59,7 @@ public class FundamentosResource {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance nivel() {
         academiaAberta.exigir();
-        return visao.data("activeMainMenu", "academia").data("nivel", nivelFundamentos());
+        return visao.data("activeMainMenu", "academia").data("nivel", nivelFundamentos()).data("niveis", trilha.niveis());
     }
 
     @GET
@@ -88,6 +88,7 @@ public class FundamentosResource {
         Licao licao = trilha.licao(id).orElseThrow(NotFoundException::new);
         return template.data("activeMainMenu", "academia")
                 .data("nivel", nivelFundamentos())
+                .data("niveis", trilha.niveis())
                 .data("licao", licao)
                 .data("proxima", trilha.proxima(id).orElse(null));
     }

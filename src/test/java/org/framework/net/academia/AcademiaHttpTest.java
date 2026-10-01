@@ -55,7 +55,8 @@ class AcademiaHttpTest {
     @ParameterizedTest(name = "{0} abre com o menu na Academia")
     @ValueSource(strings = {"/academia", "/academia/fundamentos", "/academia/fundamentos/binario",
             "/academia/fundamentos/hexadecimal", "/academia/fundamentos/camadas",
-            "/academia/ipv4", "/academia/ipv4/mascara", "/academia/ipv4/subredes"})
+            "/academia/ipv4", "/academia/ipv4/mascara", "/academia/ipv4/subredes",
+            "/academia/transporte", "/academia/transporte/aperto", "/academia/transporte/janela"})
     void paginasAbrem(String rota) {
         String html = given().header("Accept", "text/html").when().get(rota)
                 .then().statusCode(200).contentType(containsString("text/html"))
@@ -69,7 +70,7 @@ class AcademiaHttpTest {
 
     @ParameterizedTest(name = "lição {0} traz o próprio id, o selo e os scripts da lição")
     @ValueSource(strings = {"fundamentos.binario", "fundamentos.hexadecimal", "fundamentos.camadas",
-            "ipv4.mascara", "ipv4.subredes"})
+            "ipv4.mascara", "ipv4.subredes", "transporte.aperto", "transporte.janela"})
     void licaoTrazIdESelo(String id) {
         String nivel = id.substring(0, id.indexOf('.'));
         String slug = id.substring(id.indexOf('.') + 1);
@@ -78,6 +79,80 @@ class AcademiaHttpTest {
                 .body(containsString("data-acad-selo=\"" + id + "\""))
                 .body(containsString("/academia/" + nivel + "/js/" + slug + ".js"))
                 .body(containsString("só neste navegador"));
+    }
+
+    /**
+     * Ordem de Paulo (01/10/2026): "não é só enxergar, mas ler também". Toda lição abre com a parte
+     * Entenda, com os quatro blocos (por que importa, como funciona, onde se erra, para lembrar) e
+     * texto de verdade — o piso de palavras reprova lição que nascer só com animação.
+     */
+    @ParameterizedTest(name = "lição {0} tem a parte Entenda com texto para ler")
+    @ValueSource(strings = {"fundamentos.binario", "fundamentos.hexadecimal", "fundamentos.camadas",
+            "ipv4.mascara", "ipv4.subredes", "transporte.aperto", "transporte.janela"})
+    void licaoTemTextoParaLer(String id) {
+        var licao = org.framework.net.academia.trilha.domain.CatalogoTrilha.licao(id).orElseThrow();
+        String html = given().when().get(licao.rota()).then().statusCode(200).extract().asString();
+        int inicio = html.indexOf("id=\"ler\"");
+        assertTrue(inicio > 0, "lição sem a parte Entenda: " + id);
+        assertTrue(inicio < html.indexOf("id=\"ver\""), "Entenda tem de vir antes do Ver: " + id);
+        String trecho = html.substring(inicio, html.indexOf("id=\"ver\""));
+        for (String bloco : List.of("Por que importa", "Como funciona", "Onde se costuma errar", "Para lembrar")) {
+            assertTrue(trecho.contains(bloco), "bloco \"" + bloco + "\" ausente em " + id);
+        }
+        String texto = trecho.replaceAll("<[^>]+>", " ").replaceAll("\\s+", " ").trim();
+        int palavras = texto.split(" ").length;
+        assertTrue(palavras >= 200, id + ": só " + palavras + " palavras na parte Entenda (piso 200)");
+    }
+
+    @Test
+    @DisplayName("a trilha da landing sai como abas (uma por nível) e o mapa dos níveis lista as lições do catálogo")
+    void trilhaEmAbas() {
+        String html = given().when().get("/academia").then().statusCode(200).extract().asString();
+        for (var nivel : org.framework.net.academia.trilha.domain.CatalogoTrilha.niveis()) {
+            assertTrue(html.contains("data-acad-aba=\"" + nivel.id() + "\""), "aba ausente: " + nivel.id());
+            assertTrue(html.contains("data-acad-painel=\"" + nivel.id() + "\""), "painel ausente: " + nivel.id());
+            StringBuilder licoes = new StringBuilder();
+            nivel.licoes().forEach(l -> licoes.append(l.id()).append(' '));
+            assertTrue(html.contains("data-nivel=\"" + nivel.id() + "\"") && html.contains("data-licoes=\"" + licoes + "\""),
+                    "mapa sem o nível ou as lições de " + nivel.id());
+        }
+        assertTrue(html.contains("role=\"tablist\""), "lista de abas sem papel de tablist");
+        assertTrue(html.contains("/academia/core/js/niveis.js") && html.contains("/academia/inicio/js/abas.js"),
+                "scripts do desbloqueio ausentes");
+    }
+
+    @ParameterizedTest(name = "{0} traz o mapa dos níveis e o aviso de bloqueio, escondido de saída")
+    @ValueSource(strings = {"/academia/ipv4", "/academia/ipv4/mascara", "/academia/transporte/janela"})
+    void avisoDeBloqueio(String rota) {
+        String html = given().when().get(rota).then().statusCode(200).extract().asString();
+        String nivel = rota.split("/")[2];
+        assertTrue(html.contains("data-acad-mapa"), "mapa ausente em " + rota);
+        assertTrue(html.matches("(?s).*data-acad-bloqueio=\"" + nivel + "\"[^>]*\\shidden.*"),
+                "aviso de bloqueio ausente ou visível de saída em " + rota);
+    }
+
+    @ParameterizedTest(name = "lição {0}: abas de todos os níveis e sub-abas das lições do nível, com a atual marcada")
+    @ValueSource(strings = {"fundamentos.hexadecimal", "ipv4.subredes", "transporte.aperto"})
+    void navegacaoNaLicao(String id) {
+        var licao = org.framework.net.academia.trilha.domain.CatalogoTrilha.licao(id).orElseThrow();
+        var nivel = org.framework.net.academia.trilha.domain.CatalogoTrilha.nivel(licao.nivelId()).orElseThrow();
+        String html = given().when().get(licao.rota()).then().statusCode(200).extract().asString();
+        String nav = html.substring(html.indexOf("data-acad-nav>"), html.indexOf("</nav>", html.indexOf("data-acad-nav>")));
+        assertTrue(nav.contains("href=\"/academia#trilha\""), "sem caminho de volta para a Academia");
+        for (var n : org.framework.net.academia.trilha.domain.CatalogoTrilha.niveis()) {
+            // A1: nível aberto é link; nível "em breve" aparece, mas sem link (não tem página — seria 404)
+            assertEquals(n.aberto(), nav.contains("href=\"" + n.rota() + "\""),
+                    (n.aberto() ? "aba de nível aberto sem link: " : "nível em breve com link para página inexistente: ") + n.id());
+            assertTrue(nav.contains(">" + n.titulo() + "<"), "nível ausente da navegação: " + n.id());
+        }
+        assertTrue(nav.contains("href=\"" + nivel.rota() + "\" class=\"acad-subaba\""), "sub-aba da visão do nível ausente");
+        for (var l : nivel.licoes()) {
+            assertTrue(nav.contains("href=\"" + l.rota() + "\""), "sub-aba de lição ausente: " + l.id());
+        }
+        assertTrue(nav.matches("(?s).*href=\"" + licao.rota() + "\" class=\"acad-subaba active\" aria-current=\"page\".*"),
+                "a lição aberta não aparece marcada");
+        assertEquals(2, nav.split("aria-current=\"page\"", -1).length - 1,
+                "devem existir exatamente duas marcas de atual (o nível e a lição)");
     }
 
     @Test

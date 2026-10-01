@@ -9,7 +9,8 @@
  * INVARIANTES DO DOMÍNIO: a demonstração é DOM (nada de texto em canvas), cada bit é botão com
  *   aria-pressed e rótulo; duplicação consciente da fileira de bits da lição — a landing é outra
  *   fatia e não carrega script de fatia alheia. Apagar pergunta antes, dizendo quantas lições e
- *   que é só deste navegador; sem progresso guardado, não pergunta nada.
+ *   que é só deste navegador e que os níveis voltam a trancar; sem progresso guardado, não
+ *   pergunta nada. Depois de apagar, as abas da trilha são repintadas na hora (trancadas).
  *
  * COMPORTAMENTO EM CASO DE FALHA: sem o container da demonstração nada é desenhado; sem o
  *   AcademiaProgresso o botão de apagar fica sem ação.
@@ -74,7 +75,7 @@
                 return;
             }
             var pergunta = 'Apagar o progresso de ' + quantas + (quantas === 1 ? ' lição' : ' lições')
-                + ' guardado neste navegador? Isso não pode ser desfeito.';
+                + ' guardado neste navegador? Os níveis desbloqueados voltam a ficar trancados. Isso não pode ser desfeito.';
             if (!window.confirm(pergunta)) {
                 return;
             }
@@ -83,6 +84,9 @@
             Array.prototype.forEach.call(document.querySelectorAll('[data-acad-selo]'), function (selo) {
                 P.pintarSelo(selo, selo.getAttribute('data-acad-selo'));
             });
+            if (window.AcademiaAbas) {
+                window.AcademiaAbas.repintar();
+            }
         });
     }
 }());

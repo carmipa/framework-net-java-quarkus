@@ -11,7 +11,8 @@
 import { chromium } from 'playwright';
 const BASE = process.argv[2] || 'http://localhost:8081';
 const rotas = ['/academia', '/academia/fundamentos', '/academia/fundamentos/binario', '/academia/fundamentos/hexadecimal',
-  '/academia/fundamentos/camadas', '/academia/ipv4', '/academia/ipv4/mascara', '/academia/ipv4/subredes'];
+  '/academia/fundamentos/camadas', '/academia/ipv4', '/academia/ipv4/mascara', '/academia/ipv4/subredes',
+  '/academia/transporte', '/academia/transporte/aperto', '/academia/transporte/janela'];
 const falhas = []; let ok = 0;
 const confere = (c, d) => { if (c) ok++; else falhas.push(d); };
 const b = await chromium.launch();

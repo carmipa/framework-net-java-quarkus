@@ -5,7 +5,7 @@
 {#title}Binário — Academia | Framework de Redes A&D{/title}
 {#description}Lição de binário da Academia: acenda e apague os oito bits de um byte, veja os pesos de 128 a 1 somarem o número e prove que converte decimal e binário.{/description}
 {#extraHead}
-<link rel="stylesheet" href="/academia/core/css/academia.css?v=20261001b">
+<link rel="stylesheet" href="/academia/core/css/academia.css?v=20261001e">
 {/extraHead}
 {#content}
 <div class="container py-5 acad-pagina" data-acad-licao="{licao.id}">
@@ -13,6 +13,50 @@
     {#include academia/core/cabecalho-licao.html /}
 
     <div class="acad-etapas">
+        <section class="acad-etapa acad-etapa-larga acad-leitura" id="ler" aria-labelledby="ler-titulo">
+            <h2 class="acad-etapa-titulo" id="ler-titulo">
+                <span class="material-symbols-outlined" aria-hidden="true" translate="no">menu_book</span>
+                Entenda
+            </h2>
+            <p class="acad-explica">Leia primeiro; depois a animação mostra a mesma ideia acontecendo, e o Mexer deixa você testar.</p>
+            <div class="acad-leitura-texto">
+                <section class="acad-leitura-bloco">
+                    <h3><span class="material-symbols-outlined" aria-hidden="true" translate="no">lightbulb</span>Por que importa</h3>
+                    <p>Dentro do computador tudo vira <strong>bit</strong>: um sinal que só tem dois estados, desligado (<span class="acad-valor" translate="no">0</span>) ou
+                    ligado (<span class="acad-valor" translate="no">1</span>). Oito bits formam um <strong>byte</strong>. Endereço IP, máscara de rede, porta e o próprio
+                    conteúdo de um pacote são números guardados assim — por isso entender binário é a base para tudo o que
+                    vem depois na trilha, principalmente máscara e sub-rede.</p>
+                </section>
+                <section class="acad-leitura-bloco">
+                    <h3><span class="material-symbols-outlined" aria-hidden="true" translate="no">calculate</span>Como funciona</h3>
+                    <p>O binário é <strong>posicional</strong>, como o decimal: a posição do algarismo diz quanto ele vale. No
+                    decimal cada casa vale 10 vezes a anterior; no binário vale o <strong>dobro</strong>. Num byte, da direita
+                    para a esquerda, os pesos são <span class="acad-valor" translate="no">1, 2, 4, 8, 16, 32, 64 e 128</span>. O valor do byte é a soma dos pesos dos
+                    bits acesos.</p>
+                    <p>Exemplo: <span class="acad-valor" translate="no">1010 0110</span> tem acesos os pesos <span class="acad-valor" translate="no">128 + 32 + 4 + 2</span>, que somam <span class="acad-valor" translate="no">166</span>.</p>
+                    <p>Para o caminho inverso, do decimal para o binário, tire o maior peso que cabe e repita com o resto:
+                    <span class="acad-valor" translate="no">200</span> = <span class="acad-valor" translate="no">128</span> + <span class="acad-valor" translate="no">64</span> + <span class="acad-valor" translate="no">8</span>, então os bits de 128, 64 e 8 ficam acesos: <span class="acad-valor" translate="no">1100 1000</span>.</p>
+                    <p>Com oito bits existem <span class="acad-valor" translate="no">256</span> combinações, de <span class="acad-valor" translate="no">0</span> (tudo apagado) a <span class="acad-valor" translate="no">255</span> (tudo aceso, que é
+                    <span class="acad-valor" translate="no">2^8 − 1</span>).</p>
+                </section>
+                <section class="acad-leitura-bloco">
+                    <h3><span class="material-symbols-outlined" aria-hidden="true" translate="no">report</span>Onde se costuma errar</h3>
+                    <ul>
+                        <li>Ler da esquerda para a direita como se o primeiro bit valesse 1 — o bit da <strong>direita</strong> é o de peso 1.</li>
+                        <li>Esquecer os zeros à esquerda: <span class="acad-valor" translate="no">101</span> é <span class="acad-valor" translate="no">0000 0101</span>, que vale <span class="acad-valor" translate="no">5</span>, não um byte diferente.</li>
+                        <li>Dizer que o máximo de um byte é 256: são 256 <strong>valores</strong>, mas o maior deles é <span class="acad-valor" translate="no">255</span>, porque o primeiro é o zero.</li>
+                    </ul>
+                </section>
+                <section class="acad-leitura-bloco">
+                    <h3><span class="material-symbols-outlined" aria-hidden="true" translate="no">bookmark</span>Para lembrar</h3>
+                    <ul>
+                        <li>Pesos de um byte: <span class="acad-valor" translate="no">128 64 32 16 8 4 2 1</span>.</li>
+                        <li>Valor = soma dos pesos acesos. Um bit a mais à esquerda dobra a quantidade de valores possíveis.</li>
+                    </ul>
+                </section>
+            </div>
+        </section>
+
         <section class="acad-etapa" id="ver" aria-labelledby="ver-titulo">
             <h2 class="acad-etapa-titulo" id="ver-titulo">
                 <span class="material-symbols-outlined" aria-hidden="true" translate="no">visibility</span>
@@ -109,7 +153,8 @@
 {#extraScripts}
 <script src="/academia/core/js/normalizador.js?v=20261001"></script>
 <script src="/academia/core/js/motor.js?v=20261001"></script>
-<script src="/academia/core/js/progresso.js?v=20261001"></script>
+<script src="/academia/core/js/progresso.js?v=20261001d"></script>
+<script src="/academia/core/js/niveis.js?v=20261001c"></script>
 <script src="/academia/core/js/sinais.js?v=20261001"></script>
 <script src="/academia/fundamentos/js/contas-fundamentos.js?v=20261001"></script>
 <script src="/academia/fundamentos/js/bits-ui.js?v=20261001"></script>

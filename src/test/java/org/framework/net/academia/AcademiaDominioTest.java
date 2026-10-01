@@ -108,8 +108,13 @@ class AcademiaDominioTest {
         CatalogoTrilha.validar();
         assertEquals(List.of("/academia", "/academia/fundamentos", "/academia/fundamentos/binario",
                 "/academia/fundamentos/hexadecimal", "/academia/fundamentos/camadas",
-                "/academia/ipv4", "/academia/ipv4/mascara", "/academia/ipv4/subredes"), CatalogoTrilha.rotasPublicas());
+                "/academia/ipv4", "/academia/ipv4/mascara", "/academia/ipv4/subredes",
+                "/academia/transporte", "/academia/transporte/aperto", "/academia/transporte/janela"),
+                CatalogoTrilha.rotasPublicas());
         assertEquals("ipv4.subredes", CatalogoTrilha.proxima("ipv4.mascara").orElseThrow().id());
+        assertEquals("transporte.janela", CatalogoTrilha.proxima("transporte.aperto").orElseThrow().id());
+        assertTrue(CatalogoTrilha.proxima("transporte.janela").isEmpty(), "última lição do nível não tem próxima");
+        assertTrue(CatalogoTrilha.nivel("enlace").map(n -> !n.aberto()).orElse(false), "enlace segue em breve");
         assertEquals("fundamentos.hexadecimal", CatalogoTrilha.proxima("fundamentos.binario").orElseThrow().id());
         assertTrue(CatalogoTrilha.proxima("fundamentos.camadas").isEmpty(), "última lição do nível não tem próxima");
         assertTrue(CatalogoTrilha.licao("fundamentos.inventada").isEmpty());

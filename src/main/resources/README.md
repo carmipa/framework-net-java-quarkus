@@ -70,6 +70,8 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Módulo | Rota | Método | Descrição |
 |--------|------|--------|-----------|
 | Início | `/` | GET | Página inicial (landing) com atalhos para os módulos |
+| Academia | `/academia`, `/academia/<nivel>`, `/academia/<nivel>/<licao>` | GET | Escola de redes do básico ao avançado: níveis em abas que desbloqueiam um por vez e lições em **Entenda · Ver · Mexer · Provar** (texto explicativo, animação, cálculo ao vivo e exercício corrigido), com as contas no navegador |
+| Academia (API) | `/academia/api/eventos` | POST | Telemetria anônima das lições: visita em faixas (nunca o número exato) e erro de JavaScript fora do dataset público |
 | Análise Didática | `/analise` | GET/POST | CIDR, máscara, wildcard, auto-CIDR, domínio, IPv6, comparador, calculadora (parâmetro `?tab=`) |
 | Calculadora | `/calculadora` | GET | Divisão de blocos, plano de VLANs, sumarização e faixa→CIDR (parâmetro `?aba=`) |
 | Calculadora (API) | `/calculadora/api/dividir` | POST | Fragmento HTML: sub-redes de um bloco + matriz de capacidade |
@@ -446,7 +448,7 @@ Nome | Rede base | Hosts1 | Hosts2
 Estilo arquitetural: **monólito modular** (*modular monolith*) em **Java 25 + Quarkus**, migrado do projeto original em Python/Flask. A aplicação é implantada como **um único artefato** (Quarkus fast-jar), mas o código é organizado por **domínios autocontidos** (*bounded contexts*) — cada módulo funciona como um "microserviço interno", com fronteiras claras e baixo acoplamento, pronto para ser extraído para um serviço independente caso o projeto evolua nesse sentido.
 
 - **Runtime único**: endpoints **JAX-RS** (`quarkus-rest`) e views em **Qute** (`quarkus-rest-qute`) sobre `quarkus-vertx-http`.
-- **Módulos de domínio**: `analiseDidatica`, `calculadora`, `portas`, `protocolos`, `resolucaoProblemas`, `localizacao`, `analiseTrafego`, `ferramentasDiagnostico`, `segurancaRede`, `simuladores` (encapsulamento e handshake TCP — computação pura, VPS-safe).
+- **Módulos de domínio**: `academia` (escola de redes, totalmente desacoplada — ver a seção *Academia: fatias, peers e kernel* abaixo), `analiseDidatica`, `calculadora`, `portas`, `protocolos`, `resolucaoProblemas`, `localizacao`, `analiseTrafego`, `ferramentasDiagnostico`, `segurancaRede`, `simuladores` (encapsulamento e handshake TCP — computação pura, VPS-safe).
 - **Módulos transversais**: `security` (CSRF, rate limit, chave admin), `telemetria` (observabilidade), `web` (documentação, login, ícone) e `shared` (sanitização e utilitários de entrada).
 
 ### Camadas por módulo (organização DDD-lite / hexagonal)
@@ -694,6 +696,90 @@ O L2 existe porque o L1 morre a cada deploy e as origens têm limite —
 miss permanente: volta ao comportamento de antes, sem quebrar nada.
 
 ---
+
+### Academia: fatias, peers e kernel
+
+A Academia (`org.framework.net.academia`) é um pacote **totalmente desacoplado** do resto do site: cada
+nível é uma **fatia vertical** (`fundamentos`, `ipv4`, `transporte`…), a landing e os eventos também; o
+**peer** `trilha` é o dono único do catálogo (níveis, lições, rotas, ordem); o **kernel** `core` guarda o
+que é técnico e comum. Fatia não importa fatia, e nada da Academia importa módulo de negócio do site — o
+`FronteiraAcademiaArchTest` reprova o build com a aresta exata que aparecer (allowlist vazia). A única
+saída é a telemetria, por **porta** (`TelemetriaAcademiaPort`), com o adaptador do lado do módulo
+transversal `telemetria`.
+
+```mermaid
+flowchart TB
+    subgraph FATIAS["Fatias verticais"]
+        INI["inicio<br/>landing e abas da trilha"]
+        FUN["fundamentos<br/>binário · hexadecimal · camadas"]
+        IP4["ipv4<br/>máscara · sub-redes"]
+        TRA["transporte<br/>aperto de mão · janela"]
+        EVT["eventos<br/>POST /academia/api/eventos"]
+    end
+    subgraph PEER["Peer"]
+        TRI["trilha<br/>CatalogoTrilha · Nivel · Licao"]
+    end
+    subgraph KERNEL["Kernel core"]
+        POR["PortaoAcademia<br/>503 só nas rotas da Academia"]
+        LIM["LimiteCorpoAcademia<br/>413 acima de 8 KB"]
+        JS["estáticos: motor · normalizador<br/>progresso · níveis · sinais"]
+    end
+    INI --> TRI
+    FUN --> TRI
+    IP4 --> TRI
+    TRA --> TRI
+    EVT --> TRI
+    INI --> POR
+    FUN --> POR
+    IP4 --> POR
+    TRA --> POR
+    EVT --> LIM
+    EVT -->|porta TelemetriaAcademiaPort| ADP["telemetria/infrastructure<br/>TelemetriaAcademiaAdapter"]
+```
+
+**Uma lição por dentro.** O servidor só entrega HTML anônimo (o catálogo, nunca dado do aluno). As contas
+de cada nível rodam no navegador (script próprio da fatia, com gabarito escrito à mão em
+`src/test/js/academia` e rodado pelo `AcademiaJsGabaritoTest`); o progresso fica no `localStorage`; o
+servidor recebe apenas a visita em faixas.
+
+```mermaid
+sequenceDiagram
+    participant A as Aluno (navegador)
+    participant S as Quarkus
+    participant L as localStorage
+    A->>S: GET /academia/transporte/aperto
+    S-->>A: HTML anônimo: lição, abas dos níveis, sub-abas das lições
+    Note over A: Entenda (texto com exemplo resolvido)<br/>Ver (animação com Tocar/Passo/Velocidade)<br/>Mexer (recalcula a cada tecla)<br/>Provar (correção que nomeia o engano)
+    A->>L: progresso por lição: acertos, tentativas, concluída
+    A->>L: níveis desbloqueados (não regride)
+    A->>S: POST /academia/api/eventos (visita em faixas, keepalive)
+    S-->>A: 202 ACEITO · campo fora do esquema descartado · orçamento por minuto
+```
+
+**Desbloqueio dos níveis.** As abas da trilha desbloqueiam um nível por vez, conforme o aluno conclui
+todas as lições do anterior (três acertos por lição). O que foi desbloqueado fica registrado e não volta a
+trancar — lição nova num nível já concluído não tranca o seguinte; só "apagar o progresso" tranca de novo.
+Navegador que não guarda progresso libera tudo e diz isso na tela.
+
+```mermaid
+stateDiagram-v2
+    state "Bloqueado" as B
+    state "Liberado" as L
+    state "Concluído" as C
+    [*] --> L: primeiro nível
+    [*] --> B: demais níveis
+    B --> L: concluiu todas as lições do nível anterior
+    L --> C: concluiu todas as lições do nível
+    L --> B: apagar o progresso
+    C --> B: apagar o progresso
+```
+
+| Guarda | O que impede |
+|--------|--------------|
+| `FronteiraAcademiaArchTest` | fatia importando fatia, ou a Academia importando módulo de negócio |
+| `AcademiaFrontGuardTest` | texto em canvas, endereço externo, HTML cru no JS, valor técnico sem `translate="no"`, campo sem `data-history="off"`, página de fatia carregando asset de outra fatia |
+| `AcademiaJsGabaritoTest` | conta da lição divergindo do gabarito escrito à mão (com piso de casos lidos) |
+| `AcademiaHttpTest` | página fora do ar, lição sem selo, trilha sem abas, navegação sem caminho de volta |
 
 ## ✅ Requisitos
 

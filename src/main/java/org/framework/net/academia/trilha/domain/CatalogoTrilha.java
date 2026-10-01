@@ -48,7 +48,13 @@ public final class CatalogoTrilha {
                             "account_tree", 25))),
             new Nivel("transporte", "Transporte",
                     "TCP e UDP: o aperto de mão em três vias, a janela deslizante e a retransmissão.",
-                    "swap_horiz", false, List.of()),
+                    "swap_horiz", true, List.of(
+                    new Licao("transporte.aperto", "Aperto de mão e sequência",
+                            "Siga o SYN, o SYN-ACK e o ACK e descubra o número que cada lado confirma.",
+                            "handshake", 20),
+                    new Licao("transporte.janela", "Janela e retransmissão",
+                            "Perca um segmento de propósito e compare o que o Go-Back-N e a repetição seletiva reenviam.",
+                            "view_week", 25))),
             new Nivel("enlace", "Enlace",
                     "Switch, tabela MAC, ARP e a eleição da raiz no Spanning Tree.",
                     "device_hub", false, List.of()));

@@ -8,6 +8,9 @@
     <span aria-hidden="true">›</span>
     <span aria-current="page">{licao.titulo}</span>
 </nav>
+{#include academia/core/mapa-niveis.html /}
+{#include academia/core/navegacao.html atual=licao.id /}
+{#include academia/core/aviso-bloqueio.html /}
 <header class="acad-licao-cabeca">
     <div>
         <span class="aed-eyebrow aed-eyebrow-teal">

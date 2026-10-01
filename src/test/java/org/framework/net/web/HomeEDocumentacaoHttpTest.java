@@ -93,7 +93,9 @@ class HomeEDocumentacaoHttpTest {
                 .body(containsString("framework.calculadora.max-linhas"))
                 .body(containsString("Dataset público"))
                 .body(containsString("Correlação dos eventos de negócio"))
-                .body(containsString("ArquiteturaCamadasTest"));
+                .body(containsString("ArquiteturaCamadasTest"))
+                .body(containsString("Academia: fatias, peers e kernel"))
+                .body(containsString("TelemetriaAcademiaPort"));
     }
 
     @Test

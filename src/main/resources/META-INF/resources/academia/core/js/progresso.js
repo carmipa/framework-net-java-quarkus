@@ -12,7 +12,12 @@
  *   - tentativas >= acertos >= 0, inteiros;
  *   - a lição conclui ao chegar a ACERTOS_PARA_CONCLUIR acertos, e concluidaEm é gravado uma vez;
  *   - nada pessoal é guardado (nem o que foi digitado), só contagens;
- *   - a semente da pergunta vive em sessionStorage, para o reload da tradução não trocar a pergunta.
+ *   - a sonda de armazenamento roda uma vez por página e os ouvintes do evento storage só reagem às
+ *     chaves de progresso — senão duas abas abertas se repintam uma à outra sem fim;
+ *   - a semente da pergunta vive em sessionStorage, para o reload da tradução não trocar a pergunta;
+ *   - os níveis já desbloqueados ficam numa chave só ("academia.niveis.v1.desbloqueados"), para
+ *     uma lição nova num nível já concluído nunca trancar de volta o nível seguinte; "apagar o
+ *     progresso" apaga também essa chave.
  *
  * COMPORTAMENTO EM CASO DE FALHA: armazenamento bloqueado ou cheio (navegação privada, política
  *   da escola) não quebra a lição: ler devolve o estado vazio, gravar devolve false, e o selo diz
@@ -24,22 +29,42 @@
 
     var PREFIXO = 'academia.progresso.v1.';
     var PREFIXO_SEMENTE = 'academia.semente.v1.';
+    var CHAVE_DESBLOQUEADOS = 'academia.niveis.v1.desbloqueados';
+    var ID_NIVEL = /^[a-z][a-z0-9]*$/;
     var ACERTOS_PARA_CONCLUIR = 3;
 
     function vazio() {
         return { acertos: 0, tentativas: 0, concluidaEm: null };
     }
 
+    /*
+     * A sonda de "dá para guardar?" grava e apaga uma chave de teste. Ela roda UMA vez por página:
+     * cada gravação dispara o evento storage nas outras abas, e com a sonda a cada leitura duas abas
+     * da Academia abertas se repintavam uma à outra sem fim (medido: o navegador travou e caiu).
+     */
+    var sondados = {};
+
     function armazenamento(tipo) {
+        if (Object.prototype.hasOwnProperty.call(sondados, tipo)) {
+            return sondados[tipo];
+        }
+        var resultado = null;
         try {
             var s = raiz[tipo];
             var teste = '__academia_teste__';
             s.setItem(teste, '1');
             s.removeItem(teste);
-            return s;
+            resultado = s;
         } catch (e) {
-            return null;
+            resultado = null;
         }
+        sondados[tipo] = resultado;
+        return resultado;
+    }
+
+    /** O evento storage é de progresso da Academia? (null = o armazenamento inteiro foi limpo.) */
+    function eventoDeProgresso(ev) {
+        return Boolean(ev) && (ev.key === null || ev.key.indexOf(PREFIXO) === 0 || ev.key === CHAVE_DESBLOQUEADOS);
     }
 
     function valido(estado) {
@@ -91,7 +116,15 @@
             acabouDeConcluir = true;
         }
         var guardado = gravar(licaoId, estado);
+        avisarMudanca();
         return { estado: estado, guardado: guardado, acabouDeConcluir: acabouDeConcluir };
+    }
+
+    /** Avisa a própria página (navegação, abas) que o progresso mudou; outras abas recebem o storage. */
+    function avisarMudanca() {
+        try {
+            raiz.dispatchEvent(new Event('academia:progresso'));
+        } catch (e) { /* navegador antigo sem Event: a tela se acerta no próximo carregamento */ }
     }
 
     function disponivel() {
@@ -114,7 +147,43 @@
         return ids;
     }
 
-    /** Apaga o progresso de todas as lições deste navegador; devolve quantas foram apagadas. */
+    /** Ids dos níveis já desbloqueados neste navegador (valor corrompido vale como nenhum). */
+    function niveisDesbloqueados() {
+        var s = armazenamento('localStorage');
+        if (!s) {
+            return [];
+        }
+        try {
+            var lista = JSON.parse(s.getItem(CHAVE_DESBLOQUEADOS) || '[]');
+            return Array.isArray(lista) ? lista.filter(function (id) { return typeof id === 'string' && ID_NIVEL.test(id); }) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    /** Lembra que o nível foi desbloqueado; devolve false se o navegador não deixou guardar. */
+    function registrarDesbloqueio(nivelId) {
+        var s = armazenamento('localStorage');
+        if (!s || !ID_NIVEL.test(String(nivelId))) {
+            return false;
+        }
+        var lista = niveisDesbloqueados();
+        if (lista.indexOf(nivelId) >= 0) {
+            return true;
+        }
+        lista.push(nivelId);
+        try {
+            s.setItem(CHAVE_DESBLOQUEADOS, JSON.stringify(lista));
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * Apaga o progresso de todas as lições deste navegador e os níveis desbloqueados; devolve
+     * quantas lições foram apagadas.
+     */
     function apagarTudo() {
         var s = armazenamento('localStorage');
         if (!s) {
@@ -124,6 +193,8 @@
         ids.forEach(function (id) {
             try { s.removeItem(PREFIXO + id); } catch (e) { /* segue com as outras */ }
         });
+        try { s.removeItem(CHAVE_DESBLOQUEADOS); } catch (e) { /* idem */ }
+        avisarMudanca();
         return ids.length;
     }
 
@@ -192,6 +263,9 @@
         disponivel: disponivel,
         licoesGuardadas: licoesGuardadas,
         apagarTudo: apagarTudo,
+        niveisDesbloqueados: niveisDesbloqueados,
+        eventoDeProgresso: eventoDeProgresso,
+        registrarDesbloqueio: registrarDesbloqueio,
         semente: semente,
         avancarSemente: avancarSemente,
         pintarSelo: pintarSelo

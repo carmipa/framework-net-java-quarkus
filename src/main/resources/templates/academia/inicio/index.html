@@ -1,11 +1,12 @@
 {! Landing da Academia (/academia). Convidativa (D5) com demonstração viva em DOM (R8: nada de
-   vídeo de terceiro), como funciona, a trilha inteira e o aviso de privacidade. HTML anônimo (R5):
+   vídeo de terceiro), como funciona, a trilha em abas que desbloqueiam nível a nível (ordem de
+   Paulo, 01/10/2026) e o aviso de privacidade. HTML anônimo (R5):
    o progresso de cada lição é pintado pelo navegador. Variáveis: niveis, activeMainMenu. !}
 {#include shared/base.html}
 {#title}Academia de Redes | Framework de Redes A&D{/title}
 {#description}Academia de redes do básico ao avançado: em cada lição você vê a animação, mexe nos números com o resultado na hora e prova que aprendeu, sem cadastro.{/description}
 {#extraHead}
-<link rel="stylesheet" href="/academia/core/css/academia.css?v=20261001b">
+<link rel="stylesheet" href="/academia/core/css/academia.css?v=20261001e">
 {/extraHead}
 {#content}
 <div class="container py-5 acad-pagina">
@@ -19,9 +20,10 @@
             </span>
             <h1 id="acad-titulo">Aprenda redes mexendo nos números</h1>
             <p>
-                Uma escola de redes do básico ao avançado. Cada lição tem três partes: <strong>Ver</strong>, uma
-                animação que você controla; <strong>Mexer</strong>, onde você digita e o resultado muda na hora; e
-                <strong>Provar</strong>, um exercício com correção que mostra onde está o erro.
+                Uma escola de redes do básico ao avançado. Cada lição tem quatro partes: <strong>Entenda</strong>, um
+                texto curto que explica o assunto com exemplo; <strong>Ver</strong>, uma animação que você controla;
+                <strong>Mexer</strong>, onde você digita e o resultado muda na hora; e <strong>Provar</strong>, um
+                exercício com correção que mostra onde está o erro.
             </p>
             <div class="d-flex flex-wrap gap-2 mt-3">
                 <a href="{primeira.rota}" class="aed-btn aed-btn-teal" title="Abre a primeira lição da trilha">
@@ -56,6 +58,13 @@
         <div class="acad-trilha">
             <div class="acad-nivel">
                 <div class="acad-nivel-cabeca">
+                    <span class="material-symbols-outlined acad-nivel-icone" aria-hidden="true" translate="no">menu_book</span>
+                    <h3>Entenda</h3>
+                </div>
+                <p class="acad-explica mb-0">Um texto para ler antes: por que o assunto importa, como funciona com um exemplo resolvido, onde se costuma errar e o que lembrar.</p>
+            </div>
+            <div class="acad-nivel">
+                <div class="acad-nivel-cabeca">
                     <span class="material-symbols-outlined acad-nivel-icone" aria-hidden="true" translate="no">visibility</span>
                     <h3>Ver</h3>
                 </div>
@@ -83,14 +92,37 @@
             <span class="material-symbols-outlined" aria-hidden="true" translate="no">route</span>
             A trilha
         </h2>
-        <div class="acad-trilha">
+        <p class="acad-explica">
+            Um nível por vez: o próximo desbloqueia quando você conclui todas as lições do anterior, e
+            fica desbloqueado para você neste navegador.
+        </p>
+        {#include academia/core/mapa-niveis.html /}
+        {! Sem JavaScript (e para buscadores) as abas aparecem como lista e todos os painéis abertos;
+           o abas.js transforma em abas e aplica o desbloqueio do niveis.js. !}
+        <div class="acad-abas" data-acad-abas>
+            <div class="acad-abas-lista" role="tablist" aria-label="Níveis da trilha" hidden data-acad-abas-lista>
+                {#for nivel in niveis}
+                <button type="button" role="tab" class="aed-mode-btn acad-aba" id="aba-{nivel.id}"
+                        aria-controls="painel-{nivel.id}" aria-selected="false" tabindex="-1"
+                        data-acad-aba="{nivel.id}" title="Mostra as lições do nível {nivel.titulo}">
+                    <span class="material-symbols-outlined" aria-hidden="true" translate="no">{nivel.icone}</span>
+                    <span>{nivel.titulo}</span>
+                    <span class="acad-aba-estado" data-acad-aba-estado></span>
+                </button>
+                {/for}
+            </div>
             {#for nivel in niveis}
-            <article class="acad-nivel{#if !nivel.aberto} fechado{/if}" aria-labelledby="nivel-{nivel.id}">
+            <article class="acad-nivel acad-painel{#if !nivel.aberto} fechado{/if}" role="tabpanel" id="painel-{nivel.id}"
+                     aria-labelledby="nivel-{nivel.id}" data-acad-painel="{nivel.id}">
                 <div class="acad-nivel-cabeca">
                     <span class="material-symbols-outlined acad-nivel-icone" aria-hidden="true" translate="no">{nivel.icone}</span>
                     <h3 id="nivel-{nivel.id}">{nivel.titulo}</h3>
                 </div>
                 <p class="acad-explica mb-0">{nivel.resumo}</p>
+                <p class="acad-bloqueio mb-0" data-acad-painel-bloqueio hidden>
+                    <span class="material-symbols-outlined" aria-hidden="true" translate="no">lock</span>
+                    <span data-acad-painel-bloqueio-texto>Este nível desbloqueia quando você concluir o anterior.</span>
+                </p>
                 {#if nivel.aberto}
                 <ul class="acad-licoes">
                     {#for licao in nivel.licoes}
@@ -137,8 +169,10 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/academia/core/js/progresso.js?v=20261001"></script>
+<script src="/academia/core/js/progresso.js?v=20261001d"></script>
+<script src="/academia/core/js/niveis.js?v=20261001c"></script>
 <script src="/academia/core/js/selos.js?v=20261001"></script>
-<script src="/academia/inicio/js/inicio.js?v=20261001"></script>
+<script src="/academia/inicio/js/abas.js?v=20261001c"></script>
+<script src="/academia/inicio/js/inicio.js?v=20261001b"></script>
 {/extraScripts}
 {/include}
