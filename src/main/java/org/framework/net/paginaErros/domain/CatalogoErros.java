@@ -1,5 +1,6 @@
 package org.framework.net.paginaErros.domain;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,8 +18,11 @@ import java.util.Map;
  * <p><b>Invariantes do domínio:</b> o catálogo é a fonte única dos textos — a
  * página não os escreve à mão, e o CSS deriva a cor de acento da classe
  * {@code err-<código>}. Código desconhecido nunca produz página em branco: cai no
- * fallback da própria família (4xx → 400, 5xx → 500), porque erro sem texto é
- * exatamente o problema que esta tela existe para resolver.</p>
+ * texto genérico da própria família (com a cor de 400 ou 500), porque erro sem
+ * texto é exatamente o problema que esta tela existe para resolver — mas a linha
+ * de status mostra o código real. 401 e 403 têm texto próprio fora da
+ * administração ({@link AreaDoErro}). Todo código emitido pela aplicação tem
+ * entrada aqui, e uma guarda nos testes cruza os dois.</p>
  *
  * <p><b>Comportamento em caso de falha:</b> {@link #porCodigo(int)} sempre devolve
  * um {@link ErroApresentado}; não há caminho que retorne nulo.</p>
@@ -119,6 +123,38 @@ public final class CatalogoErros {
                 "422 Unprocessable Entity",
                 "Valor fora do domínio aceito pela regra de negócio."));
 
+        mapa.put(410, new ErroApresentado(410, "RECURSO REMOVIDO", "link_off",
+                "ENDEREÇO DESATIVADO",
+                "Este conteúdo foi retirado.",
+                "O endereço já existiu, mas o conteúdo foi removido de propósito e não vai voltar. "
+                        + "Use o menu para encontrar o que o substituiu.",
+                "410 Gone",
+                "Recurso removido definitivamente; o endereço não deve ser usado de novo."));
+
+        mapa.put(413, new ErroApresentado(413, "CARGA GRANDE DEMAIS", "cloud_upload",
+                "MTU EXCEDIDO",
+                "O conteúdo enviado é grande demais.",
+                "O servidor recusou o envio pelo tamanho, não pelo formato. Reduza o arquivo ou o "
+                        + "texto e envie de novo.",
+                "413 Content Too Large",
+                "Corpo da requisição acima do limite aceito."));
+
+        mapa.put(414, new ErroApresentado(414, "ENDEREÇO LONGO DEMAIS", "straighten",
+                "URL FRAGMENTADA",
+                "O endereço da página é longo demais.",
+                "A URL passou do tamanho que o servidor aceita — costuma acontecer com link colado "
+                        + "com parâmetros repetidos. Volte ao início e navegue pelo menu.",
+                "414 URI Too Long",
+                "URL acima do limite aceito."));
+
+        mapa.put(415, new ErroApresentado(415, "FORMATO NÃO SUPORTADO", "code_off",
+                "CODEC DESCONHECIDO",
+                "O formato enviado não é aceito aqui.",
+                "O endereço existe, mas não recebe dados neste tipo de conteúdo. Envie pelo "
+                        + "formulário da própria página.",
+                "415 Unsupported Media Type",
+                "Tipo de conteúdo da requisição diferente do esperado pela rota."));
+
         mapa.put(429, new ErroApresentado(429, "LIMITE EXCEDIDO", "speed",
                 "RATE LIMIT ATINGIDO",
                 "Muitas requisições em pouco tempo.",
@@ -126,6 +162,14 @@ public final class CatalogoErros {
                         + "antes de tentar novamente.",
                 "429 Too Many Requests",
                 "Limite por minuto excedido para esta origem."));
+
+        mapa.put(431, new ErroApresentado(431, "CABEÇALHOS GRANDES DEMAIS", "view_headline",
+                "HEADER OVERFLOW",
+                "O navegador enviou cabeçalhos grandes demais.",
+                "Normalmente são cookies acumulados. Apague os cookies deste site e recarregue a "
+                        + "página.",
+                "431 Request Header Fields Too Large",
+                "Cabeçalhos ou cookies acima do limite aceito."));
 
         // ---------- 5xx · servidor ----------
         mapa.put(500, new ErroApresentado(500, "FALHA NO SERVIDOR", "error",
@@ -159,19 +203,52 @@ public final class CatalogoErros {
                 "504 Gateway Timeout",
                 "Tempo de espera do upstream excedido."));
 
-        return Map.copyOf(mapa);
+        mapa.put(507, new ErroApresentado(507, "ARMAZENAMENTO CHEIO", "storage",
+                "DISCO SEM ESPAÇO",
+                "O servidor ficou sem espaço para guardar isto.",
+                "O servidor não conseguiu gravar agora por falta de espaço. As páginas continuam "
+                        + "abertas; tente de novo mais tarde.",
+                "507 Insufficient Storage",
+                "Espaço de armazenamento do servidor esgotado."));
+
+        return Collections.unmodifiableMap(mapa);
     }
 
-    /** Os códigos cobertos, em ordem — usados pela guarda de cobertura nos testes. */
+    /**
+     * Textos de 401 e 403 para quem NÃO está na administração ({@link AreaDoErro#SITE}).
+     *
+     * <p><b>Invariantes do domínio:</b> nenhum deles cita Telemetria, chave administrativa ou
+     * tela de administrador; o 403 lembra a causa honesta mais comum no site, que é a página
+     * aberta há tempo demais com o token de segurança do formulário vencido.</p>
+     */
+    private static final Map<Integer, ErroApresentado> TEXTOS_DO_SITE = Map.of(
+            401, new ErroApresentado(401, "IDENTIFICAÇÃO EXIGIDA", "no_accounts",
+                    "SEM SESSÃO",
+                    "Esta ação pede que você esteja identificado.",
+                    "As páginas e as ferramentas continuam abertas. Só esta ação precisa saber quem "
+                            + "você é; volte à página anterior e tente de novo por ela.",
+                    "401 Unauthorized",
+                    "Ação que exige identificação, feita sem sessão."),
+            403, new ErroApresentado(403, "AÇÃO NÃO LIBERADA", "lock_person",
+                    "PERMISSÃO NEGADA",
+                    "Esta ação não está liberada para você.",
+                    "Se a página ficou aberta por muito tempo, recarregue-a: o token de segurança "
+                            + "do formulário expira. Se persistir, volte ao início.",
+                    "403 Forbidden",
+                    "Permissão ausente ou token de formulário vencido."));
+
+    /** Os códigos cobertos, na ordem do catálogo — usados pela guarda de cobertura nos testes. */
     public static List<Integer> codigos() {
-        return List.of(400, 401, 403, 404, 405, 409, 422, 429, 500, 502, 503, 504);
+        return List.copyOf(CATALOGO.keySet());
     }
 
     /**
      * Estado de erro correspondente ao código HTTP.
      *
-     * <p><b>Comportamento em caso de falha:</b> código fora do catálogo cai no
-     * representante da família — 4xx vira 400, qualquer outra coisa vira 500.
+     * <p><b>Comportamento em caso de falha:</b> código 4xx ou 5xx fora do catálogo
+     * recebe o texto genérico da família, com o <b>código real</b> na linha de
+     * status (um 418 nunca aparece como "400 Bad Request") e a cor do
+     * representante (400 ou 500). Código fora de 400–599 vira o 500 inteiro.
      * Nunca devolve nulo: página de erro em branco por causa de um código não
      * previsto seria o próprio defeito que esta tela combate.</p>
      */
@@ -180,6 +257,36 @@ public final class CatalogoErros {
         if (exato != null) {
             return exato;
         }
-        return codigo >= 400 && codigo < 500 ? CATALOGO.get(400) : CATALOGO.get(500);
+        if (codigo >= 400 && codigo < 500) {
+            return new ErroApresentado(400, "REQUISIÇÃO RECUSADA", "report",
+                    "PACOTE DESCARTADO",
+                    "O servidor recusou esta requisição.",
+                    "O pedido chegou, mas não pôde ser atendido do jeito que foi feito. Confira o "
+                            + "endereço e os dados e tente novamente.",
+                    codigo + " Client Error",
+                    "Código de cliente sem texto próprio no catálogo.");
+        }
+        if (codigo >= 500 && codigo < 600) {
+            ErroApresentado base = CATALOGO.get(500);
+            return new ErroApresentado(500, base.badge(), base.icone(), base.artTag(), base.titulo(),
+                    base.descricao(), codigo + " Server Error", base.hint());
+        }
+        return CATALOGO.get(500);
+    }
+
+    /**
+     * Estado de erro com o texto da área onde aconteceu.
+     *
+     * <p><b>Comportamento em caso de falha:</b> caminho nulo ou desconhecido é tratado como
+     * {@link AreaDoErro#SITE}; código sem variante por área cai em {@link #porCodigo(int)}.</p>
+     */
+    public static ErroApresentado porCodigo(int codigo, String caminho) {
+        if (AreaDoErro.doCaminho(caminho) == AreaDoErro.SITE) {
+            ErroApresentado doSite = TEXTOS_DO_SITE.get(codigo);
+            if (doSite != null) {
+                return doSite;
+            }
+        }
+        return porCodigo(codigo);
     }
 }

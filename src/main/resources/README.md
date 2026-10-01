@@ -1020,8 +1020,8 @@ um caso de uso:
 4. `templates/home/index.html` — o bloco do módulo na landing;
 5. `META-INF/resources/robots.txt` — o prefixo da API nova, **em todos** os grupos
    permissivos (o `RobotsTxtHttpTest` cobra, mas só depois de o build quebrar);
-6. `SitemapResource.PAGINAS_PUBLICAS` — se o módulo tem página no menu (o
-   `SitemapHttpTest` cobra do mesmo jeito);
+6. `web/domain/PaginasPublicas` — se o módulo tem página no menu: é a fonte única lida
+   pelo sitemap, pelo canonical e pelas guardas (o `SitemapHttpTest` cobra do mesmo jeito);
 7. este README.
 
 ---

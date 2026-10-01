@@ -54,9 +54,9 @@ public class PaginaErroService {
      * @param metodo verbo HTTP da tentativa
      */
     public DadosPaginaErro montar(int codigo, String caminho, String metodo) {
-        ErroApresentado erro = CatalogoErros.porCodigo(codigo);
-        String traceId = resolverTraceId();
         String rota = caminho == null || caminho.isBlank() ? "/" : caminho;
+        ErroApresentado erro = CatalogoErros.porCodigo(codigo, rota);
+        String traceId = resolverTraceId();
 
         registrar(codigo, rota, metodo, traceId);
         return new DadosPaginaErro(erro, codigo, rota, metodo == null ? "GET" : metodo, traceId);

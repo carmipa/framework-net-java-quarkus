@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * o trecho ausente.</p>
  */
 @QuarkusTest
-@DisplayName("Páginas de erro: 12 estados, HTML para gente e JSON para máquina")
+@DisplayName("Páginas de erro: todos os estados do catálogo, HTML para gente e JSON para máquina")
 class PaginaErroHttpTest {
 
     @Inject
@@ -158,7 +158,7 @@ class PaginaErroHttpTest {
 
     @ParameterizedTest(name = "o estado {0} renderiza inteiro")
     @MethodSource("codigos")
-    void todosOsDozeEstadosRenderizam(int codigo) {
+    void todosOsEstadosRenderizam(int codigo) {
         ErroApresentado erro = CatalogoErros.porCodigo(codigo);
         DadosPaginaErro dados = new DadosPaginaErro(erro, codigo, "/teste", "GET", "trace-de-teste");
 
@@ -178,9 +178,9 @@ class PaginaErroHttpTest {
     }
 
     @Test
-    @DisplayName("o catálogo cobre os doze códigos, sem campo vazio")
+    @DisplayName("o catálogo cobre os dezoito códigos, sem campo vazio")
     void catalogoCompleto() {
-        assertEquals(12, CatalogoErros.codigos().size());
+        assertEquals(18, CatalogoErros.codigos().size());
         for (int codigo : CatalogoErros.codigos()) {
             ErroApresentado erro = CatalogoErros.porCodigo(codigo);
             assertNotNull(erro);
@@ -200,8 +200,33 @@ class PaginaErroHttpTest {
     void codigoDesconhecidoTemFallback() {
         assertEquals(400, CatalogoErros.porCodigo(418).codigo(), "4xx desconhecido vira 400.");
         assertEquals(400, CatalogoErros.porCodigo(451).codigo());
-        assertEquals(500, CatalogoErros.porCodigo(507).codigo(), "5xx desconhecido vira 500.");
+        assertEquals(500, CatalogoErros.porCodigo(599).codigo(), "5xx desconhecido vira 500.");
         assertEquals(500, CatalogoErros.porCodigo(0).codigo(), "Código absurdo não pode virar tela branca.");
+    }
+
+    @Test
+    @DisplayName("regressão: a página de um código fora do catálogo mostra o código real na linha de status")
+    void paginaDoFallbackMostraOCodigoReal() {
+        ErroApresentado erro = CatalogoErros.porCodigo(418);
+        DadosPaginaErro dados = new DadosPaginaErro(erro, 418, "/teste", "GET", "trace-de-teste");
+
+        String html = engine.getTemplate("paginaErros/erro.html")
+                .data("erro", erro)
+                .data("dados", dados)
+                .render();
+
+        assertTrue(html.contains("418 Client Error"), "a linha de status precisa dizer o código recebido");
+        assertFalse(html.contains("400 Bad Request"), "um 418 não pode se apresentar como 400");
+        assertTrue(html.contains("class=\"err-400\""), "a cor continua a da família 4xx");
+    }
+
+    @Test
+    @DisplayName("o serviço escolhe o texto de 401 pela área do caminho")
+    void servicoEscolheTextoPelaArea() {
+        assertTrue(paginaErroService.montar(401, "/academia/fundamentos", "GET").erro().descricao()
+                .contains("As páginas e as ferramentas continuam abertas"));
+        assertTrue(paginaErroService.montar(401, "/telemetria", "GET").erro().descricao()
+                .contains("Telemetria"));
     }
 
     @Test
