@@ -5,11 +5,11 @@
 {#title}Sub-redes — Academia | Framework de Redes A&D{/title}
 {#description}Lição de sub-redes da Academia: divida um bloco IPv4 em partes iguais, descubra o novo prefixo, quantos hosts cabem em cada uma e o endereço de cada sub-rede.{/description}
 {#extraHead}
-<link rel="stylesheet" href="/academia/core/css/academia.css?v=20261001">
+<link rel="stylesheet" href="/academia/core/css/academia.css?v=20261001b">
 <link rel="stylesheet" href="/academia/ipv4/css/ipv4.css?v=20261001">
 {/extraHead}
 {#content}
-<div class="acad-pagina" data-acad-licao="{licao.id}">
+<div class="container py-5 acad-pagina" data-acad-licao="{licao.id}">
     {#include shared/main_menu.html activeMainMenu='academia' /}
     {#include academia/core/cabecalho-licao.html /}
 
@@ -97,7 +97,7 @@
                 Provar
             </h2>
             <p class="acad-pergunta" id="provar-pergunta"></p>
-            <form id="provar-form" class="row g-3 align-items-start" novalidate>
+            <form id="provar-form" class="row g-3 align-items-end" novalidate>
                 <div class="col-12 col-md-6 acad-campo">
                     <label for="provar-resposta">
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">edit</span>
@@ -105,7 +105,6 @@
                     </label>
                     <input id="provar-resposta" class="form-control" autocomplete="off" data-history="off"
                            maxlength="32" title="Escreva a resposta; o formato aceito aparece logo abaixo">
-                    <span class="acad-eco" id="provar-eco"></span>
                 </div>
                 <div class="col-12 col-md-6 d-flex flex-wrap gap-2 align-items-center">
                     <button type="submit" class="aed-btn aed-btn-teal" title="Confere a sua resposta">
@@ -119,6 +118,7 @@
                     </button>
                 </div>
             </form>
+            <span class="acad-eco d-block mt-1" id="provar-eco"></span>
             <div class="acad-feedback" id="provar-feedback" aria-live="polite"></div>
             <div class="acad-placar" id="provar-placar"></div>
         </section>

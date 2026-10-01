@@ -5,20 +5,17 @@
    px só em borda fina e sombra.
    ========================================================================= */
 
+/* A página usa o MESMO .container py-5 do resto do site: o menu fica na mesma posição em todas
+   as páginas e a margem negativa dele (= o padding do container) não estoura a tela no celular.
+   O container do site já ocupa 98% da largura a partir de 992px (largura cheia, sem coluna central). */
 .acad-pagina {
     width: 100%;
-    padding: 2% 2% 4%;
-}
-
-.acad-pagina .aed-topnav,
-.acad-pagina nav[aria-label] {
-    margin-bottom: 2%;
 }
 
 /* ---------- cabeçalho ---------- */
 .acad-hero {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
     gap: 2rem;
     align-items: center;
     margin-bottom: 2.5rem;
@@ -55,8 +52,9 @@
 /* ---------- trilha (landing e nível) ---------- */
 .acad-trilha {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
     gap: 1rem;
+    align-items: start;
 }
 
 .acad-nivel {
@@ -71,6 +69,10 @@
 
 .acad-nivel.fechado {
     opacity: .7;
+}
+
+.acad-nivel > .acad-selo {
+    align-self: flex-start;
 }
 
 .acad-nivel-cabeca {
@@ -124,6 +126,10 @@
     color: var(--aed-text-secondary);
 }
 
+.acad-licao-texto .acad-selo {
+    margin-top: .35rem;
+}
+
 /* ---------- selo de progresso ---------- */
 .acad-selo {
     display: inline-flex;
@@ -169,13 +175,17 @@
     color: var(--aed-text-secondary);
 }
 
+/* Flex e não grid: com grid auto-fit, a etapa "larga" (1 / -1) segurava uma terceira coluna vazia
+   ao lado de Ver e Mexer. Assim as duas dividem a linha e a larga ocupa a linha inteira. */
 .acad-etapas {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 1.25rem;
+    align-items: stretch;
 }
 
 .acad-etapa {
+    flex: 1 1 26rem;
     border: 1px solid var(--aed-border);
     border-radius: var(--aed-radius-card);
     background: linear-gradient(180deg, var(--aed-card-top), var(--aed-card-bottom));
@@ -184,7 +194,7 @@
 }
 
 .acad-etapa-larga {
-    grid-column: 1 / -1;
+    flex-basis: 100%;
 }
 
 .acad-explica {
@@ -294,6 +304,10 @@
     margin-bottom: 1rem;
 }
 
+.row > .acad-campo {
+    margin-bottom: 0;
+}
+
 .acad-campo label {
     display: flex;
     align-items: center;
@@ -315,7 +329,7 @@
 
 .acad-resultado {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
     gap: .75rem;
     margin-top: .75rem;
 }
@@ -350,6 +364,12 @@
     border-radius: .6rem;
     border: 1px solid var(--aed-border);
     min-height: 2.6rem;
+}
+
+.acad-feedback:not(.ok):not(.erro):not(.neutro) {
+    border-color: transparent;
+    padding: 0;
+    min-height: 0;
 }
 
 .acad-feedback.ok {
@@ -440,7 +460,7 @@
 
 .acad-demo-numero {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: .75rem;
     margin-top: .75rem;
 }
@@ -454,10 +474,6 @@
 }
 
 @media (max-width: 576px) {
-    .acad-etapas {
-        grid-template-columns: 100%;
-    }
-
     .acad-bit .acad-bit-valor {
         font-size: 1.1rem;
     }

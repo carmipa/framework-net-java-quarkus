@@ -5,10 +5,10 @@
 {#title}Academia de Redes | Framework de Redes A&D{/title}
 {#description}Academia de redes do básico ao avançado: em cada lição você vê a animação, mexe nos números com o resultado na hora e prova que aprendeu, sem cadastro.{/description}
 {#extraHead}
-<link rel="stylesheet" href="/academia/core/css/academia.css?v=20261001">
+<link rel="stylesheet" href="/academia/core/css/academia.css?v=20261001b">
 {/extraHead}
 {#content}
-<div class="acad-pagina">
+<div class="container py-5 acad-pagina">
     {#include shared/main_menu.html activeMainMenu='academia' /}
 
     <section class="acad-hero" aria-labelledby="acad-titulo">
@@ -97,8 +97,7 @@
                     <li>
                         <a href="{licao.rota}" class="acad-licao-link" title="Abre a lição {licao.titulo}">
                             <span class="material-symbols-outlined" aria-hidden="true" translate="no">{licao.icone}</span>
-                            <span class="acad-licao-texto">{licao.titulo}<small>{licao.resumo}</small></span>
-                            <span class="acad-selo" data-acad-selo="{licao.id}"></span>
+                            <span class="acad-licao-texto">{licao.titulo}<small>{licao.resumo}</small><span class="acad-selo mt-1" data-acad-selo="{licao.id}"></span></span>
                         </a>
                     </li>
                     {/for}

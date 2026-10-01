@@ -5,10 +5,10 @@
 {#title}Binário — Academia | Framework de Redes A&D{/title}
 {#description}Lição de binário da Academia: acenda e apague os oito bits de um byte, veja os pesos de 128 a 1 somarem o número e prove que converte decimal e binário.{/description}
 {#extraHead}
-<link rel="stylesheet" href="/academia/core/css/academia.css?v=20261001">
+<link rel="stylesheet" href="/academia/core/css/academia.css?v=20261001b">
 {/extraHead}
 {#content}
-<div class="acad-pagina" data-acad-licao="{licao.id}">
+<div class="container py-5 acad-pagina" data-acad-licao="{licao.id}">
     {#include shared/main_menu.html activeMainMenu='academia' /}
     {#include academia/core/cabecalho-licao.html /}
 
@@ -76,7 +76,7 @@
             </h2>
             <p class="acad-pergunta" id="provar-pergunta"></p>
             <div class="acad-bits" id="provar-bits" aria-label="Correção bit a bit da sua resposta" hidden></div>
-            <form id="provar-form" class="row g-3 align-items-start" novalidate>
+            <form id="provar-form" class="row g-3 align-items-end" novalidate>
                 <div class="col-12 col-md-6 acad-campo">
                     <label for="provar-resposta">
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">edit</span>
@@ -84,7 +84,6 @@
                     </label>
                     <input id="provar-resposta" class="form-control" autocomplete="off" data-history="off"
                            maxlength="24" title="Escreva a resposta; o formato aceito aparece logo abaixo">
-                    <span class="acad-eco" id="provar-eco"></span>
                 </div>
                 <div class="col-12 col-md-6 d-flex flex-wrap gap-2 align-items-center">
                     <button type="submit" class="aed-btn aed-btn-teal" title="Confere a sua resposta">
@@ -98,6 +97,7 @@
                     </button>
                 </div>
             </form>
+            <span class="acad-eco d-block mt-1" id="provar-eco"></span>
             <div class="acad-feedback" id="provar-feedback" aria-live="polite"></div>
             <div class="acad-placar" id="provar-placar"></div>
         </section>

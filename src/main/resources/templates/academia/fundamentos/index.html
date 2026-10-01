@@ -4,10 +4,10 @@
 {#title}Fundamentos — Academia | Framework de Redes A&D{/title}
 {#description}Nível Fundamentos da Academia de redes: binário, hexadecimal e encapsulamento em camadas, cada lição com animação, cálculo ao vivo e exercício corrigido.{/description}
 {#extraHead}
-<link rel="stylesheet" href="/academia/core/css/academia.css?v=20261001">
+<link rel="stylesheet" href="/academia/core/css/academia.css?v=20261001b">
 {/extraHead}
 {#content}
-<div class="acad-pagina">
+<div class="container py-5 acad-pagina">
     {#include shared/main_menu.html activeMainMenu='academia' /}
     <nav class="acad-trilha-caminho mb-2" aria-label="Você está em">
         <a href="/academia">Academia</a>
@@ -31,8 +31,7 @@
         <li>
             <a href="{licao.rota}" class="acad-licao-link" title="Abre a lição {licao.titulo}">
                 <span class="material-symbols-outlined" aria-hidden="true" translate="no">{licao.icone}</span>
-                <span class="acad-licao-texto">{licao.titulo}<small>{licao.resumo} · cerca de <span translate="no">{licao.minutos}</span> min</small></span>
-                <span class="acad-selo" data-acad-selo="{licao.id}"></span>
+                <span class="acad-licao-texto">{licao.titulo}<small>{licao.resumo} · cerca de <span translate="no">{licao.minutos}</span> min</small><span class="acad-selo mt-1" data-acad-selo="{licao.id}"></span></span>
             </a>
         </li>
         {/for}
