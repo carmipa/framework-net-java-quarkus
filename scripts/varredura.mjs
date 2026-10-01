@@ -31,6 +31,13 @@
  *   node scripts/varredura.mjs http://host:8081  # outra base
  *   node scripts/varredura.mjs --vigiar          # tempo real: repete e mostra so o NOVO
  *   node scripts/varredura.mjs --so-paginas      # rapido: pula cliques e formularios
+ *   node scripts/varredura.mjs --telas=320,390,768,1024,1440,1920   # responsividade: N larguras
+ *   node scripts/varredura.mjs --com-google      # NAO bloqueia o tradutor (ver abaixo)
+ *
+ * O TRADUTOR DO GOOGLE E BLOQUEADO POR PADRAO (01/10/2026): cada pagina carrega o element.js, e
+ * uma varredura de centenas de cargas em sequencia fez o Google mandar o endereco inteiro para o
+ * captcha (google.com/sorry) — inclusive o navegador de quem estava usando o site na mesma rede.
+ * A traducao tem roteiro proprio, que toca o Google uma unica vez: scripts/verificar-tradutor.mjs.
  */
 import { chromium } from 'playwright';
 import { readFileSync, writeFileSync, appendFileSync, existsSync } from 'node:fs';
@@ -52,10 +59,32 @@ const BASE_CLI = argumentos.find((a) => a.startsWith('http'));
 const TETO_POR_PAGINA = 12;
 
 /** Viewports medidos: o desktop de trabalho e o celular onde o overflow aparece. */
-const TELAS = [
+const TELAS_PADRAO = [
   { nome: 'desktop', width: 1440, height: 900 },
   { nome: 'celular', width: 390, height: 844 },
 ];
+
+/**
+ * `--telas=320,390,1920` troca as duas telas padrao por uma lista de larguras (responsividade "em
+ * qualquer tela"). A primeira largura da lista e a usada nas etapas de clique (B em diante), entao a
+ * lista e reordenada para comecar pela maior — a etapa de cliques continua medindo o desktop.
+ * Altura: retrato (largura × 2,16) ate 768 px, paisagem comum (largura × 0,625) acima.
+ */
+const TELAS = (() => {
+  const arg = argumentos.find((a) => a.startsWith('--telas='));
+  if (!arg) { return TELAS_PADRAO; }
+  const larguras = arg.split('=')[1].split(',').map((x) => Number(x.trim())).filter((n) => Number.isInteger(n) && n >= 240 && n <= 3840);
+  if (larguras.length === 0) {
+    console.error('  NAO VERIFICADO: --telas sem nenhuma largura valida (240 a 3840)');
+    process.exit(2);
+  }
+  return [...new Set(larguras)].sort((a, b) => b - a).map((w) => ({
+    nome: w + 'px', width: w, height: w <= 768 ? Math.round(w * 2.16) : Math.round(w * 0.625),
+  }));
+})();
+const COM_GOOGLE = argumentos.includes('--com-google');
+/** Hosts do tradutor do Google (bloqueados por padrao — ver o cabecalho deste arquivo). */
+const GOOGLE_TRADUTOR = /(^|\.)(translate\.google\.com|translate\.googleapis\.com|translate-pa\.googleapis\.com|www\.google\.com)$/i;
 
 /**
  * Gatilhos que NAO devem ser clicados pela varredura.
@@ -428,6 +457,14 @@ function valorPara(campo) {
 }
 
 const criarPagina = async (contexto, tela) => {
+  if (!COM_GOOGLE && !contexto.__tradutorBloqueado) {
+    contexto.__tradutorBloqueado = true;
+    await contexto.route('**/*', (rota) => {
+      let host = '';
+      try { host = new URL(rota.request().url()).hostname; } catch { /* url opaca (data:, blob:) */ }
+      return GOOGLE_TRADUTOR.test(host) ? rota.abort('blockedbyclient') : rota.continue();
+    });
+  }
   const pagina = await contexto.newPage();
   await pagina.setViewportSize({ width: tela.width, height: tela.height });
   return pagina;
@@ -439,15 +476,21 @@ function escutar(pagina, caixa) {
   // uma chave errada — comportamento correto, esperado durante a sondagem de login
   // deste proprio instrumento. Nao e defeito do site, entao nao vira achado.
   const ehRuidoDeAuth = (url) => /\/login\/chave/.test(url || '');
+  // O bloqueio do tradutor e escolha deste instrumento (cabecalho), nao defeito do site.
+  const ehTradutorBloqueado = (url) => {
+    if (COM_GOOGLE) { return false; }
+    try { return GOOGLE_TRADUTOR.test(new URL(url).hostname); } catch { return false; }
+  };
   pagina.on('console', (msg) => {
     if (msg.type() !== 'error') { return; }
-    if (/Failed to load resource/.test(msg.text()) && ehRuidoDeAuth(msg.location()?.url)) { return; }
+    if (/Failed to load resource/.test(msg.text())
+        && (ehRuidoDeAuth(msg.location()?.url) || ehTradutorBloqueado(msg.location()?.url))) { return; }
     caixa.console.push(msg.text().slice(0, 160));
   });
   pagina.on('pageerror', (erro) => caixa.js.push(String(erro).split('\n')[0].slice(0, 160)));
   pagina.on('requestfailed', (req) => {
     const motivo = req.failure()?.errorText || '';
-    if (/ERR_ABORTED/.test(motivo)) { return; }
+    if (/ERR_ABORTED/.test(motivo) || ehTradutorBloqueado(req.url())) { return; }
     caixa.rede.push(`${motivo} ${req.url().slice(0, 100)}`);
   });
   pagina.on('response', (res) => {
