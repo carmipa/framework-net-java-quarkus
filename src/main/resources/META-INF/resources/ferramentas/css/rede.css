@@ -82,6 +82,9 @@
 .rede-saida > summary .material-symbols-outlined { color: #2dd4bf; }
 .rede-saida-corpo { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-top: 0.6rem; }
 @media (max-width: 780px) { .rede-saida-corpo { grid-template-columns: 1fr; } }
+/* Item de grade nasce com min-width:auto: a linha mais longa do <pre> (white-space:pre)
+   alargava a coluna para fora do cartão e a página rolava na horizontal (296 px em 820). */
+.rede-saida-bloco { min-width: 0; }
 .rede-saida-cab { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; }
 .rede-simulado { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; color: #fcd34d; background: rgba(250,204,21,0.12); border: 1px solid rgba(250,204,21,0.35); padding: 0.05rem 0.4rem; border-radius: 6px; }
 .rede-pre { background: #0a0e16; border: 1px solid rgba(148,163,184,0.2); border-radius: 8px; padding: 0.6rem; color: #cbd5e1; font-size: 0.8rem; overflow-x: auto; white-space: pre; margin: 0 0 0.5rem; }
@@ -100,7 +103,7 @@
 .rede-fonte { margin: 0.5rem 0 0; font-size: 0.76rem; color: #64748b; }
 
 /* ---- Investigações guiadas ---- */
-.rede-guias-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0.8rem; }
+.rede-guias-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0.8rem; }
 .rede-guia { border: 1px solid rgba(148,163,184,0.2); border-radius: 12px; background: rgba(15,22,34,0.5); padding: 0.5rem 0.9rem; }
 .rede-guia > summary { cursor: pointer; font-weight: 700; color: #eef2f8; display: flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0; }
 .rede-guia > summary .material-symbols-outlined { color: #2dd4bf; }
@@ -109,7 +112,7 @@
 .rede-guia-passos code { color: #fcd34d; background: rgba(0,0,0,0.25); padding: 0 0.25rem; border-radius: 4px; }
 
 /* ---- Quiz ---- */
-.rede-quiz-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0.8rem; }
+.rede-quiz-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0.8rem; }
 .rede-q { border: 1px solid rgba(167,139,250,0.35); border-radius: 12px; background: rgba(167,139,250,0.06); padding: 0.9rem 1rem; }
 .rede-q-texto { font-weight: 600; color: #eef2f8; margin: 0 0 0.5rem; }
 .rede-q-opcoes { display: flex; flex-wrap: wrap; gap: 0.4rem; }

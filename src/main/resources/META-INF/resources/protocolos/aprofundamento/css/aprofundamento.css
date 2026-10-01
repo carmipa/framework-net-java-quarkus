@@ -296,6 +296,7 @@
 
 .aprof-diag-sintoma {
     display: flex;
+    overflow-wrap: anywhere; /* "NET::ERR_CERT_COMMON_NAME_INVALID" num flex nao encolhe com break-word */
     align-items: center;
     gap: 0.45rem;
     font-size: 0.92rem;

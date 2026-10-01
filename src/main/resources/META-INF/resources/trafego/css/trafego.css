@@ -72,7 +72,7 @@
 
 .trafego-charts {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
     gap: 1rem;
     margin-bottom: 1.2rem;
 }
@@ -85,9 +85,15 @@
     min-width: 0;
 }
 
+/* O Chart.js mede o cartão ao criar o gráfico; criado com a aba escondida, o canvas
+   nascia com os 300 px padrão e passava do cartão em telas de 320-360 px. */
+.trafego-chart-card canvas {
+    max-width: 100%;
+}
+
 .trafego-redes {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
     gap: 1rem;
     margin-bottom: 0.5rem;
 }

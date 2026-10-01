@@ -44,6 +44,10 @@ body.aed-app {
     font-size: 0.9375rem;
     line-height: 1.5;
     min-height: 100vh;
+    /* Palavra sem espaço maior que a linha quebra em vez de empurrar a página para o lado.
+       Medido em 320 px: "NET::ERR_CERT_COMMON_NAME_INVALID" num título fazia /protocolos/tls
+       e /certificados/tipos rolarem 32 px na horizontal. Só age quando a palavra não cabe. */
+    overflow-wrap: break-word;
 }
 
 body.aed-app .container,
@@ -301,7 +305,7 @@ body.aed-app .header-tech {
 /* --- Hero (Análise Didática) --- */
 .aed-hero {
     display: grid;
-    grid-template-columns: minmax(12.5rem, 26.25rem) 1fr;
+    grid-template-columns: minmax(min(100%, 12.5rem), 26.25rem) 1fr;
     gap: 1.5rem;
     align-items: center;
     margin-bottom: 1.5rem;
@@ -683,7 +687,7 @@ body.aed-app .form-select:focus {
 /* --- Telemetry KPI --- */
 .aed-kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
     gap: 0.875rem;
     margin-bottom: 1.25rem;
 }
