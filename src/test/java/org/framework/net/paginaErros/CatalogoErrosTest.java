@@ -145,6 +145,8 @@ class CatalogoErrosTest {
 
     private static final Pattern STATUS_ENUM = Pattern.compile("Response\\.Status\\.([A-Z_]+)");
     private static final Pattern STATUS_LITERAL = Pattern.compile("\\.status\\(\\s*(\\d{3})\\b");
+    /** Resposta escrita direto no roteador do Vert.x, antes do JAX-RS (ex.: teto de corpo). */
+    private static final Pattern STATUS_VERTX = Pattern.compile("\\.setStatusCode\\(\\s*(\\d{3})\\b");
     private static final Pattern EXCECAO_JAXRS = Pattern.compile("new\\s+(?:jakarta\\.ws\\.rs\\.)?(\\w+Exception)\\(");
     private static final Map<String, Integer> EXCECOES_JAXRS = Map.of(
             "BadRequestException", 400,
@@ -193,6 +195,7 @@ class CatalogoErrosTest {
         assertEquals(Set.of(418), codigosEmitidos("return Response.status(418).build();"));
         assertEquals(Set.of(410), codigosEmitidos("Response.status(Response.Status.GONE)"));
         assertEquals(Set.of(406), codigosEmitidos("throw new NotAcceptableException(\"x\");"));
+        assertEquals(Set.of(413), codigosEmitidos("contexto.response().setStatusCode(413).end();"));
         assertEquals(Set.of(), codigosEmitidos("Response.status(Response.Status.OK); Response.status(204);"),
                 "A1: status de sucesso não é erro");
         assertEquals(Set.of(), codigosEmitidos("// throw new IllegalStateException(\"falha\");"),
@@ -210,6 +213,10 @@ class CatalogoErrosTest {
             }
         }
         m = STATUS_LITERAL.matcher(fonte);
+        while (m.find()) {
+            codigos.add(Integer.parseInt(m.group(1)));
+        }
+        m = STATUS_VERTX.matcher(fonte);
         while (m.find()) {
             codigos.add(Integer.parseInt(m.group(1)));
         }

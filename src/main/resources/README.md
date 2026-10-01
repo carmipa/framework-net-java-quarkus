@@ -84,6 +84,9 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Laboratórios | `/laboratorios` | GET | Visão geral dos laboratórios interativos (só experiências disponíveis) |
 | Laboratórios | `/laboratorios/aneis-e-rede` | GET | Experiência "Anéis e Rede": níveis de privilégio (Protection Rings) × camadas de rede |
 | Laboratórios | `/laboratorios/camadas` | GET | Experiência "Camadas em ação": encapsulamento/desencapsulamento (UDP/IP/Ethernet) entre dois hosts e um switch, passo a passo, com animação e explicações |
+| Academia | `/academia` | GET | Landing da escola de redes: demonstração viva, como funciona (Ver · Mexer · Provar) e a trilha de níveis |
+| Academia | `/academia/fundamentos` (+ `/academia/fundamentos/{binario,hexadecimal,camadas}`) | GET | Nível Fundamentos e as três lições; contas no navegador, progresso só no navegador (`localStorage`) |
+| Academia (API) | `/academia/api/eventos` | POST | Resumo da visita (faixas de tempo e interações) e erro de JavaScript da lição, esquema fechado, corpo ≤ 8 KB; erro de JS fica fora do dataset público |
 | Localização | `/localizacao` | GET | Localização por IP e por CEP no mapa |
 | Localização (API) | `/localizacao/api/gps`, `/localizacao/api/inspecao` | GET | JSON: endereço reverso das coordenadas do GPS (Nominatim, com cache e freio de 1 req/s) / cadeia de cabeçalhos e IP visto pelo servidor (teste de privacidade) |
 | Localização (API) | `/localizacao/api/ip`, `/localizacao/api/cep` | GET | JSON: geolocalização por IP / endereço por CEP (ViaCEP + OSM) |

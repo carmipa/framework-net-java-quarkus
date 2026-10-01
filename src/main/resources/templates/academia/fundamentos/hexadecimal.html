@@ -1,0 +1,131 @@
+{! Lição Fundamentos · Hexadecimal. Ver (os bits agrupados de quatro em quatro), Mexer (bits,
+   decimal e hexadecimal ao vivo) e Provar (correção por dígito). Contas no navegador (R10).
+   Variáveis: nivel, licao, proxima, activeMainMenu. !}
+{#include shared/base.html}
+{#title}Hexadecimal — Academia | Framework de Redes A&D{/title}
+{#description}Lição de hexadecimal da Academia: agrupe os bits de um byte de quatro em quatro, leia o mesmo valor em dois dígitos de 0 a F e prove que converte nos dois sentidos.{/description}
+{#extraHead}
+<link rel="stylesheet" href="/academia/core/css/academia.css?v=20261001">
+{/extraHead}
+{#content}
+<div class="acad-pagina" data-acad-licao="{licao.id}">
+    {#include shared/main_menu.html activeMainMenu='academia' /}
+    {#include academia/core/cabecalho-licao.html /}
+
+    <div class="acad-etapas">
+        <section class="acad-etapa" id="ver" aria-labelledby="ver-titulo">
+            <h2 class="acad-etapa-titulo" id="ver-titulo">
+                <span class="material-symbols-outlined" aria-hidden="true" translate="no">visibility</span>
+                Ver
+            </h2>
+            <p class="acad-explica">
+                Quatro bits valem de <span class="acad-valor" translate="no">0</span> a
+                <span class="acad-valor" translate="no">15</span> — exatamente um dígito hexadecimal, de
+                <span class="acad-valor" translate="no">0</span> a <span class="acad-valor" translate="no">F</span>.
+                Por isso um byte cabe em dois dígitos: a metade da esquerda conta de 16 em 16, a da direita de 1 em 1.
+            </p>
+            <div id="ver-animacao">
+                <div class="acad-bits com-nibbles" id="ver-bits" aria-label="Os oito bits do exemplo"></div>
+                <dl class="acad-resultado">
+                    <div><dt>Metade da esquerda</dt><dd id="ver-alto" translate="no">—</dd></div>
+                    <div><dt>Metade da direita</dt><dd id="ver-baixo" translate="no">—</dd></div>
+                    <div><dt>Hexadecimal</dt><dd id="ver-hex" translate="no">—</dd></div>
+                </dl>
+                {#include academia/core/controles-animacao.html /}
+            </div>
+        </section>
+
+        <section class="acad-etapa" id="mexer" aria-labelledby="mexer-titulo">
+            <h2 class="acad-etapa-titulo" id="mexer-titulo">
+                <span class="material-symbols-outlined" aria-hidden="true" translate="no">touch_app</span>
+                Mexer
+            </h2>
+            <p class="acad-explica">Clique nos bits ou digite o valor em decimal ou em hexadecimal.</p>
+            <div class="acad-bits com-nibbles" id="mexer-bits" role="group" aria-label="Bits do byte: clique para acender ou apagar"></div>
+            <div class="row g-3 mt-2">
+                <div class="col-12 col-md-6 acad-campo">
+                    <label for="mexer-decimal">
+                        <span class="material-symbols-outlined" aria-hidden="true" translate="no">pin</span>
+                        Decimal (0 a 255)
+                    </label>
+                    <input id="mexer-decimal" class="form-control" inputmode="numeric" autocomplete="off"
+                           data-history="off" maxlength="16" value="0"
+                           title="Digite um número de 0 a 255 e veja os dois dígitos hexadecimais">
+                    <span class="acad-eco" id="mexer-decimal-eco" aria-live="polite"></span>
+                </div>
+                <div class="col-12 col-md-6 acad-campo">
+                    <label for="mexer-hex">
+                        <span class="material-symbols-outlined" aria-hidden="true" translate="no">hexagon</span>
+                        Hexadecimal (00 a FF)
+                    </label>
+                    <input id="mexer-hex" class="form-control" autocomplete="off" data-history="off"
+                           maxlength="16" value="00"
+                           title="Digite em hexadecimal; maiúscula, minúscula e o prefixo 0x são aceitos">
+                    <span class="acad-eco" id="mexer-hex-eco" aria-live="polite"></span>
+                </div>
+            </div>
+            <dl class="acad-resultado">
+                <div><dt>Esquerda × 16</dt><dd id="mexer-alto" translate="no">0 × 16 = 0</dd></div>
+                <div><dt>Direita × 1</dt><dd id="mexer-baixo" translate="no">0 × 1 = 0</dd></div>
+                <div><dt>Byte</dt><dd id="mexer-byte" translate="no">0x00 = 0</dd></div>
+            </dl>
+            <details class="mt-3">
+                <summary>
+                    <span class="material-symbols-outlined" aria-hidden="true" translate="no">table_chart</span>
+                    Tabela de 0 a 15
+                </summary>
+                <div class="acad-resultado" translate="no">
+                    <div>0 = 0</div><div>1 = 1</div><div>2 = 2</div><div>3 = 3</div>
+                    <div>4 = 4</div><div>5 = 5</div><div>6 = 6</div><div>7 = 7</div>
+                    <div>8 = 8</div><div>9 = 9</div><div>10 = A</div><div>11 = B</div>
+                    <div>12 = C</div><div>13 = D</div><div>14 = E</div><div>15 = F</div>
+                </div>
+            </details>
+        </section>
+
+        <section class="acad-etapa acad-etapa-larga" id="provar" aria-labelledby="provar-titulo">
+            <h2 class="acad-etapa-titulo" id="provar-titulo">
+                <span class="material-symbols-outlined" aria-hidden="true" translate="no">quiz</span>
+                Provar
+            </h2>
+            <p class="acad-pergunta" id="provar-pergunta"></p>
+            <form id="provar-form" class="row g-3 align-items-start" novalidate>
+                <div class="col-12 col-md-6 acad-campo">
+                    <label for="provar-resposta">
+                        <span class="material-symbols-outlined" aria-hidden="true" translate="no">edit</span>
+                        <span id="provar-rotulo">Sua resposta</span>
+                    </label>
+                    <input id="provar-resposta" class="form-control" autocomplete="off" data-history="off"
+                           maxlength="16" title="Escreva a resposta; o formato aceito aparece logo abaixo">
+                    <span class="acad-eco" id="provar-eco"></span>
+                </div>
+                <div class="col-12 col-md-6 d-flex flex-wrap gap-2 align-items-center">
+                    <button type="submit" class="aed-btn aed-btn-teal" title="Confere a sua resposta">
+                        <span class="material-symbols-outlined" aria-hidden="true" translate="no">check_circle</span>
+                        <span>Conferir</span>
+                    </button>
+                    <button type="button" class="aed-btn aed-btn-neutral" id="provar-outra"
+                            title="Troca por outra pergunta, sem contar tentativa">
+                        <span class="material-symbols-outlined" aria-hidden="true" translate="no">casino</span>
+                        <span>Outra pergunta</span>
+                    </button>
+                </div>
+            </form>
+            <div class="acad-feedback" id="provar-feedback" aria-live="polite"></div>
+            <div class="acad-placar" id="provar-placar"></div>
+        </section>
+    </div>
+
+    {#include academia/core/rodape-licao.html /}
+</div>
+{/content}
+{#extraScripts}
+<script src="/academia/core/js/normalizador.js?v=20261001"></script>
+<script src="/academia/core/js/motor.js?v=20261001"></script>
+<script src="/academia/core/js/progresso.js?v=20261001"></script>
+<script src="/academia/core/js/sinais.js?v=20261001"></script>
+<script src="/academia/fundamentos/js/contas-fundamentos.js?v=20261001"></script>
+<script src="/academia/fundamentos/js/bits-ui.js?v=20261001"></script>
+<script src="/academia/fundamentos/js/hexadecimal.js?v=20261001"></script>
+{/extraScripts}
+{/include}

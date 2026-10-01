@@ -65,6 +65,8 @@ class ModuloDePathTest {
         assertEquals("Telemetria", TelemetriaDashboardService.moduloDePath("/telemetria"));
         assertEquals("Documentação", TelemetriaDashboardService.moduloDePath("/documentacao"));
         assertEquals("Sobre", TelemetriaDashboardService.moduloDePath("/sobre"));
+        assertEquals("Academia", TelemetriaDashboardService.moduloDePath("/academia/fundamentos/binario"));
+        assertEquals("Academia", TelemetriaDashboardService.moduloDePath("/academia/api/eventos"));
     }
 
     @Test

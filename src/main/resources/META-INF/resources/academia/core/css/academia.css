@@ -1,0 +1,468 @@
+/* =========================================================================
+   ACADEMIA — estilos compartilhados pelas páginas da Academia.
+   Reusa os tokens do site (--aed-*); só o que é da Academia mora aqui.
+   Largura cheia e % (regra de CSS do Paulo): nada de coluna central.
+   px só em borda fina e sombra.
+   ========================================================================= */
+
+.acad-pagina {
+    width: 100%;
+    padding: 2% 2% 4%;
+}
+
+.acad-pagina .aed-topnav,
+.acad-pagina nav[aria-label] {
+    margin-bottom: 2%;
+}
+
+/* ---------- cabeçalho ---------- */
+.acad-hero {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+    gap: 2rem;
+    align-items: center;
+    margin-bottom: 2.5rem;
+}
+
+.acad-hero h1 {
+    font-family: var(--aed-font-display);
+    font-size: clamp(1.8rem, 3.2vw, 2.8rem);
+    line-height: 1.15;
+    margin: .5rem 0 1rem;
+}
+
+.acad-hero p {
+    color: var(--aed-text-secondary);
+    font-size: 1.05rem;
+    max-width: 100%;
+}
+
+.acad-trilha-titulo,
+.acad-etapa-titulo {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-family: var(--aed-font-display);
+    font-size: 1.25rem;
+    margin: 0 0 1rem;
+}
+
+.acad-etapa-titulo .material-symbols-outlined,
+.acad-trilha-titulo .material-symbols-outlined {
+    color: var(--aed-teal);
+}
+
+/* ---------- trilha (landing e nível) ---------- */
+.acad-trilha {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: 1rem;
+}
+
+.acad-nivel {
+    border: 1px solid var(--aed-border);
+    border-radius: var(--aed-radius-card);
+    background: linear-gradient(180deg, var(--aed-card-top), var(--aed-card-bottom));
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+}
+
+.acad-nivel.fechado {
+    opacity: .7;
+}
+
+.acad-nivel-cabeca {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+}
+
+.acad-nivel-cabeca h3 {
+    font-size: 1.15rem;
+    margin: 0;
+}
+
+.acad-nivel-icone {
+    color: var(--aed-teal);
+    font-size: 1.8rem;
+}
+
+.acad-licoes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+
+.acad-licao-link {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--aed-border);
+    border-radius: var(--aed-radius-input, .6rem);
+    color: var(--aed-text);
+    text-decoration: none;
+}
+
+.acad-licao-link:hover,
+.acad-licao-link:focus-visible {
+    border-color: var(--aed-teal);
+    color: var(--aed-text);
+}
+
+.acad-licao-link .acad-licao-texto {
+    flex: 1 1 auto;
+}
+
+.acad-licao-link small {
+    display: block;
+    color: var(--aed-text-secondary);
+}
+
+/* ---------- selo de progresso ---------- */
+.acad-selo {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .8rem;
+    border-radius: 999rem;
+    padding: .15rem .6rem;
+    border: 1px solid var(--aed-border);
+    color: var(--aed-text-secondary);
+    white-space: nowrap;
+}
+
+.acad-selo.concluida {
+    border-color: var(--aed-risk-safe);
+    color: var(--aed-risk-safe);
+}
+
+.acad-aviso-local {
+    font-size: .85rem;
+    color: var(--aed-text-secondary);
+    display: flex;
+    gap: .4rem;
+    align-items: flex-start;
+}
+
+/* ---------- lição ---------- */
+.acad-licao-cabeca {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.acad-trilha-caminho {
+    font-size: .9rem;
+    color: var(--aed-text-secondary);
+}
+
+.acad-trilha-caminho a {
+    color: var(--aed-text-secondary);
+}
+
+.acad-etapas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr));
+    gap: 1.25rem;
+}
+
+.acad-etapa {
+    border: 1px solid var(--aed-border);
+    border-radius: var(--aed-radius-card);
+    background: linear-gradient(180deg, var(--aed-card-top), var(--aed-card-bottom));
+    padding: 1.25rem;
+    min-width: 0;
+}
+
+.acad-etapa-larga {
+    grid-column: 1 / -1;
+}
+
+.acad-explica {
+    color: var(--aed-text-secondary);
+}
+
+/* ---------- controles da animação ---------- */
+.acad-controles {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+    margin: 1rem 0;
+}
+
+.acad-controles label {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    color: var(--aed-text-secondary);
+    font-size: .9rem;
+}
+
+.acad-legenda-passo {
+    min-height: 3rem;
+    color: var(--aed-text);
+}
+
+/* ---------- bits ---------- */
+.acad-bits {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: .4rem;
+    width: 100%;
+}
+
+.acad-bit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .2rem;
+    padding: .6rem 0;
+    border-radius: .6rem;
+    border: 1px solid var(--aed-border-input, var(--aed-border));
+    background: rgba(255, 255, 255, .02);
+    color: var(--aed-text-secondary);
+    font-family: var(--aed-font-mono);
+    cursor: pointer;
+    transition: background-color .2s, color .2s, box-shadow .2s;
+}
+
+.acad-bit .acad-bit-valor {
+    font-size: 1.4rem;
+    color: var(--aed-text);
+}
+
+.acad-bit .acad-bit-peso {
+    font-size: .75rem;
+}
+
+.acad-bit[aria-pressed="true"] {
+    background: rgba(45, 212, 191, .18);
+    border-color: var(--aed-teal);
+    box-shadow: 0 0 1rem rgba(45, 212, 191, .25);
+}
+
+.acad-bit[aria-pressed="true"] .acad-bit-valor {
+    color: var(--aed-teal);
+}
+
+.acad-bit.destaque {
+    outline: 2px solid var(--aed-indigo);
+}
+
+.acad-bit.marcado-erro {
+    outline: 2px solid var(--aed-risk-critical);
+}
+
+.acad-bit:disabled {
+    cursor: default;
+}
+
+.acad-nibble-separador {
+    display: none;
+}
+
+.acad-bits.com-nibbles .acad-bit:nth-child(4) {
+    margin-right: .6rem;
+}
+
+/* ---------- valores e campos ---------- */
+.acad-valor {
+    font-family: var(--aed-font-mono);
+    color: var(--aed-teal);
+}
+
+.acad-valor-grande {
+    font-family: var(--aed-font-mono);
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    color: var(--aed-text);
+}
+
+.acad-campo {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    margin-bottom: 1rem;
+}
+
+.acad-campo label {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    color: var(--aed-text);
+}
+
+.acad-campo input,
+.acad-campo select {
+    width: 100%;
+    font-family: var(--aed-font-mono);
+}
+
+.acad-eco {
+    font-size: .85rem;
+    color: var(--aed-text-secondary);
+    min-height: 1.3rem;
+}
+
+.acad-resultado {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: .75rem;
+    margin-top: .75rem;
+}
+
+.acad-resultado > div {
+    border: 1px solid var(--aed-border);
+    border-radius: .6rem;
+    padding: .6rem .75rem;
+}
+
+.acad-resultado dt {
+    font-size: .8rem;
+    font-weight: 400;
+    color: var(--aed-text-secondary);
+}
+
+.acad-resultado dd {
+    margin: 0;
+    font-family: var(--aed-font-mono);
+    font-size: 1.2rem;
+}
+
+/* ---------- provar ---------- */
+.acad-pergunta {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.acad-feedback {
+    margin-top: .75rem;
+    padding: .6rem .8rem;
+    border-radius: .6rem;
+    border: 1px solid var(--aed-border);
+    min-height: 2.6rem;
+}
+
+.acad-feedback.ok {
+    border-color: var(--aed-risk-safe);
+}
+
+.acad-feedback.erro {
+    border-color: var(--aed-risk-critical);
+}
+
+.acad-feedback.neutro {
+    border-color: var(--aed-risk-attention);
+}
+
+.acad-placar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: .9rem;
+    color: var(--aed-text-secondary);
+    margin-top: .75rem;
+}
+
+/* ---------- camadas ---------- */
+.acad-pilha {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    width: 100%;
+}
+
+.acad-unidade {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    width: 100%;
+    min-height: 2.6rem;
+    opacity: .35;
+    transition: opacity .3s;
+}
+
+.acad-unidade.ativa {
+    opacity: 1;
+}
+
+.acad-unidade-rotulo {
+    flex: 0 0 22%;
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .85rem;
+    color: var(--aed-text-secondary);
+    padding-right: .5rem;
+}
+
+.acad-unidade-blocos {
+    flex: 1 1 auto;
+    display: flex;
+    min-width: 0;
+}
+
+.acad-bloco {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: .25rem .4rem;
+    font-family: var(--aed-font-mono);
+    font-size: .8rem;
+    border: 1px solid rgba(0, 0, 0, .35);
+    overflow: hidden;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.acad-bloco.carga { background: rgba(96, 165, 250, .25); flex: 1 1 auto; }
+.acad-bloco.transporte { background: rgba(45, 212, 191, .28); }
+.acad-bloco.rede { background: rgba(99, 102, 241, .32); }
+.acad-bloco.enlace { background: rgba(245, 158, 11, .30); }
+.acad-bloco.preenchimento { background: repeating-linear-gradient(45deg, rgba(255,255,255,.08) 0 .4rem, transparent .4rem .8rem); }
+
+/* ---------- demonstração da landing ---------- */
+.acad-demo {
+    border: 1px solid var(--aed-border);
+    border-radius: var(--aed-radius-card);
+    padding: 1.25rem;
+    background: linear-gradient(180deg, var(--aed-card-top), var(--aed-card-bottom));
+}
+
+.acad-demo-numero {
+    display: flex;
+    align-items: baseline;
+    gap: .75rem;
+    margin-top: .75rem;
+}
+
+/* ---------- movimento reduzido ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .acad-bit,
+    .acad-unidade {
+        transition: none !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .acad-etapas {
+        grid-template-columns: 100%;
+    }
+
+    .acad-bit .acad-bit-valor {
+        font-size: 1.1rem;
+    }
+
+    .acad-unidade-rotulo {
+        flex-basis: 32%;
+    }
+}

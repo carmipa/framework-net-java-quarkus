@@ -296,6 +296,7 @@ public class TelemetriaDashboardService {
             case "informacoes" -> "GeoIP";
             case "sobre" -> "Sobre";
             case "laboratorios" -> "Laboratórios";
+            case "academia" -> "Academia";
             case "certificados" -> "Certificados";
             case "camadas" -> "Camadas";
             case "criptografia" -> "Criptografia";

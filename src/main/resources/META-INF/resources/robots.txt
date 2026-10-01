@@ -68,6 +68,7 @@ Disallow: /localizacao/api
 Disallow: /seguranca/api
 Disallow: /simuladores/api
 Disallow: /trafego/api
+Disallow: /academia/api
 
 # --- Coleta em massa para treinar modelo, e robo de SEO: nao autorizados ---
 # Mesma lista do robots.txt compartilhado da VPS, para que as duas politicas
@@ -115,6 +116,7 @@ Disallow: /localizacao/api
 Disallow: /seguranca/api
 Disallow: /simuladores/api
 Disallow: /trafego/api
+Disallow: /academia/api
 Crawl-delay: 10
 
 # Mapa do site, servido por SitemapResource: so as paginas didaticas, as mesmas

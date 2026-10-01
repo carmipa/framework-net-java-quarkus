@@ -1,5 +1,6 @@
 package org.framework.net.web.domain;
 
+import org.framework.net.academia.trilha.domain.CatalogoTrilha;
 import org.framework.net.camadas.domain.CamadaAprofundamento;
 import org.framework.net.certificados.domain.CertificadoAprofundamento;
 import org.framework.net.criptografia.domain.CriptografiaAprofundamento;
@@ -86,6 +87,8 @@ public final class PaginasPublicas {
         paginas.add("/laboratorios");
         paginas.add("/laboratorios/camadas");
         paginas.add("/laboratorios/aneis-e-rede");
+        // Academia: landing, níveis abertos e lições — fonte única é a trilha.
+        paginas.addAll(CatalogoTrilha.rotasPublicas());
         paginas.add("/portas");
         // Aprofundamentos de portas (Anatomia + famílias) — fonte única.
         PortaAprofundamento.disponiveis().forEach(item -> paginas.add(item.rota()));

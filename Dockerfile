@@ -4,6 +4,9 @@
 
 FROM eclipse-temurin:25-jdk-noble AS build
 WORKDIR /build
+# Node só no estágio de BUILD: o gabarito das contas da Academia (src/test/js, `node --test`) roda
+# dentro da suíte. Sem ele o teste se ignora (Assumptions) e o portão da imagem não veria conta errada.
+RUN apt-get update && apt-get install -y --no-install-recommends nodejs && rm -rf /var/lib/apt/lists/*
 
 COPY gradle gradle
 COPY gradlew gradlew.bat settings.gradle build.gradle gradle.properties ./

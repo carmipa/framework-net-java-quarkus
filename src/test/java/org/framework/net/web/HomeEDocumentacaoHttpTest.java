@@ -37,7 +37,7 @@ class HomeEDocumentacaoHttpTest {
      */
     private static final List<String> MODULOS_DO_MENU = List.of(
             "/analise", "/calculadora", "/ipv6/analise", "/ipv6", "/ipv6/resolucao",
-            "/laboratorios", "/portas", "/protocolos", "/certificados",
+            "/laboratorios", "/academia", "/portas", "/protocolos", "/certificados",
             "/camadas", "/criptografia", "/wifi", "/resolucao-problemas",
             "/localizacao", "/trafego", "/ferramentas", "/diagnostico", "/seguranca", "/telemetria",
             "/documentacao", "/sobre");
