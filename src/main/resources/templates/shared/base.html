@@ -95,8 +95,12 @@
     {#insert extraScripts}{/insert}
 
     <div id="google_translate_element" style="display:none;"></div>
-    <script type="text/javascript" src="/web/js/i18n-translate.js?v=20260925"></script>
-    <script type="text/javascript"
+    <script type="text/javascript" src="/web/js/i18n-translate.js?v=20261001"></script>
+    {! async: script de terceiro síncrono no fim do <body> segura o DOMContentLoaded — medido em
+       01/10/2026, com o Google sem responder nenhum dos 34 scripts do site que esperam esse evento
+       rodava (abas, formulários, carimbo de tradução). A ordem continua garantida: o i18n-translate.js
+       acima é síncrono e já definiu o callback quando o element.js chegar. !}
+    <script type="text/javascript" async
         src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 </body>

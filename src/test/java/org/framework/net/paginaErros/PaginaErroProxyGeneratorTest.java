@@ -43,7 +43,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p><b>INVARIANTES DO DOMÍNIO:</b> (1) a página <b>não pode depender da
  * aplicação</b> — ela existe para o momento em que a aplicação está fora, então
  * CSS e JS que hoje vêm de {@code /paginaErros/...} são <b>embutidos</b>, e os
- * scripts que só servem ao app (tooltips, tradutor) são removidos. Um
+ * scripts que só servem ao app (tooltips) são removidos. O script de tradução e as
+ * bandeiras do seletor de idioma também vão embutidos (01/10/2026): antes o script
+ * era removido e as bandeiras ficavam na tela chamando uma função inexistente —
+ * botão morto justamente para quem não lê português. Um
  * {@code <link>} para o CSS do site aqui daria 502 também, e a página de erro
  * apareceria quebrada; (2) o que é externo (fontes, bandeiras) continua externo,
  * porque continua alcançável; (3) links de navegação permanecem — quando o
@@ -100,9 +103,18 @@ class PaginaErroProxyGeneratorTest {
 
     /** Scripts que só fazem sentido com a aplicação viva. */
     private static final List<Pattern> JS_DESCARTAVEIS = List.of(
-            Pattern.compile("<script[^>]*src=\"/web/js/field-tooltips\\.js[^\"]*\"[^>]*></script>"),
-            Pattern.compile("<script[^>]*src=\"/web/js/i18n-translate\\.js[^\"]*\"[^>]*></script>"),
-            Pattern.compile("<script[^>]*src=\"https://translate\\.google\\.com[^\"]*\"[^>]*></script>"));
+            Pattern.compile("<script[^>]*src=\"/web/js/field-tooltips\\.js[^\"]*\"[^>]*></script>"));
+
+    /**
+     * O script de tradução do próprio site, embutido: sem ele as bandeiras chamariam uma função que
+     * não existe (botão morto). O element.js do Google continua externo — alcançável com o app fora.
+     */
+    private static final Pattern JS_TRADUCAO =
+            Pattern.compile("<script[^>]*src=\"/web/js/i18n-translate\\.js[^\"]*\"[^>]*></script>");
+
+    /** Bandeiras do seletor de idioma, servidas pelo app: viram {@code data:} na página do proxy. */
+    private static final Pattern BANDEIRA =
+            Pattern.compile("src=\"/web/img/bandeiras/([a-z]{2})\\.png[^\"]*\"");
 
     /** O valor exibido no campo trace_id do terminal de diagnóstico. */
     private static final Pattern VALOR_DO_TRACE =
@@ -121,6 +133,7 @@ class PaginaErroProxyGeneratorTest {
     void geraPaginasAutonomas() {
         String css = lerEstatico("paginaErros/css/erro.css");
         String matrix = lerEstatico("paginaErros/js/erro-matrix.js");
+        String traducao = lerEstatico("web/js/i18n-translate.js");
         criarDiretorio();
 
         List<String> problemas = new ArrayList<>();
@@ -136,6 +149,10 @@ class PaginaErroProxyGeneratorTest {
                     .replaceAll(Matcher.quoteReplacement("<script>\n" + matrix + "\n</script>"));
             html = FAVICON_DO_APP.matcher(html)
                     .replaceAll(Matcher.quoteReplacement(FAVICON_EMBUTIDO));
+            html = JS_TRADUCAO.matcher(html)
+                    .replaceAll(Matcher.quoteReplacement("<script>\n" + traducao + "\n</script>"));
+            html = BANDEIRA.matcher(html).replaceAll(m -> Matcher.quoteReplacement(
+                    "src=\"data:image/png;base64," + bandeiraEmBase64(m.group(1)) + "\""));
             for (Pattern descartavel : JS_DESCARTAVEIS) {
                 html = descartavel.matcher(html).replaceAll("");
             }
@@ -152,6 +169,10 @@ class PaginaErroProxyGeneratorTest {
             }
             if (!gravado.contains("<style>")) {
                 problemas.add(codigo + ".html ficou sem o CSS embutido");
+            }
+            if (gravado.contains("aedTranslate(") && !gravado.contains("function aedTranslate(")) {
+                problemas.add(codigo + ".html tem bandeira chamando aedTranslate sem o script de tradução"
+                        + " (botão morto para quem não lê português)");
             }
             if (!gravado.contains(String.valueOf(codigo))) {
                 problemas.add(codigo + ".html não menciona o próprio código");
@@ -247,6 +268,16 @@ class PaginaErroProxyGeneratorTest {
 
     private static String lerEstatico(String relativo) {
         return ler(RAIZ_ESTATICOS.resolve(relativo));
+    }
+
+    /** Bandeira do seletor de idioma em base64 (alguns centos de bytes cada). */
+    private static String bandeiraEmBase64(String pais) {
+        try {
+            return java.util.Base64.getEncoder().encodeToString(
+                    Files.readAllBytes(RAIZ_ESTATICOS.resolve("web/img/bandeiras/" + pais + ".png")));
+        } catch (IOException e) {
+            throw new UncheckedIOException("bandeira " + pais + " ausente — a página do proxy ficaria quebrada", e);
+        }
     }
 
     private static String ler(Path caminho) {

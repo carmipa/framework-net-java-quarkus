@@ -105,8 +105,37 @@ class I18nIconesGuardTest {
             int nosso = s.indexOf("i18n-translate.js");
             int google = s.indexOf("translate_a/element.js");
             assertTrue(nosso > 0 && google > nosso, shell + ": i18n-translate.js precisa vir ANTES do element.js");
+            // O element.js é de terceiro: síncrono, um Google que não responde segura o DOMContentLoaded
+            // e nenhum script do site que espera esse evento roda (medido em 01/10/2026).
+            String tagGoogle = s.substring(s.lastIndexOf("<script", google), s.indexOf(">", google) + 1);
+            assertTrue(tagGoogle.matches("(?s)<script[^>]*\\sasync[\\s>].*"),
+                    shell + ": o element.js precisa de async — " + tagGoogle);
         }
         assertTrue(Files.size(ESTATICOS.resolve("web/fonts/material-symbols-outlined.woff2")) > 100_000,
                 "fonte local ausente ou truncada");
+    }
+
+    /**
+     * As bandeiras do seletor de idioma são ícones de interface: servidas pelo próprio site (regra de UX,
+     * blindagem 5). Com o CDN fora, o seletor virava três imagens quebradas — justamente o controle que
+     * quem não lê português procura. As bandeiras de PAÍS da análise de GeoIP (uma por país, montadas no
+     * JS) não são o seletor e ficam fora desta guarda.
+     */
+    @Test
+    void bandeirasDoSeletorDeIdiomaSaoLocais() throws IOException {
+        int seletores = 0;
+        for (String shell : List.of("shared/main_menu.html", "login/index.html", "paginaErros/erro.html")) {
+            String s = Files.readString(TEMPLATES.resolve(shell), StandardCharsets.UTF_8);
+            assertTrue(!s.contains("flagcdn.com"), shell + " ainda busca bandeira no CDN");
+            for (String pais : List.of("br", "us", "es")) {
+                assertTrue(s.contains("/web/img/bandeiras/" + pais + ".png"), shell + " sem a bandeira local " + pais);
+                seletores++;
+            }
+        }
+        assertEquals(9, seletores, "instrumento cego: seletores de idioma não encontrados");
+        for (String pais : List.of("br", "us", "es")) {
+            assertTrue(Files.size(ESTATICOS.resolve("web/img/bandeiras/" + pais + ".png")) > 200,
+                    "bandeira " + pais + " ausente ou truncada");
+        }
     }
 }
