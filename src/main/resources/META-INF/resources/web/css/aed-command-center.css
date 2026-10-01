@@ -937,11 +937,33 @@ body.aed-app .main-menu-wrap {
     .aed-doc-sidebar { position: static; }
 }
 
+/*
+ * Menu no celular (medido em 01/10/2026 a 320 e 390 px): o rótulo dos itens era escondido com
+ * display:none — os seis links do topo ficavam SEM NOME na árvore de acessibilidade (o leitor de
+ * tela dizia só "link") e os menus suspensos abriam como listas de ícones mudos, sem texto. E o
+ * menu suspenso, ancorado no botão com largura mínima de 15rem, passava da borda (IPv4 até 447 px
+ * numa tela de 320). Agora o menu vira uma grade de itens com ícone E rótulo (regra de UX: o ícone
+ * reforça, nunca substitui o texto), e o menu suspenso abre como painel da largura do menu.
+ */
 @media (max-width: 36em) {
     .aed-topnav { padding: 0.625rem 0.75rem; }
-    .aed-nav-tabs { width: 100%; }
-    .aed-nav-link { flex: 1 1 auto; justify-content: center; font-size: 0.72rem; padding: 0.5rem 0.625rem; }
-    .aed-nav-link span:not(.material-symbols-outlined) { display: none; }
+    .aed-nav-tabs {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.25rem), 1fr));
+        position: relative;
+    }
+    .aed-nav-link,
+    .aed-nav-drop-toggle { justify-content: flex-start; font-size: 0.75rem; padding: 0.5rem 0.625rem; }
+    .aed-nav-drop { position: static; }
+    .aed-nav-drop-toggle { width: 100%; }
+    .aed-nav-drop-caret { margin-left: auto; }
+    .aed-nav-drop-menu.show {
+        left: 0 !important;
+        right: 0 !important;
+        min-width: 0;
+        width: auto;
+    }
     .aed-action-row { grid-template-columns: 1fr; }
     .aed-mode-grid { grid-template-columns: repeat(2, 1fr); }
 }
