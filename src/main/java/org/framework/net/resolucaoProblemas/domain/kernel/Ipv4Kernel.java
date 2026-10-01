@@ -126,6 +126,29 @@ public class Ipv4Kernel {
         return network.getLower().increment(1).withoutPrefixLength().toCanonicalString();
     }
 
+    /** Teto da reserva de IP fixo depois do gateway (impressora, servidor, AP de laboratório). */
+    public static final int RESERVA_DHCP_MAXIMA = 9;
+
+    /**
+     * Quantos endereços depois do gateway ficam FORA do DHCP numa LAN.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> o script do Packet Tracer reservava sempre gateway + 9; numa LAN
+     * dimensionada sem folga (5 hosts num /29, que tem 6) a reserva engolia todos os endereços e
+     * nenhum PC recebia lease (auditoria CALC-16). A reserva agora sai da folga real.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> o gateway é sempre excluído (fora desta conta); a reserva nunca
+     * passa de {@link #RESERVA_DHCP_MAXIMA} nem da folga {@code suportados − 1 − pedidos}, então sobram
+     * sempre pelo menos {@code pedidos} endereços para o DHCP entregar; é a ÚNICA fonte da regra — o
+     * script e o diagrama (PCs de teste) leem daqui.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> não lança; folga negativa (pedido maior que a LAN, que o
+     * planejamento já recusa) devolve 0.</p>
+     */
+    public int reservaDhcpAposGateway(int hostsSuportados, int hostsPedidos) {
+        int folga = hostsSuportados - 1 - hostsPedidos;
+        return Math.max(0, Math.min(RESERVA_DHCP_MAXIMA, folga));
+    }
+
     /**
      * Os primeiros {@code limite} endereços atribuíveis a host de um bloco, em ordem crescente.
      *

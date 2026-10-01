@@ -371,19 +371,27 @@ public class VlsmPlanningService {
         return pairs;
     }
 
+    /**
+     * Os dois PCs de teste do diagrama: os primeiros endereços que o DHCP do roteador ENTREGA.
+     *
+     * <p>Antes eram os dois primeiros hosts depois do gateway, que caíam dentro da faixa que o próprio
+     * script exclui do DHCP — o diagrama dizia "PC teste 1 .2 DHCP" para um endereço que o DHCP nunca
+     * dá (CALC-16). A reserva vem de {@link Ipv4Kernel#reservaDhcpAposGateway}, a mesma do script.</p>
+     */
     private String[] suggestedPcIpsForDiagram(LanBlock location) {
         IPv4Address net = ipv4Kernel.parseNetwork(
                 location.getNetwork() + "/" + location.getPrefix(), "LAN");
         IPv4Address gw = new inet.ipaddr.IPAddressString(location.getGateway()).getAddress().toIPv4();
-        List<IPv4Address> others = new ArrayList<>();
-        // Três bastam: o gateway pode ser um deles e o diagrama usa no máximo dois PCs.
-        for (IPv4Address host : ipv4Kernel.primeirosHostsUteis(net, 3)) {
-            if (!host.equals(gw)) {
-                others.add(host);
+        int reservados = ipv4Kernel.reservaDhcpAposGateway(location.getHostsSupported(), location.getHostsRequired());
+        List<IPv4Address> entregues = new ArrayList<>();
+        // gateway + reservados + 2 hosts: bastam para achar os dois primeiros entregues.
+        for (IPv4Address host : ipv4Kernel.primeirosHostsUteis(net, reservados + 3)) {
+            if (host.compareTo(gw) > 0 && host.compareTo(gw.increment(reservados).toIPv4()) > 0) {
+                entregues.add(host);
             }
         }
-        String ipA = others.isEmpty() ? gw.toCanonicalString() : others.get(0).toCanonicalString();
-        String ipB = others.size() > 1 ? others.get(1).toCanonicalString() : ipA;
+        String ipA = entregues.isEmpty() ? gw.toCanonicalString() : entregues.get(0).toCanonicalString();
+        String ipB = entregues.size() > 1 ? entregues.get(1).toCanonicalString() : ipA;
         return new String[]{ipA, ipB};
     }
 

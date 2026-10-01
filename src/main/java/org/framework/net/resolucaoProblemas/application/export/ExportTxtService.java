@@ -195,15 +195,15 @@ public class ExportTxtService {
         }
         Map<String, String> blocks = new LinkedHashMap<>();
         for (LanBlock location : lanBlocks) {
-            IPv4Address lanNetwork = ipv4Kernel.parseNetwork(
-                    location.getNetwork() + "/" + location.getPrefix(),
-                    "LAN " + location.getLocationName());
-            IPv4Address gatewayIp = ipv4Kernel.parseNetwork(location.getGateway() + "/32", "Gateway");
-            IPv4Address reservedEnd = gatewayIp.increment(9).toIPv4();
-            IPv4Address maxHost = lanNetwork.getUpper().increment(-1).toIPv4();
-            if (reservedEnd.compareTo(maxHost) > 0) {
-                reservedEnd = maxHost;
-            }
+            // Sem prefixo: o IOS recusa "ip dhcp excluded-address 192.168.10.17/32 ..." (CALC-04), e a
+            // reserva vem da folga real da LAN (CALC-16) — com o gateway + 9 fixo, um /29 de 5 hosts
+            // ficava sem nenhum endereço para entregar. Dentro da LAN não há transbordo de endereço.
+            IPv4Address gatewayIp = ipv4Kernel.parseNetwork(location.getGateway() + "/32", "Gateway")
+                    .withoutPrefixLength();
+            int reservados = ipv4Kernel.reservaDhcpAposGateway(location.getHostsSupported(), location.getHostsRequired());
+            String faixaExcluida = reservados == 0
+                    ? gatewayIp.toCanonicalString()
+                    : gatewayIp.toCanonicalString() + " " + gatewayIp.increment(reservados).toIPv4().toCanonicalString();
             List<String> blockLines = new ArrayList<>();
             blockLines.addAll(packetTracerHardwareNoteCliLines());
             blockLines.add("!");
@@ -269,8 +269,7 @@ public class ExportTxtService {
                     + "antes dos PCs obterem lease (rede LAN " + location.getNetwork() + "/"
                     + location.getPrefix() + ").");
             blockLines.add("! Configuração de serviço DHCP");
-            blockLines.add("ip dhcp excluded-address " + gatewayIp.toCanonicalString() + " "
-                    + reservedEnd.toCanonicalString());
+            blockLines.add("ip dhcp excluded-address " + faixaExcluida);
             blockLines.add("ip dhcp pool LAN_" + location.getCliId());
             blockLines.add(" network " + location.getNetwork() + " " + location.getNetmask());
             blockLines.add(" default-router " + location.getGateway());

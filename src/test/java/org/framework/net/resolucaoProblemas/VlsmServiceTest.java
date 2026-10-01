@@ -218,6 +218,62 @@ class VlsmServiceTest {
     }
 
     /**
+     * CALC-04 + CALC-16: a exclusão do DHCP sai sem "/NN" (o IOS recusava a linha) e cabe na folga da LAN
+     * (gateway + 9 fixo deixava um /29 de 5 hosts sem nenhum endereço para entregar); os PCs de teste do
+     * diagrama são endereços que o DHCP de fato entrega. Gabarito pela aritmética da LAN, não pelo código:
+     * entregáveis = hosts suportados − excluídos, e tem de ser ≥ hosts pedidos.
+     */
+    @Test
+    void dhcpExcluiSemPrefixoECabeNaFolgaDaLan() {
+        NetworkScenarioResult s = vlsmService.solveNetworkProblem("192.168.10.0/24",
+                List.of(new LocationInput("Loja", "5"), new LocationInput("Sede", "60")),
+                "star", 30, 71, "telnet", "eigrp_only", 1);
+        String txt = exportTxtService.generatePacketTracerScript(s);
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("(?m)^ip dhcp excluded-address (\\S+)(?: (\\S+))?\\s*$").matcher(txt);
+        java.util.Map<String, Long> excluidosPorGateway = new java.util.HashMap<>();
+        while (m.find()) {
+            assertTrue(m.group(1).matches("\\d+\\.\\d+\\.\\d+\\.\\d+"), "com prefixo: " + m.group());
+            assertTrue(m.group(2) == null || m.group(2).matches("\\d+\\.\\d+\\.\\d+\\.\\d+"), "com prefixo: " + m.group());
+            long ini = ipLong(m.group(1));
+            long fim = m.group(2) == null ? ini : ipLong(m.group(2));
+            excluidosPorGateway.put(m.group(1), fim - ini + 1);
+        }
+        assertEquals(2, excluidosPorGateway.size(), "uma exclusão por LAN: " + excluidosPorGateway);
+        for (var lan : s.getLanBlocks()) {
+            long excluidos = excluidosPorGateway.get(lan.getGateway());
+            assertTrue(lan.getHostsSupported() - excluidos >= lan.getHostsRequired(),
+                    lan.getLocationName() + ": " + lan.getHostsSupported() + " hosts, " + excluidos
+                            + " excluídos, " + lan.getHostsRequired() + " pedidos");
+            // PC de teste do diagrama: o primeiro endereço entregue, logo depois da faixa excluída
+            String primeiroEntregue = longIp(ipLong(lan.getGateway()) + excluidos);
+            assertTrue(s.getTopologyMermaid().contains(primeiroEntregue), lan.getLocationName()
+                    + ": o diagrama não mostra " + primeiroEntregue);
+        }
+    }
+
+    @Test
+    void dhcpNoTopoDoEspacoNaoQuebra() {
+        // base no fim do espaço IPv4: gateway + 9 passava de 255.255.255.255 (AddressValueException → 500)
+        NetworkScenarioResult s = vlsmService.solveNetworkProblem("255.255.255.248/29",
+                List.of(new LocationInput("Loja", "5")), "star", 30, 71, "telnet", "eigrp_only", 1);
+        assertTrue(exportTxtService.generatePacketTracerScript(s).contains("ip dhcp excluded-address 255.255.255.249\n")
+                || exportTxtService.generatePacketTracerScript(s).contains("ip dhcp excluded-address 255.255.255.249\r\n"));
+    }
+
+    private static long ipLong(String ip) {
+        long v = 0;
+        for (String p : ip.split("\\.")) {
+            v = (v << 8) | Long.parseLong(p);
+        }
+        return v;
+    }
+
+    private static String longIp(long v) {
+        return ((v >> 24) & 255) + "." + ((v >> 16) & 255) + "." + ((v >> 8) & 255) + "." + (v & 255);
+    }
+
+    /**
      * PROPÓSITO: o aluno cola o script no Packet Tracer; a máscara do IOS é pontuada pura.
      * INVARIANTE: toda linha "ip address A M" e "network A M" traz M como máscara contígua sem "/NN".
      * FALHA: a regressão "255.255.255.128/25" faz o IOS recusar toda interface e pool DHCP.
