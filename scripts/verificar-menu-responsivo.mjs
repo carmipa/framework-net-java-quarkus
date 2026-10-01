@@ -14,8 +14,10 @@
  *  - no celular o menu recolhe atrás do botão "Menu" (nome acessível, aria-expanded acompanhando);
  *  - depois de rolar a página, o menu grudado no topo cobre no máximo 15% da altura da tela;
  *  - o tradutor do Google fica bloqueado (roteiro em volume dispara o captcha do Google);
- *  - calibração: com o CSS e o JS anteriores (git HEAD, ou --calibrar-css/--calibrar-js) o roteiro
- *    TEM de reprovar — senão ele não distingue o defeito do conserto.
+ *  - calibração: com o CSS e o JS de ANTES do conserto o roteiro TEM de reprovar — senão ele não
+ *    distingue o defeito do conserto. A referência é um commit FIXO (36e8ddd, antes de 231e391 e
+ *    0021359; troca com --calibrar-ref=<commit>). Comparar com o HEAD funcionou só até o conserto ser
+ *    commitado: depois disso HEAD e disco ficam iguais e a calibração não tem com o que comparar.
  *
  * COMPORTAMENTO EM CASO DE FALHA: sai 0 (passou), 1 (reprovou) ou 2 (não verificou: servidor fora,
  * Chromium não abriu, calibração sem versão anterior para comparar).
@@ -32,10 +34,12 @@ const BASE = process.argv.slice(2).find((a) => a.startsWith('http')) || 'http://
 const LARGURAS = [320, 360, 390, 414, 600, 768, 820, 1024, 1280, 1440, 1920, 2560];
 const PAGINAS = ['/', '/laboratorios', '/academia/'];
 const GOOGLE = /(^|\.)(translate\.google\.com|translate\.googleapis\.com|translate-pa\.googleapis\.com|www\.google\.com)$/;
+/** Commit com o menu ANTES do conserto: a calibração tem de reprovar contra ele. */
+const REF_CALIBRACAO = (process.argv.slice(2).find((a) => a.startsWith('--calibrar-ref=')) || '--calibrar-ref=36e8ddd').split('=')[1];
 
 function versaoAnterior(caminho) {
   try {
-    return execFileSync('git', ['show', 'HEAD:' + caminho], { cwd: RAIZ, encoding: 'utf8' });
+    return execFileSync('git', ['show', REF_CALIBRACAO + ':' + caminho], { cwd: RAIZ, encoding: 'utf8' });
   } catch {
     return null;
   }

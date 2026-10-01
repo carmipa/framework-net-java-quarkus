@@ -33,6 +33,7 @@
  *   node scripts/varredura.mjs --so-paginas      # rapido: pula cliques e formularios
  *   node scripts/varredura.mjs --telas=320,390,768,1024,1440,1920   # responsividade: N larguras
  *   node scripts/varredura.mjs --com-google      # NAO bloqueia o tradutor (ver abaixo)
+ *   node scripts/varredura.mjs --rotas=/analise,/trafego   # remede so essas paginas na etapa A
  *
  * O TRADUTOR DO GOOGLE E BLOQUEADO POR PADRAO (01/10/2026): cada pagina carrega o element.js, e
  * uma varredura de centenas de cargas em sequencia fez o Google mandar o endereco inteiro para o
@@ -83,6 +84,15 @@ const TELAS = (() => {
   }));
 })();
 const COM_GOOGLE = argumentos.includes('--com-google');
+/**
+ * `--rotas=/a,/b` restringe a etapa A as rotas listadas (caminho exato, sem a query). Serve para
+ * remedir so o que foi corrigido; a calibragem roda inteira do mesmo jeito. Rota pedida que nao
+ * esta no inventario derruba a varredura com 2: medir zero paginas nao e "nenhum defeito".
+ */
+const ROTAS = (() => {
+  const arg = argumentos.find((a) => a.startsWith('--rotas='));
+  return arg ? arg.split('=')[1].split(',').map((x) => x.trim()).filter(Boolean) : null;
+})();
 /** Hosts do tradutor do Google (bloqueados por padrao — ver o cabecalho deste arquivo). */
 const GOOGLE_TRADUTOR = /(^|\.)(translate\.google\.com|translate\.googleapis\.com|translate-pa\.googleapis\.com|www\.google\.com)$/i;
 
@@ -145,11 +155,24 @@ function DETECTORES() {
     const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
     return 0.2126 * f(+m[0]) + 0.7152 * f(+m[1]) + 0.0722 * f(+m[2]);
   };
+  // Conteudo de <details> FECHADO nao aparece na tela, mas o Chromium ainda devolve
+  // uma caixa calculada para ele: medido em /ferramentas/rede, os botoes da saida
+  // simulada eram acusados de "coberto" e "fora da janela" sem nunca estarem visiveis.
+  // O resumo (<summary>) do details fechado continua visivel e continua medido.
+  const emDetailsFechado = (el) => {
+    for (let d = el.closest('details'); d; d = d.parentElement && d.parentElement.closest('details')) {
+      if (!d.open) {
+        const s = el.closest('summary');
+        if (!(s && s.parentElement === d)) { return true; }
+      }
+    }
+    return false;
+  };
   const vis = (el) => {
     const r = el.getBoundingClientRect();
     const cs = getComputedStyle(el);
     return r.width > 12 && r.height > 8 && cs.visibility !== 'hidden'
-      && cs.display !== 'none' && +cs.opacity >= 0.15;
+      && cs.display !== 'none' && +cs.opacity >= 0.15 && !emDetailsFechado(el);
   };
   const nome = (el) => {
     if (!el) { return '?'; }
@@ -714,6 +737,31 @@ async function varrer() {
       return ok;
     })();
     calibragens.push(calibragemBotaoMorto);
+    // Decimo primeiro: a fronteira do <details>. O MESMO conteudo largo tem de ficar
+    // calado com o details fechado (ninguem o ve) e tem de ser acusado com ele aberto.
+    // So o primeiro lado prova que o detector nao inventa; so o segundo, que nao ficou
+    // cego para o que a pessoa ve ao clicar no resumo.
+    const calibragemDetails = await (async () => {
+      const marcas = ['fora da janela', 'rola na horizontal'];
+      const soma = (lista) => marcas.reduce((n, m) => n + conta(lista, m), 0);
+      await pagina.evaluate(() => {
+        const d = document.createElement('details');
+        d.id = 'cal-el';
+        d.innerHTML = '<summary>calibragem</summary><div style="width:130vw;height:8px"></div>'
+          + '<button type="button" style="position:relative;left:140vw">fora</button>';
+        document.body.prepend(d);
+      });
+      await pagina.waitForTimeout(150);
+      const fechado = await pagina.evaluate(DETECTORES);
+      await pagina.evaluate(() => { document.getElementById('cal-el').open = true; });
+      await pagina.waitForTimeout(150);
+      const aberto = await pagina.evaluate(DETECTORES);
+      await pagina.evaluate(() => { const e = document.getElementById('cal-el'); if (e) { e.remove(); } });
+      const ok = soma(fechado) === soma(base) && soma(aberto) > soma(base);
+      log(`   ${ok ? 'ok  ' : 'CEGO'}  ${'details fechado / aberto'.padEnd(30)} fechado ${soma(base)} → ${soma(fechado)} · aberto → ${soma(aberto)}`);
+      return ok;
+    })();
+    calibragens.push(calibragemDetails);
 
     if (calibragens.some((x) => !x)) {
       log('\n  NAO VERIFICADO: ha detector CEGO. Nada abaixo provaria ausencia de defeito.');
@@ -768,7 +816,15 @@ async function varrer() {
       }
     }
 
-    const alvos = [...INV.paginas, ...INV.variantes];
+    const todos = [...INV.paginas, ...INV.variantes];
+    const alvos = ROTAS ? todos.filter((r) => ROTAS.includes(r.split('?')[0])) : todos;
+    if (ROTAS) {
+      const fora = ROTAS.filter((r) => !todos.some((t) => t.split('?')[0] === r));
+      if (fora.length || alvos.length === 0) {
+        log(`  NAO VERIFICADO: --rotas fora do inventario: ${fora.join(', ') || '(nenhuma rota casou)'}`);
+        return { estado: 'nao-verificado', achados: [] };
+      }
+    }
 
     // --- A. PAGINAS, nas duas telas ---------------------------------------
     log(`\n${'='.repeat(70)}\n  A. PAGINAS (${alvos.length} alvos × ${TELAS.length} telas)\n${'='.repeat(70)}`);
@@ -794,6 +850,24 @@ async function varrer() {
           .forEach((d) => achados.push(`[${tela.nome}] ${rota}  [${d.t}] ${d.s}${d.n > 1 ? ` ×${d.n}` : ''}  ${d.d}`));
         if (defeitos.length > TETO_POR_PAGINA) {
           achados.push(`[${tela.nome}] ${rota}  (+${defeitos.length - TETO_POR_PAGINA} achado(s) do mesmo lote nao listados — teto de ${TETO_POR_PAGINA} por pagina)`);
+        }
+        // Segundo estado da pagina: os <details> abertos. Em repouso o conteudo deles
+        // nao conta (ver emDetailsFechado), e foi ali que a saida simulada de
+        // /ferramentas/rede estourava o cartao e rolava a pagina em 296 px — a pessoa
+        // so via ao clicar no resumo, e a varredura nunca clicava. So entra o que
+        // NAO apareceu em repouso, para nao repetir achado.
+        const abertos = await pagina.evaluate(() => {
+          const ds = [...document.querySelectorAll('details:not([open])')];
+          ds.forEach((d) => { d.open = true; });
+          return ds.length;
+        });
+        if (abertos > 0) {
+          await pagina.waitForTimeout(250);
+          const vistos = new Set(defeitos.map((d) => `${d.t}|${d.s}`));
+          agrupar(await pagina.evaluate(DETECTORES))
+            .filter((d) => !vistos.has(`${d.t}|${d.s}`))
+            .slice(0, TETO_POR_PAGINA)
+            .forEach((d) => achados.push(`[${tela.nome}] ${rota}  (${abertos} details abertos) [${d.t}] ${d.s}${d.n > 1 ? ` ×${d.n}` : ''}  ${d.d}`));
         }
         caixa.http.slice(antes).forEach((h) => achados.push(`[${tela.nome}] ${rota}  requisicao ${h}`));
 

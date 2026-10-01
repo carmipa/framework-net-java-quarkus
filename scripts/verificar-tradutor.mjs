@@ -12,8 +12,9 @@
  *  - só UMA carga toca o Google de verdade (a do item 1); todas as outras bloqueiam o Google —
  *    roteiro automatizado em volume é o que dispara o captcha para o endereço inteiro;
  *  - captcha ou Google fora do ar no item 1 é NÃO VERIFICOU (2), nunca aprovação nem reprovação;
- *  - o detector do aviso é calibrado contra a versão ANTERIOR do script (git HEAD~ ou o arquivo
- *    passado em --calibrar=<caminho>): ela tem de reprovar, senão o detector não discrimina.
+ *  - o detector do aviso é calibrado contra a versão ANTERIOR do script (o commit fixo 36e8ddd, de
+ *    antes do aviso existir, ou o arquivo passado em --calibrar=<caminho>): ela tem de reprovar, senão
+ *    o detector não discrimina. Não é o HEAD: depois do commit do aviso, o HEAD já o tem.
  *
  * COMPORTAMENTO EM CASO DE FALHA: sai 0 (passou), 1 (reprovou) ou 2 (não verificou: Chromium não
  * abriu, servidor fora, Google em captcha no item 1, ou calibração impossível). Cada linha diz o que
@@ -232,7 +233,7 @@ try {
     let antigo = null;
     try {
       antigo = CALIBRAR ? readFileSync(CALIBRAR, 'utf8')
-        : execFileSync('git', ['show', 'HEAD:src/main/resources/META-INF/resources/web/js/i18n-translate.js'], { cwd: RAIZ, encoding: 'utf8' });
+        : execFileSync('git', ['show', '36e8ddd:src/main/resources/META-INF/resources/web/js/i18n-translate.js'], { cwd: RAIZ, encoding: 'utf8' });
     } catch { antigo = null; }
     if (!antigo || /aed-tradutor-aviso/.test(antigo)) {
       naoVerificado.push('0. calibração: não há versão anterior sem o aviso para comparar (passe --calibrar=<arquivo>)');
