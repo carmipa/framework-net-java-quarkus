@@ -86,6 +86,7 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Laboratórios | `/laboratorios/camadas` | GET | Experiência "Camadas em ação": encapsulamento/desencapsulamento (UDP/IP/Ethernet) entre dois hosts e um switch, passo a passo, com animação e explicações |
 | Academia | `/academia` | GET | Landing da escola de redes: demonstração viva, como funciona (Ver · Mexer · Provar) e a trilha de níveis |
 | Academia | `/academia/fundamentos` (+ `/academia/fundamentos/{binario,hexadecimal,camadas}`) | GET | Nível Fundamentos e as três lições; contas no navegador, progresso só no navegador (`localStorage`) |
+| Academia | `/academia/ipv4` (+ `/academia/ipv4/{mascara,subredes}`) | GET | Nível IPv4: régua de 32 bits, máscara, rede, broadcast e hosts (com /31 e /32), divisão em sub-redes; contas próprias no navegador |
 | Academia (API) | `/academia/api/eventos` | POST | Resumo da visita (faixas de tempo e interações) e erro de JavaScript da lição, esquema fechado, corpo ≤ 8 KB; erro de JS fica fora do dataset público |
 | Localização | `/localizacao` | GET | Localização por IP e por CEP no mapa |
 | Localização (API) | `/localizacao/api/gps`, `/localizacao/api/inspecao` | GET | JSON: endereço reverso das coordenadas do GPS (Nominatim, com cache e freio de 1 req/s) / cadeia de cabeçalhos e IP visto pelo servidor (teste de privacidade) |

@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AcademiaJsGabaritoTest {
 
     private static final Path TESTES_JS = Path.of("src", "test", "js", "academia");
-    private static final int PISO_DE_TESTES = 15;
+    private static final int PISO_DE_TESTES = 22;
     private static final Pattern PASS = Pattern.compile("(?m)^# pass (\\d+)");
     private static final Pattern FAIL = Pattern.compile("(?m)^# fail (\\d+)");
 

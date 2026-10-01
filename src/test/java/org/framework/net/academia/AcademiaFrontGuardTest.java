@@ -85,9 +85,50 @@ class AcademiaFrontGuardTest {
         assertTrue(violacoes.isEmpty(), String.join("\n", violacoes));
     }
 
+    /**
+     * Fatia não fala com fatia também na tela: a página de uma fatia só carrega script e estilo do
+     * kernel ({@code /academia/core/}) e dela mesma. Link de NAVEGAÇÃO para outra fatia é livre.
+     */
+    @Test
+    @DisplayName("página de fatia só carrega asset do kernel e dela mesma")
+    void assetsSemCruzarFatia() {
+        List<Path> arquivos = listar(TEMPLATES, ".html");
+        List<String> violacoes = new ArrayList<>();
+        int referencias = 0;
+        for (Path arquivo : arquivos) {
+            String fatia = TEMPLATES.relativize(arquivo).getName(0).toString();
+            if ("core".equals(fatia)) {
+                continue;
+            }
+            String conteudo = ler(arquivo);
+            referencias += contar(ASSET_DA_ACADEMIA, conteudo);
+            violacoes.addAll(violacoesAsset(arquivo.toString(), fatia, conteudo));
+        }
+        assertTrue(referencias >= 20, "controle positivo: só " + referencias + " assets da Academia vistos");
+        assertTrue(violacoes.isEmpty(), String.join("\n", violacoes));
+    }
+
+    private static final Pattern ASSET_DA_ACADEMIA = Pattern.compile("(?:src|href)=\"/academia/([a-z0-9]+)/(?:js|css)/");
+
+    private static List<String> violacoesAsset(String nome, String fatia, String conteudo) {
+        List<String> violacoes = new ArrayList<>();
+        Matcher m = ASSET_DA_ACADEMIA.matcher(conteudo);
+        while (m.find()) {
+            String dono = m.group(1);
+            if (!"core".equals(dono) && !fatia.equals(dono)) {
+                violacoes.add(nome + ": a fatia " + fatia + " carrega asset da fatia " + dono);
+            }
+        }
+        return violacoes;
+    }
+
     @Test
     @DisplayName("calibração: cada regra reprova o caso doente e aceita o legítimo parecido")
     void calibracao() {
+        assertEquals(1, violacoesAsset("x.html", "ipv4", "<script src=\"/academia/fundamentos/js/contas-fundamentos.js\">").size());
+        assertEquals(0, violacoesAsset("x.html", "ipv4", "<script src=\"/academia/ipv4/js/contas-ipv4.js\"><script src=\"/academia/core/js/motor.js\">").size());
+        assertEquals(0, violacoesAsset("x.html", "inicio", "<a href=\"/academia/fundamentos/binario\">").size(),
+                "A1: link de navegação para outra fatia é livre");
         assertEquals(1, violacoesEstatico("x.js", "ctx.fillText('128', 0, 0);").size());
         assertEquals(0, violacoesEstatico("x.js", "// o texto nunca vai para fillTextura nem canvas").size(),
                 "A1: palavra parecida não é chamada");

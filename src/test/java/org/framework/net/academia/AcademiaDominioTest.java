@@ -107,7 +107,9 @@ class AcademiaDominioTest {
     void catalogoValido() {
         CatalogoTrilha.validar();
         assertEquals(List.of("/academia", "/academia/fundamentos", "/academia/fundamentos/binario",
-                "/academia/fundamentos/hexadecimal", "/academia/fundamentos/camadas"), CatalogoTrilha.rotasPublicas());
+                "/academia/fundamentos/hexadecimal", "/academia/fundamentos/camadas",
+                "/academia/ipv4", "/academia/ipv4/mascara", "/academia/ipv4/subredes"), CatalogoTrilha.rotasPublicas());
+        assertEquals("ipv4.subredes", CatalogoTrilha.proxima("ipv4.mascara").orElseThrow().id());
         assertEquals("fundamentos.hexadecimal", CatalogoTrilha.proxima("fundamentos.binario").orElseThrow().id());
         assertTrue(CatalogoTrilha.proxima("fundamentos.camadas").isEmpty(), "última lição do nível não tem próxima");
         assertTrue(CatalogoTrilha.licao("fundamentos.inventada").isEmpty());

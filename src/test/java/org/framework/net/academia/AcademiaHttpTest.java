@@ -54,7 +54,8 @@ class AcademiaHttpTest {
 
     @ParameterizedTest(name = "{0} abre com o menu na Academia")
     @ValueSource(strings = {"/academia", "/academia/fundamentos", "/academia/fundamentos/binario",
-            "/academia/fundamentos/hexadecimal", "/academia/fundamentos/camadas"})
+            "/academia/fundamentos/hexadecimal", "/academia/fundamentos/camadas",
+            "/academia/ipv4", "/academia/ipv4/mascara", "/academia/ipv4/subredes"})
     void paginasAbrem(String rota) {
         String html = given().header("Accept", "text/html").when().get(rota)
                 .then().statusCode(200).contentType(containsString("text/html"))
@@ -67,12 +68,15 @@ class AcademiaHttpTest {
     }
 
     @ParameterizedTest(name = "lição {0} traz o próprio id, o selo e os scripts da lição")
-    @ValueSource(strings = {"binario", "hexadecimal", "camadas"})
-    void licaoTrazIdESelo(String slug) {
-        given().when().get("/academia/fundamentos/" + slug).then().statusCode(200)
-                .body(containsString("data-acad-licao=\"fundamentos." + slug + "\""))
-                .body(containsString("data-acad-selo=\"fundamentos." + slug + "\""))
-                .body(containsString("/academia/fundamentos/js/" + slug + ".js"))
+    @ValueSource(strings = {"fundamentos.binario", "fundamentos.hexadecimal", "fundamentos.camadas",
+            "ipv4.mascara", "ipv4.subredes"})
+    void licaoTrazIdESelo(String id) {
+        String nivel = id.substring(0, id.indexOf('.'));
+        String slug = id.substring(id.indexOf('.') + 1);
+        given().when().get("/academia/" + nivel + "/" + slug).then().statusCode(200)
+                .body(containsString("data-acad-licao=\"" + id + "\""))
+                .body(containsString("data-acad-selo=\"" + id + "\""))
+                .body(containsString("/academia/" + nivel + "/js/" + slug + ".js"))
                 .body(containsString("só neste navegador"));
     }
 

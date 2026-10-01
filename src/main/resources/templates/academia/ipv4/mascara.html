@@ -1,0 +1,137 @@
+{! Lição IPv4 · Máscara e prefixo. Ver (a divisória andando de /24 a /27), Mexer (IP, prefixo e
+   máscara ao vivo, régua clicável) e Provar (máscara, hosts, rede e broadcast, com a correção
+   nomeando o engano). Contas no navegador (R10). Variáveis: nivel, licao, proxima, activeMainMenu. !}
+{#include shared/base.html}
+{#title}Máscara e prefixo — Academia | Framework de Redes A&D{/title}
+{#description}Lição de máscara e prefixo CIDR da Academia: mova a divisória dos 32 bits e veja máscara, rede, broadcast e hosts utilizáveis, inclusive nos casos /31 e /32.{/description}
+{#extraHead}
+<link rel="stylesheet" href="/academia/core/css/academia.css?v=20261001">
+<link rel="stylesheet" href="/academia/ipv4/css/ipv4.css?v=20261001">
+{/extraHead}
+{#content}
+<div class="acad-pagina" data-acad-licao="{licao.id}">
+    {#include shared/main_menu.html activeMainMenu='academia' /}
+    {#include academia/core/cabecalho-licao.html /}
+
+    <div class="acad-etapas">
+        <section class="acad-etapa acad-etapa-larga" id="ver" aria-labelledby="ver-titulo">
+            <h2 class="acad-etapa-titulo" id="ver-titulo">
+                <span class="material-symbols-outlined" aria-hidden="true" translate="no">visibility</span>
+                Ver
+            </h2>
+            <p class="acad-explica">
+                O endereço tem <span class="acad-valor" translate="no">32</span> bits. O prefixo diz quantos,
+                da esquerda para a direita, são a parte de <strong>rede</strong>; o resto é a parte de
+                <strong>host</strong>. A rede é o endereço com todos os bits de host em
+                <span class="acad-valor" translate="no">0</span>; o broadcast, com todos em
+                <span class="acad-valor" translate="no">1</span>.
+            </p>
+            <div id="ver-animacao">
+                <div class="acad-regua" id="ver-regua" aria-label="Os 32 bits do exemplo"></div>
+                <div class="acad-regua-legenda" aria-hidden="true">
+                    <span><span class="amostra rede"></span>rede</span>
+                    <span><span class="amostra host"></span>host</span>
+                </div>
+                <dl class="acad-resultado">
+                    <div><dt>Prefixo e máscara</dt><dd id="ver-mascara" translate="no">—</dd></div>
+                    <div><dt>Rede</dt><dd id="ver-rede" translate="no">—</dd></div>
+                    <div><dt>Broadcast</dt><dd id="ver-broadcast" translate="no">—</dd></div>
+                    <div><dt>Hosts utilizáveis</dt><dd id="ver-hosts" translate="no">—</dd></div>
+                </dl>
+                {#include academia/core/controles-animacao.html /}
+            </div>
+        </section>
+
+        <section class="acad-etapa acad-etapa-larga" id="mexer" aria-labelledby="mexer-titulo">
+            <h2 class="acad-etapa-titulo" id="mexer-titulo">
+                <span class="material-symbols-outlined" aria-hidden="true" translate="no">touch_app</span>
+                Mexer
+            </h2>
+            <p class="acad-explica">Digite um endereço e o prefixo (ou a máscara). Clicar num bit da régua põe a divisória depois dele.</p>
+            <div class="row g-3">
+                <div class="col-12 col-md-4 acad-campo">
+                    <label for="mexer-ip">
+                        <span class="material-symbols-outlined" aria-hidden="true" translate="no">lan</span>
+                        Endereço IPv4
+                    </label>
+                    <input id="mexer-ip" class="form-control" autocomplete="off" data-history="off" maxlength="32"
+                           value="192.168.10.77" title="Digite o endereço; a vírgula do teclado numérico vale como ponto">
+                    <span class="acad-eco" id="mexer-ip-eco" aria-live="polite"></span>
+                </div>
+                <div class="col-12 col-md-4 acad-campo">
+                    <label for="mexer-prefixo">
+                        <span class="material-symbols-outlined" aria-hidden="true" translate="no">straighten</span>
+                        Prefixo
+                    </label>
+                    <input id="mexer-prefixo" class="form-control" inputmode="numeric" autocomplete="off"
+                           data-history="off" maxlength="8" value="/27" title="De /0 a /32; com ou sem a barra">
+                    <span class="acad-eco" id="mexer-prefixo-eco" aria-live="polite"></span>
+                </div>
+                <div class="col-12 col-md-4 acad-campo">
+                    <label for="mexer-mascara">
+                        <span class="material-symbols-outlined" aria-hidden="true" translate="no">filter_alt</span>
+                        Máscara
+                    </label>
+                    <input id="mexer-mascara" class="form-control" autocomplete="off" data-history="off" maxlength="32"
+                           value="255.255.255.224" title="Digite a máscara; ela precisa ter todos os bits 1 antes dos 0">
+                    <span class="acad-eco" id="mexer-mascara-eco" aria-live="polite"></span>
+                </div>
+            </div>
+            <div class="acad-regua" id="mexer-regua" role="group" aria-label="Régua de 32 bits: ative um bit para mover a divisória"></div>
+            <dl class="acad-resultado">
+                <div><dt>Rede</dt><dd id="mexer-rede" translate="no">—</dd></div>
+                <div><dt>Broadcast</dt><dd id="mexer-broadcast" translate="no">—</dd></div>
+                <div><dt>Primeiro host</dt><dd id="mexer-primeiro" translate="no">—</dd></div>
+                <div><dt>Último host</dt><dd id="mexer-ultimo" translate="no">—</dd></div>
+                <div><dt>Hosts utilizáveis</dt><dd id="mexer-hosts" translate="no">—</dd></div>
+                <div><dt>Endereços no bloco</dt><dd id="mexer-bloco" translate="no">—</dd></div>
+            </dl>
+            <p class="acad-explica mt-2" id="mexer-nota" aria-live="polite"></p>
+        </section>
+
+        <section class="acad-etapa acad-etapa-larga" id="provar" aria-labelledby="provar-titulo">
+            <h2 class="acad-etapa-titulo" id="provar-titulo">
+                <span class="material-symbols-outlined" aria-hidden="true" translate="no">quiz</span>
+                Provar
+            </h2>
+            <p class="acad-pergunta" id="provar-pergunta"></p>
+            <form id="provar-form" class="row g-3 align-items-start" novalidate>
+                <div class="col-12 col-md-6 acad-campo">
+                    <label for="provar-resposta">
+                        <span class="material-symbols-outlined" aria-hidden="true" translate="no">edit</span>
+                        <span id="provar-rotulo">Sua resposta</span>
+                    </label>
+                    <input id="provar-resposta" class="form-control" autocomplete="off" data-history="off"
+                           maxlength="32" title="Escreva a resposta; o formato aceito aparece logo abaixo">
+                    <span class="acad-eco" id="provar-eco"></span>
+                </div>
+                <div class="col-12 col-md-6 d-flex flex-wrap gap-2 align-items-center">
+                    <button type="submit" class="aed-btn aed-btn-teal" title="Confere a sua resposta">
+                        <span class="material-symbols-outlined" aria-hidden="true" translate="no">check_circle</span>
+                        <span>Conferir</span>
+                    </button>
+                    <button type="button" class="aed-btn aed-btn-neutral" id="provar-outra"
+                            title="Troca por outra pergunta, sem contar tentativa">
+                        <span class="material-symbols-outlined" aria-hidden="true" translate="no">casino</span>
+                        <span>Outra pergunta</span>
+                    </button>
+                </div>
+            </form>
+            <div class="acad-feedback" id="provar-feedback" aria-live="polite"></div>
+            <div class="acad-placar" id="provar-placar"></div>
+        </section>
+    </div>
+
+    {#include academia/core/rodape-licao.html /}
+</div>
+{/content}
+{#extraScripts}
+<script src="/academia/core/js/normalizador.js?v=20261001"></script>
+<script src="/academia/core/js/motor.js?v=20261001"></script>
+<script src="/academia/core/js/progresso.js?v=20261001"></script>
+<script src="/academia/core/js/sinais.js?v=20261001"></script>
+<script src="/academia/ipv4/js/contas-ipv4.js?v=20261001"></script>
+<script src="/academia/ipv4/js/regua.js?v=20261001"></script>
+<script src="/academia/ipv4/js/mascara.js?v=20261001"></script>
+{/extraScripts}
+{/include}
