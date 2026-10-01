@@ -13,8 +13,8 @@
 
 .doc-sidebar {
     position: sticky;
-    top: 1rem;
-    max-height: calc(100vh - 2rem);
+    top: calc(var(--aed-topnav-fixo, 0px) + 1rem);
+    max-height: calc(100vh - var(--aed-topnav-fixo, 0px) - 2rem);
     overflow-y: auto;
     scrollbar-width: none; /* Oculta no Firefox */
     -ms-overflow-style: none; /* Oculta no IE/Edge antigo */

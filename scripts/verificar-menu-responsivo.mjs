@@ -11,6 +11,8 @@
  *  - todo item do topo (link ou botão) tem nome acessível igual ao rótulo, em toda largura;
  *  - todo menu suspenso aberto cabe na tela (8 px de folga) e mostra o TEXTO de cada item;
  *  - abrir um menu não cria rolagem horizontal;
+ *  - no celular o menu recolhe atrás do botão "Menu" (nome acessível, aria-expanded acompanhando);
+ *  - depois de rolar a página, o menu grudado no topo cobre no máximo 15% da altura da tela;
  *  - o tradutor do Google fica bloqueado (roteiro em volume dispara o captcha do Google);
  *  - calibração: com o CSS e o JS anteriores (git HEAD, ou --calibrar-css/--calibrar-js) o roteiro
  *    TEM de reprovar — senão ele não distingue o defeito do conserto.
@@ -59,6 +61,45 @@ async function medir(browser, { cssAntigo = null, jsAntigo = null } = {}) {
     for (const caminho of PAGINAS) {
       await page.goto(BASE + caminho, { waitUntil: 'load' });
       await page.waitForTimeout(400);
+      // menu grudado: depois de rolar, quanto da tela ele cobre
+      const cobre = await page.evaluate(async () => {
+        // só o menu GRUDADO cobre a leitura; o que rola com a página sai da tela ao rolar
+        if (getComputedStyle(document.querySelector('.aed-topnav')).position !== 'sticky') { return 0; }
+        window.scrollTo(0, 1500);
+        await new Promise((r) => setTimeout(r, 150));
+        const n = document.querySelector('.aed-topnav').getBoundingClientRect();
+        const vis = Math.max(0, Math.min(n.bottom, innerHeight) - Math.max(n.top, 0));
+        window.scrollTo(0, 0);
+        await new Promise((r) => setTimeout(r, 150));
+        return Math.round(100 * vis / innerHeight);
+      });
+      if (cobre > 15) {
+        achados.push(`${largura}px ${caminho}: depois de rolar, o menu grudado cobre ${cobre}% da tela`);
+      }
+      // celular: menu recolhido atrás do botão
+      const botao = await page.$('.aed-nav-recolher');
+      const botaoVisivel = botao ? await botao.isVisible() : false;
+      if (botaoVisivel) {
+        const antes = await page.evaluate(() => ({
+          expandido: document.querySelector('.aed-nav-recolher').getAttribute('aria-expanded'),
+          itensVisiveis: document.querySelector('#aed-nav-itens').getBoundingClientRect().height > 0,
+          alturaMenu: Math.round(document.querySelector('.aed-topnav').getBoundingClientRect().height),
+        }));
+        const nomeBotao = (await page.locator('.aed-nav-recolher').ariaSnapshot()).trim();
+        if (antes.expandido !== 'false' || antes.itensVisiveis) {
+          achados.push(`${largura}px ${caminho}: menu do celular não começa recolhido (${JSON.stringify(antes)})`);
+        }
+        if (!/button "Menu"/.test(nomeBotao)) {
+          achados.push(`${largura}px ${caminho}: botão do menu sem nome acessível "Menu" (${nomeBotao})`);
+        }
+        await botao.click();
+        await page.waitForTimeout(150);
+        const depois = await page.evaluate(() => document.querySelector('.aed-nav-recolher').getAttribute('aria-expanded'));
+        if (depois !== 'true') {
+          achados.push(`${largura}px ${caminho}: aria-expanded não acompanha a abertura (${depois})`);
+        }
+        medidos++;
+      }
       // nome acessível = rótulo visível (ou, se o rótulo estiver escondido, o mesmo texto)
       const nomes = await page.$$eval('.aed-nav-tabs > a.aed-nav-link, .aed-nav-tabs .aed-nav-drop-toggle', (els) => els.map((el) => {
         const rotulo = [...el.querySelectorAll('span:not(.material-symbols-outlined)')].map((s) => s.textContent.trim()).join(' ').trim();

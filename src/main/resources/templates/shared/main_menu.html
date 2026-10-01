@@ -10,7 +10,15 @@
             </div>
         </a>
     </div>
-    <div class="aed-nav-tabs">
+    {! No celular o menu inteiro (grade de rótulos) tem perto de 20rem de altura: ele recolhe atrás
+       deste botão. Sai escondido do servidor e só aparece quando o aed-shell.js liga o recolhimento —
+       sem JavaScript, o menu fica sempre aberto e nada fica inalcançável. !}
+    <button type="button" class="aed-nav-recolher" aria-expanded="false" aria-controls="aed-nav-itens" hidden
+            title="Mostra ou esconde os itens do menu do site">
+        <span class="material-symbols-outlined" aria-hidden="true" translate="no">menu</span>
+        <span>Menu</span>
+    </button>
+    <div class="aed-nav-tabs" id="aed-nav-itens">
         <a href="/"
            class="aed-nav-link {#if activeMainMenu == 'home'}is-active{/if}"
            title="Página inicial do framework">

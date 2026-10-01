@@ -8,6 +8,60 @@
         });
     });
 
+    /**
+     * Menu recolhível no celular.
+     *
+     * PROPÓSITO DE NEGÓCIO: no celular o menu completo (ícone + rótulo, em grade) tem perto de 20rem;
+     *   ele recolhe atrás de um botão "Menu" para a página começar na tela, não depois do menu.
+     * INVARIANTES: sem este script o botão continua escondido e o menu continua aberto (nada fica
+     *   inalcançável); aria-expanded acompanha o estado; Esc fecha e devolve o foco ao botão; em tela
+     *   larga o CSS ignora o recolhimento.
+     * FALHA: sem o botão ou sem a lista, não faz nada.
+     */
+    const nav = document.querySelector(".aed-topnav");
+    const recolher = nav && nav.querySelector(".aed-nav-recolher");
+    const itensMenu = document.getElementById("aed-nav-itens");
+    if (nav && recolher && itensMenu) {
+        recolher.hidden = false;
+        nav.classList.add("nav-recolhivel");
+        const definir = (aberto) => {
+            nav.classList.toggle("nav-aberta", aberto);
+            recolher.setAttribute("aria-expanded", String(aberto));
+        };
+        recolher.addEventListener("click", () => definir(!nav.classList.contains("nav-aberta")));
+        nav.addEventListener("keydown", (ev) => {
+            // Com um menu suspenso aberto, o Esc é dele (o Bootstrap o fecha); o menu do site fica.
+            if (ev.key === "Escape" && nav.classList.contains("nav-aberta")
+                    && !nav.querySelector(".aed-nav-drop-menu.show")) {
+                definir(false);
+                recolher.focus();
+            }
+        });
+    }
+
+    /**
+     * Altura do menu grudado, para quem gruda embaixo dele.
+     *
+     * PROPÓSITO DE NEGÓCIO: os índices pegajosos dos aprofundamentos (BGP, SSH, DNS, TLS), a barra do
+     *   construtor de comando e a barra lateral da documentação grudavam em top:0 — debaixo do menu do
+     *   topo, que também gruda. Medido em 01/10/2026: a 1920 px o índice ficava inteiro escondido.
+     * INVARIANTES: --aed-topnav-fixo vale a altura do menu SÓ quando ele está grudado (sticky); quando
+     *   ele rola com a página (telas menores), vale 0 e os pegajosos voltam ao topo.
+     * FALHA: sem o menu, a variável não existe e o CSS usa 0 (comportamento anterior).
+     */
+    if (nav) {
+        const marcarAltura = () => {
+            const grudado = getComputedStyle(nav).position === "sticky";
+            document.documentElement.style.setProperty("--aed-topnav-fixo",
+                grudado ? Math.ceil(nav.getBoundingClientRect().height) + "px" : "0px");
+        };
+        marcarAltura();
+        window.addEventListener("resize", marcarAltura);
+        if (window.ResizeObserver) {
+            new ResizeObserver(marcarAltura).observe(nav);
+        }
+    }
+
     /** Desabilita tooltips nativos vazios (regra do prompt). */
     document.querySelectorAll("[title='']").forEach((el) => el.removeAttribute("title"));
 

@@ -767,7 +767,7 @@ body.aed-app .form-select:focus {
 
 .aed-doc-sidebar {
     position: sticky;
-    top: 5rem;
+    top: calc(var(--aed-topnav-fixo, 0px) + 1rem);
 }
 
 /* --- Footer --- */
@@ -966,6 +966,50 @@ body.aed-app .main-menu-wrap {
     }
     .aed-action-row { grid-template-columns: 1fr; }
     .aed-mode-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Botão "Menu" do celular: só existe quando o JS liga o recolhimento (sem JS o menu fica aberto). */
+.aed-nav-recolher {
+    display: none;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.875rem;
+    min-height: 2.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--aed-border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--aed-text);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.aed-nav-recolher:focus-visible,
+.aed-nav-link:focus-visible,
+.aed-nav-drop-toggle:focus-visible {
+    outline: 2px solid var(--aed-teal);
+    outline-offset: 2px;
+}
+
+@media (max-width: 36em) {
+    .nav-recolhivel .aed-nav-recolher { display: inline-flex; }
+    .nav-recolhivel:not(.nav-aberta) .aed-nav-tabs { display: none; }
+    .nav-recolhivel.nav-aberta .aed-nav-recolher {
+        border-color: var(--aed-teal);
+        color: var(--aed-teal);
+    }
+}
+
+/*
+ * Menu grudado no topo só quando sobra tela. Medido em 01/10/2026 depois de rolar a página: a
+ * 1024×600 o menu (três linhas) cobria 35% da tela o tempo todo, a 1280×720 22%, e no celular deitado
+ * mais da metade. Grudado só a partir de 90em de largura e 50em de altura (menu em até duas linhas,
+ * ~14% da tela a 1440×900); abaixo disso ele rola junto com a página. position:relative mantém o
+ * empilhamento dos menus suspensos acima do conteúdo.
+ */
+@media (max-width: 89.99em), (max-height: 49.99em) {
+    .aed-topnav { position: relative; }
 }
 
 /* --- Bootstrap alert overrides --- */

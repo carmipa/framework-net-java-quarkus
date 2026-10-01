@@ -19,7 +19,7 @@
 .rede-cat-processos    { --c: #fb7185; }
 
 /* ---- Toolbar ---- */
-.rede-toolbar { position: sticky; top: 0; z-index: 3; padding: 0.75rem 0; margin-bottom: 1rem; background: linear-gradient(180deg, rgba(10,14,22,0.98) 80%, rgba(10,14,22,0)); }
+.rede-toolbar { position: sticky; top: var(--aed-topnav-fixo, 0px); z-index: 3; padding: 0.75rem 0; margin-bottom: 1rem; background: linear-gradient(180deg, rgba(10,14,22,0.98) 80%, rgba(10,14,22,0)); }
 .rede-busca { display: flex; align-items: center; gap: 0.5rem; max-width: 46rem; }
 .rede-busca > .material-symbols-outlined { color: #64748b; }
 .rede-busca .form-control { flex: 1; }

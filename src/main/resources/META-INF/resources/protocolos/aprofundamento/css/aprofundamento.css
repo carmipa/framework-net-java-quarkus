@@ -68,7 +68,8 @@
 /* --- Índice pegajoso --- */
 .aprof-indice {
     position: sticky;
-    top: 0;
+    /* embaixo do menu do topo quando ele também gruda (aed-shell.js mede a altura) */
+    top: var(--aed-topnav-fixo, 0px);
     z-index: 3;
     display: flex;
     flex-wrap: wrap;
