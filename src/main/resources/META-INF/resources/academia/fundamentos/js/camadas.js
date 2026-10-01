@@ -41,28 +41,50 @@
         return el;
     }
 
-    function bloco(classe, texto) {
+    /**
+     * Um bloco do desenho do quadro: nome do pedaço e quantos bytes ele ocupa.
+     *
+     * PROPÓSITO DE NEGÓCIO: mostrar ao aluno de que pedaços o quadro é feito e quanto
+     * cada um pesa, legível em qualquer tela e em qualquer idioma do tradutor.
+     *
+     * INVARIANTES DO DOMÍNIO: o número de bytes nunca passa pelo tradutor; nome de
+     * protocolo ("Ethernet", "IPv4", "TCP", "FCS") também não; palavra comum ("dados",
+     * "preenchimento") passa, senão quem lê em inglês vê português dentro do desenho.
+     * O texto nunca é cortado: o bloco não encolhe abaixo do próprio rótulo, e a linha
+     * de blocos quebra quando não cabe (CSS .acad-unidade-blocos).
+     *
+     * COMPORTAMENTO EM CASO DE FALHA: não lança; devolve o elemento montado.
+     */
+    function bloco(classe, nome, bytes, tecnico) {
         var el = document.createElement('span');
         el.className = 'acad-bloco ' + classe;
-        el.setAttribute('translate', 'no');
-        el.textContent = texto;
+        var n = document.createElement('span');
+        n.textContent = nome;
+        if (tecnico) { n.setAttribute('translate', 'no'); }
+        var b = document.createElement('span');
+        b.setAttribute('translate', 'no');
+        b.textContent = String(bytes);
+        el.appendChild(n);
+        el.appendChild(document.createTextNode(' '));
+        el.appendChild(b);
         return el;
     }
 
     /** Desenha as quatro unidades (mensagem, segmento, pacote, quadro) de um encapsulamento. */
     function desenharPilha(container, r) {
         container.textContent = '';
-        var t = r.transporte + ' ' + r.cabecalhoTransporte;
-        var carga = 'dados ' + r.carga;
+        var t = function () { return bloco('transporte', r.transporte, r.cabecalhoTransporte, true); };
+        var carga = function () { return bloco('carga', 'dados', r.carga, false); };
+        var ip = function () { return bloco('rede', 'IPv4', 20, true); };
         var linhas = [
-            { icone: 'chat', nome: 'Aplicação', total: r.carga, blocos: [bloco('carga', carga)] },
-            { icone: 'swap_horiz', nome: 'Transporte', total: r.segmento, blocos: [bloco('transporte', t), bloco('carga', carga)] },
-            { icone: 'lan', nome: 'Rede (IPv4)', total: r.pacote, blocos: [bloco('rede', 'IPv4 20'), bloco('transporte', t), bloco('carga', carga)] },
+            { icone: 'chat', nome: 'Aplicação', total: r.carga, blocos: [carga()] },
+            { icone: 'swap_horiz', nome: 'Transporte', total: r.segmento, blocos: [t(), carga()] },
+            { icone: 'lan', nome: 'Rede (IPv4)', total: r.pacote, blocos: [ip(), t(), carga()] },
             {
                 icone: 'settings_ethernet', nome: 'Enlace (Ethernet)', total: r.quadro,
-                blocos: [bloco('enlace', 'Ethernet 14'), bloco('rede', 'IPv4 20'), bloco('transporte', t), bloco('carga', carga)]
-                    .concat(r.preenchimento > 0 ? [bloco('preenchimento', 'preench. ' + r.preenchimento)] : [])
-                    .concat([bloco('enlace', 'FCS 4')])
+                blocos: [bloco('enlace', 'Ethernet', 14, true), ip(), t(), carga()]
+                    .concat(r.preenchimento > 0 ? [bloco('preenchimento', 'preenchimento', r.preenchimento, false)] : [])
+                    .concat([bloco('enlace', 'FCS', 4, true)])
             }
         ];
         linhas.forEach(function (linha) {
