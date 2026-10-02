@@ -278,8 +278,8 @@
     {
       "titulo": "Montar e desmontar um PFX (PKCS#12) com a cadeia",
       "cenario": "Você tem cert do servidor (PEM), a chave privada (.key) e a cadeia intermediária (chain.pem) e precisa de um .pfx único para importar no Windows; depois precisa extrair de volta o PEM para um Nginx.",
-      "comandos": "# Montar PFX: cert + chave + cadeia, protegido por senha\nopenssl pkcs12 -export \\\n  -inkey servidor.key \\\n  -in servidor.crt \\\n  -certfile chain.pem \\\n  -name \"meu-servico\" \\\n  -out servidor.pfx\n# (o openssl pede a senha de exportacao — use uma senha forte)\n\n# Inspecionar o conteúdo do PFX\nopenssl pkcs12 -in servidor.pfx -info -noout\n\n# Extrair SÓ os certificados (sem chave) em PEM\nopenssl pkcs12 -in servidor.pfx -clcerts -nokeys -out extraido_cert.pem\n\n# Extrair a chave privada (CUIDADO: -nodes grava a chave SEM cifra)\nopenssl pkcs12 -in servidor.pfx -nocerts -nodes -out extraido.key\nchmod 600 extraido.key",
-      "explicacao": "O -export cria o container; -certfile injeta a cadeia. Na volta, -nokeys traz só o público e -nocerts -nodes traz a chave em claro — por isso o chmod 600 imediato. Sem -nodes, a chave sai cifrada com passphrase, mais segura em disco."
+      "comandos": "# Montar PFX: cert + chave + cadeia, protegido por senha\nopenssl pkcs12 -export \\\n  -inkey servidor.key \\\n  -in servidor.crt \\\n  -certfile chain.pem \\\n  -name \"meu-servico\" \\\n  -out servidor.pfx\n# (o openssl pede a senha de exportacao — use uma senha forte)\n\n# Inspecionar o conteúdo do PFX\nopenssl pkcs12 -in servidor.pfx -info -noout\n\n# Extrair os certificados (sem chave) em PEM: a folha e a cadeia, nessa ordem\nopenssl pkcs12 -in servidor.pfx -clcerts -nokeys -out folha.pem\nopenssl pkcs12 -in servidor.pfx -cacerts -nokeys -out cadeia.pem\ncat folha.pem cadeia.pem > fullchain.pem\n\n# Extrair a chave privada (CUIDADO: -nodes grava a chave SEM cifra)\nopenssl pkcs12 -in servidor.pfx -nocerts -nodes -out extraido.key\nchmod 600 extraido.key",
+      "explicacao": "O -export cria o container; -certfile injeta a cadeia. Na volta, -clcerts traz SÓ a folha e -cacerts só a cadeia: o Nginx precisa das duas, folha primeiro, senão o cliente recebe a cadeia incompleta. -nocerts -nodes traz a chave em claro — por isso o chmod 600 imediato. Sem -nodes, a chave sai cifrada com passphrase, mais segura em disco."
     },
     {
       "titulo": "Importar um PFX para um keystore Java (keytool)",
@@ -298,8 +298,8 @@
     {
       "sintoma": "'unable to load private key' ou 'No certificate matches private key'",
       "causa_provavel": "O bloco lido não é uma chave (é um certificado), ou o cert e a chave não são o mesmo par.",
-      "comando": "openssl rsa -in suposta.key -check -noout\n# comparar par:\nopenssl x509 -in servidor.crt -noout -modulus | openssl md5\nopenssl rsa  -in servidor.key -noout -modulus | openssl md5",
-      "leitura": "Os dois md5 do modulus DEVEM ser iguais para o par casar. Se diferem, você misturou cert e chave de emissões distintas. (Para chaves EC, troque 'openssl rsa' por 'openssl pkey'.)"
+      "comando": "openssl rsa -in suposta.key -check -noout\n# comparar par (RSA ou EC): a chave pública dos dois lados\nopenssl x509 -in servidor.crt -noout -pubkey | openssl md5\nopenssl pkey -in servidor.key -pubout       | openssl md5",
+      "leitura": "Os dois md5 da chave pública DEVEM ser iguais para o par casar. Se diferem, você misturou cert e chave de emissões distintas. O -modulus só existe para RSA: num certificado EC o x509 imprime 'No modulus for this public key type' e o pkey nem aceita a opção."
     },
     {
       "sintoma": "PFX importa mas o TLS falha por falta de chave privada",

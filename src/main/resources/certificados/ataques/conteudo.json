@@ -29,7 +29,7 @@
     {
       "rotulo": "Defesa de base",
       "valor": "HSTS + TLS 1.2/1.3 + CT/CAA",
-      "dica": "HSTS remove o botão de prosseguir; CT/CAA controlam quem emite."
+      "dica": "HSTS remove o botão de prosseguir; o CAA diz quais CAs podem emitir e o CT torna toda emissão pública e detectável."
     }
   ],
   "conceitos": [

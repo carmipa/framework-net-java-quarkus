@@ -171,7 +171,7 @@
         [
           "ExtendedKeyUsage (EKU)",
           "Refina o propósito (serverAuth, clientAuth, codeSigning)",
-          "Frequentemente crítica; serverAuth é obrigatório para TLS de servidor"
+          "Nos certificados TLS públicos vai não crítica (regras do CA/Browser Forum); serverAuth é obrigatório para TLS de servidor"
         ],
         [
           "BasicConstraints",

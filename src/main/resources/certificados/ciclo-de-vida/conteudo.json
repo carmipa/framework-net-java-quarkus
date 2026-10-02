@@ -156,7 +156,7 @@
         [
           "Subject (CN, O, OU)",
           "Proposto pelo solicitante",
-          "Só o que a CA validou; DV ignora O/OU"
+          "Só o que a CA validou: o DV não leva O, e o OU é proibido nos certificados TLS públicos (CA/B Forum)"
         ],
         [
           "SAN (domínios)",
@@ -290,7 +290,7 @@
     {
       "sintoma": "Servidor não inicia com erro 'key values mismatch' ou 'private key does not match certificate'",
       "causa_provavel": "A chave privada instalada não corresponde ao certificado (arquivos trocados, chave de outra emissão).",
-      "comando": "openssl x509 -in server.crt -noout -modulus | openssl md5\nopenssl rsa  -in server.key -noout -modulus | openssl md5",
+      "comando": "openssl x509 -in server.crt -noout -pubkey | openssl md5\nopenssl pkey -in server.key -pubout       | openssl md5",
       "leitura": "Os dois md5 precisam ser idênticos. Se diferem, o par está trocado: localize a chave gerada junto com o CSR daquele certificado ou reemita a partir de um novo par."
     },
     {

@@ -239,8 +239,8 @@
     {
       "sintoma": "Binário assinado aparece como publisher desconhecido após meses",
       "causa_provavel": "A assinatura foi feita sem carimbo de tempo (timestamp) e o certificado de code signing expirou; sem timestamp a assinatura deixa de ser válida na expiração",
-      "leitura": "Verifique se há uma contra-assinatura de timestamp; reassine com timestamp de uma TSA confiável",
-      "comando": "openssl pkcs7 -in artefato.p7s -inform DER -print -noout | grep -i signingTime"
+      "leitura": "Sem saída = não há carimbo de tempo de TSA: reassine com timestamp de uma TSA confiável. Não procure signingTime: ele é a hora declarada pelo próprio signatário e aparece mesmo sem carimbo nenhum",
+      "comando": "openssl pkcs7 -in artefato.p7s -inform DER -print -noout | grep -iE \"timeStampToken|countersignature|1\\.3\\.6\\.1\\.4\\.1\\.311\\.3\\.3\\.1\""
     },
     {
       "sintoma": "E-mail S/MIME chega cifrado mas o cliente não mostra remetente verificado",

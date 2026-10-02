@@ -119,7 +119,7 @@
       "linhas": [
         [
           "Windows (certmgr / CAPI)",
-          "Edge, Chrome, apps .NET no Windows",
+          "Apps .NET e o próprio Windows; Chrome e Edge trazem raiz própria, mas aceitam as raízes que o administrador instala aqui",
           "certmgr.msc; PowerShell Get-ChildItem Cert:\\LocalMachine\\Root"
         ],
         [
@@ -219,7 +219,7 @@
     },
     {
       "nome": "Publicar registros CAA",
-      "como_funciona": "Você declara no DNS quais CAs podem emitir para o seu domínio (issue/issuewild) e um contato para incidentes (iodef). CAs são obrigadas a checar o CAA antes de emitir e recusar se não estiverem autorizadas, cortando o risco de uma CA legítima emitir para o seu domínio por engano.",
+      "como_funciona": "Você declara no DNS quais CAs podem emitir para o seu domínio (issue/issuewild) e um contato (iodef) por onde a CA avisa você de pedidos que violam essa política. CAs são obrigadas a checar o CAA antes de emitir e recusar se não estiverem autorizadas, cortando o risco de uma CA legítima emitir para o seu domínio por engano.",
       "cobre": "Prevenção de mis-issuance por CA não autorizada",
       "limite": "Só vincula CAs que respeitam a regra; não para uma CA comprometida ou maliciosa que ignore o CAA."
     },
@@ -279,7 +279,7 @@
       "sintoma": "Certificado do meu domínio aparecendo em log CT que eu não emiti",
       "causa_provavel": "Mis-issuance por CA não autorizada, intermediária vazada ou CA comprometida.",
       "comando": "openssl s_client -connect meudominio:443 -servername meudominio </dev/null 2>/dev/null | openssl x509 -noout -issuer -dates",
-      "leitura": "Compare o issuer com as CAs que você autorizou no CAA. Emissor desconhecido = incidente: revogue, avise a CA (contato iodef do CAA) e reforce o CAA."
+      "leitura": "O comando mostra o certificado que o SEU servidor apresenta; compare com o que o log CT registrou (busca do domínio num monitor de CT, como o crt.sh). Emissor fora das CAs que você autorizou no CAA = incidente: peça a revogação à CA emissora pelo canal de Certificate Problem Report que ela publica na CPS (seção 1.5.2) e reforce o CAA. O iodef do CAA é o contrário: é por onde a CA avisa VOCÊ de um pedido recusado."
     },
     {
       "sintoma": "Aviso de certificado inválido após trocar de CA/raiz",
