@@ -21,10 +21,11 @@ import java.net.URI;
 @Path("/admin")
 public class AdminLoginResource {
 
-    private static final int COOKIE_MAX_AGE = 28_800; // 8 horas
-
     @Inject
     AdminApiKeyService adminApiKeyService;
+
+    @Inject
+    org.framework.net.security.SessaoTelemetriaService sessaoTelemetria;
 
     @ConfigProperty(name = "framework.security.cookie-secure", defaultValue = "false")
     boolean cookieSecure;
@@ -58,32 +59,32 @@ public class AdminLoginResource {
             URI back = URI.create("/admin/login?erro=chave-invalida&redirect=" + urlEncode(safeRedirect(redirect)));
             return Response.seeOther(back).build();
         }
-        NewCookie cookie = new NewCookie.Builder(AdminApiKeyService.COOKIE_NAME)
-                .value(apiKey.strip())
-                .path("/")
-                .maxAge(COOKIE_MAX_AGE)
-                .httpOnly(true)
-                .secure(cookieSecure)
-                .sameSite(NewCookie.SameSite.STRICT)
-                .build();
+        // SEC-04: o cookie levava a CHAVE administrativa crua por 8 h (Path=/). Agora sai a sessão
+        // assinada (HMAC, sem a chave), a mesma do login de contingência da Telemetria, papel dono; e o
+        // cookie antigo é apagado.
         return Response.seeOther(URI.create(safeRedirect(redirect)))
-                .cookie(cookie)
+                .cookie(sessaoTelemetria.emitirCookie("admin", org.framework.net.security.SessaoTelemetriaService.ORIGEM_CONTINGENCIA,
+                        org.framework.net.security.SessaoTelemetriaService.PAPEL_DONO), cookieAntigoApagado())
                 .build();
     }
 
     @GET
     @Path("/logout")
     public Response logout(@QueryParam("redirect") String redirect) {
-        NewCookie cookie = new NewCookie.Builder(AdminApiKeyService.COOKIE_NAME)
+        return Response.seeOther(URI.create(safeRedirect(redirect)))
+                .cookie(sessaoTelemetria.cookieDeSaida(), cookieAntigoApagado())
+                .build();
+    }
+
+    /** Apaga o cookie ADMIN_API_KEY de versões anteriores, que guardava a chave crua. */
+    private NewCookie cookieAntigoApagado() {
+        return new NewCookie.Builder(AdminApiKeyService.COOKIE_NAME)
                 .value("")
                 .path("/")
                 .maxAge(0)
                 .httpOnly(true)
                 .secure(cookieSecure)
                 .sameSite(NewCookie.SameSite.STRICT)
-                .build();
-        return Response.seeOther(URI.create(safeRedirect(redirect)))
-                .cookie(cookie)
                 .build();
     }
 

@@ -56,6 +56,15 @@ public class AdminApiKeyFilter implements ContainerRequestFilter {
     @Inject
     SessaoTelemetriaService sessaoTelemetriaService;
 
+    @Inject
+    RequestRateLimiter rateLimiter;
+
+    @Inject
+    org.framework.net.paginaErros.presentation.PaginaErroResposta paginaErroResposta;
+
+    /** Balde do limite para chave administrativa errada no cabeçalho (força bruta, SEC-06). */
+    static final String CHAVE_ERRADA = "chave-admin-errada";
+
     @ConfigProperty(name = "framework.telemetry.dashboard-enabled", defaultValue = "true")
     boolean telemetryDashboardEnabled;
 
@@ -84,11 +93,16 @@ public class AdminApiKeyFilter implements ContainerRequestFilter {
             return;
         }
 
-        String submitted = firstNonBlank(
-                requestContext.getHeaderString(AdminApiKeyService.HEADER_NAME),
-                adminApiKeyService.extractFromCookie(requestContext.getHeaderString("Cookie"))
-        );
-        if (adminApiKeyService.isValid(submitted)) {
+        // SEC-04: navegador prova a identidade pela sessão assinada (dono); a chave crua só vale no
+        // cabeçalho, para automação. O cookie com a chave crua deixou de ser aceito.
+        if (sessaoTelemetriaService.ehDono(requestContext.getHeaderString("Cookie"))) {
+            return;
+        }
+        String submitted = requestContext.getHeaderString(AdminApiKeyService.HEADER_NAME);
+        if (submitted != null && !submitted.isBlank() && adminApiKeyService.isValid(submitted)) {
+            return;
+        }
+        if (tentativaEsgotada(requestContext, submitted)) {
             return;
         }
 
@@ -142,6 +156,9 @@ public class AdminApiKeyFilter implements ContainerRequestFilter {
         if (chave != null && !chave.isBlank() && adminApiKeyService.isValid(chave)) {
             return;
         }
+        if (tentativaEsgotada(requestContext, chave)) {
+            return;
+        }
         if (prefersHtml(requestContext)) {
             requestContext.abortWith(Response.seeOther(URI.create("/login")).build());
             return;
@@ -151,6 +168,26 @@ public class AdminApiKeyFilter implements ContainerRequestFilter {
                 .entity("{\"erro\":\"Telemetria exige autenticação. Abra /login ou envie o header "
                         + AdminApiKeyService.HEADER_NAME + ".\"}")
                 .build());
+    }
+
+    /**
+     * Chave errada no cabeçalho conta no limite de requisições.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> este filtro roda antes do limite de requisições e respondia 401 na
+     * hora: 130 tentativas seguidas davam 130 respostas 401, nenhuma 429 (auditoria SEC-06).</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> só a tentativa ERRADA consome o balde pesado (por origem); chave
+     * certa e requisição sem cabeçalho não são afetadas.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> balde esgotado aborta com 429 e devolve {@code true}.</p>
+     */
+    private boolean tentativaEsgotada(ContainerRequestContext requestContext, String chave) {
+        if (chave == null || chave.isBlank() || rateLimiter.allow(requestContext, CHAVE_ERRADA, true)) {
+            return false;
+        }
+        requestContext.abortWith(paginaErroResposta.recusa(requestContext, Response.Status.TOO_MANY_REQUESTS.getStatusCode(),
+                "{\"erro\":\"Muitas tentativas de chave. Aguarde um minuto e tente novamente.\"}"));
+        return true;
     }
 
     private static void abortUnavailable(ContainerRequestContext requestContext) {
@@ -179,13 +216,4 @@ public class AdminApiKeyFilter implements ContainerRequestFilter {
         return path.endsWith("/") && path.length() > 1 ? path.substring(0, path.length() - 1) : path;
     }
 
-    private static String firstNonBlank(String a, String b) {
-        if (a != null && !a.isBlank()) {
-            return a.strip();
-        }
-        if (b != null && !b.isBlank()) {
-            return b.strip();
-        }
-        return "";
-    }
 }

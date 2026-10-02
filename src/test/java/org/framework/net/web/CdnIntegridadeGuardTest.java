@@ -30,6 +30,34 @@ class CdnIntegridadeGuardTest {
 
     private static final Pattern EXTERNO = Pattern.compile(
             "<(script|link)\\b[^>]*?(?:src|href)=\"(https?://[^\"]+)\"[^>]*>");
+    /** Bloco importmap e as URLs externas dentro dele (SEC-05: a guarda só via script src e link href). */
+    private static final Pattern IMPORTMAP = Pattern.compile("(?s)<script\s+type=\"importmap\"[^>]*>(.*?)</script>");
+    private static final Pattern URL_NO_IMPORTMAP = Pattern.compile("\"(https?://[^\"]+)\"");
+
+    /**
+     * Linha de base (catraca, A4): URLs de CDN em importmap que já existiam quando a guarda nasceu. O módulo
+     * ES carregado por importmap não tem integrity por URL (esm.sh gera o grafo no servidor), e trazer as
+     * bibliotecas para o repositório depende de decisão do Paulo. A dívida só desce: URL nova reprova.
+     */
+    static final java.util.Set<String> IMPORTMAP_LINHA_DE_BASE = java.util.Set.of(
+            "https://esm.sh/three@0.185.1",
+            "https://esm.sh/three@0.185.1/",
+            "https://esm.sh/globe.gl@2.34.4?external=three&deps=three@0.185.1");
+
+    static List<String> violacoesImportmap(String texto) {
+        List<String> out = new ArrayList<>();
+        Matcher bloco = IMPORTMAP.matcher(texto);
+        while (bloco.find()) {
+            Matcher url = URL_NO_IMPORTMAP.matcher(bloco.group(1));
+            while (url.find()) {
+                if (!IMPORTMAP_LINHA_DE_BASE.contains(url.group(1))) {
+                    out.add("importmap com CDN fora da linha de base: " + url.group(1));
+                }
+            }
+        }
+        return out;
+    }
+
     private static final Pattern VERSAO_FLUTUANTE = Pattern.compile("@\\d+(?:\\.\\d+)?/");
 
     static List<String> violacoes(String texto) {
@@ -59,6 +87,10 @@ class CdnIntegridadeGuardTest {
         assertEquals(0, violacoes("<script src=\"https://cdn.jsdelivr.net/npm/mermaid@11.17.2/dist/mermaid.min.js\" "
                 + "integrity=\"sha384-abc\" crossorigin=\"anonymous\"></script>").size());
         assertEquals(0, violacoes("<script src=\"https://translate.google.com/translate_a/element.js?cb=x\"></script>").size());
+        // importmap (SEC-05): URL de CDN nova reprova; a da linha de base e o caminho local passam.
+        assertEquals(1, violacoesImportmap("<script type=\"importmap\">{\"imports\":{\"x\":\"https://esm.sh/x@1.0.0\"}}</script>").size());
+        assertEquals(0, violacoesImportmap("<script type=\"importmap\">{\"imports\":{\"three\":\"https://esm.sh/three@0.185.1\","
+                + "\"y\":\"/localizacao/vendor/y.mjs\"}}</script>").size());
     }
 
     @Test
@@ -73,6 +105,9 @@ class CdnIntegridadeGuardTest {
                     externos++;
                 }
                 for (String v : violacoes(s)) {
+                    todas.add(p + ": " + v);
+                }
+                for (String v : violacoesImportmap(s)) {
                     todas.add(p + ": " + v);
                 }
             }

@@ -60,18 +60,7 @@ public class AdminApiKeyService {
         return constantTimeEquals(configuredKey.strip(), submittedKey.strip());
     }
 
-    public String extractFromCookie(String cookieHeader) {
-        if (cookieHeader == null || cookieHeader.isBlank()) {
-            return "";
-        }
-        for (String chunk : cookieHeader.split(";")) {
-            String trimmed = chunk.strip();
-            if (trimmed.startsWith(COOKIE_NAME + "=")) {
-                return trimmed.substring(COOKIE_NAME.length() + 1);
-            }
-        }
-        return "";
-    }
+
 
     public String configuredKeyForDisplay() {
         if (!isEnforcementActive()) {

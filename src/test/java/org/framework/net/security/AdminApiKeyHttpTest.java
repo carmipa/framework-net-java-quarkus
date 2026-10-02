@@ -37,6 +37,30 @@ class AdminApiKeyHttpTest {
         }
     }
 
+    /**
+     * SEC-04: o login de /admin guardava a CHAVE crua no cookie ADMIN_API_KEY por 8 h. Agora emite a
+     * sessão assinada; o cookie da chave é apagado e deixa de valer, e a sessão abre a exportação.
+     */
+    @Test
+    void loginAdminEmiteSessaoAssinadaNuncaAChave() {
+        var resposta = given().redirects().follow(false)
+                .formParam("api_key", "test-admin-secret").formParam("redirect", "/export/json")
+                .when().post("/admin/login")
+                .then().statusCode(303).extract();
+        String sessao = resposta.cookie(SessaoTelemetriaService.COOKIE_NAME);
+        org.junit.jupiter.api.Assertions.assertNotNull(sessao, "a sessão assinada precisa sair no login");
+        org.junit.jupiter.api.Assertions.assertFalse(sessao.contains("test-admin-secret"), "a sessão não carrega a chave");
+        String antigo = resposta.cookie(AdminApiKeyService.COOKIE_NAME);
+        org.junit.jupiter.api.Assertions.assertTrue(antigo == null || antigo.isEmpty(), "o cookie da chave crua não é emitido");
+
+        given().header("Accept", "application/json")
+                .cookie(SessaoTelemetriaService.COOKIE_NAME, sessao)
+                .when().get("/export/json").then().statusCode(200);
+        given().header("Accept", "application/json")
+                .cookie(AdminApiKeyService.COOKIE_NAME, "test-admin-secret")
+                .when().get("/export/json").then().statusCode(401);
+    }
+
     @Test
     void exportSemChaveRetorna401() {
         given()
