@@ -63,6 +63,23 @@ class ProxyEncaminhamentoHttpTest {
     }
 
     @Test
+    @DisplayName("X-Forwarded-Host do cliente não muda o host das URLs absolutas (OPS-07)")
+    void hostNaoVemDoCabecalhoDoCliente() {
+        String xml = given()
+                .header("Host", "frameworknet.carminati.dev.br")
+                .header("X-Forwarded-Proto", "https")
+                .header("X-Forwarded-Host", "auditoria-ops.invalid")
+                .header("X-Forwarded-Prefix", "/prefixo-forjado")
+                .header("X-Forwarded-For", "198.51.100.201")
+                .when().get("/sitemap.xml")
+                .then().statusCode(200)
+                .extract().asString();
+        assertTrue(xml.contains("<loc>https://frameworknet.carminati.dev.br/</loc>")
+                        && !xml.contains("auditoria-ops.invalid") && !xml.contains("prefixo-forjado"),
+                () -> "Host ou prefixo do cliente entrou na URL absoluta.\n" + xml);
+    }
+
+    @Test
     @DisplayName("clientes distintos não compartilham o balde do rate limit")
     void cadaClienteTemSeuBalde() {
         // Com o limite em 2/min, três clientes distintos só passam se cada um

@@ -29,8 +29,8 @@ public class ProxyEncaminhamentoTestProfile implements QuarkusTestProfile {
                 "quarkus.http.proxy.trusted-proxies", "127.0.0.1/32,::1/128",
                 "quarkus.http.proxy.proxy-address-forwarding", "true",
                 "quarkus.http.proxy.allow-forwarded", "false",
-                "quarkus.http.proxy.enable-forwarded-host", "true",
-                "quarkus.http.proxy.enable-forwarded-prefix", "true",
+                "quarkus.http.proxy.enable-forwarded-host", "false",
+                "quarkus.http.proxy.enable-forwarded-prefix", "false",
                 "framework.security.rate-limit-enabled", "true",
                 "framework.security.rate-limit-per-minute", "2");
     }
