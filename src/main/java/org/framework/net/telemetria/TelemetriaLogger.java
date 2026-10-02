@@ -127,6 +127,23 @@ public class TelemetriaLogger {
     }
 
     public void logHttpAccess(TelemetriaRequestContext ctx, int httpStatus, String pais, String clienteTipo) {
+        logHttpAccess(ctx, httpStatus, pais, clienteTipo, 0);
+    }
+
+    /**
+     * Evento de acesso HTTP de uma requisição.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> alimenta o painel (volume por módulo, rotas, país, bots) e a trilha
+     * de investigação.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> nunca o IP; quando o teto por origem suprimiu eventos iguais no
+     * minuto anterior, a quantidade vai no campo {@code suprimidosAntes} — o painel conta a recusa, não a
+     * esconde.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> telemetria desligada ou contexto nulo não grava nada.</p>
+     */
+    public void logHttpAccess(TelemetriaRequestContext ctx, int httpStatus, String pais, String clienteTipo,
+                              int suprimidosAntes) {
         if (!enabled || ctx == null) {
             return;
         }
@@ -138,6 +155,9 @@ public class TelemetriaLogger {
         // Origem agregavel, nunca o IP: pais (CF-IPCountry) e bot/humano (User-Agent).
         fields.put("pais", pais == null ? "??" : pais);
         fields.put("clienteTipo", clienteTipo == null ? "desconhecido" : clienteTipo);
+        if (suprimidosAntes > 0) {
+            fields.put("suprimidosAntes", suprimidosAntes);
+        }
 
         TelemetriaEvent telemetriaEvent = new TelemetriaEvent(
                 UUID.randomUUID().toString(),

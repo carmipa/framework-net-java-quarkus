@@ -7,6 +7,7 @@ import org.framework.net.paginaErros.domain.CatalogoErros.ErroApresentado;
 import org.framework.net.telemetria.TelemetriaContext;
 import org.framework.net.telemetria.TelemetriaLogger;
 import org.framework.net.telemetria.TelemetriaRequestContext;
+import org.framework.net.telemetria.TetoDeEventos;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -45,6 +46,9 @@ public class PaginaErroService {
 
     @Inject
     TelemetriaLogger telemetriaLogger;
+
+    @Inject
+    TetoDeEventos tetoDeEventos;
 
     /**
      * Dados prontos para o template.
@@ -91,10 +95,29 @@ public class PaginaErroService {
         return "err-" + UUID.randomUUID().toString().substring(0, 13);
     }
 
+    /**
+     * Grava o evento {@code pagina_erro_exibida}.
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> erro de cliente (4xx) passa pelo teto por origem
+     * ({@link TetoDeEventos}) — 404 em série gravava um evento por requisição e o caminho escolhido pelo
+     * cliente inteiro (auditoria SEC-02); a rota vai saneada e truncada
+     * ({@link TelemetriaContext#caminhoParaLog}). Erro do servidor (5xx) grava sempre.</p>
+     */
     private void registrar(int codigo, String rota, String metodo, String traceId) {
+        int suprimidosAntes = 0;
+        if (codigo < 500) {
+            TetoDeEventos.Decisao decisao = tetoDeEventos.avaliar("pagina-erro-" + codigo);
+            if (!decisao.gravar()) {
+                return;
+            }
+            suprimidosAntes = decisao.suprimidosAntes();
+        }
         Map<String, Object> campos = new LinkedHashMap<>();
         campos.put("httpStatus", codigo);
-        campos.put("rota", rota);
+        campos.put("rota", TelemetriaContext.caminhoParaLog(rota));
+        if (suprimidosAntes > 0) {
+            campos.put("suprimidosAntes", suprimidosAntes);
+        }
         campos.put("metodo", metodo == null ? "GET" : metodo);
         campos.put("traceId", traceId);
         String nivel = codigo >= 500 ? "error" : "warn";

@@ -13,6 +13,7 @@ import org.framework.net.telemetria.OrigemAcesso;
 import org.framework.net.telemetria.TelemetriaContext;
 import org.framework.net.telemetria.TelemetriaLogger;
 import org.framework.net.telemetria.TelemetriaRequestContext;
+import org.framework.net.telemetria.TetoDeEventos;
 
 import java.io.IOException;
 
@@ -27,6 +28,9 @@ public class TelemetriaRequestFilter implements ContainerRequestFilter, Containe
 
     @Inject
     TelemetriaLogger telemetriaLogger;
+
+    @Inject
+    TetoDeEventos tetoDeEventos;
 
     /**
      * O cabeçalho {@code CF-IPCountry} vale alguma coisa neste ambiente?
@@ -95,7 +99,14 @@ public class TelemetriaRequestFilter implements ContainerRequestFilter, Containe
                 telemetriaContext.registrarResposta(ctx, status);
                 String pais = textoOu(requestContext.getProperty("tele.pais"), "??");
                 String clienteTipo = textoOu(requestContext.getProperty("tele.clienteTipo"), "desconhecido");
-                telemetriaLogger.logHttpAccess(ctx, status, pais, clienteTipo);
+                // Erro de cliente (404, 401, 403, 429...) tem teto por origem: em série, ele apagava a trilha
+                // durável. Erro do servidor (5xx) e sucesso gravam sempre.
+                TetoDeEventos.Decisao decisao = status >= 400 && status < 500
+                        ? tetoDeEventos.avaliar("http-" + status)
+                        : new TetoDeEventos.Decisao(true, 0);
+                if (decisao.gravar()) {
+                    telemetriaLogger.logHttpAccess(ctx, status, pais, clienteTipo, decisao.suprimidosAntes());
+                }
                 Object requestId = requestContext.getProperty("requestId");
                 if (requestId != null) {
                     responseContext.getHeaders().putSingle("X-Request-Id", requestId.toString());

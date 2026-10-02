@@ -2,6 +2,7 @@ package org.framework.net.paginaErros.presentation;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.container.ResourceInfo;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
@@ -10,6 +11,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
+import org.framework.net.security.RequestRateLimiter;
 import org.framework.net.telemetria.TelemetriaLogger;
 
 /**
@@ -52,11 +54,32 @@ public class PaginaErroMapper implements ExceptionMapper<Throwable> {
     @Context
     Request request;
 
+    @Inject
+    RequestRateLimiter rateLimiter;
+
+    @Context
+    ResourceInfo resourceInfo;
+
+    /** Balde único do limite para rota inexistente: o caminho é escolha de quem chama, não identidade. */
+    static final String CHAVE_ROTA_INEXISTENTE = "rota-inexistente";
+
     @Override
     public Response toResponse(Throwable exception) {
         int status = statusDe(exception);
         String caminho = caminhoAtual();
         String metodo = metodoAtual();
+
+        // Rota inexistente não passa pelos filtros JAX-RS (não são @PreMatching): sem isto, 404 em série
+        // escapava do limite de requisições, e cada um renderizava a página e gravava evento (SEC-02).
+        if (status == Response.Status.NOT_FOUND.getStatusCode() && semRecursoResolvido()
+                && !rateLimiter.allow(null, CHAVE_ROTA_INEXISTENTE, false)) {
+            int recusa = Response.Status.TOO_MANY_REQUESTS.getStatusCode();
+            if (!querHtml(caminho)) {
+                return Response.status(recusa).type(MediaType.APPLICATION_JSON)
+                        .entity("{\"erro\":\"Muitas requisições. Aguarde um minuto e tente novamente.\"}").build();
+            }
+            return paginaErroResposta.pagina(recusa, caminho, metodo);
+        }
 
         if (status >= 500) {
             telemetriaLogger.logException("paginaErros", "falha_nao_tratada", null, exception);
@@ -127,6 +150,15 @@ public class PaginaErroMapper implements ExceptionMapper<Throwable> {
             return caminho.startsWith("/") ? caminho : "/" + caminho;
         } catch (RuntimeException ex) {
             return "/";
+        }
+    }
+
+    /** Nenhum método de recurso casou com a requisição (rota inexistente). */
+    private boolean semRecursoResolvido() {
+        try {
+            return resourceInfo == null || resourceInfo.getResourceMethod() == null;
+        } catch (RuntimeException semContexto) {
+            return true;
         }
     }
 
