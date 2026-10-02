@@ -31,8 +31,9 @@ public class ExportTxtService {
     private static final String PACKET_TRACER_ROUTER_MODEL = "2911";
     private static final String PACKET_TRACER_SWITCH_MODEL = "2960";
     private static final String LAB_ENABLE_PASSWORD = "cisco";
-    private static final String LAB_VTY_PASSWORD = "fiap";
+    public static final String LAB_VTY_PASSWORD = "fiap";
     private static final String LAB_SSH_DOMAIN = "lab.fiap.local";
+    public static final String LAB_SSH_USER = "admin";
     private static final int LAB_SERIAL_CLOCK_BPS = 64000;
 
     @Inject
@@ -52,6 +53,19 @@ public class ExportTxtService {
         return "telnet";
     }
 
+    /**
+     * Linhas de IOS que liberam o acesso remoto pelas VTY do roteador do laboratório.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> o aluno cola o bloco no Packet Tracer e entra no roteador por
+     * Telnet ou SSH sem montar a configuração de acesso à mão.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> com SSH (ou SSH + Telnet) as VTY usam {@code login local} com um
+     * usuário definido, porque o SSH do IOS não autentica pela senha de linha; a chave RSA tem 2048 bits;
+     * só Telnet mantém a senha de linha.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> não lança; modo desconhecido ou nulo vira "telnet"
+     * (ver {@link #normalizeRemoteAccessExport(String)}).</p>
+     */
     public List<String> remoteAccessCliLines(String mode) {
         mode = normalizeRemoteAccessExport(mode);
         if ("telnet".equals(mode)) {
@@ -64,15 +78,19 @@ public class ExportTxtService {
                     "exit"
             );
         }
+        // Auditoria CONT-22: o SSH do IOS só autentica por usuário (local ou AAA) — com a senha de linha
+        // ("password" + "login") a sessão SSH é recusada. Chave de 1024 bits está abaixo do mínimo atual;
+        // 2048 é o recomendado (Cisco, "Configuring Secure Shell"; NIST SP 800-131A).
         List<String> lines = new ArrayList<>();
-        lines.add("! Acesso remoto SSH (VTY) — laboratorio");
+        lines.add("! Acesso remoto SSH (VTY) — laboratorio (usuario " + LAB_SSH_USER + ", senha "
+                + LAB_VTY_PASSWORD + ")");
         lines.add("ip domain-name " + LAB_SSH_DOMAIN);
-        lines.add("crypto key generate rsa modulus 1024");
+        lines.add("username " + LAB_SSH_USER + " secret " + LAB_VTY_PASSWORD);
+        lines.add("crypto key generate rsa modulus 2048");
         lines.add("ip ssh version 2");
         lines.add("!");
         lines.add("line vty 0 4");
-        lines.add(" password " + LAB_VTY_PASSWORD);
-        lines.add(" login");
+        lines.add(" login local");
         lines.add("both".equals(mode) ? " transport input ssh telnet" : " transport input ssh");
         lines.add("exit");
         return lines;

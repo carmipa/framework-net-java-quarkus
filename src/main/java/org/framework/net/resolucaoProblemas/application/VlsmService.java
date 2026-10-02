@@ -333,6 +333,18 @@ public class VlsmService {
         return Math.max(requiredPrefix, currentPrefix);
     }
 
+    /**
+     * Roteiro de montagem do cenário no Packet Tracer, na ordem em que o aluno executa.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> transformar o plano calculado em passos de laboratório (equipamentos,
+     * enlaces, comandos, DHCP e acesso remoto), para o aluno não travar em detalhe do simulador.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> o passo de acesso remoto cita as mesmas credenciais que o script
+     * gerado usa (constantes de {@link ExportTxtService}), nunca uma cópia.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> não lança; modo de acesso desconhecido cai no texto do
+     * Telnet.</p>
+     */
     private List<String> packetTracerSteps(
             List<LanBlock> cleanedLans, String topologyType, int wanPrefix,
             int eigrpAs, int ospfProcess, String remoteAccess,
@@ -350,9 +362,11 @@ public class VlsmService {
         steps.add(wanStep);
 
         String accessNote = switch (remoteAccess) {
-            case "ssh" -> " Acesso remoto: SSH (transport input ssh) — no PT use Desktop → SSH "
-                    + "ou um PC com cliente SSH para o IP de Gi0/0 do roteador.";
-            case "both" -> " Acesso remoto: SSH e Telnet habilitados nas VTY.";
+            case "ssh" -> " Acesso remoto: SSH (transport input ssh, usuário " + ExportTxtService.LAB_SSH_USER
+                    + " / senha " + ExportTxtService.LAB_VTY_PASSWORD + ") — no PT use "
+                    + "Desktop → SSH ou um PC com cliente SSH para o IP de Gi0/0 do roteador.";
+            case "both" -> " Acesso remoto: SSH e Telnet habilitados nas VTY (usuário " + ExportTxtService.LAB_SSH_USER
+                    + " / senha " + ExportTxtService.LAB_VTY_PASSWORD + ").";
             default -> " Acesso remoto: Telnet nas VTY (padrão laboratório anterior).";
         };
         steps.add("Aplicar os comandos CLI gerados em cada roteador, validando interfaces up/up." + accessNote);

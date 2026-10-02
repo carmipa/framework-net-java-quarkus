@@ -79,6 +79,25 @@ class VlsmServiceTest {
         String cli = s.getRouterCommands().get("Matriz");
         assertTrue(cli.contains("transport input ssh"));
         assertTrue(cli.contains("ip ssh version 2"));
+        // CONT-22: SSH no IOS autentica por usuário; senha de linha não serve, e 1024 bits é pouco.
+        assertTrue(cli.contains("username admin secret "), cli);
+        assertTrue(cli.contains(" login local"), cli);
+        assertTrue(cli.contains("crypto key generate rsa modulus 2048"), cli);
+        assertFalse(cli.contains("modulus 1024"), cli);
+        assertFalse(cli.contains("\n login\n"), "SSH com senha de linha não autentica:\n" + cli);
+    }
+
+    /** Fronteira do CONT-22: o modo Telnet continua com senha de linha, sem usuário nem chave RSA. */
+    @Test
+    void telnetContinuaComSenhaDeLinha() {
+        NetworkScenarioResult s = vlsmService.solveNetworkProblem(
+                "10.0.0.0/16", List.of(new LocationInput("A", "50"), new LocationInput("B", "50")),
+                "star", 30, 71, "telnet", "eigrp_only", 1);
+        String cli = s.getRouterCommands().values().iterator().next();
+        assertTrue(cli.contains("\n login\n"), cli);
+        assertTrue(cli.contains("transport input telnet"), cli);
+        assertFalse(cli.contains("crypto key generate"), cli);
+        assertFalse(cli.contains("login local"), cli);
     }
 
     @Test
