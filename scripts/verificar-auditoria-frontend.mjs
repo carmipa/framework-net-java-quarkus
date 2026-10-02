@@ -666,6 +666,223 @@ for (const caso of [
   await ctx.close();
 }
 
+// FRONT-13 — consulta sem coordenada tira o marcador da anterior; o motivo aparece em português.
+{
+  const page = await novaPagina(browser);
+  await page.route(/\/api\/informacoes\/geo\?ip=8\.8\.8\.8/, (r) => r.fulfill({ contentType: 'application/json',
+    body: JSON.stringify({ ok: true, ip: '8.8.8.8', consultado: '8.8.8.8', pais: 'Estados Unidos', pais_codigo: 'US',
+      cidade: 'Mountain View', latitude: 37.4, longitude: -122.1 }) }));
+  await page.goto(BASE + '/localizacao', { waitUntil: 'load', timeout: 45000 });
+  await assentar(page);
+  const marcadores = () => page.evaluate(() => document.querySelectorAll('.leaflet-marker-icon').length);
+  const consultar = async (ip) => {
+    await page.fill('#geo-ip-digitar', ip);
+    await page.click('#btn-geo-localizar');
+    await page.waitForTimeout(1500);
+  };
+  await consultar('8.8.8.8');
+  const comCoordenada = await marcadores();
+  await consultar('xyz');
+  const semCoordenada = await marcadores();
+  const texto = await page.evaluate(() => (document.getElementById('geo-report-root') || document.body).innerText);
+  registrar('FRONT-13 consulta sem coordenada limpa o mapa e fala português',
+    comCoordenada >= 1 && semCoordenada === 0 && /Endereço inválido/.test(texto) && !/invalid:/i.test(texto),
+    `marcadores com coordenada=${comCoordenada} depois do inválido=${semCoordenada} texto="${texto.trim().slice(0, 70)}"`);
+  await page.context().close();
+}
+
+// FRONT-14 — sem rede, a página offline do service worker vem com o estilo dela.
+{
+  const page = await novaPagina(browser);
+  await page.goto(BASE + '/', { waitUntil: 'load', timeout: 45000 });
+  const pronto = await page.evaluate(async () => {
+    if (!('serviceWorker' in navigator)) return false;
+    const reg = await Promise.race([navigator.serviceWorker.ready, new Promise((ok) => setTimeout(() => ok(null), 15000))]);
+    if (!reg) return false;
+    // Espera a casca offline (a página) estar no cache, de qualquer versão: o que se mede depois é se
+    // ela aparece com o estilo dela, e não o nome do cache.
+    for (let i = 0; i < 30; i++) {
+      for (const nome of (await caches.keys()).filter((n) => n.startsWith('framework-net-'))) {
+        if (await (await caches.open(nome)).match('/offline.html')) return true;
+      }
+      await new Promise((ok) => setTimeout(ok, 300));
+    }
+    return false;
+  });
+  let estilo = {};
+  if (pronto) {
+    await page.reload({ waitUntil: 'load' });
+    await page.context().setOffline(true);
+    await page.goto(BASE + '/pagina-que-nunca-entrou-no-cache-' + Date.now(), { waitUntil: 'load', timeout: 15000 }).catch(() => {});
+    estilo = await page.evaluate(() => {
+      const el = document.querySelector('.offline-wrap');
+      return { titulo: document.title, wrap: !!el, display: el ? getComputedStyle(el).display : '' };
+    });
+    await page.context().setOffline(false);
+  }
+  registrar('FRONT-14 página offline estilizada', pronto && estilo.wrap && estilo.display === 'flex',
+    `casca offline no cache=${pronto} ${JSON.stringify(estilo)}`);
+  await page.context().close();
+}
+
+// FRONT-15 — "Copiar" da tabela dá retorno e não leva os campos internos; FRONT-25 — o modal devolve o foco.
+{
+  const ctx = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'] });
+  await ctx.route(/translate\.google(apis)?\.com|www\.google\.com/, (r) => r.abort());
+  const page = await ctx.newPage();
+  await page.goto(BASE + '/portas', { waitUntil: 'load', timeout: 45000 });
+  await assentar(page);
+  const copiar = page.locator('[data-grid-copy]:visible').first();
+  await copiar.click();
+  await page.waitForTimeout(300);
+  const copia = await page.evaluate(async () => ({
+    texto: await navigator.clipboard.readText(),
+    aviso: (document.getElementById('datagrid-aviso') || {}).textContent || '',
+  }));
+  let campos = {};
+  try { campos = JSON.parse(copia.texto); } catch (e) { campos = { invalido: copia.texto.slice(0, 40) }; }
+  const internos = ['gridRow', 'gridMobileRow', 'search'].filter((k) => k in campos);
+  registrar('FRONT-15 copiar avisa e leva só o conteúdo', /copiada/.test(copia.aviso) && internos.length === 0 && Object.keys(campos).length > 0,
+    `aviso="${copia.aviso}" campos=${Object.keys(campos).join(',')} internos=${internos.join(',') || 'nenhum'}`);
+
+  const detalhes = page.locator('[data-grid-details]:visible').first();
+  await detalhes.focus();
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(600);
+  const aberto = await page.evaluate(() => !!document.querySelector('.modal.show'));
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(700);
+  const foco = await page.evaluate(() => {
+    const el = document.activeElement;
+    return { attr: el && el.hasAttribute('data-grid-details'), tag: el && el.tagName };
+  });
+  registrar('FRONT-25 fechar o modal devolve o foco ao botão', aberto && foco.attr === true, `aberto=${aberto} foco=${JSON.stringify(foco)}`);
+  await ctx.close();
+}
+
+// FRONT-16 — um <main>, um h1 e o link de pular que leva o foco ao conteúdo.
+{
+  const page = await novaPagina(browser);
+  const achados = [];
+  const rotas = ['/', '/analise', '/calculadora', '/ipv6', '/portas', '/protocolos', '/criptografia', '/camadas', '/wifi',
+    '/ferramentas', '/certificados', '/diagnostico', '/seguranca', '/trafego', '/localizacao', '/informacoes',
+    '/resolucao-problemas', '/documentacao', '/sobre', '/academia', '/academia/fundamentos/binario', '/protocolos/bgp'];
+  for (const rota of rotas) {
+    await page.goto(BASE + rota, { waitUntil: 'load', timeout: 45000 });
+    const m = await page.evaluate(() => ({ main: document.querySelectorAll('main').length,
+      h1: [...document.querySelectorAll('h1')].filter((h) => h.offsetParent !== null || h.getClientRects().length).length,
+      pular: !!document.querySelector('a.aed-pular[href="#conteudo"]') }));
+    await page.evaluate(() => { document.activeElement && document.activeElement.blur(); window.scrollTo(0, 0); });
+    await page.keyboard.press('Tab');
+    const primeiro = await page.evaluate(() => document.activeElement && document.activeElement.classList.contains('aed-pular'));
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(150);
+    const destino = await page.evaluate(() => document.activeElement && document.activeElement.id);
+    if (m.main !== 1 || m.h1 !== 1 || !m.pular || !primeiro || destino !== 'conteudo') {
+      achados.push(`${rota}: ${JSON.stringify(m)} 1º Tab no pular=${primeiro} foco depois=${destino}`);
+    }
+  }
+  registrar('FRONT-16 main, h1 único e link de pular', achados.length === 0,
+    achados.length ? achados.slice(0, 5).join(' | ') : `${rotas.length} páginas`);
+  await page.context().close();
+}
+
+// FRONT-18 — nenhuma bandeira do flagcdn: a bandeira é emoji local, e a página não pede nada lá fora.
+{
+  const page = await novaPagina(browser);
+  const externos = [];
+  page.on('request', (q) => { if (/flagcdn\.com/.test(q.url())) externos.push(q.url()); });
+  await page.route(/\/api\/informacoes\/geo/, (r) => r.fulfill({ contentType: 'application/json',
+    body: JSON.stringify({ ok: true, ip: '200.160.2.3', consultado: '200.160.2.3', pais: 'Brasil', pais_codigo: 'BR',
+      cidade: 'São Paulo', latitude: -23.5, longitude: -46.6 }) }));
+  await page.goto(BASE + '/localizacao', { waitUntil: 'load', timeout: 45000 });
+  await assentar(page);
+  await page.fill('#geo-ip-digitar', '200.160.2.3');
+  await page.click('#btn-geo-localizar');
+  await page.waitForTimeout(1500);
+  const r = await page.evaluate(() => {
+    const raiz = document.getElementById('geo-report-root');
+    return { bandeira: /\u{1F1E7}\u{1F1F7}/u.test(raiz ? raiz.textContent : ''),
+      imgs: [...document.querySelectorAll('img')].filter((i) => /flagcdn/.test(i.src)).length };
+  });
+  registrar('FRONT-18 bandeira local, sem flagcdn', r.bandeira && r.imgs === 0 && externos.length === 0,
+    `emoji BR=${r.bandeira} img flagcdn=${r.imgs} pedidos ao flagcdn=${externos.length}`);
+  await page.context().close();
+}
+
+// FRONT-19 — os botões citados na auditoria têm ícone (decorativo) ao lado do rótulo.
+{
+  const page = await novaPagina(browser);
+  const nomes = /^(Detalhes|Aplicar|Localizar|Testar Regra|Disparar Ping Simulado|Limpar|Anterior|Próxima|Tentar de novo)$/;
+  const achados = [];
+  let vistos = 0;
+  for (const rota of ['/portas', '/protocolos', '/localizacao', '/seguranca', '/diagnostico', '/calculadora', '/analise']) {
+    await page.goto(BASE + rota, { waitUntil: 'load', timeout: 45000 });
+    await assentar(page);
+    const r = await page.evaluate((padrao) => {
+      const re = new RegExp(padrao);
+      const rotulo = (b) => [...b.childNodes].filter((n) => !(n.nodeType === 1 && n.classList.contains('material-symbols-outlined')))
+        .map((n) => n.textContent).join(' ').replace(/\s+/g, ' ').trim();
+      const alvo = [...document.querySelectorAll('button, a.btn')].filter((b) => re.test(rotulo(b)));
+      return { total: alvo.length, sem: alvo.filter((b) => {
+        const ic = b.querySelector('.material-symbols-outlined');
+        return !ic || ic.getAttribute('aria-hidden') !== 'true';
+      }).map((b) => rotulo(b)) };
+    }, nomes.source);
+    vistos += r.total;
+    r.sem.forEach((s) => achados.push(`${rota}: "${s}"`));
+  }
+  registrar('FRONT-19 botões com ícone decorativo', vistos >= 6 && achados.length === 0,
+    `botões vistos=${vistos} sem ícone=${achados.slice(0, 6).join(' | ') || 'nenhum'}`);
+  await page.context().close();
+}
+
+// FRONT-22 — título "<página> | Framework de Redes A&D", sem o nome antigo nem o do autor.
+{
+  const page = await novaPagina(browser);
+  const achados = [];
+  for (const rota of ['/', '/analise', '/calculadora', '/portas', '/localizacao', '/sobre', '/academia', '/protocolos/bgp']) {
+    await page.goto(BASE + rota, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    const t = await page.evaluate(() => ({ titulo: document.title,
+      og: (document.querySelector('meta[property="og:title"]') || {}).content || '' }));
+    const ok = (s) => /^[^|]+ \| Framework de Redes A&D$/.test(s) && !/Paulo André|CyberNet|FrameworkNet/.test(s);
+    if (!ok(t.titulo) || !ok(t.og)) achados.push(`${rota}: "${t.titulo}" og="${t.og}"`);
+  }
+  registrar('FRONT-22 título com uma marca só', achados.length === 0, achados.length ? achados.join(' | ') : '8 páginas');
+  await page.context().close();
+}
+
+// FRONT-24 — as setas entram no menu suspenso do topo e andam entre os itens.
+{
+  const page = await novaPagina(browser);
+  await page.setViewportSize({ width: 1400, height: 900 });
+  await page.goto(BASE + '/', { waitUntil: 'load', timeout: 45000 });
+  await assentar(page);
+  const passos = [];
+  const posicao = () => page.evaluate(() => {
+    const caixa = document.activeElement && document.activeElement.closest('.aed-nav-drop');
+    if (!caixa) return 'fora';
+    const itens = [...caixa.querySelectorAll('.aed-nav-drop-menu .aed-nav-link')];
+    const i = itens.indexOf(document.activeElement);
+    return i < 0 ? (document.activeElement.classList.contains('aed-nav-drop-toggle') ? 'botão' : '?') : `${i + 1}/${itens.length}`;
+  });
+  await page.locator('.aed-nav-drop-toggle').first().focus();
+  for (const tecla of ['ArrowDown', 'ArrowDown', 'End', 'ArrowDown', 'Home', 'ArrowUp']) {
+    await page.keyboard.press(tecla);
+    await page.waitForTimeout(120);
+    passos.push(`${tecla}→${await posicao()}`);
+  }
+  const aberto = await page.evaluate(() => !!document.querySelector('.aed-nav-drop-menu.show'));
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  const fechou = await page.evaluate(() => !document.querySelector('.aed-nav-drop-menu.show'));
+  const n = passos[2] ? passos[2].split('/')[1] : '?';
+  const esperado = ['ArrowDown→1/' + n, 'ArrowDown→2/' + n, 'End→' + n + '/' + n, 'ArrowDown→1/' + n, 'Home→1/' + n, 'ArrowUp→' + n + '/' + n];
+  registrar('FRONT-24 setas no menu suspenso do topo', aberto && fechou && passos.join(' ') === esperado.join(' '),
+    `${passos.join(' ')} aberto=${aberto} Esc fechou=${fechou}`);
+  await page.context().close();
+}
+
 await browser.close();
 const reprovados = resultados.filter((r) => !r.ok);
 console.log(`\n${resultados.length - reprovados.length}/${resultados.length} passaram`);
