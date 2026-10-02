@@ -61,6 +61,31 @@
         }
     }
 
+    /**
+     * Propósito: o Bootstrap troca o aria-describedby do elemento pelo id do tooltip ao mostrar e o
+     * APAGA ao esconder; a dica ou o erro que o campo já descrevia some para o leitor de tela depois do
+     * primeiro foco.
+     * Invariante: a descrição original do elemento continua lá antes, durante e depois do tooltip.
+     * Falha: sem descrição original não faz nada; evento que não chega deixa o comportamento do Bootstrap.
+     */
+    function preservarDescricao(el) {
+        if (el.hasAttribute("data-descr-original")) {
+            return;
+        }
+        const original = (el.getAttribute("aria-describedby") || "").trim();
+        el.setAttribute("data-descr-original", original);
+        if (!original) {
+            return;
+        }
+        const juntar = () => {
+            const ids = original.split(/\s+/).concat((el.getAttribute("aria-describedby") || "").split(/\s+/));
+            el.setAttribute("aria-describedby", Array.from(new Set(ids.filter(Boolean))).join(" "));
+        };
+        el.addEventListener("inserted.bs.tooltip", juntar);
+        el.addEventListener("shown.bs.tooltip", juntar);
+        el.addEventListener("hidden.bs.tooltip", () => el.setAttribute("aria-describedby", original));
+    }
+
     function init(root) {
         const scope = root || document;
         scope.querySelectorAll("input, select, textarea").forEach(ensureTooltip);
@@ -78,6 +103,7 @@
         if (w.bootstrap && w.bootstrap.Tooltip) {
             scope.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
                 if (!w.bootstrap.Tooltip.getInstance(el)) {
+                    preservarDescricao(el);
                     new w.bootstrap.Tooltip(el);
                 }
             });

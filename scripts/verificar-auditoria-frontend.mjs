@@ -16,6 +16,9 @@ async function assentar(page) {
 
 async function novaPagina(browser, { bloquearFontesGoogle = false, errosConsole } = {}) {
   const ctx = await browser.newContext();
+  // Roteiro em volume não toca o Google Tradutor: muitas cargas seguidas levam o IP para o captcha
+  // ("sorry") e derrubam a tradução de verdade. A tradução tem roteiro próprio (verificar-tradutor.mjs).
+  await ctx.route(/translate\.google(apis)?\.com|translate-pa\.googleapis\.com|www\.google\.com/, (r) => r.abort());
   if (bloquearFontesGoogle) {
     await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   }
@@ -30,7 +33,7 @@ async function novaPagina(browser, { bloquearFontesGoogle = false, errosConsole 
 let browser;
 try {
   browser = await chromium.launch();
-  const sonda = await (await browser.newContext()).newPage();
+  const sonda = await novaPagina(browser);
   const r = await sonda.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
   if (!r || r.status() !== 200) { console.log('NÃO VERIFICOU — servidor não respondeu 200 em', BASE); process.exit(2); }
 } catch (e) {
@@ -300,6 +303,29 @@ try {
     registrar('F31 limpar console honesto', /Não limpo/.test(com403) && !/Console limpo/.test(com403) && /Console limpo/.test(com204),
       `403 → "${com403.trim().slice(0, 60)}" | 204 → "${com204.trim().slice(0, 30)}"`);
   }
+  await page.context().close();
+}
+
+// A11Y-01 (auditoria de 2026-10-01) — o tooltip do Bootstrap trocava o aria-describedby do campo pelo id
+// dele e o APAGAVA ao esconder: a dica própria do campo sumia para o leitor de tela depois do 1º foco.
+for (const caso of [
+  { rota: '/ferramentas', campo: '#cmd-alvo', descr: 'cmd-alvo-dica' },
+  { rota: '/laboratorios/camadas', campo: '[aria-describedby="lab-msg-ajuda"]', descr: 'lab-msg-ajuda' },
+]) {
+  const page = await novaPagina(browser);
+  await page.goto(BASE + caso.rota, { waitUntil: 'load', timeout: 45000 });
+  await assentar(page);
+  const el = await page.$(caso.campo);
+  const ids = async () => ((await el.getAttribute('aria-describedby')) || '').split(/\s+/).filter(Boolean);
+  await el.focus();
+  await page.waitForTimeout(400);
+  const durante = await ids();
+  await page.evaluate(() => document.activeElement && document.activeElement.blur());
+  await page.waitForTimeout(400);
+  const depois = await ids();
+  registrar(`A11Y-01 descrição do campo sobrevive ao tooltip (${caso.rota})`,
+    durante.some((i) => i.startsWith('tooltip')) && durante.includes(caso.descr) && depois.join(' ') === caso.descr,
+    `durante="${durante.join(' ')}" depois="${depois.join(' ')}"`);
   await page.context().close();
 }
 
