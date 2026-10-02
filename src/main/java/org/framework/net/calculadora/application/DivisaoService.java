@@ -257,7 +257,7 @@ public class DivisaoService {
         if (valor.isEmpty()) {
             throw new CalculadoraException(nomeCampo + " não foi informado. " + dica);
         }
-        if (valor.length() > 10 || !valor.chars().allMatch(Character::isDigit)) {
+        if (valor.length() > 10 || !org.framework.net.shared.NumeroAscii.digitosAscii(valor)) {
             throw new CalculadoraException(nomeCampo + " deve ser um número inteiro. Recebido: " + texto);
         }
         long numero = Long.parseLong(valor);

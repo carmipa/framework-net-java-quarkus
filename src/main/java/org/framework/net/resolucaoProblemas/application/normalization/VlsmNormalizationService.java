@@ -62,10 +62,12 @@ public class VlsmNormalizationService {
         if (txt.isEmpty()) {
             throw new EntradaInvalidaException(fieldLabel + " deve ser informado.");
         }
-        if (!txt.chars().allMatch(Character::isDigit)) {
-            throw new EntradaInvalidaException(fieldLabel + " deve ser um número inteiro positivo.");
+        java.util.OptionalInt lido = org.framework.net.shared.NumeroAscii.inteiro(txt, org.framework.net.shared.NumeroAscii.MAX_DIGITOS_INT);
+        if (lido.isEmpty()) {
+            throw new EntradaInvalidaException(fieldLabel + " deve ser um número inteiro positivo de até "
+                    + org.framework.net.shared.NumeroAscii.MAX_DIGITOS_INT + " dígitos.");
         }
-        int number = Integer.parseInt(txt);
+        int number = lido.getAsInt();
         if (number <= 0) {
             throw new EntradaInvalidaException(fieldLabel + " deve ser maior que zero.");
         }

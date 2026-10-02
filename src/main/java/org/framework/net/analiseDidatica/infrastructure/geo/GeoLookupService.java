@@ -209,7 +209,7 @@ public class GeoLookupService {
             return false;
         }
         for (String part : parts) {
-            if (part.isEmpty() || part.length() > 3 || !part.chars().allMatch(Character::isDigit)) {
+            if (org.framework.net.shared.NumeroAscii.inteiro(part, 3).isEmpty()) {
                 return false;
             }
             int n = Integer.parseInt(part);

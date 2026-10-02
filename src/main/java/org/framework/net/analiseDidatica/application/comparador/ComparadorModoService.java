@@ -32,7 +32,7 @@ public class ComparadorModoService {
         String[] fieldNames = {"comparador_cidr_a", "comparador_cidr_b"};
         for (int idx = 0; idx < cidrsTxt.length; idx++) {
             String cidrTxt = cidrsTxt[idx];
-            if (cidrTxt == null || !cidrTxt.chars().allMatch(Character::isDigit)) {
+            if (org.framework.net.shared.NumeroAscii.inteiro(cidrTxt, 2).isEmpty()) {
                 result.setErro("CIDR " + (idx + 1) + " do comparador deve ser número inteiro entre 0 e 32.");
                 result.invalidFields().add(fieldNames[idx]);
                 return result;

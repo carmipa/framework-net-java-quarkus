@@ -201,11 +201,13 @@ public class BulkClassImportService {
         if (txt.isEmpty()) {
             throw new EntradaInvalidaException("Linha " + lineNo + ": coluna " + colLabel + " de hosts está vazia.");
         }
-        if (!txt.chars().allMatch(Character::isDigit)) {
+        java.util.OptionalInt lido = org.framework.net.shared.NumeroAscii.inteiro(txt, org.framework.net.shared.NumeroAscii.MAX_DIGITOS_INT);
+        if (lido.isEmpty()) {
             throw new EntradaInvalidaException(
-                    "Linha " + lineNo + ": '" + txt + "' em " + colLabel + " deve ser um número inteiro.");
+                    "Linha " + lineNo + ": '" + txt + "' em " + colLabel + " deve ser um número inteiro de até "
+                            + org.framework.net.shared.NumeroAscii.MAX_DIGITOS_INT + " dígitos.");
         }
-        int number = Integer.parseInt(txt);
+        int number = lido.getAsInt();
         if (number <= 0) {
             throw new EntradaInvalidaException(
                     "Linha " + lineNo + ": hosts em " + colLabel + " deve ser maior que zero.");

@@ -350,10 +350,7 @@ public class HistoricoStore {
     }
 
     private static int parsePositive(String value, int defaultValue) {
-        if (value == null || !value.chars().allMatch(Character::isDigit)) {
-            return defaultValue;
-        }
-        return Integer.parseInt(value);
+        return org.framework.net.shared.NumeroAscii.inteiro(value, org.framework.net.shared.NumeroAscii.MAX_DIGITOS_INT).orElse(defaultValue);
     }
 
     private static String formatarTimestampUtc(String ts) {

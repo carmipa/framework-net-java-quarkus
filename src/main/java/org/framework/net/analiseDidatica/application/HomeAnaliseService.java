@@ -219,10 +219,10 @@ public class HomeAnaliseService {
     }
 
     private void aplicarDefaultsHistorico(HomeViewModel vm, String historyLimit, String historyPage) {
-        if (historyLimit != null && historyLimit.chars().allMatch(Character::isDigit)) {
+        if (org.framework.net.shared.NumeroAscii.inteiro(historyLimit, 4).isPresent()) {
             vm.setHistoryLimitPre(historyLimit);
         }
-        if (historyPage != null && historyPage.chars().allMatch(Character::isDigit)) {
+        if (org.framework.net.shared.NumeroAscii.inteiro(historyPage, 6).isPresent()) {
             vm.setHistoryPagePre(historyPage);
         }
     }

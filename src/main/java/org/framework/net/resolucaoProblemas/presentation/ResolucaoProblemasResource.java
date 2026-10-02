@@ -563,7 +563,7 @@ public class ResolucaoProblemasResource {
                         Set.of("loc_hosts")
                 );
             }
-            if (!host.chars().allMatch(Character::isDigit)) {
+            if (org.framework.net.shared.NumeroAscii.inteiro(host, org.framework.net.shared.NumeroAscii.MAX_DIGITOS_INT).isEmpty()) {
                 locations.add(new LocationInput(name, host));
                 return new LocationCollectionResult(
                         locations,
@@ -614,7 +614,7 @@ public class ResolucaoProblemasResource {
                 if (name.isEmpty()) {
                     invalid.add("loc_name");
                 }
-                if (host.isEmpty() || !host.chars().allMatch(Character::isDigit) || Integer.parseInt(host) <= 0) {
+                if (org.framework.net.shared.NumeroAscii.inteiro(host, org.framework.net.shared.NumeroAscii.MAX_DIGITOS_INT).orElse(0) <= 0) {
                     invalid.add("loc_hosts");
                 }
             }
