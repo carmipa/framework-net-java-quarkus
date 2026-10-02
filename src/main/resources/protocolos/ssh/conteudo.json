@@ -271,8 +271,8 @@
     {
       "titulo": "3. Endurecer o sshd sem se trancar do lado de fora",
       "cenario": "Desligar senha e root em um servidor de produção.",
-      "comandos": "sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak\nsudo tee /etc/ssh/sshd_config.d/99-hardening.conf >/dev/null <<'EOF'\nPermitRootLogin no\nPasswordAuthentication no\nKbdInteractiveAuthentication no\nAllowGroups sshusers\nLogLevel VERBOSE\nEOF\nsudo sshd -t && sudo systemctl reload ssh",
-      "explicacao": "A ordem importa: 'sshd -t' valida a sintaxe ANTES do reload, e o reload não derruba a sessão atual. Mantenha o terminal atual aberto e teste o login em uma segunda janela — se algo der errado, você ainda tem a sessão viva para desfazer."
+      "comandos": "sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak\n# o seu usuário PRECISA estar no grupo antes do AllowGroups:\nsudo groupadd -f sshusers && sudo usermod -aG sshusers \"$USER\"\nsudo tee /etc/ssh/sshd_config.d/00-hardening.conf >/dev/null <<'EOF'\nPermitRootLogin no\nPasswordAuthentication no\nKbdInteractiveAuthentication no\nAllowGroups sshusers\nLogLevel VERBOSE\nEOF\nsudo sshd -t && sudo sshd -T | grep -Ei '^(permitrootlogin|passwordauthentication|kbdinteractiveauthentication|allowgroups) '\nsudo systemctl reload ssh",
+      "explicacao": "No sshd_config vale o PRIMEIRO valor lido de cada opção, e os arquivos de sshd_config.d entram em ordem alfabética: um '99-' perde para o '50-cloud-init.conf', que costuma trazer 'PasswordAuthentication yes'. Por isso o arquivo começa com '00-', e o 'sshd -T' mostra a configuração EFETIVA — confira que as quatro linhas saíram como você escreveu antes do reload. 'sshd -t' valida a sintaxe; o reload não derruba a sessão atual. Mantenha o terminal aberto e teste o login em uma segunda janela: se algo der errado, a sessão viva desfaz."
     },
     {
       "titulo": "4. Atravessar o bastion sem expor a chave",
@@ -302,7 +302,7 @@
     },
     {
       "sintoma": "Configuração alterada não surtiu efeito",
-      "causa_provavel": "Diretiva sobrescrita por um arquivo em sshd_config.d ou por um bloco Match anterior.",
+      "causa_provavel": "Outro valor da mesma diretiva foi lido ANTES do seu (no sshd_config vale o primeiro): um arquivo de sshd_config.d com nome menor, ou um bloco Match que casou com a conexão.",
       "comando": "sudo sshd -T | grep -i permitrootlogin\nsudo sshd -T -C user=paulo,host=x,addr=203.0.113.9",
       "leitura": "'sshd -T' imprime a configuração EFETIVA, que é o que vale — não o que está no arquivo que você editou. A forma com -C aplica os blocos Match para aquele usuário e origem."
     },
