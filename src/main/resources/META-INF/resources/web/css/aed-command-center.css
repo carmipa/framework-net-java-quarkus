@@ -11,7 +11,8 @@
     --aed-bg: #06080f;
     --aed-text: #eef2f8;
     --aed-text-secondary: #8b97ad;
-    --aed-text-faint: #5b6679;
+    /* AA (4.5:1) também sobre o cartão #0f1622: #5b6679 dava 3,13:1 (FRONT-11). */
+    --aed-text-faint: #7d899f;
     --aed-teal: #2dd4bf;
     --aed-teal-dim: rgba(45, 212, 191, 0.15);
     --aed-indigo: #6366f1;
@@ -31,6 +32,14 @@
     --aed-font-display: "Space Grotesk", system-ui, sans-serif;
     --aed-font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
+
+/* Texto vermelho/verde do Bootstrap sobre o fundo escuro do tema ficava abaixo de AA
+   (#dc3545 3,41:1 em bg-dark; #198754 ~4:1). Só a COR DO TEXTO muda: fundos e bordas
+   (bg-danger, border-danger) continuam com a cor do Bootstrap (FRONT-11). */
+body.aed-app .text-danger { color: #f87171 !important; }
+body.aed-app .text-success { color: #3fb950 !important; }
+body.aed-app .text-primary { color: #6ea8fe !important; }
+body.aed-app { --bs-code-color: #f472b6; }
 
 /* --- Base page --- */
 body.aed-app {
@@ -530,12 +539,13 @@ body.aed-app .form-select:focus {
 
 .aed-btn-danger {
     background: rgba(244, 63, 94, 0.15);
-    color: var(--aed-risk-critical);
+    color: #fb7185; /* AA sobre o próprio fundo rosado: o --aed-risk-critical dava 4,3:1 (FRONT-11) */
     border: 1px solid rgba(244, 63, 94, 0.35);
 }
 
 .aed-btn-indigo {
-    background: linear-gradient(135deg, var(--aed-indigo), #818cf8);
+    /* Texto branco precisa de 4,5:1 nas duas pontas do gradiente: #818cf8 dava 2,98:1 (FRONT-11). */
+    background: linear-gradient(135deg, #4338ca, #4f46e5);
     color: #fff;
 }
 

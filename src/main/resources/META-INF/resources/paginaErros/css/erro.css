@@ -12,7 +12,7 @@
     --tx: #eef2f8;
     --tx-2: #9fb0c7;
     --tx-3: #7d8aa1;
-    --tx-4: #5b6679;
+    --tx-4: #76829a; /* AA sobre o fundo e o cartão (FRONT-11); era #5b6679, 3,3:1 */
     --tx-5: #4b5568;
     --f-title: 'Space Grotesk', system-ui, sans-serif;
     --f-ui: 'Inter Tight', system-ui, sans-serif;
@@ -167,7 +167,7 @@ a:hover { color: #eef2f8; }
 .term-name { margin-left: 6px; font-family: var(--f-mono); font-size: 10.5px; color: var(--tx-4); }
 .term-body { padding: 14px 16px; font-family: var(--f-mono); font-size: 11.5px; line-height: 1.9; }
 .term-row { display: flex; gap: 10px; flex-wrap: wrap; }
-.tk { color: #46506a; width: 76px; flex-shrink: 0; }
+.tk { color: var(--tx-4); width: 76px; flex-shrink: 0; }
 .tv { color: #c7d0de; word-break: break-all; }
 .tv-accent { color: var(--accent); }
 .tv-id { color: #a5b4fc; }
@@ -249,7 +249,7 @@ a:hover { color: #eef2f8; }
 .footer { border-top: 1px solid rgba(255, 255, 255, .06); padding: 2% 4%; text-align: center; }
 .foot-1 { color: var(--tx-4); font-size: 12px; }
 .foot-1 strong { color: #8b97ad; font-weight: 600; }
-.foot-2 { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; color: #46506a; font-size: 11.5px; }
+.foot-2 { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; color: var(--tx-4); font-size: 11.5px; }
 .foot-2 .material-symbols-outlined { font-size: 14px; color: #2dd4bf; }
 
 /* ---------- ANIMAÇÕES ---------- */

@@ -19,7 +19,7 @@
 .lab-subnav-item:hover { background: rgba(45, 212, 191, 0.12); color: #eef2f8; }
 .lab-subnav-item.is-active { background: rgba(45, 212, 191, 0.18); color: #2dd4bf; }
 .lab-subnav-item .material-symbols-outlined { font-size: 1.1rem; }
-.lab-subnav-hint { margin-left: auto; display: inline-flex; align-items: center; gap: 0.3rem; color: #64748b; font-size: 0.8rem; }
+.lab-subnav-hint { margin-left: auto; display: inline-flex; align-items: center; gap: 0.3rem; color: var(--aed-text-faint, #7d899f); font-size: 0.8rem; }
 .lab-subnav-hint .material-symbols-outlined { font-size: 1rem; }
 
 /* ---- Visão geral ---- */
@@ -110,7 +110,7 @@
 .lab-camada:not(.presente) > .lab-camada-nome, .lab-camada:not(.presente) > .lab-camada-bytes { display: none; }
 .lab-total { margin-top: 0.75rem; font-size: 0.9rem; color: #cbd5e1; }
 .lab-total strong { color: #2dd4bf; font-variant-numeric: tabular-nums; }
-.lab-total-nota { margin: 0.25rem 0 0; font-size: 0.78rem; color: #64748b; line-height: 1.35; }
+.lab-total-nota { margin: 0.25rem 0 0; font-size: 0.78rem; color: var(--aed-text-faint, #7d899f); line-height: 1.35; }
 
 /* ---- Explicação ---- */
 .lab-explica { margin-top: 1.25rem; border: 1px solid rgba(148, 163, 184, 0.22); border-radius: 14px; background: rgba(15, 22, 34, 0.55); padding: 1rem 1.1rem; }
@@ -126,8 +126,8 @@
 .lab-acao-add { color: #34d399; }
 .lab-acao-remove { color: #f59e0b; }
 .lab-acao-exam { color: #38bdf8; }
-.lab-acao-neutro { color: #64748b; }
-.lab-proximo { margin: 0.5rem 0 0; font-size: 0.86rem; color: #64748b; font-style: italic; }
+.lab-acao-neutro { color: var(--aed-text-faint, #7d899f); }
+.lab-proximo { margin: 0.5rem 0 0; font-size: 0.86rem; color: var(--aed-text-faint, #7d899f); font-style: italic; }
 
 /* ---- Pergunta ---- */
 .lab-pergunta { margin-top: 1.25rem; border: 1px solid rgba(167, 139, 250, 0.35); border-radius: 14px; background: rgba(167, 139, 250, 0.06); padding: 1rem 1.1rem; }
@@ -173,7 +173,7 @@
 .rings-anel p{margin:.3rem 0 0;color:#cbd5e1;font-size:.85rem;line-height:1.45}
 .rings-anel.is-user{border-left-color:#2dd4bf}.rings-anel.is-user .rings-anel-badge{background:#2dd4bf}
 .rings-anel.is-kernel{border-left-color:#f87171}.rings-anel.is-kernel .rings-anel-badge{background:#f87171}
-.rings-anel.is-unused{border-left-color:#64748b}.rings-anel.is-unused .rings-anel-badge{background:#64748b;color:#e2e8f0}
+.rings-anel.is-unused{border-left-color:#64748b}.rings-anel.is-unused .rings-anel-badge{background:#475569;color:#e2e8f0}
 .rings-anel.is-neg{border-left-color:#a78bfa}.rings-anel.is-neg .rings-anel-badge{background:#a78bfa;color:#0b0f17}
 .rings-nota{display:flex;gap:.7rem;align-items:flex-start;margin:1rem 0;padding:.85rem 1rem;border:1px solid rgba(250,204,21,.35);border-radius:10px;background:rgba(250,204,21,.07)}
 .rings-nota .material-symbols-outlined{color:#facc15;flex:none}

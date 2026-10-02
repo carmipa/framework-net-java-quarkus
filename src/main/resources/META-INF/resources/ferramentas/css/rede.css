@@ -100,7 +100,7 @@
 .rede-nota-limite .material-symbols-outlined { color: #f59e0b; }
 .rede-nota-proximo .material-symbols-outlined { color: #34d399; }
 .rede-nota-dif .material-symbols-outlined { color: #38bdf8; }
-.rede-fonte { margin: 0.5rem 0 0; font-size: 0.76rem; color: #64748b; }
+.rede-fonte { margin: 0.5rem 0 0; font-size: 0.76rem; color: var(--aed-text-faint, #7d899f); }
 
 /* ---- Investigações guiadas ---- */
 .rede-guias-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0.8rem; }

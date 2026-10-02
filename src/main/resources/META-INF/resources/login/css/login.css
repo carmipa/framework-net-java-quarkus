@@ -14,7 +14,7 @@
     --tx: #eef2f8;
     --tx-2: #9fb0c7;
     --tx-3: #7d8aa1;
-    --tx-4: #5b6679;
+    --tx-4: #76829a; /* AA sobre o fundo e o cartão (FRONT-11); era #5b6679, 3,3:1 */
     --tx-5: #4b5568;
     --f-title: 'Space Grotesk', system-ui, sans-serif;
     --f-ui: 'Inter Tight', system-ui, sans-serif;
@@ -161,7 +161,7 @@ a:hover { color: #eef2f8; }
 .field-ic { font-size: 18px; color: var(--tx-3); }
 .field input { flex: 1; min-width: 0; padding: 13px 0; border: none; background: transparent; color: var(--tx); font-size: 13px; font-family: var(--f-mono); }
 .field input:focus { outline: none; }
-.field input::placeholder { color: #46506a; }
+.field input::placeholder { color: var(--tx-4); }
 .eye-btn { display: flex; align-items: center; justify-content: center; padding: 6px; border-radius: 7px; border: none; background: transparent; color: var(--tx-3); cursor: pointer; transition: color .14s, background .14s; }
 .eye-btn:hover { color: #fbbf24; background: rgba(245, 158, 11, .10); }
 .eye-btn .material-symbols-outlined { font-size: 18px; }
@@ -217,7 +217,7 @@ a:hover { color: #eef2f8; }
 .footer { border-top: 1px solid rgba(255, 255, 255, .06); padding: 2% 4%; text-align: center; }
 .foot-1 { color: var(--tx-4); font-size: 12px; }
 .foot-1 strong { color: #8b97ad; font-weight: 600; }
-.foot-2 { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; color: #46506a; font-size: 11.5px; }
+.foot-2 { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; color: var(--tx-4); font-size: 11.5px; }
 .foot-2 .material-symbols-outlined { font-size: 14px; color: var(--accent); }
 
 /* ---------- ANIMAÇÕES ---------- */
