@@ -8,7 +8,6 @@ import org.framework.net.analiseTrafego.aovivo.SnapshotAoVivo.RedeWifi;
 import org.framework.net.analiseTrafego.aovivo.SnapshotAoVivo.TopHost;
 
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -29,7 +28,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class TrafegoAoVivoService {
 
     private static final DateTimeFormatter HMS =
-            DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneId.systemDefault());
+            org.framework.net.shared.FusoDoSite.formato("HH:mm:ss");
     private static final int MAX_SERIE = 30;
     private static final int MAX_PACOTES = 25;
     private static final String[] PROTOS = {"TCP", "UDP", "TLS", "DNS", "ICMP", "ARP"};

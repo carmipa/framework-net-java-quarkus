@@ -3,7 +3,6 @@ package org.framework.net.telemetria;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -16,7 +15,7 @@ public class TelemetriaConsoleBuffer {
 
     private static final int MAX_LINHAS = 800;
     private static final DateTimeFormatter FORMATO =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
+            org.framework.net.shared.FusoDoSite.formato("yyyy-MM-dd HH:mm:ss");
 
     private final ReentrantLock lock = new ReentrantLock();
     private final Deque<String> linhas = new ArrayDeque<>();

@@ -14,8 +14,6 @@ import org.framework.net.resolucaoProblemas.domain.model.RoutingPlan;
 import org.framework.net.resolucaoProblemas.domain.model.WanLink;
 import org.framework.net.resolucaoProblemas.exception.EntradaInvalidaException;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -493,7 +491,8 @@ public class ExportTxtService {
         lines.add("=".repeat(78));
         lines.add("DOCUMENTACAO DO CENARIO DE REDE — EXPORTACAO AUTOMATICA");
         lines.add("=".repeat(78));
-        lines.add("Gerado em: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        lines.add("Gerado em: " + org.framework.net.shared.FusoDoSite.formato("yyyy-MM-dd HH:mm:ss").format(java.time.Instant.now())
+                + " (" + org.framework.net.shared.FusoDoSite.ROTULO + ")");
         lines.add("");
         lines.add(packetTracerHardwareNotePlainBlock());
         lines.add("1) RESUMO DO PLANEJAMENTO");

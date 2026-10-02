@@ -20,7 +20,7 @@ import java.util.TreeMap;
 @ApplicationScoped
 public class TelemetriaDashboardService {
 
-    private static final ZoneId ZONA = ZoneId.systemDefault();
+    private static final ZoneId ZONA = org.framework.net.shared.FusoDoSite.ZONA;
     private static final DateTimeFormatter HHMM = DateTimeFormatter.ofPattern("HH:mm").withZone(ZONA);
     private static final DateTimeFormatter DDMM_HHMM = DateTimeFormatter.ofPattern("dd/MM HH:mm").withZone(ZONA);
     private static final DateTimeFormatter ATUALIZADO = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").withZone(ZONA);
