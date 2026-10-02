@@ -47,6 +47,11 @@ final class FontesJava {
     // Aceita também import com curinga (a.b.*): antes ele escapava da varredura inteira.
     private static final Pattern IMPORT = Pattern.compile("^\\s*import\\s+(static\\s+)?([\\w.]+(?:\\.\\*)?)\\s*;");
 
+    // ACAD-27: import quebrado em linhas ou com espaço em volta do ponto é Java válido e escapava do
+    // padrão por linha. Este varre o texto inteiro; o nome sai sem os espaços.
+    private static final Pattern IMPORT_TEXTO = Pattern.compile(
+            "(?m)^\\s*import\\s+(static\\s+)?([\\w.\\s]+?(?:\\.\\s*\\*)?)\\s*;");
+
     private static final Pattern NOME_QUALIFICADO = Pattern.compile("\\borg\\.framework\\.net\\.[\\w.]*\\w");
 
     private FontesJava() {
@@ -88,10 +93,13 @@ final class FontesJava {
     private static ArquivoJava analisar(Path relativo, String exibicao, String conteudo) {
         List<String> imports = new ArrayList<>();
         List<String> referencias = new ArrayList<>();
+        Matcher noTexto = IMPORT_TEXTO.matcher(conteudo);
+        while (noTexto.find()) {
+            imports.add(noTexto.group(2).replaceAll("\\s+", ""));
+        }
         for (String linha : conteudo.split("\\R")) {
             Matcher importado = IMPORT.matcher(linha);
             if (importado.find()) {
-                imports.add(importado.group(2));
                 continue;
             }
             if (linha.stripLeading().startsWith("package ")) {
@@ -164,7 +172,8 @@ final class FontesJava {
                 }
             }
             todas.addAll(referencias);
-            return todas;
+            // O mesmo tipo alcançado por import e por nome qualificado (import quebrado em linhas) conta uma vez.
+            return List.copyOf(new java.util.LinkedHashSet<>(todas));
         }
     }
 }

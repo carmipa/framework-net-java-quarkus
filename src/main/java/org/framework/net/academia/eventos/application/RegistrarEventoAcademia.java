@@ -64,6 +64,9 @@ public class RegistrarEventoAcademia {
     private final AtomicLong aceitos = new AtomicLong();
     private final AtomicLong licaoDesconhecida = new AtomicLong();
     private final AtomicLong semTelemetria = new AtomicLong();
+    /** Último log de descarte (nanoTime); -1 = nunca. Um log por minuto no máximo. */
+    private final AtomicLong ultimoLogDescarte = new AtomicLong(-1);
+    static final long INTERVALO_LOG_DESCARTE_NANOS = 60_000_000_000L;
 
     /** Resumo de visita: tempo e interações viram faixas antes de sair daqui. */
     public Resultado registrarVisita(String licaoId, long segundos, long interacoes, boolean concluiu) {
@@ -71,6 +74,7 @@ public class RegistrarEventoAcademia {
             return recusarLicao(licaoId);
         }
         if (!orcamentoVisitas.consumir()) {
+            logarDescarte(System.nanoTime());
             return Resultado.DESCARTADO_ORCAMENTO;
         }
         return publicar(new Visita(licaoId, FaixaTempo.de(segundos), FaixaInteracoes.de(interacoes), concluiu));
@@ -82,9 +86,31 @@ public class RegistrarEventoAcademia {
             return recusarLicao(licaoId);
         }
         if (!orcamentoErros.consumir()) {
+            logarDescarte(System.nanoTime());
             return Resultado.DESCARTADO_ORCAMENTO;
         }
         return publicar(new ErroJs(licaoId, tipo, mensagem));
+    }
+
+    /**
+     * Descarte por orçamento sai no log, no máximo uma vez por minuto, com os contadores desde o
+     * arranque (auditoria ACAD-04: os contadores não tinham leitor e o descarte era silencioso).
+     *
+     * @return {@code true} se este descarte gerou o log
+     */
+    boolean logarDescarte(long agoraNanos) {
+        long anterior = ultimoLogDescarte.get();
+        if (anterior >= 0 && agoraNanos - anterior < INTERVALO_LOG_DESCARTE_NANOS) {
+            return false;
+        }
+        if (!ultimoLogDescarte.compareAndSet(anterior, agoraNanos)) {
+            return false;
+        }
+        Contadores c = contadores();
+        LOG.warnf("academia descartou eventos por orçamento (desde o arranque): visitas=%d erros=%d aceitos=%d"
+                        + " licaoDesconhecida=%d semTelemetria=%d",
+                c.descartadosVisita(), c.descartadosErro(), c.aceitos(), c.licaoDesconhecida(), c.semTelemetria());
+        return true;
     }
 
     public Contadores contadores() {

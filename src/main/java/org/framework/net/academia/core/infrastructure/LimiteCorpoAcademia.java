@@ -12,9 +12,11 @@ import jakarta.enterprise.event.Observes;
  * antes dele, um corpo de megabytes ocuparia memória da JVM que é a mesma do site inteiro (D12).
  * Os eventos da Academia têm poucas centenas de bytes.</p>
  *
- * <p><b>INVARIANTES DO DOMÍNIO:</b> vale só para {@code /academia/api/*}; roda no roteador do
- * Vert.x, antes do RESTEasy e dos filtros JAX-RS; teto de {@link #TETO_BYTES} pelo
- * {@code Content-Length} declarado.</p>
+ * <p><b>INVARIANTES DO DOMÍNIO:</b> vale para toda requisição cujo caminho, sem parâmetros de
+ * matriz ({@code ;x}), comece por {@code /academia/api/} — o RESTEasy ignora o {@code ;x} e entrega
+ * {@code /academia;x/api/eventos} ao mesmo recurso, e a rota {@code /academia/api/*} do Vert.x não
+ * casava com ele (auditoria ACAD-01); roda no roteador do Vert.x, antes do RESTEasy e dos filtros
+ * JAX-RS; teto de {@link #TETO_BYTES} pelo {@code Content-Length} declarado.</p>
  *
  * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> {@code Content-Length} acima do teto ⇒ 413 e a conexão
  * não chega à aplicação; {@code Content-Length} ilegível ⇒ 413 também (falha fechada). Corpo
@@ -28,7 +30,11 @@ public class LimiteCorpoAcademia {
     public static final long TETO_BYTES = 8 * 1024;
 
     void registrar(@Observes Router router) {
-        router.route("/academia/api/*").order(-1000).handler(contexto -> {
+        router.route().order(-1000).handler(contexto -> {
+            if (!ehApiDaAcademia(contexto.normalizedPath())) {
+                contexto.next();
+                return;
+            }
             String declarado = contexto.request().getHeader("Content-Length");
             if (declarado != null && excede(declarado)) {
                 contexto.response().setStatusCode(413)
@@ -38,6 +44,15 @@ public class LimiteCorpoAcademia {
             }
             contexto.next();
         });
+    }
+
+    /** O caminho, sem parâmetros de matriz e sem diferença de caixa, é de API da Academia? */
+    static boolean ehApiDaAcademia(String caminho) {
+        if (caminho == null) {
+            return false;
+        }
+        String semMatriz = caminho.replaceAll(";[^/]*", "").toLowerCase(java.util.Locale.ROOT);
+        return semMatriz.startsWith("/academia/api/") || semMatriz.equals("/academia/api");
     }
 
     /** {@code true} se o {@code Content-Length} declarado passa do teto ou não é um número. */

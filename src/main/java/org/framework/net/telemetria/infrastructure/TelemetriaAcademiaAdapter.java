@@ -51,6 +51,10 @@ public class TelemetriaAcademiaAdapter implements TelemetriaAcademiaPort {
     @Inject
     TelemetriaLogger telemetriaLogger;
 
+    /** Console do painel da Telemetria (só o dono vê; não é o dataset público). */
+    @Inject
+    org.framework.net.telemetria.TelemetriaConsoleBuffer console;
+
     private final Deque<ErroGuardado> erros = new ArrayDeque<>();
     private long errosDescartados;
 
@@ -83,6 +87,12 @@ public class TelemetriaAcademiaAdapter implements TelemetriaAcademiaPort {
         }
         erros.addLast(new ErroGuardado(Instant.now(), erro.licaoId(), erro.tipo().name(), erro.mensagem()));
         LOG.warnf("academia erro_js licao=%s tipo=%s mensagem=%s", erro.licaoId(), erro.tipo(), erro.mensagem());
+        // ACAD-04: o buffer não tinha leitor fora dos testes. O console do painel é onde o dono olha.
+        if (console != null) {
+            console.append("warn", "academia erro_js licao=" + erro.licaoId() + " tipo=" + erro.tipo()
+                    + " mensagem=" + erro.mensagem() + " (buffer " + erros.size() + "/" + TETO_ERROS
+                    + ", descartados " + errosDescartados + ")");
+        }
     }
 
     /** Os erros guardados, do mais antigo ao mais novo. */

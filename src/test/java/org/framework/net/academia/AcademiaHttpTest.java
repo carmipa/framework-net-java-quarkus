@@ -52,6 +52,9 @@ class AcademiaHttpTest {
     @Inject
     TelemetriaAcademiaAdapter adaptador;
 
+    @Inject
+    org.framework.net.telemetria.TelemetriaConsoleBuffer console;
+
     @ParameterizedTest(name = "{0} abre com o menu na Academia")
     @ValueSource(strings = {"/academia", "/academia/fundamentos", "/academia/fundamentos/binario",
             "/academia/fundamentos/hexadecimal", "/academia/fundamentos/camadas",
@@ -226,6 +229,9 @@ class AcademiaHttpTest {
         assertFalse(guardado.mensagem().contains("a@b.com"));
         assertFalse(guardado.mensagem().contains("123.456.789-09"));
 
+        assertTrue(console.snapshot(500).stream().anyMatch(l -> l.contains(marca)),
+                "ACAD-04: o erro de JS aparece no console do painel (o buffer não tinha leitor)");
+
         boolean naTelemetriaComum = telemetriaStore.snapshotEventos().stream()
                 .anyMatch(e -> String.valueOf(e.fields()).contains(marca));
         assertFalse(naTelemetriaComum, "erro de JS não pode entrar na telemetria que alimenta o dataset público");
@@ -239,6 +245,15 @@ class AcademiaHttpTest {
                 .body("{\"tipo\":\"erro\",\"licaoId\":\"fundamentos.binario\",\"mensagem\":\"" + preenchimento + "\"}")
                 .when().post("/academia/api/eventos")
                 .then().statusCode(413).body(containsString("8 KB"));
+
+        // ACAD-10/01: o teto vale também com parâmetro de matriz no caminho (o RESTEasy o ignora e
+        // entrega ao mesmo recurso); antes o 9 KB passava e chegava à aplicação.
+        for (String rota : List.of("/academia;x/api/eventos", "/academia/api;x/eventos", "/academia/api/eventos;y")) {
+            given().urlEncodingEnabled(false).contentType("application/json")
+                    .body("{\"tipo\":\"erro\",\"licaoId\":\"fundamentos.binario\",\"mensagem\":\"" + preenchimento + "\"}")
+                    .when().post(rota)
+                    .then().statusCode(413);
+        }
 
         String cabe = "x".repeat(7900);
         given().contentType("application/json")

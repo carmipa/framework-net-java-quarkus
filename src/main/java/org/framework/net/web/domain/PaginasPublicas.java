@@ -76,6 +76,30 @@ public final class PaginasPublicas {
         return rota != null && !rota.isBlank() && INDICE.contains(rota);
     }
 
+    /**
+     * Rotas públicas da Academia, sem nunca derrubar a lista do site.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> esta lista é lida na carga da classe e alimenta o canonical de
+     * TODAS as páginas. Um defeito no catálogo da trilha (lição com valor inválido) lançava
+     * {@code ExceptionInInitializerError} aqui, e a classe inteira ficava inutilizável: o site todo
+     * respondia 500 por causa da Academia (auditoria ACAD-02, D12).</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> falha da Academia tira só as rotas dela; as demais páginas
+     * continuam na lista.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> qualquer {@link RuntimeException} ou
+     * {@link LinkageError} da fonte vira lista vazia e log em ERROR com a causa.</p>
+     */
+    static List<String> rotasDaAcademia(java.util.function.Supplier<List<String>> fonte) {
+        try {
+            return fonte.get();
+        } catch (RuntimeException | LinkageError falha) {
+            org.jboss.logging.Logger.getLogger(PaginasPublicas.class).errorf(falha,
+                    "rotas da Academia fora da lista pública (catálogo com defeito): %s", falha.getClass().getSimpleName());
+            return List.of();
+        }
+    }
+
     private static List<String> montar() {
         List<String> paginas = new ArrayList<>();
         paginas.add("/");
@@ -88,7 +112,7 @@ public final class PaginasPublicas {
         paginas.add("/laboratorios/camadas");
         paginas.add("/laboratorios/aneis-e-rede");
         // Academia: landing, níveis abertos e lições — fonte única é a trilha.
-        paginas.addAll(CatalogoTrilha.rotasPublicas());
+        paginas.addAll(rotasDaAcademia(CatalogoTrilha::rotasPublicas));
         paginas.add("/portas");
         // Aprofundamentos de portas (Anatomia + famílias) — fonte única.
         PortaAprofundamento.disponiveis().forEach(item -> paginas.add(item.rota()));

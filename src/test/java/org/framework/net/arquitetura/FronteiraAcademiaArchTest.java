@@ -62,6 +62,18 @@ class FronteiraAcademiaArchTest {
      */
     private static final Set<String> TIPOS_EXTERNOS_ACEITOS = Set.of();
 
+    /**
+     * Tipos da Academia que código de FORA dela pode alcançar (aresta de entrada, auditoria ACAD-27: a
+     * guarda só via a saída, e foi uma entrada — web lendo o catálogo — que derrubou o site no ACAD-02).
+     */
+    private static final java.util.Map<String, String> ENTRADAS_ACEITAS = java.util.Map.of(
+            PREFIXO + "academia.eventos.domain.ports.TelemetriaAcademiaPort", "porta que a telemetria implementa",
+            PREFIXO + "academia.eventos.domain.EventoAcademia", "evento que atravessa a porta",
+            PREFIXO + "academia.eventos.domain.EventoAcademia.ErroJs", "evento que atravessa a porta",
+            PREFIXO + "academia.eventos.domain.EventoAcademia.Visita", "evento que atravessa a porta",
+            PREFIXO + "academia.trilha.domain.CatalogoTrilha",
+            "PaginasPublicas lê as rotas públicas, protegida por PaginasPublicas.rotasDaAcademia (ACAD-02)");
+
     /** Tipos de {@code security} que a conta pode alcançar. Vazia; a sessão da Telemetria jamais. */
     private static final Set<String> SECURITY_ACEITO_NA_CONTA = Set.of();
 
@@ -79,6 +91,35 @@ class FronteiraAcademiaArchTest {
         assertTrue(violacoes.isEmpty(), () -> mensagem(
                 "A Academia é autocontida: duplique conscientemente ou registre o TIPO em "
                         + "TIPOS_EXTERNOS_ACEITOS com o motivo.", violacoes));
+    }
+
+    @Test
+    @DisplayName("de fora, a Academia só é alcançada pelos tipos de entrada registrados")
+    void entradaNaAcademiaSoPeloQueEstaRegistrado() {
+        List<String> violacoes = violacoesEntradaNaAcademia(FontesJava.todos());
+        assertTrue(violacoes.isEmpty(), () -> mensagem(
+                "Quem está fora fala com a Academia por porta; registre o TIPO em ENTRADAS_ACEITAS com o motivo.",
+                violacoes));
+    }
+
+    @Test
+    @DisplayName("calibração: entrada nova reprova, entrada registrada passa, import quebrado em linhas é visto")
+    void calibracaoEntrada() {
+        ArquivoJava webNoServico = sintetico("web/presentation/A.java",
+                "import org.framework.net.academia.trilha.application.TrilhaService;");
+        ArquivoJava importEmLinhas = sintetico("telemetria/application/B.java",
+                "import\n    org.framework.net.academia.core.application.PortaoAcademia;");
+        ArquivoJava importComEspaco = sintetico("web/domain/C.java",
+                "import org.framework.net . academia.trilha.domain . Nivel;");
+        ArquivoJava portaRegistrada = sintetico("telemetria/infrastructure/D.java",
+                "import org.framework.net.academia.eventos.domain.ports.TelemetriaAcademiaPort;");
+        ArquivoJava dentroDaAcademia = sintetico("academia/trilha/application/E.java",
+                "import org.framework.net.academia.trilha.domain.CatalogoTrilha;");
+
+        assertEquals(3, violacoesEntradaNaAcademia(List.of(webNoServico, importEmLinhas, importComEspaco)).size(),
+                "A2: entrada não registrada sem reprovar");
+        assertEquals(List.of(), violacoesEntradaNaAcademia(List.of(portaRegistrada, dentroDaAcademia)),
+                "A1: entrada registrada ou uso interno reprovado");
     }
 
     @Test
@@ -179,6 +220,21 @@ class FronteiraAcademiaArchTest {
             for (String tipo : arquivo.dependenciasDoProjeto()) {
                 if (!ACADEMIA.equals(moduloDoImport(tipo)) && !TIPOS_EXTERNOS_ACEITOS.contains(tipo)) {
                     violacoes.add(arquivo.caminho() + " alcança " + tipo);
+                }
+            }
+        }
+        return violacoes;
+    }
+
+    private static List<String> violacoesEntradaNaAcademia(List<ArquivoJava> fontes) {
+        List<String> violacoes = new ArrayList<>();
+        for (ArquivoJava arquivo : fontes) {
+            if (ACADEMIA.equals(arquivo.modulo())) {
+                continue;
+            }
+            for (String tipo : arquivo.dependenciasDoProjeto()) {
+                if (ACADEMIA.equals(moduloDoImport(tipo)) && !ENTRADAS_ACEITAS.containsKey(tipo)) {
+                    violacoes.add(arquivo.caminho() + " entra na Academia por " + tipo);
                 }
             }
         }
