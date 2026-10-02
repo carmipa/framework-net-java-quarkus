@@ -83,6 +83,27 @@ public class HistoricoStore {
     /** Guarda o deque e o arquivo: sem ela, duas gravações truncavam o mesmo arquivo ao mesmo tempo. */
     private final Object trava = new Object();
 
+    /**
+     * Espera entre a consulta e a gravação do arquivo. Cada consulta regravava o arquivo inteiro (até
+     * ~287 KB), inclusive em GET anônimo: um visitante nas rotas pesadas chegava a ~26 MB/min de escrita
+     * (auditoria OPS-03). Agora as consultas da janela saem numa gravação só. Risco residual declarado:
+     * processo morto sem encerramento perde no máximo esta janela de histórico didático.
+     */
+    long atrasoGravacaoMs = 5_000;
+
+    /** Quantas vezes o arquivo foi gravado (diagnóstico e teste). */
+    final java.util.concurrent.atomic.AtomicInteger gravacoes = new java.util.concurrent.atomic.AtomicInteger();
+
+    private final java.util.concurrent.ScheduledExecutorService gravador =
+            java.util.concurrent.Executors.newSingleThreadScheduledExecutor(r -> {
+                Thread t = new Thread(r, "historico-gravador");
+                t.setDaemon(true);
+                return t;
+            });
+
+    /** Há gravação agendada? (guardado por {@link #trava}) */
+    private boolean gravacaoAgendada;
+
     void onStart(@Observes @Priority(1) StartupEvent event) {
         carregar();
     }
@@ -137,8 +158,55 @@ public class HistoricoStore {
                 Map.of("status", "quarentena", "motivo", causa.getClass().getSimpleName()));
     }
 
+    /**
+     * Grava agora o que estiver pendente.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> fecha a janela de agrupamento — no encerramento do processo, no
+     * agendador e nos testes que leem o arquivo.</p>
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> grava sob a mesma trava das consultas, de forma atômica (arquivo
+     * temporário + move); desmarca a gravação agendada.</p>
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> lança {@link HistoricoPersistenciaException} se o disco
+     * recusar; o conteúdo continua em memória para a próxima gravação.</p>
+     */
+    public void gravarPendente() {
+        synchronized (trava) {
+            gravacaoAgendada = false;
+            persistir();
+        }
+    }
+
+    @jakarta.annotation.PreDestroy
+    void aoEncerrar() {
+        gravador.shutdownNow();
+        try {
+            gravarPendente();
+        } catch (HistoricoPersistenciaException ex) {
+            LOG.errorf(ex, "Histórico não gravado ao encerrar.");
+        }
+    }
+
+    private void agendarGravacao() {
+        if (gravacaoAgendada) {
+            return;
+        }
+        gravacaoAgendada = true;
+        try {
+            gravador.schedule(() -> {
+                try {
+                    gravarPendente();
+                } catch (HistoricoPersistenciaException ex) {
+                    LOG.errorf(ex, "Histórico não gravado; nova tentativa na próxima consulta.");
+                }
+            }, atrasoGravacaoMs, java.util.concurrent.TimeUnit.MILLISECONDS);
+        } catch (java.util.concurrent.RejectedExecutionException encerrando) {
+            gravacaoAgendada = false;
+            persistir();
+        }
+    }
+
     public void persistir() {
         synchronized (trava) {
+            gravacoes.incrementAndGet();
             Path destino = historyFile();
             try {
                 Files.createDirectories(destino.getParent());
@@ -208,7 +276,7 @@ public class HistoricoStore {
                 historyStore.removeLast();
             }
             LOG.infof("Histórico append modo=%s id=%s", registro.get("modo"), registro.get("id"));
-            persistir();
+            agendarGravacao();
         }
     }
 

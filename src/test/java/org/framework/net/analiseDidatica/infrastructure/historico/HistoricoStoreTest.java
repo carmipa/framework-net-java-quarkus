@@ -122,12 +122,32 @@ class HistoricoStoreTest {
             f.get(60, TimeUnit.SECONDS);   // qualquer exceção (ConcurrentModification etc.) reprova aqui
         }
         pool.shutdown();
+        s.gravarPendente();
 
         List<Map<String, Object>> noDisco = objectMapper.readValue(arquivo(home).toFile(), new TypeReference<>() {});
         // 8 sessões x 40 consultas: cada sessão cabe no teto por sessão, e o total no teto do arquivo.
         assertEquals(Math.min(HistoricoStore.MAX_TOTAL, threads * Math.min(porThread, config.maxHistory())),
                 noDisco.size());
         assertEquals(noDisco.size(), s.listarTodos().size());
+    }
+
+    /** OPS-03: consultas em série saem numa gravação só, e nada se perde ao gravar. */
+    @Test
+    void consultasEmSerieSaemNumaGravacaoSo() throws Exception {
+        Path home = Files.createTempDirectory("hist-lote");
+        HistoricoStore s = novoStore(home);
+        s.atrasoGravacaoMs = 400;
+        for (int i = 0; i < 20; i++) {
+            s.registrarConsulta("L", Map.of("modo", "ip", "ip", "10.9.0." + i), Map.of("rede", "x"));
+        }
+        long limite = System.currentTimeMillis() + 5_000;
+        while (!Files.exists(arquivo(home)) && System.currentTimeMillis() < limite) {
+            Thread.sleep(50);
+        }
+        Thread.sleep(200);
+        assertTrue(s.gravacoes.get() <= 2, "20 consultas gravaram o arquivo " + s.gravacoes.get() + " vezes");
+        List<Map<String, Object>> noDisco = objectMapper.readValue(arquivo(home).toFile(), new TypeReference<>() {});
+        assertEquals(Math.min(20, config.maxHistory()), noDisco.size(), "a gravação em lote leva todas as consultas");
     }
 
     /** F07: cada sessão vê só o seu; teto por sessão não apaga o de outra; o legado global não volta. */
@@ -171,6 +191,7 @@ class HistoricoStoreTest {
         HistoricoStore s = novoStore(home);
         s.carregar();
         s.registrarConsulta("S", Map.of("modo", "ip", "ip", "203.0.113.50"), Map.of("rede", "x"));
+        s.gravarPendente();
 
         assertEquals(conteudoAntigo, Files.readString(antigo), "o arquivo lido pela versão anterior foi alterado");
         assertTrue(Files.readString(arquivo(home)).contains("203.0.113.50"), "o registro novo tem de ir para o v2");
