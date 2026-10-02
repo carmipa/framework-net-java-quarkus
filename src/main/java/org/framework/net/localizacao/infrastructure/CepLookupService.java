@@ -14,7 +14,6 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Consulta de endereço por CEP via <a href="https://viacep.com.br">ViaCEP</a> (HTTP público, sem chave).
@@ -37,10 +36,30 @@ public class CepLookupService {
     @ConfigProperty(name = "framework.localizacao.http-timeout-seconds", defaultValue = "5")
     int timeoutSeconds;
 
+    @ConfigProperty(name = "framework.localizacao.cache-ttl-seconds", defaultValue = "86400")
+    int cacheTtlSeconds;
+
     @Inject
     ObjectMapper objectMapper;
 
-    private final Map<String, Map<String, Object>> cache = new ConcurrentHashMap<>();
+    /** L2 (Redis): o Javadoc do cache distribuído prometia o CEP e ele não usava (OPS-17). */
+    @Inject
+    org.framework.net.shared.CacheDistribuido cacheDistribuido;
+
+    /** L1 com validade (OPS-17: antes sem expiração). */
+    private volatile org.framework.net.shared.CacheLocal<Map<String, Object>> cacheLocal;
+
+    private org.framework.net.shared.CacheLocal<Map<String, Object>> cache() {
+        if (cacheLocal == null) {
+            synchronized (this) {
+                if (cacheLocal == null) {
+                    cacheLocal = new org.framework.net.shared.CacheLocal<>(MAX_CACHE,
+                            Duration.ofSeconds(Math.max(1, cacheTtlSeconds)));
+                }
+            }
+        }
+        return cacheLocal;
+    }
     private volatile HttpClient httpClient;
 
     /** Consulta o CEP (aceita com ou sem máscara). Nunca lança — retorna {@code ok=false} em falha. */
@@ -49,9 +68,13 @@ public class CepLookupService {
         if (cep == null) {
             return erro("invalid", "CEP inválido: informe 8 dígitos (ex.: 01001-000).", cepRaw);
         }
-        Map<String, Object> cached = cache.get(cep);
-        if (cached != null) {
-            return new LinkedHashMap<>(cached);
+        java.util.Optional<Map<String, Object>> cached = cache().obter(cep);
+        if (cached.isPresent()) {
+            return new LinkedHashMap<>(cached.get());
+        }
+        java.util.Optional<Map<String, Object>> doL2 = lerDoCacheDistribuido(cep);
+        if (doL2.isPresent()) {
+            return doL2.get();
         }
         try {
             HttpRequest request = HttpRequest.newBuilder()
@@ -111,10 +134,29 @@ public class CepLookupService {
     }
 
     private void guardarCache(String cep, Map<String, Object> value) {
-        if (cache.size() >= MAX_CACHE) {
-            cache.clear();
+        cache().guardar(cep, new LinkedHashMap<>(value));
+        try {
+            cacheDistribuido.guardar("cep", cep, objectMapper.writeValueAsString(value),
+                    Duration.ofSeconds(Math.max(1, cacheTtlSeconds)));
+        } catch (Exception ex) {
+            LOG.debugf("Nao foi possivel gravar o CEP %s no cache distribuido", cep);
         }
-        cache.put(cep, new LinkedHashMap<>(value));
+    }
+
+    /** Lê do L2 e repovoa o L1; ausente, ilegível ou Redis fora devolve vazio (vai ao ViaCEP). */
+    @SuppressWarnings("unchecked")
+    private java.util.Optional<Map<String, Object>> lerDoCacheDistribuido(String cep) {
+        var bruto = cacheDistribuido.obter("cep", cep);
+        if (bruto.isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        try {
+            Map<String, Object> valor = objectMapper.readValue(bruto.get(), Map.class);
+            cache().guardar(cep, new LinkedHashMap<>(valor));
+            return java.util.Optional.of(new LinkedHashMap<>(valor));
+        } catch (Exception ex) {
+            return java.util.Optional.empty();
+        }
     }
 
     private HttpClient client() {

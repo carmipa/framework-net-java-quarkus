@@ -70,6 +70,20 @@ public class TelemetriaStore {
     @Inject
     TelemetriaStreamRedis stream;
 
+    static final int FILA_STREAM = 2_000;
+
+    private final java.util.concurrent.atomic.AtomicLong descartadosStream = new java.util.concurrent.atomic.AtomicLong();
+
+    private final java.util.concurrent.ThreadPoolExecutor publicadorStream = new java.util.concurrent.ThreadPoolExecutor(
+            1, 1, 0L, java.util.concurrent.TimeUnit.MILLISECONDS,
+            new java.util.concurrent.ArrayBlockingQueue<>(FILA_STREAM),
+            r -> {
+                Thread t = new Thread(r, "telemetria-stream");
+                t.setDaemon(true);
+                return t;
+            },
+            new java.util.concurrent.ThreadPoolExecutor.AbortPolicy());
+
     @Inject
     public TelemetriaStore(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper.copy().enable(SerializationFeature.INDENT_OUTPUT);
@@ -131,8 +145,32 @@ public class TelemetriaStore {
         // unitario) ou com o recurso desligado, o registro segue igual — a
         // verdade duravel ja foi para o arquivo acima.
         if (stream != null) {
-            stream.publicar(evento);
+            publicarNoStream(evento);
         }
+    }
+
+    /**
+     * Publica no Stream fora da thread da requisição (auditoria OPS-17: o XADD era síncrono no filtro de
+     * resposta, e com o Redis lento toda resposta esperava). Uma thread só, na ordem de chegada; fila de
+     * no máximo {@link #FILA_STREAM} eventos — cheia, o evento não vai ao Stream (a verdade durável já está
+     * no arquivo) e o descarte é contado.
+     */
+    private void publicarNoStream(TelemetriaEvent evento) {
+        try {
+            publicadorStream.execute(() -> stream.publicar(evento));
+        } catch (java.util.concurrent.RejectedExecutionException cheia) {
+            descartadosStream.incrementAndGet();
+        }
+    }
+
+    /** Eventos que não foram ao Stream porque a fila estava cheia (o arquivo os tem). */
+    public long descartadosStream() {
+        return descartadosStream.get();
+    }
+
+    @jakarta.annotation.PreDestroy
+    void encerrarPublicador() {
+        publicadorStream.shutdown();
     }
 
     /**

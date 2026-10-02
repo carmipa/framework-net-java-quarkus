@@ -17,7 +17,6 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Geocodificação (endereço → coordenadas) via
@@ -54,7 +53,20 @@ public class NominatimGeocoder {
     @Inject
     ObjectMapper objectMapper;
 
-    private final Map<String, Map<String, Object>> cache = new ConcurrentHashMap<>();
+    /** L1 com validade (OPS-17: sem expiração, endereço corrigido na origem nunca era visto). */
+    private volatile org.framework.net.shared.CacheLocal<Map<String, Object>> cacheLocal;
+
+    private org.framework.net.shared.CacheLocal<Map<String, Object>> cache() {
+        if (cacheLocal == null) {
+            synchronized (this) {
+                if (cacheLocal == null) {
+                    cacheLocal = new org.framework.net.shared.CacheLocal<>(MAX_CACHE,
+                            Duration.ofSeconds(Math.max(1, cacheTtlSeconds)));
+                }
+            }
+        }
+        return cacheLocal;
+    }
     private volatile HttpClient httpClient;
 
     private static final long JANELA_NANOS = 1_000_000_000L;
@@ -121,9 +133,9 @@ public class NominatimGeocoder {
             return Optional.empty();
         }
         String chave = query.strip().toLowerCase();
-        Map<String, Object> cached = cache.get(chave);
-        if (cached != null) {
-            return Optional.of(new LinkedHashMap<>(cached));
+        Optional<Map<String, Object>> cached = cache().obter(chave);
+        if (cached.isPresent()) {
+            return Optional.of(new LinkedHashMap<>(cached.get()));
         }
         // L2: o Nominatim pede ~1 req/s por política de uso, e endereço é dado
         // estático. Perder o cache a cada deploy só gera tráfego desnecessário lá.
@@ -180,9 +192,9 @@ public class NominatimGeocoder {
         }
         // ~11 m de resolução: o mesmo ponto (ou vizinho imediato) não volta ao Nominatim.
         String chave = String.format(java.util.Locale.ROOT, "rev|%.4f|%.4f", lat, lon);
-        Map<String, Object> cached = cache.get(chave);
-        if (cached != null) {
-            return Optional.of(new LinkedHashMap<>(cached));
+        Optional<Map<String, Object>> cached = cache().obter(chave);
+        if (cached.isPresent()) {
+            return Optional.of(new LinkedHashMap<>(cached.get()));
         }
         Optional<Map<String, Object>> doL2 = lerDoCacheDistribuido(chave);
         if (doL2.isPresent()) {
@@ -251,10 +263,7 @@ public class NominatimGeocoder {
     }
 
     private void guardarCache(String chave, Map<String, Object> value) {
-        if (cache.size() >= MAX_CACHE) {
-            cache.clear();
-        }
-        cache.put(chave, new LinkedHashMap<>(value));
+        cache().guardar(chave, new LinkedHashMap<>(value));
         try {
             cacheDistribuido.guardar("nominatim", chave, objectMapper.writeValueAsString(value),
                     Duration.ofSeconds(Math.max(1, cacheTtlSeconds)));
@@ -279,9 +288,7 @@ public class NominatimGeocoder {
         }
         try {
             Map<String, Object> valor = objectMapper.readValue(bruto.get(), Map.class);
-            if (cache.size() < MAX_CACHE) {
-                cache.put(chave, new LinkedHashMap<>(valor));
-            }
+            cache().guardar(chave, new LinkedHashMap<>(valor));
             return Optional.of(new LinkedHashMap<>(valor));
         } catch (Exception ex) {
             return Optional.empty();

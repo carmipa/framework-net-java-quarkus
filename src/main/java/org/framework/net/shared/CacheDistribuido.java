@@ -10,7 +10,6 @@ import org.jboss.logging.Logger;
 
 import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Segundo nível de cache para respostas de APIs externas, sobrevivendo a deploys.
@@ -33,7 +32,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * projeto</b>. Redis desligado, inalcançável ou lento faz {@link #obter} devolver
  * {@link Optional#empty()} e {@link #guardar} não fazer nada — o serviço chamador
  * segue para a origem exatamente como fazia antes de existir cache distribuído.
- * A primeira falha é registrada em WARN uma única vez, para não inundar o log.
+ * Falha abre um {@link Disjuntor} por 60 s: nesse intervalo nada vai ao Redis (antes cada chamada
+ * esperava o timeout do cliente). O log sai em cada TROCA de estado — antes saía uma vez na vida do
+ * processo, e uma segunda queda passava calada (auditoria OPS-17).
  * Nenhuma exceção escapa deste componente.</p>
  */
 @ApplicationScoped
@@ -58,7 +59,8 @@ public class CacheDistribuido {
     boolean habilitado;
 
     private ValueCommands<String, String> valores;
-    private final AtomicBoolean falhaJaRegistrada = new AtomicBoolean(false);
+    /** Costura de teste: relógio monotônico do disjuntor. */
+    final Disjuntor disjuntor = new Disjuntor(System::nanoTime);
 
     @PostConstruct
     void iniciar() {
@@ -88,13 +90,15 @@ public class CacheDistribuido {
      * chamador precisa saber para ir à origem.</p>
      */
     public Optional<String> obter(String namespace, String chave) {
-        if (valores == null || chave == null || chave.isBlank()) {
+        if (valores == null || chave == null || chave.isBlank() || !disjuntor.permite()) {
             return Optional.empty();
         }
         try {
-            return Optional.ofNullable(valores.get(montarChave(namespace, chave)));
+            Optional<String> valor = Optional.ofNullable(valores.get(montarChave(namespace, chave)));
+            registrarSucesso();
+            return valor;
         } catch (RuntimeException ex) {
-            registrarFalhaUmaVez(ex);
+            registrarFalha(ex);
             return Optional.empty();
         }
     }
@@ -113,10 +117,14 @@ public class CacheDistribuido {
         if (ttl == null || ttl.isZero() || ttl.isNegative()) {
             return;
         }
+        if (!disjuntor.permite()) {
+            return;
+        }
         try {
             valores.setex(montarChave(namespace, chave), ttl.toSeconds(), valor);
+            registrarSucesso();
         } catch (RuntimeException ex) {
-            registrarFalhaUmaVez(ex);
+            registrarFalha(ex);
         }
     }
 
@@ -129,11 +137,16 @@ public class CacheDistribuido {
         return PREFIXO + namespace + ":" + chave;
     }
 
-    private void registrarFalhaUmaVez(RuntimeException ex) {
-        if (falhaJaRegistrada.compareAndSet(false, true)) {
-            LOG.warnf("Cache distribuido falhou (%s: %s). A aplicacao segue com cache em memoria; "
-                            + "este aviso nao se repete.",
-                    ex.getClass().getSimpleName(), ex.getMessage());
+    private void registrarFalha(RuntimeException ex) {
+        if (disjuntor.falhou()) {
+            LOG.warnf("Cache distribuido falhou (%s: %s). Desligado por 60 s; a aplicacao segue com cache"
+                    + " em memoria.", ex.getClass().getSimpleName(), ex.getMessage());
+        }
+    }
+
+    private void registrarSucesso() {
+        if (disjuntor.funcionou()) {
+            LOG.info("Cache distribuido voltou a responder.");
         }
     }
 }
