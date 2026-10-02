@@ -88,9 +88,6 @@
                 temporizador = null;
             }
             rotuloTocar(indice >= passos.length - 1 ? 'Repetir' : 'Tocar', indice >= passos.length - 1 ? 'replay' : 'play_arrow');
-            if (btnTocar) {
-                btnTocar.setAttribute('aria-pressed', 'false');
-            }
         }
 
         function aplicar(i) {
@@ -165,9 +162,6 @@
                 return;
             }
             rotuloTocar('Pausar', 'pause');
-            if (btnTocar) {
-                btnTocar.setAttribute('aria-pressed', 'true');
-            }
             if (indice < 0 && !aplicar(0)) {
                 return;
             }

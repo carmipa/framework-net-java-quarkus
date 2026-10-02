@@ -14,7 +14,18 @@
     if (!window.AcademiaProgresso) {
         return;
     }
-    Array.prototype.forEach.call(document.querySelectorAll('[data-acad-selo]'), function (selo) {
-        window.AcademiaProgresso.pintarSelo(selo, selo.getAttribute('data-acad-selo'));
+    function pintar() {
+        Array.prototype.forEach.call(document.querySelectorAll('[data-acad-selo]'), function (selo) {
+            window.AcademiaProgresso.pintarSelo(selo, selo.getAttribute('data-acad-selo'));
+        });
+    }
+    pintar();
+    // ACAD-17: concluir uma lição em outra aba não atualizava os selos desta (evento storage), nem
+    // apagar o progresso nesta mesma página (academia:progresso).
+    window.addEventListener('storage', function (ev) {
+        if (window.AcademiaProgresso.eventoDeProgresso(ev)) {
+            pintar();
+        }
     });
+    window.addEventListener('academia:progresso', pintar);
 }());

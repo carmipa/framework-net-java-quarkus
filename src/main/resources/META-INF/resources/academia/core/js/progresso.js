@@ -20,9 +20,10 @@
  *     progresso" apaga também essa chave.
  *
  * COMPORTAMENTO EM CASO DE FALHA: armazenamento bloqueado ou cheio (navegação privada, política
- *   da escola) não quebra a lição: ler devolve o estado vazio, gravar devolve false, e o selo diz
- *   "o progresso não pode ser guardado neste navegador". Valor corrompido na chave é ignorado e
- *   tratado como estado vazio.
+ *   da escola) não quebra a lição: o progresso vive na memória da página enquanto ela estiver aberta
+ *   (antes ler devolvia sempre vazio e o placar travava em 0 — a lição nunca concluía, auditoria
+ *   ACAD-08), gravar devolve false e o selo diz "o progresso não pode ser guardado neste navegador".
+ *   Valor corrompido na chave é ignorado e tratado como estado vazio.
  */
 (function (raiz) {
     'use strict';
@@ -32,6 +33,13 @@
     var CHAVE_DESBLOQUEADOS = 'academia.niveis.v1.desbloqueados';
     var ID_NIVEL = /^[a-z][a-z0-9]*$/;
     var ACERTOS_PARA_CONCLUIR = 3;
+
+    /** Progresso da página quando o navegador não deixa guardar (ACAD-08). */
+    var memoria = {};
+
+    function copia(estado) {
+        return { acertos: estado.acertos, tentativas: estado.tentativas, concluidaEm: estado.concluidaEm };
+    }
 
     function vazio() {
         return { acertos: 0, tentativas: 0, concluidaEm: null };
@@ -74,6 +82,9 @@
     }
 
     function ler(licaoId) {
+        if (Object.prototype.hasOwnProperty.call(memoria, licaoId)) {
+            return copia(memoria[licaoId]);
+        }
         var s = armazenamento('localStorage');
         if (!s) {
             return vazio();
@@ -88,16 +99,21 @@
     }
 
     function gravar(licaoId, estado) {
+        if (!valido(estado)) {
+            return false;
+        }
         var s = armazenamento('localStorage');
-        if (!s || !valido(estado)) {
-            return false;
+        if (s) {
+            try {
+                s.setItem(PREFIXO + licaoId, JSON.stringify(estado));
+                delete memoria[licaoId];
+                return true;
+            } catch (e) {
+                /* cheio ou bloqueado no meio: cai para a memória da página */
+            }
         }
-        try {
-            s.setItem(PREFIXO + licaoId, JSON.stringify(estado));
-            return true;
-        } catch (e) {
-            return false;
-        }
+        memoria[licaoId] = copia(estado);
+        return false;
     }
 
     /**
@@ -221,6 +237,37 @@
         return proxima;
     }
 
+    /**
+     * Guarda o que está digitado na resposta enquanto a pergunta for a mesma (auditoria ACAD-24).
+     *
+     * PROPÓSITO DE NEGÓCIO: trocar o idioma recarrega a página; a semente já mantinha a pergunta, mas a
+     *   resposta digitada sumia.
+     * INVARIANTES: o rascunho vive em sessionStorage, ligado à semente da pergunta — pergunta nova
+     *   (semente avançou) ignora o rascunho velho; restaura depois que a lição montou a pergunta.
+     * FALHA: sem sessionStorage não há rascunho, e a lição funciona igual.
+     */
+    function ligarRascunho(licaoId, campo) {
+        var s = armazenamento('sessionStorage');
+        if (!s || !campo) {
+            return;
+        }
+        var chave = 'academia.rascunho.v1.' + licaoId;
+        raiz.setTimeout(function () {
+            try {
+                var r = JSON.parse(s.getItem(chave) || 'null');
+                if (r && r.semente === semente(licaoId) && typeof r.texto === 'string' && campo.value === '') {
+                    campo.value = r.texto.slice(0, 64);
+                    campo.dispatchEvent(new Event('input'));
+                }
+            } catch (e) { /* rascunho corrompido: ignora */ }
+        }, 0);
+        campo.addEventListener('input', function () {
+            try {
+                s.setItem(chave, JSON.stringify({ semente: semente(licaoId), texto: String(campo.value).slice(0, 64) }));
+            } catch (e) { /* sem espaço: segue sem rascunho */ }
+        });
+    }
+
     /** Preenche o selo de uma lição: concluída/andamento e onde está guardado. */
     function pintarSelo(el, licaoId) {
         if (!el) {
@@ -268,6 +315,7 @@
         registrarDesbloqueio: registrarDesbloqueio,
         semente: semente,
         avancarSemente: avancarSemente,
-        pintarSelo: pintarSelo
+        pintarSelo: pintarSelo,
+        ligarRascunho: ligarRascunho
     };
 }(window));

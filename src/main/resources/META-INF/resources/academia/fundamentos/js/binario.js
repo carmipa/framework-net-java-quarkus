@@ -144,6 +144,7 @@
         var perguntaEl = document.getElementById('provar-pergunta');
         var rotuloEl = document.getElementById('provar-rotulo');
         var campo = document.getElementById('provar-resposta');
+        P.ligarRascunho(LICAO, campo);
         var ecoEl = document.getElementById('provar-eco');
         var feedback = document.getElementById('provar-feedback');
         var placar = document.getElementById('provar-placar');

@@ -118,7 +118,12 @@
                 return;
             }
             if (novo < estado.p) {
-                limpar('Não cabe: um /' + estado.p + ' tem só ' + C.hostsUtilizaveis(estado.p) + ' hosts utilizáveis.');
+                // ACAD-21: a frase antiga dizia "um /31 tem só 2 hosts" quando o aluno tinha pedido 2 — a conta
+                // de sub-rede reserva rede e broadcast (/30 para 2 hosts), e o motivo real é o prefixo pedido.
+                var pedido = estado.modo === 'hosts'
+                    ? estado.qtd + (estado.qtd === 1 ? ' host' : ' hosts') + ' por sub-rede'
+                    : estado.qtd + (estado.qtd === 1 ? ' sub-rede' : ' sub-redes');
+                limpar('Não cabe: ' + pedido + ' pede um /' + novo + ', que é maior que o /' + estado.p + ' de partida.');
                 return;
             }
             var divisao = C.dividir(estado.ip, estado.p, novo);
@@ -177,6 +182,7 @@
         var perguntaEl = document.getElementById('provar-pergunta');
         var rotuloEl = document.getElementById('provar-rotulo');
         var campo = document.getElementById('provar-resposta');
+        P.ligarRascunho(LICAO, campo);
         var ecoEl = document.getElementById('provar-eco');
         var feedback = document.getElementById('provar-feedback');
         var placar = document.getElementById('provar-placar');

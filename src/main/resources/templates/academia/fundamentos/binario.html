@@ -91,20 +91,20 @@
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">pin</span>
                         Decimal (0 a 255)
                     </label>
-                    <input id="mexer-decimal" class="form-control" inputmode="numeric" autocomplete="off"
+                    <input id="mexer-decimal" aria-describedby="mexer-decimal-eco" class="form-control" inputmode="numeric" autocomplete="off"
                            data-history="off" maxlength="16" value="0"
                            title="Digite um número de 0 a 255 e veja os bits acenderem">
-                    <span class="acad-eco" id="mexer-decimal-eco" aria-live="polite"></span>
+                    <span class="acad-eco" id="mexer-decimal-eco"></span>
                 </div>
                 <div class="col-12 col-md-6 acad-campo">
                     <label for="mexer-binario">
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">toggle_on</span>
                         Binário (até 8 bits)
                     </label>
-                    <input id="mexer-binario" class="form-control" inputmode="numeric" autocomplete="off"
+                    <input id="mexer-binario" aria-describedby="mexer-binario-eco" class="form-control" inputmode="numeric" autocomplete="off"
                            data-history="off" maxlength="24" value="00000000"
                            title="Digite os bits; espaço e o prefixo 0b são aceitos">
-                    <span class="acad-eco" id="mexer-binario-eco" aria-live="polite"></span>
+                    <span class="acad-eco" id="mexer-binario-eco"></span>
                 </div>
             </div>
             <dl class="acad-resultado">
@@ -126,7 +126,7 @@
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">edit</span>
                         <span id="provar-rotulo">Sua resposta</span>
                     </label>
-                    <input id="provar-resposta" class="form-control" autocomplete="off" data-history="off"
+                    <input id="provar-resposta" aria-describedby="provar-eco" class="form-control" autocomplete="off" data-history="off"
                            maxlength="24" title="Escreva a resposta; o formato aceito aparece logo abaixo">
                 </div>
                 <div class="col-12 col-md-6 d-flex flex-wrap gap-2 align-items-center">
@@ -151,13 +151,13 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/academia/core/js/normalizador.js?v=20261002"></script>
-<script src="/academia/core/js/motor.js?v=20261001"></script>
-<script src="/academia/core/js/progresso.js?v=20261001d"></script>
-<script src="/academia/core/js/niveis.js?v=20261001c"></script>
-<script src="/academia/core/js/sinais.js?v=20261002"></script>
-<script src="/academia/fundamentos/js/contas-fundamentos.js?v=20261001"></script>
-<script src="/academia/fundamentos/js/bits-ui.js?v=20261001"></script>
-<script src="/academia/fundamentos/js/binario.js?v=20261002"></script>
+<script src="/academia/core/js/normalizador.js?v=20261002b"></script>
+<script src="/academia/core/js/motor.js?v=20261002b"></script>
+<script src="/academia/core/js/progresso.js?v=20261002b"></script>
+<script src="/academia/core/js/niveis.js?v=20261002b"></script>
+<script src="/academia/core/js/sinais.js?v=20261002b"></script>
+<script src="/academia/fundamentos/js/contas-fundamentos.js?v=20261002b"></script>
+<script src="/academia/fundamentos/js/bits-ui.js?v=20261002b"></script>
+<script src="/academia/fundamentos/js/binario.js?v=20261002b"></script>
 {/extraScripts}
 {/include}

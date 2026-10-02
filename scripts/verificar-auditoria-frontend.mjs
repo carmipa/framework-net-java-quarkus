@@ -552,6 +552,120 @@ for (const caso of [
   await page.context().close();
 }
 
+// ACAD BAIXA (auditoria de 2026-10-01) — conteúdo, acessibilidade e estado das lições, na tela real.
+{
+  const page = await novaPagina(browser);
+  const ac = [];
+  const caso = (id, ok, det) => { ac.push(id); registrar(id, ok, det); };
+  const ir = async (rota) => { await page.goto(BASE + rota, { waitUntil: 'load', timeout: 45000 }); await assentar(page); };
+
+  // ACAD-11 e 16: na lição, o nível é aria-current="true" (a página é a lição); nível bloqueado é focável e diz o motivo.
+  await ir('/academia/ipv4/subredes');
+  const nav = await page.evaluate(() => {
+    const nivel = document.querySelector('[data-acad-nav-nivel="ipv4"]');
+    const paginas = document.querySelectorAll('[data-acad-nav] [aria-current="page"]').length;
+    const bloq = [...document.querySelectorAll('[data-acad-nav-nivel][aria-disabled="true"]')];
+    return { nivel: nivel && nivel.getAttribute('aria-current'), paginas,
+      bloqueados: bloq.length, focaveis: bloq.filter((b) => b.tabIndex === 0 && /bloqueado/.test(b.getAttribute('aria-label') || '')).length };
+  });
+  caso('ACAD-11 nível marcado como "true" dentro da lição', nav.nivel === 'true' && nav.paginas === 1, JSON.stringify(nav));
+  caso('ACAD-16 nível bloqueado focável e com o motivo', nav.bloqueados > 0 && nav.focaveis === nav.bloqueados, JSON.stringify(nav));
+
+  // ACAD-21: pedido que não cabe explica pelo prefixo, sem "tem só 2 hosts".
+  await page.fill('#mexer-prefixo', '31');
+  await page.selectOption('#mexer-modo', 'hosts');
+  await page.fill('#mexer-quantidade', '2');
+  await page.waitForTimeout(200);
+  const aviso = await page.textContent('#mexer-aviso');
+  caso('ACAD-21 "não cabe" diz o prefixo pedido', /pede um \/30/.test(aviso) && !/tem só/.test(aviso), aviso.trim());
+
+  // ACAD-24: a resposta digitada volta depois do reload (troca de idioma recarrega).
+  await page.fill('#provar-resposta', '192.168.1.64/26');
+  await page.reload({ waitUntil: 'load' }); await assentar(page);
+  const voltou = await page.inputValue('#provar-resposta');
+  caso('ACAD-24 resposta digitada sobrevive ao reload', voltou === '192.168.1.64/26', `campo depois do reload="${voltou}"`);
+
+  // ACAD-14: eco não é região viva; o campo aponta para ele como descrição.
+  const eco = await page.evaluate(() => {
+    const ecos = [...document.querySelectorAll('.acad-eco')];
+    return { vivos: ecos.filter((e) => e.hasAttribute('aria-live')).length,
+      descritos: ecos.filter((e) => document.querySelector('[aria-describedby~="' + e.id + '"]')).length, total: ecos.length };
+  });
+  caso('ACAD-14 eco sem aria-live e ligado ao campo', eco.total > 0 && eco.vivos === 0 && eco.descritos === eco.total, JSON.stringify(eco));
+
+  // ACAD-20 e 15: /31 sem rede/broadcast; régua com uma parada de Tab e setas.
+  await ir('/academia/ipv4/mascara');
+  await page.fill('#mexer-prefixo', '31');
+  await page.waitForTimeout(200);
+  const rede = await page.textContent('#mexer-rede');
+  caso('ACAD-20 /31 não mostra rede nem broadcast', /ver nota/.test(rede), `rede="${rede.trim()}"`);
+  const regua = await page.evaluate(() => [...document.querySelectorAll('#mexer-regua button')].filter((b) => b.tabIndex === 0).length);
+  await page.evaluate(() => { const b = document.querySelector('#mexer-regua button[tabindex="0"]') || document.querySelector('#mexer-regua button'); b.focus(); });
+  await page.keyboard.press('ArrowRight');
+  const andou = await page.evaluate(() => [...document.querySelectorAll('#mexer-regua button')].indexOf(document.activeElement));
+  caso('ACAD-15 régua é uma parada de Tab e anda com as setas', regua === 1 && andou === 1, `paradas=${regua} foco depois da seta=bit ${andou + 1}`);
+
+  // ACAD-13: Tocar não acumula aria-pressed com a troca de rótulo.
+  const pressed = await page.evaluate(() => { const b = document.querySelector('[data-acad-acao="tocar"]'); b.click(); return b.getAttribute('aria-pressed'); });
+  caso('ACAD-13 botão Tocar sem aria-pressed', pressed === null, `aria-pressed=${pressed}`);
+
+  // ACAD-19: a conta do hexadecimal não é igualdade encadeada falsa.
+  await ir('/academia/fundamentos/hexadecimal');
+  await page.fill('#mexer-hex', 'AF');
+  await page.waitForTimeout(200);
+  const alto = await page.textContent('#mexer-alto');
+  caso('ACAD-19 "A (10) × 16 = 160"', alto.trim() === 'A (10) × 16 = 160', alto.trim());
+
+  // ACAD-18 e 22: emoji conta 1 caractere; acima do teto o quadro velho some e o texto não fala em fragmentação.
+  await ir('/academia/fundamentos/camadas');
+  await page.fill('#mexer-mensagem', '👍');
+  await page.waitForTimeout(150);
+  const ecoEmoji = await page.textContent('#mexer-mensagem-eco');
+  caso('ACAD-18 "1 caractere = 4 bytes"', /^1 caractere = 4 bytes/.test(ecoEmoji.trim()), ecoEmoji.trim());
+  await page.fill('#mexer-mensagem', 'é'.repeat(600)); // 1200 bytes em UTF-8 (o campo limita 1000 caracteres)
+  await page.waitForTimeout(150);
+  const longo = await page.evaluate(() => ({ eco: document.getElementById('mexer-mensagem-eco').textContent, quadro: document.getElementById('mexer-quadro').textContent }));
+  caso('ACAD-22 acima do teto: sem quadro velho e sem "fragmentação fica para outro nível"',
+    longo.quadro.trim() === '—' && /1460/.test(longo.eco) && !/outro nível/.test(longo.eco), JSON.stringify(longo).slice(0, 160));
+  const ac23 = await page.evaluate(() => /até 40\s+bytes em cada um/.test(document.body.innerText));
+  caso('ACAD-23 opções até 40 bytes', ac23, `texto corrigido=${ac23}`);
+
+  // ACAD-12 e 17: painel de nível focável; selo da landing reage a progresso feito em outra aba.
+  await ir('/academia');
+  const paineis = await page.evaluate(() => [...document.querySelectorAll('[role="tabpanel"]')].every((p) => p.tabIndex === 0));
+  caso('ACAD-12 painel de nível focável', paineis, `todos com tabindex 0=${paineis}`);
+  // A landing já repinta pelo abas.js; a página de nível só tem o selos.js — é ela que o ACAD-17 cita.
+  await ir('/academia/fundamentos');
+  const outra = await page.context().newPage();
+  await outra.goto(BASE + '/academia/fundamentos/binario', { waitUntil: 'load', timeout: 45000 });
+  await outra.evaluate(() => { for (let i = 0; i < 3; i++) window.AcademiaProgresso.registrarTentativa('fundamentos.binario', true); });
+  await page.waitForTimeout(500);
+  const selo = await page.evaluate(() => (document.querySelector('[data-acad-selo="fundamentos.binario"]') || {}).textContent || '');
+  caso('ACAD-17 selo atualiza com progresso de outra aba', /concluída/.test(selo), `selo="${selo.trim()}"`);
+  await outra.close();
+  await page.context().close();
+}
+
+// ACAD-08 — armazenamento bloqueado: o progresso vive na página e a lição conclui.
+{
+  const ctx = await browser.newContext();
+  await ctx.route(/translate\.google(apis)?\.com|www\.google\.com/, (r) => r.abort());
+  await ctx.addInitScript(() => {
+    Object.defineProperty(window, 'localStorage', { configurable: true, get() { throw new Error('bloqueado pela política'); } });
+  });
+  const page = await ctx.newPage();
+  await page.goto(BASE + '/academia/fundamentos/binario', { waitUntil: 'load', timeout: 45000 });
+  await assentar(page);
+  const r = await page.evaluate(() => {
+    const P = window.AcademiaProgresso;
+    let ultimo;
+    for (let i = 0; i < 3; i++) ultimo = P.registrarTentativa('fundamentos.binario', true);
+    return { acertos: P.ler('fundamentos.binario').acertos, concluiu: ultimo.acabouDeConcluir, guardado: ultimo.guardado };
+  });
+  registrar('ACAD-08 sem armazenamento a lição conclui na página', r.acertos === 3 && r.concluiu && r.guardado === false, JSON.stringify(r));
+  await ctx.close();
+}
+
 await browser.close();
 const reprovados = resultados.filter((r) => !r.ok);
 console.log(`\n${resultados.length - reprovados.length}/${resultados.length} passaram`);

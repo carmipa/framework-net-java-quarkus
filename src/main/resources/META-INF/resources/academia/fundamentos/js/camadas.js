@@ -158,10 +158,22 @@
         function atualizar(contarInteracao) {
             var bytes = F.bytesUtf8(mensagem.value);
             if (bytes > F.MAX_MENSAGEM) {
-                eco.textContent = 'A mensagem passou de ' + F.MAX_MENSAGEM + ' bytes; fragmentação fica para outro nível.';
+                // ACAD-22: o texto antigo dizia que acima de 1000 bytes entraria fragmentação — falso (o
+                // quadro Ethernet leva até 1500 bytes de pacote) — e o quadro da mensagem anterior ficava na
+                // tela como se fosse desta.
+                eco.textContent = 'Esta lição mostra mensagens de até ' + F.MAX_MENSAGEM + ' bytes. Na rede real o '
+                    + 'quadro Ethernet leva até 1500 bytes de pacote: o TCP corta a mensagem em segmentos de até '
+                    + '1460 bytes, e só um datagrama UDP acima de 1472 bytes faz o IPv4 fragmentar.';
+                pilha.textContent = '';
+                campos.forEach(function (c) {
+                    document.getElementById('mexer-' + c).textContent = '—';
+                });
                 return;
             }
-            eco.textContent = mensagem.value.length + ' caracteres = ' + bytes + ' bytes em UTF-8';
+            // ACAD-18: contar caracteres, não unidades UTF-16 (um emoji contava 2), e no singular quando é 1.
+            var caracteres = Array.from(mensagem.value).length;
+            eco.textContent = caracteres + (caracteres === 1 ? ' caractere = ' : ' caracteres = ') + bytes
+                + (bytes === 1 ? ' byte' : ' bytes') + ' em UTF-8';
             var r = F.encapsular(bytes, transporte.value === 'UDP' ? 'UDP' : 'TCP');
             ativarAte(desenharPilha(pilha, r), 3);
             campos.forEach(function (c) {
@@ -181,6 +193,7 @@
     (function provar() {
         var perguntaEl = document.getElementById('provar-pergunta');
         var campo = document.getElementById('provar-resposta');
+        P.ligarRascunho(LICAO, campo);
         var ecoEl = document.getElementById('provar-eco');
         var feedback = document.getElementById('provar-feedback');
         var placar = document.getElementById('provar-placar');

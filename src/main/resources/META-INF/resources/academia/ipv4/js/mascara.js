@@ -114,6 +114,12 @@
             ['rede', 'broadcast', 'primeiro', 'ultimo'].forEach(function (k) {
                 document.getElementById('mexer-' + k).textContent = a[k];
             });
+            // ACAD-20: em /31 e /32 não há endereço de rede nem broadcast separados (a nota explica); mostrar
+            // um valor ali contradizia a nota logo abaixo.
+            if (estado.p >= 31) {
+                document.getElementById('mexer-rede').textContent = '— (ver nota)';
+                document.getElementById('mexer-broadcast').textContent = '— (ver nota)';
+            }
             document.getElementById('mexer-hosts').textContent = String(a.hosts);
             document.getElementById('mexer-bloco').textContent = String(a.bloco);
             notaEl.textContent = nota(estado.p);
@@ -161,6 +167,7 @@
         var perguntaEl = document.getElementById('provar-pergunta');
         var rotuloEl = document.getElementById('provar-rotulo');
         var campo = document.getElementById('provar-resposta');
+        P.ligarRascunho(LICAO, campo);
         var ecoEl = document.getElementById('provar-eco');
         var feedback = document.getElementById('provar-feedback');
         var placar = document.getElementById('provar-placar');

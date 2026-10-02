@@ -91,25 +91,25 @@
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">pin</span>
                         Decimal (0 a 255)
                     </label>
-                    <input id="mexer-decimal" class="form-control" inputmode="numeric" autocomplete="off"
+                    <input id="mexer-decimal" aria-describedby="mexer-decimal-eco" class="form-control" inputmode="numeric" autocomplete="off"
                            data-history="off" maxlength="16" value="0"
                            title="Digite um número de 0 a 255 e veja os dois dígitos hexadecimais">
-                    <span class="acad-eco" id="mexer-decimal-eco" aria-live="polite"></span>
+                    <span class="acad-eco" id="mexer-decimal-eco"></span>
                 </div>
                 <div class="col-12 col-md-6 acad-campo">
                     <label for="mexer-hex">
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">hexagon</span>
                         Hexadecimal (00 a FF)
                     </label>
-                    <input id="mexer-hex" class="form-control" autocomplete="off" data-history="off"
+                    <input id="mexer-hex" aria-describedby="mexer-hex-eco" class="form-control" autocomplete="off" data-history="off"
                            maxlength="16" value="00"
                            title="Digite em hexadecimal; maiúscula, minúscula e o prefixo 0x são aceitos">
-                    <span class="acad-eco" id="mexer-hex-eco" aria-live="polite"></span>
+                    <span class="acad-eco" id="mexer-hex-eco"></span>
                 </div>
             </div>
             <dl class="acad-resultado">
-                <div><dt>Esquerda × 16</dt><dd id="mexer-alto" translate="no">0 × 16 = 0</dd></div>
-                <div><dt>Direita × 1</dt><dd id="mexer-baixo" translate="no">0 × 1 = 0</dd></div>
+                <div><dt>Esquerda × 16</dt><dd id="mexer-alto" translate="no">0 (0) × 16 = 0</dd></div>
+                <div><dt>Direita × 1</dt><dd id="mexer-baixo" translate="no">0 (0) × 1 = 0</dd></div>
                 <div><dt>Byte</dt><dd id="mexer-byte" translate="no">0x00 = 0</dd></div>
             </dl>
             <details class="mt-3">
@@ -138,7 +138,7 @@
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">edit</span>
                         <span id="provar-rotulo">Sua resposta</span>
                     </label>
-                    <input id="provar-resposta" class="form-control" autocomplete="off" data-history="off"
+                    <input id="provar-resposta" aria-describedby="provar-eco" class="form-control" autocomplete="off" data-history="off"
                            maxlength="16" title="Escreva a resposta; o formato aceito aparece logo abaixo">
                 </div>
                 <div class="col-12 col-md-6 d-flex flex-wrap gap-2 align-items-center">
@@ -163,13 +163,13 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/academia/core/js/normalizador.js?v=20261002"></script>
-<script src="/academia/core/js/motor.js?v=20261001"></script>
-<script src="/academia/core/js/progresso.js?v=20261001d"></script>
-<script src="/academia/core/js/niveis.js?v=20261001c"></script>
-<script src="/academia/core/js/sinais.js?v=20261002"></script>
-<script src="/academia/fundamentos/js/contas-fundamentos.js?v=20261001"></script>
-<script src="/academia/fundamentos/js/bits-ui.js?v=20261001"></script>
-<script src="/academia/fundamentos/js/hexadecimal.js?v=20261002"></script>
+<script src="/academia/core/js/normalizador.js?v=20261002b"></script>
+<script src="/academia/core/js/motor.js?v=20261002b"></script>
+<script src="/academia/core/js/progresso.js?v=20261002b"></script>
+<script src="/academia/core/js/niveis.js?v=20261002b"></script>
+<script src="/academia/core/js/sinais.js?v=20261002b"></script>
+<script src="/academia/fundamentos/js/contas-fundamentos.js?v=20261002b"></script>
+<script src="/academia/fundamentos/js/bits-ui.js?v=20261002b"></script>
+<script src="/academia/fundamentos/js/hexadecimal.js?v=20261002b"></script>
 {/extraScripts}
 {/include}

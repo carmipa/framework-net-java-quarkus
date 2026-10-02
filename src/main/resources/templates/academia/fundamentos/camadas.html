@@ -40,8 +40,8 @@
                     <p>Exemplo: a mensagem "Oi" (2 bytes) por TCP: <span class="acad-valor" translate="no">2 + 20 = 22</span> no segmento, <span class="acad-valor" translate="no">22 + 20 = 42</span> no
                     pacote; como 42 é menor que 46, entram <span class="acad-valor" translate="no">4</span> bytes de preenchimento; o quadro fica com
                     <span class="acad-valor" translate="no">14 + 46 + 4 = 64</span> bytes.</p>
-                    <p>As contas da lição usam os cabeçalhos mínimos. Na vida real o TCP e o IPv4 podem levar opções (até 60
-                    bytes cada), e o preâmbulo da Ethernet, que vem antes do quadro, não entra nessa conta.</p>
+                    <p>As contas da lição usam os cabeçalhos mínimos. Na vida real o TCP e o IPv4 podem levar opções (até 40
+                    bytes em cada um, e aí o cabeçalho chega a 60 bytes), e o preâmbulo da Ethernet, que vem antes do quadro, não entra nessa conta.</p>
                 </section>
                 <section class="acad-leitura-bloco">
                     <h3><span class="material-symbols-outlined" aria-hidden="true" translate="no">report</span>Onde se costuma errar</h3>
@@ -90,9 +90,9 @@
                     <span class="material-symbols-outlined" aria-hidden="true" translate="no">chat</span>
                     Mensagem da aplicação
                 </label>
-                <textarea id="mexer-mensagem" class="form-control" rows="2" maxlength="1000" data-history="off"
+                <textarea id="mexer-mensagem" aria-describedby="mexer-mensagem-eco" class="form-control" rows="2" maxlength="1000" data-history="off"
                           title="Escreva qualquer texto; acento ocupa mais de um byte em UTF-8">Oi</textarea>
-                <span class="acad-eco" id="mexer-mensagem-eco" aria-live="polite"></span>
+                <span class="acad-eco" id="mexer-mensagem-eco"></span>
             </div>
             <div class="acad-campo">
                 <label for="mexer-transporte">
@@ -126,7 +126,7 @@
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">edit</span>
                         <span>Tamanho do quadro, em bytes</span>
                     </label>
-                    <input id="provar-resposta" class="form-control" inputmode="numeric" autocomplete="off"
+                    <input id="provar-resposta" aria-describedby="provar-eco" class="form-control" inputmode="numeric" autocomplete="off"
                            data-history="off" maxlength="16" title="Some todas as camadas, do cabeçalho Ethernet ao FCS">
                 </div>
                 <div class="col-12 col-md-6 d-flex flex-wrap gap-2 align-items-center">
@@ -151,12 +151,12 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/academia/core/js/normalizador.js?v=20261002"></script>
-<script src="/academia/core/js/motor.js?v=20261001"></script>
-<script src="/academia/core/js/progresso.js?v=20261001d"></script>
-<script src="/academia/core/js/niveis.js?v=20261001c"></script>
-<script src="/academia/core/js/sinais.js?v=20261002"></script>
-<script src="/academia/fundamentos/js/contas-fundamentos.js?v=20261001"></script>
-<script src="/academia/fundamentos/js/camadas.js?v=20261002"></script>
+<script src="/academia/core/js/normalizador.js?v=20261002b"></script>
+<script src="/academia/core/js/motor.js?v=20261002b"></script>
+<script src="/academia/core/js/progresso.js?v=20261002b"></script>
+<script src="/academia/core/js/niveis.js?v=20261002b"></script>
+<script src="/academia/core/js/sinais.js?v=20261002b"></script>
+<script src="/academia/fundamentos/js/contas-fundamentos.js?v=20261002b"></script>
+<script src="/academia/fundamentos/js/camadas.js?v=20261002b"></script>
 {/extraScripts}
 {/include}

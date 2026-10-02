@@ -48,6 +48,10 @@ test('binário: espaço, sublinhado e 0b; menos de 8 bits é número; 9 bits pas
     assert.equal(N.binario('101').eco, 'interpretado como 0000 0101 (5)');
     aceita(N.binario('11111111'), 255);
     recusa(N.binario('111111111'), 'faixa');
+    // ACAD-07 (fronteira, A1): 9 dígitos com zero à frente é legítimo; 9 dígitos começando por 1 não cabe.
+    aceita(N.binario('000100010'), 34);
+    aceita(N.binario('0000000000'), 0);
+    recusa(N.binario('100000000'), 'faixa');
     recusa(N.binario('102'), 'formato');
     recusa(N.binario(' '), 'vazio');
 });

@@ -92,6 +92,8 @@
                 }
                 link.setAttribute('aria-disabled', 'true');
                 link.setAttribute('title', 'Bloqueada: conclua ' + (requisito ? requisito.titulo : 'o nível anterior') + ' para abrir');
+                link.setAttribute('tabindex', '0');
+                link.setAttribute('aria-label', (link.textContent || '').replace(/\s+/g, ' ').trim() + ' — ' + link.getAttribute('title'));
             } else {
                 if (link.hasAttribute('data-acad-href')) {
                     link.setAttribute('href', link.getAttribute('data-acad-href'));
@@ -100,6 +102,8 @@
                     link.removeAttribute('data-acad-title');
                 }
                 link.removeAttribute('aria-disabled');
+                link.removeAttribute('tabindex');
+                link.removeAttribute('aria-label');
             }
         });
     }

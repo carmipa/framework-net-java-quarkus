@@ -104,10 +104,13 @@
         if (!/^[01]+$/.test(limpo)) {
             return falha('formato', 'Binário só tem 0 e 1.');
         }
-        if (limpo.length > tamanho) {
+        // ACAD-07: zero à esquerda não muda o valor — "000100010" é 34 e cabe em 8 bits. Só passa da faixa
+        // quando os bits que SOBRAM depois de tirar os zeros da frente não cabem.
+        var significativos = limpo.replace(/^0+/, '') || '0';
+        if (significativos.length > tamanho) {
             return falha('faixa', 'Use no máximo ' + tamanho + ' bits.');
         }
-        var completo = limpo.padStart(tamanho, '0');
+        var completo = significativos.padStart(tamanho, '0');
         var valor = parseInt(completo, 2);
         return sucesso(valor, 'interpretado como ' + agrupar4(completo) + ' (' + valor + ')');
     }

@@ -112,7 +112,7 @@
                 {/for}
             </div>
             {#for nivel in niveis}
-            <article class="acad-nivel acad-painel{#if !nivel.aberto} fechado{/if}" role="tabpanel" id="painel-{nivel.id}"
+            <article class="acad-nivel acad-painel{#if !nivel.aberto} fechado{/if}" role="tabpanel" tabindex="0" id="painel-{nivel.id}"
                      aria-labelledby="nivel-{nivel.id}" data-acad-painel="{nivel.id}">
                 <div class="acad-nivel-cabeca">
                     <span class="material-symbols-outlined acad-nivel-icone" aria-hidden="true" translate="no">{nivel.icone}</span>
@@ -169,10 +169,10 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/academia/core/js/progresso.js?v=20261001d"></script>
-<script src="/academia/core/js/niveis.js?v=20261001c"></script>
-<script src="/academia/core/js/selos.js?v=20261001"></script>
-<script src="/academia/inicio/js/abas.js?v=20261001c"></script>
-<script src="/academia/inicio/js/inicio.js?v=20261001b"></script>
+<script src="/academia/core/js/progresso.js?v=20261002b"></script>
+<script src="/academia/core/js/niveis.js?v=20261002b"></script>
+<script src="/academia/core/js/selos.js?v=20261002b"></script>
+<script src="/academia/inicio/js/abas.js?v=20261002b"></script>
+<script src="/academia/inicio/js/inicio.js?v=20261002b"></script>
 {/extraScripts}
 {/include}

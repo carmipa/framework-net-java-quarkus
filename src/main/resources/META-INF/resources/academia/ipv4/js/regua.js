@@ -40,6 +40,28 @@
             botoes.push(botao);
             container.appendChild(botao);
         }
+        if (interativa) {
+            // ACAD-15: 32 botões eram 32 paradas de Tab no caminho do formulário. Agora a régua é uma
+            // parada só; setas, Home e End andam entre os bits.
+            botoes.forEach(function (b, i) { b.tabIndex = i === 0 ? 0 : -1; });
+            container.setAttribute('role', 'group');
+            container.addEventListener('keydown', function (ev) {
+                var atual = botoes.indexOf(document.activeElement);
+                if (atual < 0) {
+                    return;
+                }
+                var alvo = { ArrowRight: atual + 1, ArrowDown: atual + 1, ArrowLeft: atual - 1, ArrowUp: atual - 1,
+                    Home: 0, End: 31 }[ev.key];
+                if (alvo === undefined) {
+                    return;
+                }
+                ev.preventDefault();
+                alvo = Math.max(0, Math.min(31, alvo));
+                botoes[atual].tabIndex = -1;
+                botoes[alvo].tabIndex = 0;
+                botoes[alvo].focus();
+            });
+        }
 
         /** Mostra os bits do endereço e a divisória do prefixo. */
         function mostrar(bitsEndereco, prefixo) {

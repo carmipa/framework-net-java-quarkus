@@ -92,18 +92,18 @@
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">lan</span>
                         Rede de partida
                     </label>
-                    <input id="mexer-ip" class="form-control" autocomplete="off" data-history="off" maxlength="32"
+                    <input id="mexer-ip" aria-describedby="mexer-ip-eco" class="form-control" autocomplete="off" data-history="off" maxlength="32"
                            value="192.168.1.0" title="Endereço do bloco que será dividido">
-                    <span class="acad-eco" id="mexer-ip-eco" aria-live="polite"></span>
+                    <span class="acad-eco" id="mexer-ip-eco"></span>
                 </div>
                 <div class="col-12 col-md-5 acad-campo">
                     <label for="mexer-prefixo">
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">straighten</span>
                         Prefixo do bloco
                     </label>
-                    <input id="mexer-prefixo" class="form-control" inputmode="numeric" autocomplete="off"
+                    <input id="mexer-prefixo" aria-describedby="mexer-prefixo-eco" class="form-control" inputmode="numeric" autocomplete="off"
                            data-history="off" maxlength="8" value="/24" title="De /0 a /32; com ou sem a barra">
-                    <span class="acad-eco" id="mexer-prefixo-eco" aria-live="polite"></span>
+                    <span class="acad-eco" id="mexer-prefixo-eco"></span>
                 </div>
                 <div class="col-12 col-md-7 acad-campo">
                     <label for="mexer-modo">
@@ -120,9 +120,9 @@
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">pin</span>
                         Quantidade
                     </label>
-                    <input id="mexer-quantidade" class="form-control" inputmode="numeric" autocomplete="off"
+                    <input id="mexer-quantidade" aria-describedby="mexer-quantidade-eco" class="form-control" inputmode="numeric" autocomplete="off"
                            data-history="off" maxlength="12" value="4" title="Quantas sub-redes, ou quantos hosts por sub-rede">
-                    <span class="acad-eco" id="mexer-quantidade-eco" aria-live="polite"></span>
+                    <span class="acad-eco" id="mexer-quantidade-eco"></span>
                 </div>
             </div>
             <dl class="acad-resultado">
@@ -147,7 +147,7 @@
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">edit</span>
                         <span id="provar-rotulo">Sua resposta</span>
                     </label>
-                    <input id="provar-resposta" class="form-control" autocomplete="off" data-history="off"
+                    <input id="provar-resposta" aria-describedby="provar-eco" class="form-control" autocomplete="off" data-history="off"
                            maxlength="32" title="Escreva a resposta; o formato aceito aparece logo abaixo">
                 </div>
                 <div class="col-12 col-md-6 d-flex flex-wrap gap-2 align-items-center">
@@ -172,12 +172,12 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/academia/core/js/normalizador.js?v=20261002"></script>
-<script src="/academia/core/js/motor.js?v=20261001"></script>
-<script src="/academia/core/js/progresso.js?v=20261001d"></script>
-<script src="/academia/core/js/niveis.js?v=20261001c"></script>
-<script src="/academia/core/js/sinais.js?v=20261002"></script>
-<script src="/academia/ipv4/js/contas-ipv4.js?v=20261001"></script>
-<script src="/academia/ipv4/js/subredes.js?v=20261002"></script>
+<script src="/academia/core/js/normalizador.js?v=20261002b"></script>
+<script src="/academia/core/js/motor.js?v=20261002b"></script>
+<script src="/academia/core/js/progresso.js?v=20261002b"></script>
+<script src="/academia/core/js/niveis.js?v=20261002b"></script>
+<script src="/academia/core/js/sinais.js?v=20261002b"></script>
+<script src="/academia/ipv4/js/contas-ipv4.js?v=20261002b"></script>
+<script src="/academia/ipv4/js/subredes.js?v=20261002b"></script>
 {/extraScripts}
 {/include}

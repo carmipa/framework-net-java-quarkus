@@ -111,8 +111,10 @@
                 campoHex.value = F.paraHex(valor);
                 ecoHex.textContent = '';
             }
-            altoEl.textContent = DIGITOS.charAt(n.alto) + ' = ' + n.alto + ' × 16 = ' + (n.alto * 16);
-            baixoEl.textContent = DIGITOS.charAt(n.baixo) + ' = ' + n.baixo + ' × 1 = ' + n.baixo;
+            // ACAD-19: "A = 10 × 16 = 160" é igualdade encadeada falsa (A não vale 160). O dígito mostra o
+            // valor entre parênteses e a conta vem depois.
+            altoEl.textContent = DIGITOS.charAt(n.alto) + ' (' + n.alto + ') × 16 = ' + (n.alto * 16);
+            baixoEl.textContent = DIGITOS.charAt(n.baixo) + ' (' + n.baixo + ') × 1 = ' + n.baixo;
             byteEl.textContent = '0x' + F.paraHex(valor) + ' = ' + valor;
             if (origem !== null) {
                 S.interagiu();
@@ -146,6 +148,7 @@
         var perguntaEl = document.getElementById('provar-pergunta');
         var rotuloEl = document.getElementById('provar-rotulo');
         var campo = document.getElementById('provar-resposta');
+        P.ligarRascunho(LICAO, campo);
         var ecoEl = document.getElementById('provar-eco');
         var feedback = document.getElementById('provar-feedback');
         var placar = document.getElementById('provar-placar');

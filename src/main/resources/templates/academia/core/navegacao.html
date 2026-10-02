@@ -12,7 +12,7 @@
         </a>
         {#for n in niveis}
         {#if n.aberto}
-        <a href="{n.rota}" class="aed-mode-btn acad-aba{#if n.id == nivel.id} active{/if}"{#if n.id == nivel.id} aria-current="page"{/if}
+        <a href="{n.rota}" class="aed-mode-btn acad-aba{#if n.id == nivel.id} active{/if}"{#if n.id == nivel.id} aria-current="{#if atual == ''}page{#else}true{/if}"{/if}
            data-acad-nav-nivel="{n.id}" title="Abre o nível {n.titulo}">
             <span class="material-symbols-outlined" aria-hidden="true" translate="no">{n.icone}</span>
             <span>{n.titulo}</span>

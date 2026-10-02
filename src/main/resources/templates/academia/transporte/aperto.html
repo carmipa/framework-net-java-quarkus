@@ -93,40 +93,40 @@
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">computer</span>
                         ISN do cliente
                     </label>
-                    <input id="mexer-isn-cliente" class="form-control" inputmode="numeric" autocomplete="off"
+                    <input id="mexer-isn-cliente" aria-describedby="mexer-isn-cliente-eco" class="form-control" inputmode="numeric" autocomplete="off"
                            data-history="off" maxlength="16" value="100"
                            title="Número inicial do cliente, de 0 a 4294967295">
-                    <span class="acad-eco" id="mexer-isn-cliente-eco" aria-live="polite"></span>
+                    <span class="acad-eco" id="mexer-isn-cliente-eco"></span>
                 </div>
                 <div class="col-12 col-md-6 acad-campo">
                     <label for="mexer-isn-servidor">
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">dns</span>
                         ISN do servidor
                     </label>
-                    <input id="mexer-isn-servidor" class="form-control" inputmode="numeric" autocomplete="off"
+                    <input id="mexer-isn-servidor" aria-describedby="mexer-isn-servidor-eco" class="form-control" inputmode="numeric" autocomplete="off"
                            data-history="off" maxlength="16" value="300"
                            title="Número inicial do servidor, de 0 a 4294967295">
-                    <span class="acad-eco" id="mexer-isn-servidor-eco" aria-live="polite"></span>
+                    <span class="acad-eco" id="mexer-isn-servidor-eco"></span>
                 </div>
                 <div class="col-12 col-md-6 acad-campo">
                     <label for="mexer-bytes-cliente">
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">upload</span>
                         Bytes que o cliente envia
                     </label>
-                    <input id="mexer-bytes-cliente" class="form-control" inputmode="numeric" autocomplete="off"
+                    <input id="mexer-bytes-cliente" aria-describedby="mexer-bytes-cliente-eco" class="form-control" inputmode="numeric" autocomplete="off"
                            data-history="off" maxlength="8" value="50"
                            title="Dados do cliente depois do aperto de mão; 0 para nenhum">
-                    <span class="acad-eco" id="mexer-bytes-cliente-eco" aria-live="polite"></span>
+                    <span class="acad-eco" id="mexer-bytes-cliente-eco"></span>
                 </div>
                 <div class="col-12 col-md-6 acad-campo">
                     <label for="mexer-bytes-servidor">
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">download</span>
                         Bytes que o servidor responde
                     </label>
-                    <input id="mexer-bytes-servidor" class="form-control" inputmode="numeric" autocomplete="off"
+                    <input id="mexer-bytes-servidor" aria-describedby="mexer-bytes-servidor-eco" class="form-control" inputmode="numeric" autocomplete="off"
                            data-history="off" maxlength="8" value="20"
                            title="Dados do servidor depois dos dados do cliente; 0 para nenhum">
-                    <span class="acad-eco" id="mexer-bytes-servidor-eco" aria-live="polite"></span>
+                    <span class="acad-eco" id="mexer-bytes-servidor-eco"></span>
                 </div>
             </div>
             <p class="acad-explica mt-2" id="mexer-nota" aria-live="polite"></p>
@@ -146,7 +146,7 @@
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">edit</span>
                         <span id="provar-rotulo">Sua resposta</span>
                     </label>
-                    <input id="provar-resposta" class="form-control" inputmode="numeric" autocomplete="off"
+                    <input id="provar-resposta" aria-describedby="provar-eco" class="form-control" inputmode="numeric" autocomplete="off"
                            data-history="off" maxlength="16" title="Escreva o número; só algarismos">
                 </div>
                 <div class="col-12 col-md-6 d-flex flex-wrap gap-2 align-items-center">
@@ -171,12 +171,12 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/academia/core/js/normalizador.js?v=20261002"></script>
-<script src="/academia/core/js/motor.js?v=20261001"></script>
-<script src="/academia/core/js/progresso.js?v=20261001d"></script>
-<script src="/academia/core/js/niveis.js?v=20261001c"></script>
-<script src="/academia/core/js/sinais.js?v=20261002"></script>
-<script src="/academia/transporte/js/contas-transporte.js?v=20261001"></script>
-<script src="/academia/transporte/js/aperto.js?v=20261002"></script>
+<script src="/academia/core/js/normalizador.js?v=20261002b"></script>
+<script src="/academia/core/js/motor.js?v=20261002b"></script>
+<script src="/academia/core/js/progresso.js?v=20261002b"></script>
+<script src="/academia/core/js/niveis.js?v=20261002b"></script>
+<script src="/academia/core/js/sinais.js?v=20261002b"></script>
+<script src="/academia/transporte/js/contas-transporte.js?v=20261002b"></script>
+<script src="/academia/transporte/js/aperto.js?v=20261002b"></script>
 {/extraScripts}
 {/include}

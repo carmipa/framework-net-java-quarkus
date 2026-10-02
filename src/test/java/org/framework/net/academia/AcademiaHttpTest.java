@@ -151,8 +151,13 @@ class AcademiaHttpTest {
         }
         assertTrue(nav.matches("(?s).*href=\"" + licao.rota() + "\" class=\"acad-subaba active\" aria-current=\"page\".*"),
                 "a lição aberta não aparece marcada");
-        assertEquals(2, nav.split("aria-current=\"page\"", -1).length - 1,
-                "devem existir exatamente duas marcas de atual (o nível e a lição)");
+        // ACAD-11: a PÁGINA é a lição; o nível em que ela está é "true" (parte do caminho), não "page".
+        assertEquals(1, nav.split("aria-current=\"page\"", -1).length - 1,
+                "só a lição aberta é a página atual");
+        assertTrue(nav.matches("(?s).*aria-current=\"true\"\\s+data-acad-nav-nivel=\"" + nivel.id() + "\".*"),
+                "a marca de parte do caminho precisa estar no nível da lição");
+        assertEquals(1, nav.split("aria-current=\"true\"", -1).length - 1,
+                "o nível da lição aparece marcado como parte do caminho");
     }
 
     @Test

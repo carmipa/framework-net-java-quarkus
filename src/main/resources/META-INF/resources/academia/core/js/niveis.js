@@ -198,7 +198,7 @@
                 iconeETexto(alvo, info.icone, info.texto);
                 Object.keys(ESTADO).forEach(function (k) { link.classList.remove('estado-' + k); });
                 link.classList.add('estado-' + e.estado);
-                var aqui = link.getAttribute('aria-current') === 'page';
+                var aqui = link.hasAttribute('aria-current');
                 var req = e.requisito ? porId(atual.niveis, e.requisito) : null;
                 if (e.estado === 'bloqueado' && !aqui) {
                     if (link.hasAttribute('href')) {
@@ -207,10 +207,17 @@
                     }
                     link.setAttribute('aria-disabled', 'true');
                     link.setAttribute('title', (e.titulo || '') + ': bloqueado — conclua ' + (req ? req.titulo : 'o nível anterior') + ' para abrir');
+                    // ACAD-16: sem href o link sai da ordem do Tab, e o motivo morava só no title.
+                    link.setAttribute('tabindex', '0');
+                    link.setAttribute('role', 'link');
+                    link.setAttribute('aria-label', link.getAttribute('title'));
                 } else if (link.hasAttribute('data-acad-href')) {
                     link.setAttribute('href', link.getAttribute('data-acad-href'));
                     link.removeAttribute('data-acad-href');
                     link.removeAttribute('aria-disabled');
+                    link.removeAttribute('tabindex');
+                    link.removeAttribute('role');
+                    link.removeAttribute('aria-label');
                     link.setAttribute('title', 'Abre o nível ' + (e.titulo || ''));
                 }
             });

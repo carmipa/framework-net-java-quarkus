@@ -97,27 +97,27 @@
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">view_week</span>
                         Segmentos (1 a 64)
                     </label>
-                    <input id="mexer-segmentos" class="form-control" inputmode="numeric" autocomplete="off"
+                    <input id="mexer-segmentos" aria-describedby="mexer-segmentos-eco" class="form-control" inputmode="numeric" autocomplete="off"
                            data-history="off" maxlength="4" value="6" title="Quantos segmentos o emissor precisa entregar">
-                    <span class="acad-eco" id="mexer-segmentos-eco" aria-live="polite"></span>
+                    <span class="acad-eco" id="mexer-segmentos-eco"></span>
                 </div>
                 <div class="col-12 col-md-6 acad-campo">
                     <label for="mexer-janela">
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">width</span>
                         Janela (1 a 32)
                     </label>
-                    <input id="mexer-janela" class="form-control" inputmode="numeric" autocomplete="off"
+                    <input id="mexer-janela" aria-describedby="mexer-janela-eco" class="form-control" inputmode="numeric" autocomplete="off"
                            data-history="off" maxlength="4" value="4" title="Quantos segmentos podem estar no caminho sem confirmação">
-                    <span class="acad-eco" id="mexer-janela-eco" aria-live="polite"></span>
+                    <span class="acad-eco" id="mexer-janela-eco"></span>
                 </div>
                 <div class="col-12 col-md-6 acad-campo">
                     <label for="mexer-perdido">
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">block</span>
                         Segmento perdido
                     </label>
-                    <input id="mexer-perdido" class="form-control" inputmode="numeric" autocomplete="off"
+                    <input id="mexer-perdido" aria-describedby="mexer-perdido-eco" class="form-control" inputmode="numeric" autocomplete="off"
                            data-history="off" maxlength="4" value="2" title="Qual segmento se perde na primeira vez; deixe vazio para nenhum">
-                    <span class="acad-eco" id="mexer-perdido-eco" aria-live="polite"></span>
+                    <span class="acad-eco" id="mexer-perdido-eco"></span>
                 </div>
                 <div class="col-12 col-md-6 acad-campo">
                     <label for="mexer-modo">
@@ -150,7 +150,7 @@
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">edit</span>
                         <span id="provar-rotulo">Sua resposta</span>
                     </label>
-                    <input id="provar-resposta" class="form-control" inputmode="numeric" autocomplete="off"
+                    <input id="provar-resposta" aria-describedby="provar-eco" class="form-control" inputmode="numeric" autocomplete="off"
                            data-history="off" maxlength="8" title="Escreva o número; só algarismos">
                 </div>
                 <div class="col-12 col-md-6 d-flex flex-wrap gap-2 align-items-center">
@@ -175,12 +175,12 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/academia/core/js/normalizador.js?v=20261002"></script>
-<script src="/academia/core/js/motor.js?v=20261001"></script>
-<script src="/academia/core/js/progresso.js?v=20261001d"></script>
-<script src="/academia/core/js/niveis.js?v=20261001c"></script>
-<script src="/academia/core/js/sinais.js?v=20261002"></script>
-<script src="/academia/transporte/js/contas-transporte.js?v=20261001"></script>
-<script src="/academia/transporte/js/janela.js?v=20261002"></script>
+<script src="/academia/core/js/normalizador.js?v=20261002b"></script>
+<script src="/academia/core/js/motor.js?v=20261002b"></script>
+<script src="/academia/core/js/progresso.js?v=20261002b"></script>
+<script src="/academia/core/js/niveis.js?v=20261002b"></script>
+<script src="/academia/core/js/sinais.js?v=20261002b"></script>
+<script src="/academia/transporte/js/contas-transporte.js?v=20261002b"></script>
+<script src="/academia/transporte/js/janela.js?v=20261002b"></script>
 {/extraScripts}
 {/include}

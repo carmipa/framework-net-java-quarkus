@@ -101,27 +101,27 @@
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">lan</span>
                         Endereço IPv4
                     </label>
-                    <input id="mexer-ip" class="form-control" autocomplete="off" data-history="off" maxlength="32"
+                    <input id="mexer-ip" aria-describedby="mexer-ip-eco" class="form-control" autocomplete="off" data-history="off" maxlength="32"
                            value="192.168.10.77" title="Digite o endereço; a vírgula do teclado numérico vale como ponto">
-                    <span class="acad-eco" id="mexer-ip-eco" aria-live="polite"></span>
+                    <span class="acad-eco" id="mexer-ip-eco"></span>
                 </div>
                 <div class="col-12 col-md-4 acad-campo">
                     <label for="mexer-prefixo">
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">straighten</span>
                         Prefixo
                     </label>
-                    <input id="mexer-prefixo" class="form-control" inputmode="numeric" autocomplete="off"
+                    <input id="mexer-prefixo" aria-describedby="mexer-prefixo-eco" class="form-control" inputmode="numeric" autocomplete="off"
                            data-history="off" maxlength="8" value="/27" title="De /0 a /32; com ou sem a barra">
-                    <span class="acad-eco" id="mexer-prefixo-eco" aria-live="polite"></span>
+                    <span class="acad-eco" id="mexer-prefixo-eco"></span>
                 </div>
                 <div class="col-12 col-md-4 acad-campo">
                     <label for="mexer-mascara">
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">filter_alt</span>
                         Máscara
                     </label>
-                    <input id="mexer-mascara" class="form-control" autocomplete="off" data-history="off" maxlength="32"
+                    <input id="mexer-mascara" aria-describedby="mexer-mascara-eco" class="form-control" autocomplete="off" data-history="off" maxlength="32"
                            value="255.255.255.224" title="Digite a máscara; ela precisa ter todos os bits 1 antes dos 0">
-                    <span class="acad-eco" id="mexer-mascara-eco" aria-live="polite"></span>
+                    <span class="acad-eco" id="mexer-mascara-eco"></span>
                 </div>
             </div>
             <div class="acad-regua" id="mexer-regua" role="group" aria-label="Régua de 32 bits: ative um bit para mover a divisória"></div>
@@ -148,7 +148,7 @@
                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">edit</span>
                         <span id="provar-rotulo">Sua resposta</span>
                     </label>
-                    <input id="provar-resposta" class="form-control" autocomplete="off" data-history="off"
+                    <input id="provar-resposta" aria-describedby="provar-eco" class="form-control" autocomplete="off" data-history="off"
                            maxlength="32" title="Escreva a resposta; o formato aceito aparece logo abaixo">
                 </div>
                 <div class="col-12 col-md-6 d-flex flex-wrap gap-2 align-items-center">
@@ -173,13 +173,13 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/academia/core/js/normalizador.js?v=20261002"></script>
-<script src="/academia/core/js/motor.js?v=20261001"></script>
-<script src="/academia/core/js/progresso.js?v=20261001d"></script>
-<script src="/academia/core/js/niveis.js?v=20261001c"></script>
-<script src="/academia/core/js/sinais.js?v=20261002"></script>
-<script src="/academia/ipv4/js/contas-ipv4.js?v=20261001"></script>
-<script src="/academia/ipv4/js/regua.js?v=20261001"></script>
-<script src="/academia/ipv4/js/mascara.js?v=20261002"></script>
+<script src="/academia/core/js/normalizador.js?v=20261002b"></script>
+<script src="/academia/core/js/motor.js?v=20261002b"></script>
+<script src="/academia/core/js/progresso.js?v=20261002b"></script>
+<script src="/academia/core/js/niveis.js?v=20261002b"></script>
+<script src="/academia/core/js/sinais.js?v=20261002b"></script>
+<script src="/academia/ipv4/js/contas-ipv4.js?v=20261002b"></script>
+<script src="/academia/ipv4/js/regua.js?v=20261002b"></script>
+<script src="/academia/ipv4/js/mascara.js?v=20261002b"></script>
 {/extraScripts}
 {/include}
