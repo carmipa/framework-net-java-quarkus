@@ -110,7 +110,7 @@ public class ExportTxtService {
                 + "  Padrao deste laboratorio: roteadores Cisco " + PACKET_TRACER_ROUTER_MODEL
                 + " e switches Cisco " + PACKET_TRACER_SWITCH_MODEL + ".\n"
                 + "  Os comandos CLI assumem interfaces típicas desses modelos "
-                + "(ex.: GigabitEthernet0/0, Serial0/3/n no roteador).\n"
+                + "(ex.: GigabitEthernet0/0; seriais Serial0/3/0 e 0/3/1, depois 0/2, 0/1 e 0/0).\n"
                 + "\n";
     }
 
@@ -153,6 +153,34 @@ public class ExportTxtService {
         return hints;
     }
 
+    /**
+     * Portas seriais de um Cisco 2911 com quatro HWIC-2T, na ordem em que o laboratorio as usa.
+     *
+     * <p>A HWIC-2T tem as portas 0 e 1; "Serial0/3/2" em diante nao existe (auditoria CALC-18). A ordem
+     * comeca no slot 3, que e o que o Packet Tracer do laboratorio traz montado.</p>
+     */
+    private static final List<String> SERIAIS_DO_2911 = List.of(
+            "Serial0/3/0", "Serial0/3/1", "Serial0/2/0", "Serial0/2/1",
+            "Serial0/1/0", "Serial0/1/1", "Serial0/0/0", "Serial0/0/1");
+
+    /**
+     * Nome da n-esima serial do roteador do laboratorio.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> o script e a tabela do Packet Tracer citam a mesma porta, e uma porta
+     * que existe no 2911.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> ate oito seriais, todas reais (quatro HWIC-2T); da nona em diante o
+     * nome segue o slot 3 so para nao sumir, e o script avisa que faltam modulos.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> nao lanca; indice negativo cai na primeira porta.</p>
+     */
+    public static String serialDoLaboratorio(int indice) {
+        if (indice < 0) {
+            return SERIAIS_DO_2911.get(0);
+        }
+        return indice < SERIAIS_DO_2911.size() ? SERIAIS_DO_2911.get(indice) : "Serial0/3/" + indice;
+    }
+
     public String routerExportFilename(String locationName) {
         return "R-" + normalizationService.normalizeCliIdentifier(locationName, "ROTEADOR") + ".txt";
     }
@@ -182,7 +210,7 @@ public class ExportTxtService {
                 String neighborKey = endpointA.equals(location.getLocationKey()) ? endpointB : endpointA;
                 LanBlock neighbor = locationsByKey.get(neighborKey);
                 String neighborName = neighbor != null ? neighbor.getLocationName() : neighborKey;
-                rows.add(row("Serial0/3/" + serialIdx, link.getIps().get(location.getLocationKey()),
+                rows.add(row(serialDoLaboratorio(serialIdx), link.getIps().get(location.getLocationKey()),
                         link.getNetmask(), "/" + link.getPrefix(), "WAN",
                         link.getName() + " → vizinho " + neighborName));
                 serialIdx++;
@@ -259,12 +287,19 @@ public class ExportTxtService {
                 String neighborCli = normalizationService.normalizeCliIdentifier(
                         neighbor != null ? neighbor.getLocationName() : neighborKey, "DESTINO");
                 List<String> serialLines = new ArrayList<>();
-                serialLines.add("interface Serial0/3/" + serialIdx);
+                if (serialIdx >= SERIAIS_DO_2911.size()) {
+                    serialLines.add("! este roteador precisa de mais de " + SERIAIS_DO_2911.size()
+                            + " seriais: o 2911 com quatro HWIC-2T tem só essas; acrescente modulos");
+                }
+                serialLines.add("interface " + serialDoLaboratorio(serialIdx));
                 serialLines.add(" description LINK_PARA_" + neighborCli);
                 serialLines.add(" ip address " + link.getIps().get(location.getLocationKey()) + " " + link.getNetmask());
                 serialLines.add(" no shutdown");
-                if (serialIdx == 0) {
-                    serialLines.add("! clock rate na primeira WAN: convencao de aula; "
+                // Uma ponta por ENLACE (a primeira do par) leva o clock rate. Pela posicao da serial no
+                // roteador, enlace que nao era o primeiro de nenhum lado ficava sem relogio e enlace que era
+                // o primeiro dos dois ganhava dois (auditoria CALC-17).
+                if (endpointA.equals(location.getLocationKey())) {
+                    serialLines.add("! clock rate nesta ponta do enlace (lado DCE por convencao de aula); "
                             + "no PT use a porta marcada como DCE (senao mova ao vizinho)");
                     serialLines.add(" clock rate " + LAB_SERIAL_CLOCK_BPS);
                 }

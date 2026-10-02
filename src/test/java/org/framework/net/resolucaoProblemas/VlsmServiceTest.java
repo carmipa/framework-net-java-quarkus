@@ -87,6 +87,27 @@ class VlsmServiceTest {
         assertFalse(cli.contains("\n login\n"), "SSH com senha de linha não autentica:\n" + cli);
     }
 
+    @Inject
+    org.framework.net.resolucaoProblemas.application.parsing.EngenhariaReversaService engenhariaReversa;
+
+    /**
+     * Auditoria CALC-17/CALC-18: o hub de 8 roteadores tem 7 seriais, todas portas reais do 2911 (HWIC-2T
+     * tem 0 e 1), e cada enlace leva clock rate em UMA ponta — o script do Projetar, colado na Engenharia
+     * reversa do próprio site, não pode ser reprovado pelo relógio.
+     */
+    @Test
+    void seriaisReaisEClockRateUmaVezPorEnlace() {
+        NetworkScenarioResult s = solveDemo(VlsmNormalizationService.EIGHT_ROUTERS_DEMO);
+        String todos = String.join("\n-------------\n", s.getRouterCommands().values());
+        assertFalse(todos.matches("(?s).*Serial0/\\d/[2-9].*"), "porta que o 2911 não tem:\n" + todos);
+        // A auditoria do próprio site vem antes da contagem: é ela que precisa enxergar o relógio errado.
+        var cenario = engenhariaReversa.interpretar(todos);
+        assertTrue(cenario.achados().stream().noneMatch(a -> "Camada física".equals(a.categoria())),
+                () -> "o próprio script do Projetar reprovado pelo relógio: " + cenario.achados());
+        long relogios = todos.lines().filter(l -> l.strip().startsWith("clock rate ")).count();
+        assertEquals(s.getWanLinks().size(), relogios, "um clock rate por enlace");
+    }
+
     /** Fronteira do CONT-22: o modo Telnet continua com senha de linha, sem usuário nem chave RSA. */
     @Test
     void telnetContinuaComSenhaDeLinha() {
