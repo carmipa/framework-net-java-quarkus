@@ -55,7 +55,7 @@
     {
       "titulo": "Ponto final (FQDN)",
       "icone": "public",
-      "texto": "Um nome terminado em ponto (exemplo.com.) é um FQDN absoluto. Sem o ponto, as ferramentas podem anexar domínios de busca do resolv.conf, alterando o resultado.",
+      "texto": "Um nome terminado em ponto (example.com.) é um FQDN absoluto. Sem o ponto, as ferramentas podem anexar domínios de busca do resolv.conf, alterando o resultado.",
       "destaque": "Use +short e o ponto final quando quiser precisão e evitar surpresas de search domain."
     },
     {

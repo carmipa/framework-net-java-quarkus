@@ -208,19 +208,19 @@
     {
       "titulo": "1. Ver o handshake e a cadeia de um site",
       "cenario": "Inspecionar versão, cipher e a cadeia de certificados servida.",
-      "comandos": "openssl s_client -connect frameworknet.carminati.dev.br:443 -servername frameworknet.carminati.dev.br </dev/null\n\n# só a versão e a cipher negociadas:\nopenssl s_client -connect exemplo.com:443 </dev/null 2>/dev/null | grep -E 'Protocol|Cipher'",
+      "comandos": "openssl s_client -connect frameworknet.carminati.dev.br:443 -servername frameworknet.carminati.dev.br </dev/null\n\n# só a versão e a cipher negociadas:\nopenssl s_client -connect example.com:443 </dev/null 2>/dev/null | grep -E 'Protocol|Cipher'",
       "explicacao": "A seção 'Certificate chain' mostra a ordem enviada (0 = folha, 1 = intermediária). 'Verify return code: 0 (ok)' confirma a validação. Se aparecer 'unable to get local issuer certificate', o servidor esqueceu de enviar a intermediária."
     },
     {
       "titulo": "2. Ler os campos do certificado de folha",
       "cenario": "Conferir nome (SAN), validade e emissor.",
-      "comandos": "openssl s_client -connect exemplo.com:443 -servername exemplo.com </dev/null 2>/dev/null \\\n  | openssl x509 -noout -subject -issuer -dates -ext subjectAltName",
+      "comandos": "openssl s_client -connect example.com:443 -servername example.com </dev/null 2>/dev/null \\\n  | openssl x509 -noout -subject -issuer -dates -ext subjectAltName",
       "explicacao": "O que vale é o subjectAltName (SAN) — o CN é legado. 'notAfter' é a expiração. O 'issuer' é a CA intermediária; se for você mesmo, é autoassinado. Nome no SAN diferente do host acessado é o clássico 'name mismatch'."
     },
     {
       "titulo": "3. Testar quais versões/ciphers o servidor aceita",
       "cenario": "Auditar se ainda há protocolo ou cipher legado habilitado.",
-      "comandos": "# TLS 1.0 ainda responde? (esperado: falhar)\n# no OpenSSL 3 o cliente recusa TLS 1.0 sozinho; o SECLEVEL=0 tira essa trava do LADO DO TESTE\nopenssl s_client -connect example.com:443 -tls1 -cipher 'DEFAULT:@SECLEVEL=0' </dev/null\n\n# varredura completa, se disponível:\ntestssl.sh --quiet example.com",
+      "comandos": "# TLS 1.0 ainda responde? (esperado: falhar)\n# no OpenSSL 3 o cliente recusa TLS 1.0 sozinho; o SECLEVEL=0 tira essa trava do LADO DO TESTE\nopenssl s_client -connect example.com:443 -tls1 -cipher 'DEFAULT:@SECLEVEL=0' </dev/null\n\n# varredura completa do SEU servidor (troque o nome), se disponível:\ntestssl.sh --quiet servidor.example.com",
       "explicacao": "Se o -tls1 conecta, o servidor ainda aceita TLS 1.0 — desligue. Sem o @SECLEVEL=0, um OpenSSL 3 falha por conta própria e o teste diria 'não aceita' mesmo com o servidor aceitando. O testssl.sh classifica protocolo, cipher, forward secrecy, vulnerabilidades conhecidas e a cadeia, tudo de uma vez, sem tocar em nada no servidor."
     },
     {

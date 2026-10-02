@@ -279,19 +279,19 @@
       "sintoma": "100% de perda no ping, mas o host claramente está no ar (site abre, SSH conecta)",
       "causa_provavel": "O host ou um firewall no caminho está bloqueando ICMP Echo (tipos 8/0). O serviço funciona; só o ping foi filtrado.",
       "leitura": "Ping não é prova de que o host caiu — muitos ambientes bloqueiam Echo por política. Teste a porta real do serviço em vez de confiar só no ping.",
-      "comando": "ping -c 4 host.exemplo.com; nc -zv host.exemplo.com 443"
+      "comando": "ping -c 4 host.example.com; nc -zv host.example.com 443"
     },
     {
       "sintoma": "Traceroute mostra asteriscos (* * *) em um ou mais saltos",
       "causa_provavel": "Aquele roteador não gera ou tem rate limit de Time Exceeded, ou filtra ICMP. Não significa necessariamente que a rota está quebrada.",
       "leitura": "Asteriscos no meio com saltos posteriores respondendo = salto silencioso, rota OK. Asteriscos até o fim = o caminho realmente não completa após aquele ponto.",
-      "comando": "mtr -r -c 10 host.exemplo.com"
+      "comando": "mtr -r -c 10 host.example.com"
     },
     {
       "sintoma": "Conexões travam ao transferir arquivos grandes, mas o ping simples funciona",
       "causa_provavel": "PMTUD quebrado: um enlace tem MTU menor e o ICMP tipo 3 código 4 ('fragmentation needed') está sendo bloqueado. Pacotes grandes somem sem aviso (buraco negro de MTU).",
       "leitura": "Handshake e pacotes pequenos passam; pacotes grandes com DF são descartados silenciosamente. O ICMP essencial precisa ser liberado.",
-      "comando": "ping -M do -s 1472 host.exemplo.com   # reduza o tamanho ate parar de falhar"
+      "comando": "ping -M do -s 1472 host.example.com   # reduza o tamanho ate parar de falhar"
     },
     {
       "sintoma": "tcpdump mostra 'ICMP host unreachable' ou 'port unreachable' chegando",

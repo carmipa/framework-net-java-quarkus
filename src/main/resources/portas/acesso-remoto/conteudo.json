@@ -261,7 +261,7 @@
     {
       "titulo": "Descobrir portas de acesso remoto expostas",
       "cenario": "Verificar se 22, 23, 3389 ou 5900 estão abertas onde não deveriam.",
-      "comandos": "# Varrer as portas de acesso remoto de um host\nnmap -p 22,23,3389,5900 -sV alvo.exemplo.com\n\n# Ver quais portas o próprio servidor está escutando\nsudo ss -tlnp | grep -E ':(22|23|3389|5900)'",
+      "comandos": "# Varrer as portas de acesso remoto de um host\nnmap -p 22,23,3389,5900 -sV scanme.nmap.org\n\n# Ver quais portas o próprio servidor está escutando\nsudo ss -tlnp | grep -E ':(22|23|3389|5900)'",
       "explicacao": "O nmap revela quais serviços estão acessíveis e suas versões (útil para detectar RDP sem patch). O ss mostra o que a máquina expõe localmente. Qualquer 23 aberta, ou 3389/5900 acessível pela internet, é um item para corrigir imediatamente."
     }
   ],

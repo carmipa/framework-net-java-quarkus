@@ -278,19 +278,19 @@
     {
       "titulo": "Descobrir quais portas de e-mail estão abertas",
       "cenario": "Você quer saber se um servidor expõe portas claras (110/143) ou apenas as seguras, e se a 25 está aberta ao mundo.",
-      "comandos": "# Varredura das portas da família e-mail\nnmap -p 25,110,143,465,587,993,995 mail.exemplo.com\n\n# Detecção de serviço e versão nessas portas\nnmap -sV -p 25,110,143,465,587,993,995 mail.exemplo.com\n\n# Ver quais métodos de autenticação e STARTTLS o SMTP anuncia\nnmap --script smtp-commands -p 25,587 mail.exemplo.com",
+      "comandos": "# Varredura das portas da família e-mail\nnmap -p 25,110,143,465,587,993,995 mail.example.com\n\n# Detecção de serviço e versão nessas portas\nnmap -sV -p 25,110,143,465,587,993,995 mail.example.com\n\n# Ver quais métodos de autenticação e STARTTLS o SMTP anuncia\nnmap --script smtp-commands -p 25,587 mail.example.com",
       "explicacao": "Se 110 ou 143 aparecerem 'open', há transporte em texto claro exposto - candidato a desativação. O script smtp-commands mostra se o servidor anuncia STARTTLS e AUTH; um servidor de submissão saudável exige ambos na 587."
     },
     {
       "titulo": "Testar se a porta 25 é um open relay",
       "cenario": "Confirmar, a partir de FORA da rede, se o servidor retransmite e-mail de remetente e destinatário externos (o que caracteriza open relay).",
-      "comandos": "# Script pronto do nmap para testar relay aberto (executar de fora)\nnmap -p 25 --script smtp-open-relay mail.exemplo.com\n\n# Teste manual com o cliente SMTP (use um MAIL FROM e RCPT TO EXTERNOS)\nswaks --server mail.exemplo.com:25 \\\n  --from teste@dominio-externo.com \\\n  --to alvo@outro-dominio-externo.com\n\n# Inspecionar STARTTLS na submissão\nopenssl s_client -starttls smtp -connect mail.exemplo.com:587",
+      "comandos": "# Script pronto do nmap para testar relay aberto (executar de fora)\nnmap -p 25 --script smtp-open-relay mail.example.com\n\n# Teste manual com o cliente SMTP (use um MAIL FROM e RCPT TO EXTERNOS)\nswaks --server mail.example.com:25 \\\n  --from teste@example.org \\\n  --to alvo@example.net\n\n# Inspecionar STARTTLS na submissão\nopenssl s_client -starttls smtp -connect mail.example.com:587",
       "explicacao": "Se o swaks conseguir entregar para um destino externo sem autenticar, o relay está ABERTO - falha crítica a corrigir imediatamente. Rode o teste de fora da rede: por dentro, o servidor pode confiar no IP local e dar um falso 'seguro'. O openssl confirma que a 587 promove a conexão para TLS antes do login."
     },
     {
       "titulo": "Capturar credenciais em texto claro no POP3/IMAP",
       "cenario": "Demonstrar em laboratório por que 110/143 são perigosas: a senha viaja legível na rede.",
-      "comandos": "# Capturar tráfego POP3 em claro (porta 110) e ver USER/PASS\nsudo tcpdump -i any -A 'tcp port 110'\n\n# Capturar IMAP em claro (porta 143) e ver o comando LOGIN\nsudo tcpdump -i any -A 'tcp port 143'\n\n# Comparar: conexão IMAPS segura (993) - conteúdo fica cifrado\nopenssl s_client -connect mail.exemplo.com:993",
+      "comandos": "# Capturar tráfego POP3 em claro (porta 110) e ver USER/PASS\nsudo tcpdump -i any -A 'tcp port 110'\n\n# Capturar IMAP em claro (porta 143) e ver o comando LOGIN\nsudo tcpdump -i any -A 'tcp port 143'\n\n# Comparar: conexão IMAPS segura (993) - conteúdo fica cifrado\nopenssl s_client -connect mail.example.com:993",
       "explicacao": "No tcpdump das portas claras, os comandos USER, PASS e LOGIN aparecem em texto legível - qualquer um na rede lê a senha. Já a sessão 993 pelo openssl mostra apenas bytes cifrados após o handshake TLS. É a prova prática de por que só as portas seguras devem ficar ativas."
     }
   ],
@@ -298,19 +298,19 @@
     {
       "sintoma": "E-mails de saída não são entregues e o IP entrou em blocklist",
       "causa_provavel": "Servidor operando como open relay na porta 25, usado por spammers",
-      "comando": "nmap -p 25 --script smtp-open-relay mail.exemplo.com",
+      "comando": "nmap -p 25 --script smtp-open-relay mail.example.com",
       "leitura": "Se o script indicar relay permitido, feche o relay (só domínios locais ou remetentes autenticados) e solicite a remoção das listas negras após corrigir."
     },
     {
       "sintoma": "Cliente de e-mail pede senha repetidamente ou avisa 'conexão insegura'",
       "causa_provavel": "Cliente apontado para 110/143 sem TLS, ou 587 sem STARTTLS obrigatório",
-      "comando": "openssl s_client -starttls imap -connect mail.exemplo.com:143",
+      "comando": "openssl s_client -starttls imap -connect mail.example.com:143",
       "leitura": "Se o STARTTLS não for oferecido, migre o cliente para 993/995 (TLS implícito) e desative as portas claras no servidor."
     },
     {
       "sintoma": "Envios saem às vezes cifrados, às vezes em texto claro",
       "causa_provavel": "STARTTLS opcional na submissão, sujeito a downgrade/stripping",
-      "comando": "nmap --script smtp-commands -p 587 mail.exemplo.com",
+      "comando": "nmap --script smtp-commands -p 587 mail.example.com",
       "leitura": "Se o STARTTLS aparecer como opcional, torne o TLS obrigatório na 587 (ou migre para a 465 implícita) e configure o cliente para exigir criptografia."
     },
     {

@@ -178,25 +178,25 @@
       "sintoma": "Ping retorna 100% de perda, mas o site/serviço continua acessível no navegador ou por SSH",
       "causa_provavel": "ICMP está bloqueado ou despriorizado por firewall no host ou no caminho; o serviço em si (TCP) está no ar",
       "leitura": "Não conclua que o host caiu. Teste a porta real do serviço em vez do ICMP.",
-      "comando": "# Testa a porta TCP diretamente, ignorando ICMP\ncurl -I https://exemplo.com\nnc -vz exemplo.com 443"
+      "comando": "# Testa a porta TCP diretamente, ignorando ICMP\ncurl -I https://example.com\nnc -vz example.com 443"
     },
     {
       "sintoma": "Traceroute mostra asteriscos (* * *) em um ou mais saltos do meio, mas o último salto responde normalmente",
       "causa_provavel": "Roteadores intermediários configurados para não gerar Time Exceeded (ou com rate limit de ICMP); o tráfego passa por eles normalmente",
       "leitura": "Asteriscos no meio com destino respondendo = rota saudável. Só preocupa se os asteriscos vão do salto X até o fim.",
-      "comando": "# Confirme trocando o protocolo de sondagem\nsudo traceroute -I -n exemplo.com\nsudo traceroute -T -p 443 -n exemplo.com"
+      "comando": "# Confirme trocando o protocolo de sondagem\nsudo traceroute -I -n example.com\nsudo traceroute -T -p 443 -n example.com"
     },
     {
       "sintoma": "mtr acusa Loss% alto num salto intermediário, mas 0% no salto final (destino)",
       "causa_provavel": "Aquele roteador limita respostas ICMP direcionadas a ele próprio, mas encaminha o tráfego de passagem sem perda",
       "leitura": "Perda que não chega ao último salto é ruído cosmético. Só é perda real quando persiste até o destino.",
-      "comando": "# Rode mais ciclos e compare a perda do salto suspeito com a do último\nsudo mtr --report -c 200 -n exemplo.com"
+      "comando": "# Rode mais ciclos e compare a perda do salto suspeito com a do último\nsudo mtr --report -c 200 -n example.com"
     },
     {
       "sintoma": "Transferências grandes travam ou ficam lentíssimas, mas ping pequeno e navegação leve funcionam",
       "causa_provavel": "MTU menor em algum enlace do caminho (VPN/PPPoE) descartando pacotes grandes com DF (Path MTU Discovery quebrado por ICMP bloqueado)",
       "leitura": "Se pacotes pequenos passam e grandes não, o problema é MTU, não alcance.",
-      "comando": "# Ache o maior payload que passa sem fragmentar\nping -M do -s 1472 -c 3 exemplo.com\nping -M do -s 1400 -c 3 exemplo.com"
+      "comando": "# Ache o maior payload que passa sem fragmentar\nping -M do -s 1472 -c 3 example.com\nping -M do -s 1400 -c 3 example.com"
     }
   ]
 }

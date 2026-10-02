@@ -89,7 +89,7 @@
         [
           "EHLO / HELO",
           "Identifica o cliente e abre a sessão; EHLO ativa as extensões ESMTP",
-          "EHLO mail.exemplo.com",
+          "EHLO mail.example.com",
           "250 lista de extensões"
         ],
         [
@@ -107,13 +107,13 @@
         [
           "MAIL FROM",
           "Define o remetente do envelope (return-path)",
-          "MAIL FROM:<ana@exemplo.com>",
+          "MAIL FROM:<ana@example.com>",
           "250 OK"
         ],
         [
           "RCPT TO",
           "Define cada destinatário (pode repetir)",
-          "RCPT TO:<beto@destino.com>",
+          "RCPT TO:<beto@example.net>",
           "250 OK ou 550"
         ],
         [
@@ -334,25 +334,25 @@
     {
       "titulo": "Inspecionar STARTTLS no submission",
       "cenario": "Confirmar que a porta 587 aceita STARTTLS e ver as extensões ESMTP e o certificado.",
-      "comandos": "openssl s_client -starttls smtp -crlf -connect smtp.exemplo.com:587\n# após o handshake TLS:\nEHLO teste.local\nQUIT",
+      "comandos": "openssl s_client -starttls smtp -crlf -connect smtp.example.com:587\n# após o handshake TLS:\nEHLO teste.local\nQUIT",
       "explicacao": "O openssl abre a conexão em claro na 587, envia STARTTLS e faz o handshake TLS; a partir daí você fala SMTP dentro do canal cifrado. Verifique 'Verify return code: 0' e as linhas 250-STARTTLS e 250-AUTH na resposta ao EHLO."
     },
     {
       "titulo": "Enviar um e-mail de teste com swaks",
       "cenario": "Depurar entrega e autenticação ponta a ponta, vendo cada linha da conversa SMTP.",
-      "comandos": "swaks --to beto@destino.com --from ana@exemplo.com \\\n      --server smtp.exemplo.com:587 --tls \\\n      --auth LOGIN --auth-user ana@exemplo.com",
+      "comandos": "swaks --to beto@example.net --from ana@example.com \\\n      --server smtp.example.com:587 --tls \\\n      --auth LOGIN --auth-user ana@example.com",
       "explicacao": "O swaks conduz toda a sessão (EHLO, STARTTLS via --tls, AUTH, MAIL FROM, RCPT TO, DATA) e imprime cada comando e o código de resposta. No swaks, --tls exige STARTTLS; para TLS implícito na 465 use --tlsc. Ideal para isolar em que passo a entrega falha."
     },
     {
       "titulo": "Conferir TLS implícito (465, 993, 995)",
       "cenario": "Validar que as portas de TLS implícito respondem cifradas e conferir o certificado.",
-      "comandos": "openssl s_client -connect smtp.exemplo.com:465 -crlf\nopenssl s_client -connect imap.exemplo.com:993 -crlf\nopenssl s_client -connect pop.exemplo.com:995 -crlf",
+      "comandos": "openssl s_client -connect smtp.example.com:465 -crlf\nopenssl s_client -connect imap.example.com:993 -crlf\nopenssl s_client -connect pop.example.com:995 -crlf",
       "explicacao": "Nessas portas o TLS é imediato, sem STARTTLS. Serve para inspecionar validade e CN/SAN do certificado e confirmar que a porta implícita está ativa e cifrada."
     },
     {
       "titulo": "Máquina de estados do SMTP em laboratório",
       "cenario": "Ver a sequência de códigos passo a passo em um servidor de teste isolado.",
-      "comandos": "nc smtp-lab.local 25\nEHLO teste.local\nMAIL FROM:<ana@exemplo.com>\nRCPT TO:<beto@exemplo.com>\nDATA\nSubject: teste\n\ncorpo da mensagem\n.\nQUIT",
+      "comandos": "nc smtp-lab.local 25\nEHLO teste.local\nMAIL FROM:<ana@example.com>\nRCPT TO:<beto@example.com>\nDATA\nSubject: teste\n\ncorpo da mensagem\n.\nQUIT",
       "explicacao": "Mostra o SMTP cru e os códigos 220 -> 250 -> 250 -> 250 -> 354 -> 250 -> 221. Use apenas em servidor de laboratório: na porta 25 da Internet o tráfego vai em texto puro."
     }
   ],
@@ -360,31 +360,31 @@
     {
       "sintoma": "'Relay access denied' (550 5.7.1) ao enviar",
       "causa_provavel": "Cliente tentando enviar sem AUTH ou pela porta 25 (relay) em vez do submission 587/465.",
-      "comando": "swaks --server smtp.exemplo.com:587 --tls --auth LOGIN --auth-user ana@exemplo.com",
+      "comando": "swaks --server smtp.example.com:587 --tls --auth LOGIN --auth-user ana@example.com",
       "leitura": "235 após o AUTH e depois 250 no RCPT TO indicam submission autenticado funcionando."
     },
     {
       "sintoma": "E-mail cai no spam / DMARC fail",
       "causa_provavel": "SPF ou DKIM ausente ou desalinhado com o domínio do From visível.",
-      "comando": "dig +short TXT exemplo.com ; dig +short TXT _dmarc.exemplo.com ; dig +short TXT seletor._domainkey.exemplo.com",
+      "comando": "dig +short TXT example.com ; dig +short TXT _dmarc.example.com ; dig +short TXT seletor._domainkey.example.com",
       "leitura": "Espere v=spf1 ... -all, v=DMARC1; p=... e v=DKIM1; k=rsa; p=... Sem o registro DMARC não há política; para o DMARC passar basta SPF OU DKIM alinhado com o From — reprova quando NENHUM dos dois alinha."
     },
     {
       "sintoma": "STARTTLS não aparece / cliente cai para texto puro",
       "causa_provavel": "MTA sem TLS configurado ou stripping de STARTTLS na rede.",
-      "comando": "openssl s_client -starttls smtp -connect smtp.exemplo.com:587",
+      "comando": "openssl s_client -starttls smtp -connect smtp.example.com:587",
       "leitura": "A linha 250-STARTTLS na resposta do EHLO e 'Verify return code: 0' confirmam TLS disponível e handshake concluído."
     },
     {
       "sintoma": "Conexão trava ou dá timeout na porta 25 saindo da rede",
       "causa_provavel": "Provedor bloqueia a 25 de saída (medida anti-spam); o correto é usar submission.",
-      "comando": "openssl s_client -connect smtp.exemplo.com:465   # ou -starttls smtp -connect smtp.exemplo.com:587",
+      "comando": "openssl s_client -connect smtp.example.com:465   # ou -starttls smtp -connect smtp.example.com:587",
       "leitura": "Banner 220 significa porta liberada; ausência de resposta na 25 e liberação na 465/587 confirmam o bloqueio."
     },
     {
       "sintoma": "A mesma mensagem some ao abrir em outro dispositivo",
       "causa_provavel": "Conta configurada como POP3 (baixa e apaga) em vez de IMAP.",
-      "comando": "openssl s_client -connect mail.exemplo.com:993   # IMAP  vs  :995 POP3",
+      "comando": "openssl s_client -connect mail.example.com:993   # IMAP  vs  :995 POP3",
       "leitura": "993/143 = IMAP (sincroniza e mantém no servidor); 995/110 = POP3 (baixa e remove) - troque para IMAP para ver a caixa em todos os aparelhos."
     }
   ]

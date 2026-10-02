@@ -85,13 +85,13 @@ public class LabDnsIcmpService {
         List<RegistroTrafego> registros() {
             return switch (this) {
                 case DNS -> List.of(
-                        new RegistroTrafego("DNS", "A? www.exemplo.com",
+                        new RegistroTrafego("DNS", "A? www.example.com",
                                 "consulta A comum, nome curto", NORMAL,
                                 "Resolução típica de um site — nada a assinalar."),
-                        new RegistroTrafego("DNS", "AAAA? mail.exemplo.com",
+                        new RegistroTrafego("DNS", "AAAA? mail.example.com",
                                 "consulta AAAA (IPv6) comum", NORMAL,
                                 "Consulta de rotina para um serviço conhecido."),
-                        new RegistroTrafego("DNS", "A? cdn.exemplo.com — 300 consultas/min",
+                        new RegistroTrafego("DNS", "A? cdn.example.com — 300 consultas/min",
                                 "alto volume para um mesmo domínio de CDN", NORMAL,
                                 "Volume alto, mas para um CDN legítimo: é o caso clássico de FALSO POSITIVO se olhar só a taxa."),
                         new RegistroTrafego("DNS", "TXT? a8f3k2j9q1z7x4b2.dados.tunnel.evil.com",

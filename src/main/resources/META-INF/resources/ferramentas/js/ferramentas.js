@@ -5,6 +5,12 @@
  * opções, explicando cada flag. Nada é executado nem enviado ao servidor — é um
  * gerador didático de linha de comando.
  *
+ * Invariantes: o alvo padrão de cada ferramenta é um nome que pode ser usado sem
+ * atingir terceiro — example.com (reservado, RFC 2606) para consulta e conexão
+ * única, scanme.nmap.org (o host que o projeto Nmap autoriza varrer) para o nmap.
+ * Trocar de ferramenta só troca o alvo se ele ainda for um desses padrões: o que a
+ * pessoa digitou nunca é sobrescrito.
+ *
  * Comportamento em caso de falha: ausência dos elementos esperados não faz nada;
  * navegador sem clipboard mostra aviso no botão copiar.
  */
@@ -13,7 +19,7 @@
 
     var TOOLS = {
         dig: {
-            base: "dig", alvoPos: "fim",
+            base: "dig", alvoPos: "fim", alvoPadrao: "example.com",
             opcoes: [
                 { flag: "+short", label: "Resposta curta", exp: "+short mostra só a resposta, sem a seção completa." },
                 { flag: "MX", label: "Registro MX", exp: "Consulta os servidores de e-mail do domínio." },
@@ -22,7 +28,7 @@
             ]
         },
         nmap: {
-            base: "nmap", alvoPos: "fim",
+            base: "nmap", alvoPos: "fim", alvoPadrao: "scanme.nmap.org",
             opcoes: [
                 { flag: "-sS", label: "SYN scan", exp: "-sS é o scan SYN (meio-aberto), rápido e discreto (requer root)." },
                 { flag: "-sV", label: "Versão do serviço", exp: "-sV tenta identificar o software e a versão de cada porta." },
@@ -31,7 +37,7 @@
             ]
         },
         tcpdump: {
-            base: "tcpdump", alvoPos: "filtro",
+            base: "tcpdump", alvoPos: "filtro", alvoPadrao: "example.com",
             opcoes: [
                 { flag: "-i eth0", label: "Interface eth0", exp: "-i escolhe a interface de captura." },
                 { flag: "-nn", label: "Sem resolver nomes", exp: "-nn não resolve hosts nem portas (mais rápido, IPs crus)." },
@@ -40,7 +46,7 @@
             ]
         },
         curl: {
-            base: "curl", alvoPos: "fim", alvoPrefixo: "https://",
+            base: "curl", alvoPos: "fim", alvoPrefixo: "https://", alvoPadrao: "example.com",
             opcoes: [
                 { flag: "-v", label: "Verboso", exp: "-v mostra o handshake, os cabeçalhos e o passo a passo." },
                 { flag: "-I", label: "Só cabeçalhos", exp: "-I faz um HEAD: só os cabeçalhos de resposta." },
@@ -49,7 +55,7 @@
             ]
         },
         ping: {
-            base: "ping", alvoPos: "fim",
+            base: "ping", alvoPos: "fim", alvoPadrao: "example.com",
             opcoes: [
                 { flag: "-c 4", label: "4 pacotes", exp: "-c limita quantos pacotes enviar (senão roda sem parar no Linux)." },
                 { flag: "-M do -s 1472", label: "Testar MTU", exp: "Não fragmentar com payload 1472 testa a MTU do caminho." }
@@ -58,6 +64,21 @@
     };
 
     var estado = { tool: "dig", flags: {} };
+    var PADROES = Object.keys(TOOLS).map(function (t) { return TOOLS[t].alvoPadrao; });
+
+    function atualizarDica() {
+        var caixa = document.getElementById("cmd-alvo-dica-texto");
+        if (!caixa) { return; }
+        var code = document.createElement("code");
+        code.setAttribute("translate", "no");
+        code.textContent = TOOLS[estado.tool].alvoPadrao;
+        var texto = estado.tool === "nmap"
+            ? " é o host que o projeto Nmap autoriza varrer (sem exagero). Fora dele, só rede sua ou com autorização por escrito."
+            : " é reservado para exemplos (RFC 2606): troque pelo seu host.";
+        caixa.textContent = "";
+        caixa.appendChild(code);
+        caixa.appendChild(document.createTextNode(texto));
+    }
 
     function montar() {
         var spec = TOOLS[estado.tool];
@@ -120,7 +141,15 @@
             op.value = t; op.textContent = t;
             sel.appendChild(op);
         });
-        sel.addEventListener("change", function () { estado.tool = sel.value; renderOpcoes(); });
+        sel.addEventListener("change", function () {
+            var alvo = document.getElementById("cmd-alvo");
+            estado.tool = sel.value;
+            if (PADROES.indexOf(alvo.value.trim()) >= 0) {
+                alvo.value = TOOLS[estado.tool].alvoPadrao;
+            }
+            atualizarDica();
+            renderOpcoes();
+        });
         document.getElementById("cmd-alvo").addEventListener("input", montar);
         var limpar = document.getElementById("cmd-limpar");
         if (limpar) {
@@ -144,6 +173,7 @@
                 setTimeout(function () { copiar.innerHTML = original; }, 1500);
             } catch (e) { copiar.textContent = "Falhou"; }
         });
+        atualizarDica();
         renderOpcoes();
     });
 })();

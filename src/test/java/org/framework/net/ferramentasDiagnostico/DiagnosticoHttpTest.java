@@ -33,12 +33,12 @@ class DiagnosticoHttpTest {
     void dnsSimuladoResponde() {
         given()
                 .contentType("application/x-www-form-urlencoded")
-                .formParam("dominio", "exemplo.com")
+                .formParam("dominio", "example.com")
                 .when().post("/diagnostico/api/dns")
                 .then()
                 .statusCode(200)
                 .contentType(containsString("text/html"))
-                .body(containsString("exemplo.com"))
+                .body(containsString("example.com"))
                 .body(containsString("ANSWER SECTION"))
                 .body(not(containsString("<!DOCTYPE html>")));
     }
@@ -77,7 +77,7 @@ class DiagnosticoHttpTest {
     void scanTrazTabelaDissecadaComEstados() {
         given()
                 .contentType("application/x-www-form-urlencoded")
-                .formParam("host", "scanme.exemplo.com")
+                .formParam("host", "scanme.example.com")
                 .when().post("/diagnostico/api/scan")
                 .then()
                 .statusCode(200)
@@ -137,7 +137,7 @@ class DiagnosticoHttpTest {
     void scanSynSimuladoResponde() {
         given()
                 .contentType("application/x-www-form-urlencoded")
-                .formParam("host", "scanme.exemplo.com")
+                .formParam("host", "scanme.example.com")
                 .when().post("/diagnostico/api/scan")
                 .then()
                 .statusCode(200)
@@ -150,7 +150,7 @@ class DiagnosticoHttpTest {
     void dnsSpoofingSimuladoResponde() {
         given()
                 .contentType("application/x-www-form-urlencoded")
-                .formParam("dominio", "banco.exemplo.com")
+                .formParam("dominio", "banco.example.com")
                 .when().post("/diagnostico/api/dns-spoofing")
                 .then()
                 .statusCode(200)

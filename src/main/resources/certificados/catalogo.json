@@ -140,13 +140,13 @@
     {
       "campo": "CRL Distribution Points",
       "oque": "URLs das listas de certificados revogados (CRL) publicadas pela CA",
-      "exemplo": "URI:http://crl.ca-exemplo.com/r11.crl",
+      "exemplo": "URI:http://crl.ca.example.com/r11.crl",
       "nota": "Permite verificar a revogação por lista; as CRLs podem ficar grandes, por isso muitos preferiam o OCSP"
     },
     {
       "campo": "Authority Information Access (OCSP)",
       "oque": "URLs de serviços da CA: o respondedor OCSP e o certificado do emissor (CA Issuers)",
-      "exemplo": "OCSP - URI:http://ocsp.ca-exemplo.com; CA Issuers - URI:http://ca-exemplo.com/r11.der",
+      "exemplo": "OCSP - URI:http://ocsp.ca.example.com; CA Issuers - URI:http://ca.example.com/r11.der",
       "nota": "O OCSP verifica a revogação sob consulta e o OCSP stapling entrega essa resposta no próprio handshake TLS; algumas CAs (como a Let's Encrypt) estão descontinuando o OCSP em favor da CRL. Confira no Inspetor TLS do site"
     }
   ],
@@ -178,7 +178,7 @@
     {
       "tipo": "Multi-domínio (SAN/UCC)",
       "valida": "Controle de cada domínio listado; vários nomes distintos no mesmo certificado via SAN",
-      "uso": "Consolidar domínios diferentes (exemplo.com.br, exemplo.net, outro.com) num único certificado",
+      "uso": "Consolidar domínios diferentes (exemplo.com.br, example.net, outro.com) num único certificado",
       "observacao": "Reduz a gestão, mas cada novo domínio exige reemissão; todos compartilham a mesma chave privada"
     },
     {

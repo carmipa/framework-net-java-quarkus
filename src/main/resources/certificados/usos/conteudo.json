@@ -89,7 +89,7 @@
           "HTTPS (TLS servidor)",
           "serverAuth / 1.3.6.1.5.5.7.3.1",
           "Servidor",
-          "Site em https://exemplo.com na porta 443"
+          "Site em https://example.com na porta 443"
         ],
         [
           "mTLS (TLS mútuo)",
@@ -207,13 +207,13 @@
     {
       "titulo": "Inspecionar o EKU de um certificado",
       "cenario": "Você recebeu um certificado e precisa confirmar para que ele foi realmente emitido antes de confiar nele em algum fluxo.",
-      "comandos": "# Ver todas as extensoes, incluindo Extended Key Usage\nopenssl x509 -in certificado.pem -noout -text\n\n# Filtrar so o bloco de EKU\nopenssl x509 -in certificado.pem -noout -text | grep -A1 \"Extended Key Usage\"\n\n# Baixar e inspecionar o certificado que um servidor apresenta na porta 443\nopenssl s_client -connect exemplo.com:443 -servername exemplo.com </dev/null 2>/dev/null | openssl x509 -noout -text | grep -A1 \"Extended Key Usage\"",
+      "comandos": "# Ver todas as extensoes, incluindo Extended Key Usage\nopenssl x509 -in certificado.pem -noout -text\n\n# Filtrar so o bloco de EKU\nopenssl x509 -in certificado.pem -noout -text | grep -A1 \"Extended Key Usage\"\n\n# Baixar e inspecionar o certificado que um servidor apresenta na porta 443\nopenssl s_client -connect example.com:443 -servername example.com </dev/null 2>/dev/null | openssl x509 -noout -text | grep -A1 \"Extended Key Usage\"",
       "explicacao": "A saída mostra linhas como TLS Web Server Authentication (serverAuth), TLS Web Client Authentication (clientAuth), Code Signing ou E-mail Protection. Se o propósito esperado não estiver listado, o certificado não deve ser aceito para aquele uso. O mesmo handshake da porta 443 pode ser visto de forma guiada no Inspetor TLS do site."
     },
     {
       "titulo": "Exigir certificado de cliente (mTLS) no Nginx",
       "cenario": "Você quer proteger uma API para que só clientes com certificado emitido pela sua CA consigam conectar — sem senha, só mTLS.",
-      "comandos": "# --- Config de servidor (nginx.conf) ---\n# server {\n#     listen 443 ssl;\n#     server_name api.exemplo.com;\n#\n#     ssl_certificate     /etc/ssl/servidor.crt;\n#     ssl_certificate_key /etc/ssl/servidor.key;\n#\n#     # CA que assinou os certificados de CLIENTE\n#     ssl_client_certificate /etc/ssl/ca-clientes.crt;\n#     ssl_verify_client on;          # exige e VALIDA o cert do cliente\n#     ssl_verify_depth 2;            # profundidade da cadeia\n# }\n\n# --- Teste com curl apresentando o certificado de cliente ---\ncurl --cert cliente.crt --key cliente.key \\\n     --cacert ca-servidor.crt \\\n     https://api.exemplo.com/ping\n\n# Sem --cert a conexao e recusada (400 No required SSL certificate)",
+      "comandos": "# --- Config de servidor (nginx.conf) ---\n# server {\n#     listen 443 ssl;\n#     server_name api.example.com;\n#\n#     ssl_certificate     /etc/ssl/servidor.crt;\n#     ssl_certificate_key /etc/ssl/servidor.key;\n#\n#     # CA que assinou os certificados de CLIENTE\n#     ssl_client_certificate /etc/ssl/ca-clientes.crt;\n#     ssl_verify_client on;          # exige e VALIDA o cert do cliente\n#     ssl_verify_depth 2;            # profundidade da cadeia\n# }\n\n# --- Teste com curl apresentando o certificado de cliente ---\ncurl --cert cliente.crt --key cliente.key \\\n     --cacert ca-servidor.crt \\\n     https://api.example.com/ping\n\n# Sem --cert a conexao e recusada (400 No required SSL certificate)",
       "explicacao": "ssl_verify_client on faz o servidor exigir e validar a cadeia do cliente contra ca-clientes.crt; o cliente, por sua vez, valida o servidor com --cacert. Os dois lados provam identidade. Jamais use verify off ou -k para silenciar erro: isso reintroduz o ataque de man-in-the-middle."
     },
     {
@@ -228,7 +228,7 @@
       "sintoma": "Handshake mTLS falha com 400 No required SSL certificate was sent",
       "causa_provavel": "O servidor exige certificado de cliente (ssl_verify_client on) mas o cliente não apresentou nenhum, ou apresentou um fora da CA configurada",
       "leitura": "Confirme que o curl/cliente envia --cert e --key e que o certificado foi assinado pela CA em ssl_client_certificate",
-      "comando": "curl -v --cert cliente.crt --key cliente.key --cacert ca-servidor.crt https://api.exemplo.com/ping"
+      "comando": "curl -v --cert cliente.crt --key cliente.key --cacert ca-servidor.crt https://api.example.com/ping"
     },
     {
       "sintoma": "Navegador ou cliente recusa o certificado dizendo uso inválido",

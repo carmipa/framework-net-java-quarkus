@@ -213,7 +213,7 @@
     {
       "titulo": "Isolar o problema por camada com o traceroute",
       "cenario": "Um site não abre. Você quer descobrir se a falha está no endereçamento/roteamento (camada Internet) ou mais acima (Transporte/Aplicação), separando os sintomas por camada.",
-      "comandos": "# 1) Camada Internet: o IP é alcançável e roteia?\ntracert 8.8.8.8        # Windows\ntraceroute 8.8.8.8     # Linux/macOS\n\n# 2) Camada Aplicação: o nome resolve? (DNS)\nnslookup exemplo.com\n\n# 3) Camada Transporte: a porta responde?\nTest-NetConnection exemplo.com -Port 443   # PowerShell",
+      "comandos": "# 1) Camada Internet: o IP é alcançável e roteia?\ntracert 8.8.8.8        # Windows\ntraceroute 8.8.8.8     # Linux/macOS\n\n# 2) Camada Aplicação: o nome resolve? (DNS)\nnslookup example.com\n\n# 3) Camada Transporte: a porta responde?\nTest-NetConnection example.com -Port 443   # PowerShell",
       "explicacao": "O tracert opera na camada Internet (usa IP/ICMP e o campo TTL) e mostra o caminho de roteadores até o destino. O nslookup testa a Aplicação (DNS). O Test-NetConnection abre um handshake TCP na porta, testando o Transporte. Rodando os três, você sobe camada por camada e descobre exatamente onde a comunicação quebra."
     }
   ],
@@ -221,13 +221,13 @@
     {
       "sintoma": "ping no IP funciona, mas o site não abre pelo nome",
       "causa_provavel": "Camada Internet OK (IP roteia), mas a camada de Aplicação falha: DNS não resolve o nome.",
-      "comando": "nslookup exemplo.com",
+      "comando": "nslookup example.com",
       "leitura": "Se o ping no IP direto responde e o nslookup falha ou retorna servidor sem resposta, o problema está acima da camada Internet. Configure/troque o servidor DNS."
     },
     {
       "sintoma": "o nome resolve e o IP pinga, mas a conexão ao serviço dá timeout",
       "causa_provavel": "Camadas Internet e Aplicação (DNS) OK, mas a camada de Transporte está bloqueada: porta fechada ou firewall barrando o TCP.",
-      "comando": "Test-NetConnection exemplo.com -Port 443",
+      "comando": "Test-NetConnection example.com -Port 443",
       "leitura": "TcpTestSucceeded : False com ping funcionando indica bloqueio na camada de Transporte (porta), não na de Internet. Verifique firewall e se o serviço escuta na porta."
     },
     {

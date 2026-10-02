@@ -196,7 +196,7 @@ public class Ipv6CidrService {
             throw new Ipv6Exception("Informe um domínio (ex.: google.com).");
         }
         if (!d.contains(".")) {
-            throw new Ipv6Exception("Domínio inválido. Use algo como google.com ou www.exemplo.org.");
+            throw new Ipv6Exception("Domínio inválido. Use algo como google.com ou www.example.org.");
         }
         try {
             String aaaa = dnsResolver.resolverAaaaComCache(d);

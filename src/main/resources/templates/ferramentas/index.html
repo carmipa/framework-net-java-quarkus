@@ -35,7 +35,8 @@
                 </div>
                 <div class="col-12 col-md-8">
                     <label for="cmd-alvo" class="form-label small text-secondary">Alvo (host / IP / URL)</label>
-                    <input id="cmd-alvo" type="text" class="form-control bg-dark text-light border-secondary" value="exemplo.com" spellcheck="false" autocomplete="off">
+                    <input id="cmd-alvo" type="text" class="form-control bg-dark text-light border-secondary" value="example.com" spellcheck="false" autocomplete="off" aria-describedby="cmd-alvo-dica">
+                    <p id="cmd-alvo-dica" class="small text-secondary mt-1 mb-0"><span class="material-symbols-outlined" aria-hidden="true" translate="no">info</span> <span id="cmd-alvo-dica-texto"><code translate="no">example.com</code> é reservado para exemplos (RFC 2606): troque pelo seu host.</span></p>
                 </div>
             </div>
             <div id="cmd-opcoes" class="d-flex flex-wrap gap-3 mb-3"></div>
@@ -53,6 +54,6 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/ferramentas/js/ferramentas.js?v=20260925"></script>
+<script src="/ferramentas/js/ferramentas.js?v=20261001"></script>
 {/extraScripts}
 {/include}

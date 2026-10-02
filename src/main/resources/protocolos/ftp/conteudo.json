@@ -373,7 +373,7 @@
     {
       "titulo": "1. Ver a senha do FTP em texto claro",
       "cenario": "Provar, na prática, por que o FTP puro está em desuso.",
-      "comandos": "# terminal 1 - capturar o canal de controle\nsudo tcpdump -i any -A 'tcp port 21'\n\n# terminal 2 - sessão FTP comum\nftp ftp.exemplo.com\n# Name: paulo\n# Password: (digite a senha)\nftp> ls\nftp> quit",
+      "comandos": "# terminal 1 - capturar o canal de controle\nsudo tcpdump -i any -A 'tcp port 21'\n\n# terminal 2 - sessão FTP comum\nftp ftp.example.com\n# Name: paulo\n# Password: (digite a senha)\nftp> ls\nftp> quit",
       "explicacao": "No terminal 1 aparecem, legíveis, as linhas 'USER paulo' e 'PASS <sua senha>' — o -A do tcpdump mostra o payload como texto ASCII. Nenhum handshake TLS acontece antes do login. É o sniffing de credenciais em uma linha."
     },
     {
@@ -385,7 +385,7 @@
     {
       "titulo": "3. FTP passivo e FTPS explícito com lftp",
       "cenario": "Configurar modo passivo e forçar TLS, cifrando controle e dados.",
-      "comandos": "lftp -u paulo,senha ftp.exemplo.com\nlftp> set ftp:passive-mode on\nlftp> ls\n\n# agora exigindo TLS (FTPS explícito, AUTH TLS na 21)\nlftp> set ftp:ssl-force true\nlftp> set ftp:ssl-protect-data true\nlftp> set ssl:verify-certificate true\nlftp> ls\nlftp> get arquivo.bin",
+      "comandos": "lftp -u paulo,senha ftp.example.com\nlftp> set ftp:passive-mode on\nlftp> ls\n\n# agora exigindo TLS (FTPS explícito, AUTH TLS na 21)\nlftp> set ftp:ssl-force true\nlftp> set ftp:ssl-protect-data true\nlftp> set ssl:verify-certificate true\nlftp> ls\nlftp> get arquivo.bin",
       "explicacao": "passive-mode faz o CLIENTE abrir a conexão de dados (bom atrás de NAT). ssl-force exige AUTH TLS no controle; ssl-protect-data cifra também o canal de dados — sem ele, só o login é protegido e o arquivo ainda trafega em claro. verify-certificate é o que fecha a porta para MITM."
     },
     {

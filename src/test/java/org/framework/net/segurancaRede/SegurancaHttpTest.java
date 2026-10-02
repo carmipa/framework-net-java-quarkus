@@ -305,7 +305,7 @@ class SegurancaHttpTest {
 
     @Test
     void tlsRecusaCertificadoExpirado() {
-        tls("exemplo.com", "exemplo.com", "-3", "nao", "TLS 1.3", "TLS_AES_128_GCM_SHA256")
+        tls("example.com", "example.com", "-3", "nao", "TLS 1.3", "TLS_AES_128_GCM_SHA256")
                 .when().post("/seguranca/api/tls")
                 .then()
                 .statusCode(200)
@@ -316,13 +316,13 @@ class SegurancaHttpTest {
     /** Auditoria CALC-37: vence hoje ainda vale (até o notAfter); "EXPIRADO, 0 dia atrás" era falso. Fronteira: -1 expira. */
     @Test
     void tlsVencendoHojeAindaNaoEstaExpirado() {
-        tls("exemplo.com", "exemplo.com", "0", "nao", "TLS 1.3", "TLS_AES_128_GCM_SHA256")
+        tls("example.com", "example.com", "0", "nao", "TLS 1.3", "TLS_AES_128_GCM_SHA256")
                 .when().post("/seguranca/api/tls")
                 .then()
                 .statusCode(200)
                 .body(containsString("Vence HOJE"))
                 .body(not(containsString("EXPIRADO")));
-        tls("exemplo.com", "exemplo.com", "-1", "nao", "TLS 1.3", "TLS_AES_128_GCM_SHA256")
+        tls("example.com", "example.com", "-1", "nao", "TLS 1.3", "TLS_AES_128_GCM_SHA256")
                 .when().post("/seguranca/api/tls")
                 .then()
                 .statusCode(200)
@@ -331,7 +331,7 @@ class SegurancaHttpTest {
 
     @Test
     void tlsAtencaoComTls12ECipherCbc() {
-        tls("exemplo.com", "exemplo.com", "60", "nao", "TLS 1.2", "ECDHE-RSA-AES128-CBC-SHA")
+        tls("example.com", "example.com", "60", "nao", "TLS 1.2", "ECDHE-RSA-AES128-CBC-SHA")
                 .when().post("/seguranca/api/tls")
                 .then()
                 .statusCode(200)
@@ -341,7 +341,7 @@ class SegurancaHttpTest {
 
     @Test
     void tlsCuringaCasaUmRotulo() {
-        tls("www.exemplo.com", "*.exemplo.com", "60", "nao", "TLS 1.3", "TLS_CHACHA20_POLY1305_SHA256")
+        tls("www.example.com", "*.example.com", "60", "nao", "TLS 1.3", "TLS_CHACHA20_POLY1305_SHA256")
                 .when().post("/seguranca/api/tls")
                 .then()
                 .statusCode(200)
@@ -350,7 +350,7 @@ class SegurancaHttpTest {
 
     @Test
     void tlsDiasNaoNumericoRetorna400() {
-        tls("exemplo.com", "exemplo.com", "abc", "nao", "TLS 1.3", "TLS_AES_128_GCM_SHA256")
+        tls("example.com", "example.com", "abc", "nao", "TLS 1.3", "TLS_AES_128_GCM_SHA256")
                 .when().post("/seguranca/api/tls")
                 .then()
                 .statusCode(400);
@@ -358,7 +358,7 @@ class SegurancaHttpTest {
 
     @Test
     void tlsRejeitaCaracteresPerigosos() {
-        tls("<script>", "exemplo.com", "60", "nao", "TLS 1.3", "TLS_AES_128_GCM_SHA256")
+        tls("<script>", "example.com", "60", "nao", "TLS 1.3", "TLS_AES_128_GCM_SHA256")
                 .when().post("/seguranca/api/tls")
                 .then()
                 .statusCode(400);
@@ -366,7 +366,7 @@ class SegurancaHttpTest {
 
     @Test
     void tlsRecusaCadeiaAutoassinada() {
-        tls("exemplo.com", "exemplo.com", "60", "sim", "TLS 1.3", "TLS_AES_128_GCM_SHA256")
+        tls("example.com", "example.com", "60", "sim", "TLS 1.3", "TLS_AES_128_GCM_SHA256")
                 .when().post("/seguranca/api/tls")
                 .then()
                 .statusCode(200)
@@ -377,7 +377,7 @@ class SegurancaHttpTest {
 
     @Test
     void tlsRecusaProtocoloObsoleto() {
-        tls("exemplo.com", "exemplo.com", "60", "nao", "TLS 1.0", "TLS_AES_128_GCM_SHA256")
+        tls("example.com", "example.com", "60", "nao", "TLS 1.0", "TLS_AES_128_GCM_SHA256")
                 .when().post("/seguranca/api/tls")
                 .then()
                 .statusCode(200)
@@ -388,7 +388,7 @@ class SegurancaHttpTest {
 
     @Test
     void tlsRecusaCipherQuebrada() {
-        tls("exemplo.com", "exemplo.com", "60", "nao", "TLS 1.2", "RC4-MD5")
+        tls("example.com", "example.com", "60", "nao", "TLS 1.2", "RC4-MD5")
                 .when().post("/seguranca/api/tls")
                 .then()
                 .statusCode(200)
@@ -399,8 +399,8 @@ class SegurancaHttpTest {
 
     @Test
     void tlsCuringaNaoCasaMultiplosRotulos() {
-        // O curinga cobre UM rótulo: *.exemplo.com casa www.exemplo.com, mas NÃO www.sub.exemplo.com.
-        tls("www.sub.exemplo.com", "*.exemplo.com", "60", "nao", "TLS 1.3", "TLS_AES_128_GCM_SHA256")
+        // O curinga cobre UM rótulo: *.example.com casa www.example.com, mas NÃO www.sub.example.com.
+        tls("www.sub.example.com", "*.example.com", "60", "nao", "TLS 1.3", "TLS_AES_128_GCM_SHA256")
                 .when().post("/seguranca/api/tls")
                 .then()
                 .statusCode(200)
@@ -410,7 +410,7 @@ class SegurancaHttpTest {
 
     @Test
     void tlsDiasForaDeFaixaRetorna400() {
-        tls("exemplo.com", "exemplo.com", "999999", "nao", "TLS 1.3", "TLS_AES_128_GCM_SHA256")
+        tls("example.com", "example.com", "999999", "nao", "TLS 1.3", "TLS_AES_128_GCM_SHA256")
                 .when().post("/seguranca/api/tls")
                 .then()
                 .statusCode(400);

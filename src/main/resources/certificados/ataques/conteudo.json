@@ -252,7 +252,7 @@
     {
       "titulo": "Varredura completa de protocolos e cifras com testssl",
       "cenario": "Você precisa saber se o servidor ainda aceita TLS antigo, cifras fracas ou está vulnerável a downgrade, e se HSTS e OCSP stapling estão ativos.",
-      "comandos": "# Varredura padrão (protocolos, cifras, vulnerabilidades, cabeçalhos)\n./testssl.sh exemplo.com.br\n\n# Focar só em protocolos habilitados e forward secrecy\n./testssl.sh --protocols --fs exemplo.com.br\n\n# Verificar vulnerabilidades conhecidas (POODLE, BEAST, Heartbleed etc.)\n./testssl.sh --vulnerable exemplo.com.br",
+      "comandos": "# Troque servidor.example.com pelo SEU servidor: varredura em servidor alheio só com autorização\n\n# Varredura padrão (protocolos, cifras, vulnerabilidades, cabeçalhos)\n./testssl.sh servidor.example.com\n\n# Focar só em protocolos habilitados e forward secrecy\n./testssl.sh --protocols --fs servidor.example.com\n\n# Verificar vulnerabilidades conhecidas (POODLE, BEAST, Heartbleed etc.)\n./testssl.sh --vulnerable servidor.example.com",
       "explicacao": "O relatório marca em vermelho protocolos obsoletos (SSLv3, TLS 1.0/1.1) que devem ser desativados, cifras fracas (RC4, 3DES) e ausência de HSTS. A seção de vulnerabilidades confirma exposição a downgrade e correlatos. O alvo desejado: apenas TLS 1.2 e 1.3 habilitados, suítes com ECDHE (forward secrecy) e HSTS presente."
     },
     {

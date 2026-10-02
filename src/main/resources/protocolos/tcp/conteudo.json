@@ -444,7 +444,7 @@
     {
       "titulo": "Abrir e testar conexões com nc (netcat)",
       "cenario": "Você quer testar manualmente se uma porta TCP está aberta e até trocar bytes crus com o serviço, sem um cliente dedicado.",
-      "comandos": "# Testar se a porta 80 responde (modo verboso, so scan)\nnc -zv exemplo.com 80\n\n# Abrir conexao e falar HTTP na mao\nprintf 'GET / HTTP/1.0\\r\\n\\r\\n' | nc exemplo.com 80\n\n# Subir um servidor de escuta local para testes\nnc -l 9000",
+      "comandos": "# Testar se a porta 80 responde (modo verboso, so scan)\nnc -zv example.com 80\n\n# Abrir conexao e falar HTTP na mao\nprintf 'GET / HTTP/1.0\\r\\n\\r\\n' | nc example.com 80\n\n# Subir um servidor de escuta local para testes\nnc -l 9000",
       "explicacao": "O nc completa o handshake TCP por você. Com -z ele só verifica se a porta abre (útil para varredura leve); connection refused = porta fechada com RST, e travar até estourar = pacotes filtrados por firewall. O modo -l transforma o nc num servidor para observar o outro lado da conexão."
     }
   ],

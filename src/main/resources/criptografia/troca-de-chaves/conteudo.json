@@ -216,13 +216,13 @@
     {
       "titulo": "Confirmar ECDHE e forward secrecy na conexão",
       "cenario": "Verificar qual troca de chaves o servidor negocia e se há PFS.",
-      "comandos": "openssl s_client -connect exemplo.com:443 -tls1_3 </dev/null 2>/dev/null | openssl x509 -noout -issuer -subject\n\n# ver a suite e o grupo negociados\necho | openssl s_client -connect exemplo.com:443 2>/dev/null | grep -E 'Cipher|Server Temp Key|Protocol'",
+      "comandos": "openssl s_client -connect example.com:443 -tls1_3 </dev/null 2>/dev/null | openssl x509 -noout -issuer -subject\n\n# ver a suite e o grupo negociados\necho | openssl s_client -connect example.com:443 2>/dev/null | grep -E 'Cipher|Server Temp Key|Protocol'",
       "explicacao": "A linha 'Server Temp Key' revelando ECDH com uma curva (ex.: X25519, 253 bits) confirma troca efêmera e forward secrecy. Uma suite ECDHE_ no campo Cipher também indica PFS; TLS_RSA_ indicaria key transport sem PFS."
     },
     {
       "titulo": "Testar se o servidor ainda aceita RSA key transport (sem PFS)",
       "cenario": "Detectar suites legadas sem forward secrecy.",
-      "comandos": "# tentar forcar uma suite RSA key transport (sucesso = sem PFS)\nopenssl s_client -connect exemplo.com:443 -cipher 'AES256-SHA' -tls1_2 </dev/null 2>/dev/null | grep -E 'Cipher|New,'\n\n# listar as suites RSA (sem ECDHE/DHE) que a lib conhece\nopenssl ciphers -v 'AES256-SHA:DES-CBC3-SHA' | awk '{print $1, $3, $4}'",
+      "comandos": "# tentar forcar uma suite RSA key transport (sucesso = sem PFS)\nopenssl s_client -connect example.com:443 -cipher 'AES256-SHA' -tls1_2 </dev/null 2>/dev/null | grep -E 'Cipher|New,'\n\n# listar as suites RSA (sem ECDHE/DHE) que a lib conhece\nopenssl ciphers -v 'AES256-SHA:DES-CBC3-SHA' | awk '{print $1, $3, $4}'",
       "explicacao": "Se a conexão completa com uma suite cujo Kx=RSA, o servidor aceita key transport sem forward secrecy e deveria desabilitá-la. Um handshake_failure indica que ele já rejeita esse modo legado."
     },
     {
