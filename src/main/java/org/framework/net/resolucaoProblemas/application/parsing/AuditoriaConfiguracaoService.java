@@ -488,10 +488,33 @@ public class AuditoriaConfiguracaoService {
         }
     }
 
+    /**
+     * Confere o endereçamento de cada interface e entre roteadores.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> apontar o endereço que o IOS recusa ou que derruba a comunicação antes
+     * de o aluno colar o script.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> um IP por equipamento; interface não recebe o endereço de rede nem o
+     * de broadcast da própria sub-rede (até /30); no mesmo roteador nenhuma sub-rede pode conter outra,
+     * mesmo com máscaras diferentes (10.0.0.0/24 contém 10.0.0.128/25); as duas pontas de um enlace usam a
+     * mesma máscara (auditoria CALC-13).</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> não lança; cada problema vira um achado na linha da
+     * interface.</p>
+     */
     private void conferirEnderecamento(List<RoteadorLido> roteadores, List<AchadoConfiguracao> achados) {
         Map<String, String> donos = new LinkedHashMap<>();
         for (RoteadorLido r : roteadores) {
             for (InterfaceLida i : r.interfacesComIp()) {
+                if (i.prefixo() <= 30 && (i.ip().equals(MascaraIpv4.enderecoDeRede(i.ip(), i.prefixo()))
+                        || i.ip().equals(MascaraIpv4.broadcastDe(i.ip(), i.prefixo())))) {
+                    boolean rede = i.ip().equals(MascaraIpv4.enderecoDeRede(i.ip(), i.prefixo()));
+                    achados.add(AchadoConfiguracao.semCorrecao("Endereçamento", r.hostname(), i.linha(),
+                            "ip address " + i.ip() + " " + i.mascara(),
+                            "O endereço " + i.ip() + " é o " + (rede ? "endereço de rede" : "broadcast")
+                                    + " de " + MascaraIpv4.cidrDe(i.ip(), i.prefixo()) + " (" + i.nome() + ").",
+                            "O IOS recusa esse endereço na interface (\"Bad mask\"); use um host do bloco."));
+                }
                 String anterior = donos.put(i.ip(), r.hostname() + " " + i.nome());
                 if (anterior != null) {
                     achados.add(AchadoConfiguracao.semCorrecao("Endereçamento", r.hostname(), i.linha(),
@@ -506,14 +529,40 @@ public class AuditoriaConfiguracaoService {
                 for (int b = a + 1; b < comIp.size(); b++) {
                     InterfaceLida ia = comIp.get(a);
                     InterfaceLida ib = comIp.get(b);
-                    if (ia.prefixo() == ib.prefixo()
-                            && MascaraIpv4.mesmaSubRede(ia.ip(), ib.ip(), ia.prefixo())) {
+                    // Sobreposição vale com máscaras diferentes também: a menor contém a maior.
+                    int menor = Math.min(ia.prefixo(), ib.prefixo());
+                    if (MascaraIpv4.mesmaSubRede(ia.ip(), ib.ip(), menor)) {
                         achados.add(AchadoConfiguracao.semCorrecao("Endereçamento", r.hostname(),
                                 ib.linha(), "ip address " + ib.ip() + " " + ib.mascara(),
                                 "As interfaces " + ia.nome() + " e " + ib.nome()
                                         + " estão na mesma sub-rede "
                                         + MascaraIpv4.cidrDe(ia.ip(), ia.prefixo()) + ".",
                                 "O IOS recusa a segunda interface: sub-redes sobrepostas no mesmo roteador."));
+                    }
+                }
+            }
+        }
+        conferirMascarasDoEnlace(roteadores, achados);
+    }
+
+    /** As duas pontas de um enlace com máscaras diferentes: cada lado calcula outra sub-rede. */
+    private void conferirMascarasDoEnlace(List<RoteadorLido> roteadores, List<AchadoConfiguracao> achados) {
+        for (int x = 0; x < roteadores.size(); x++) {
+            for (int y = x + 1; y < roteadores.size(); y++) {
+                RoteadorLido ra = roteadores.get(x);
+                RoteadorLido rb = roteadores.get(y);
+                for (InterfaceLida ia : ra.interfacesComIp()) {
+                    for (InterfaceLida ib : rb.interfacesComIp()) {
+                        int menor = Math.min(ia.prefixo(), ib.prefixo());
+                        if (ia.prefixo() != ib.prefixo() && !ia.ip().equals(ib.ip())
+                                && MascaraIpv4.mesmaSubRede(ia.ip(), ib.ip(), menor)) {
+                            achados.add(AchadoConfiguracao.aviso("Endereçamento", rb.hostname(), ib.linha(),
+                                    "O enlace entre " + ra.hostname() + " " + ia.nome() + " (/" + ia.prefixo()
+                                            + ") e " + rb.hostname() + " " + ib.nome() + " (/" + ib.prefixo()
+                                            + ") usa máscaras diferentes.",
+                                    "Cada ponta calcula outra sub-rede e outro broadcast; os roteadores podem até "
+                                            + "se falar, mas o OSPF não forma adjacência com máscara divergente."));
+                        }
                     }
                 }
             }

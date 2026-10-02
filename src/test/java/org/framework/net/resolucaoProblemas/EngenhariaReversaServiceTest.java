@@ -494,6 +494,65 @@ class EngenhariaReversaServiceTest {
                 () -> "o AS repetido continua sinalizado como aviso: " + ibgp.achados());
     }
 
+    /**
+     * Auditoria CALC-13 — gabarito (A3): o IOS recusa endereço de rede/broadcast na interface ("Bad mask")
+     * e sub-redes sobrepostas no mesmo roteador, mesmo com máscaras diferentes; OSPF não forma adjacência
+     * com máscara divergente no enlace. Fronteira (A1): /31 usa os dois endereços (RFC 3021) e sub-redes
+     * vizinhas que não se sobrepõem passam.
+     */
+    @Test
+    @DisplayName("acusa IP de rede/broadcast, sobreposição com máscaras diferentes e máscara divergente no enlace")
+    void enderecamentoQueOIosRecusa() {
+        CenarioReconstruido c = servico.interpretar("""
+                hostname A
+                interface GigabitEthernet0/0
+                 ip address 10.0.0.0 255.255.255.0
+                 no shutdown
+                interface GigabitEthernet0/1
+                 ip address 10.0.0.129 255.255.255.128
+                 no shutdown
+                interface GigabitEthernet0/2
+                 ip address 10.9.9.255 255.255.255.0
+                 no shutdown
+                interface Serial0/0/0
+                 ip address 10.1.1.1 255.255.255.252
+                 clock rate 64000
+                 no shutdown
+                -------------
+                hostname B
+                interface Serial0/0/0
+                 ip address 10.1.1.2 255.255.255.248
+                 no shutdown
+                """);
+        String todos = c.achados().toString();
+        assertTrue(c.achados().stream().anyMatch(a -> a.descricao().contains("10.0.0.0 é o endereço de rede")), todos);
+        assertTrue(c.achados().stream().anyMatch(a -> a.descricao().contains("10.9.9.255 é o broadcast")), todos);
+        assertTrue(c.achados().stream().anyMatch(a -> a.descricao().contains("mesma sub-rede")
+                && a.descricao().contains("GigabitEthernet0/1")), "10.0.0.0/24 contém 10.0.0.128/25: " + todos);
+        assertTrue(c.achados().stream().anyMatch(a -> a.descricao().contains("máscaras diferentes")), todos);
+
+        CenarioReconstruido ok = servico.interpretar("""
+                hostname A
+                interface GigabitEthernet0/0
+                 ip address 10.0.0.1 255.255.255.128
+                 no shutdown
+                interface GigabitEthernet0/1
+                 ip address 10.0.0.129 255.255.255.128
+                 no shutdown
+                interface Serial0/0/0
+                 ip address 10.1.1.0 255.255.255.254
+                 clock rate 64000
+                 no shutdown
+                -------------
+                hostname B
+                interface Serial0/0/0
+                 ip address 10.1.1.1 255.255.255.254
+                 no shutdown
+                """);
+        assertTrue(ok.achados().stream().noneMatch(a -> "Endereçamento".equals(a.categoria())),
+                () -> "nada a acusar no endereçamento: " + ok.achados());
+    }
+
     @Test
     @DisplayName("estado admin: comando ausente não inventa shutdown nem no shutdown")
     void reconstrucaoPreservaAusencia() {
