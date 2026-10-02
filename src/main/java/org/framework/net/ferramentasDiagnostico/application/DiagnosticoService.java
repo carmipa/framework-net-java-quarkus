@@ -25,7 +25,9 @@ import java.util.Map;
  *
  * <p><b>INVARIANTES DO DOMÍNIO:</b> computação pura e determinística no formato;
  * nenhum pacote real é enviado (o app roda em VPS; sondagem real exigiria agente
- * nativo com privilégio). Entrada sempre sanitizada antes de ser ecoada.</p>
+ * nativo com privilégio). Entrada validada por lista branca (IPv4, nome RFC 1123,
+ * rede IPv4 com prefixo) antes de ser ecoada — o simulador responde como se tivesse
+ * falado com o alvo, então alvo impossível nunca recebe resposta de sucesso.</p>
  *
  * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> entrada inválida dispara
  * {@link DiagnosticoException} (HTTP 400 pelo mapper), nunca uma saída vazia.</p>
@@ -38,9 +40,9 @@ public class DiagnosticoService {
 
     // ------------------------------------------------------------------ PING
 
-    public ResultadoDiagnostico executarPingSimulado(String host) {
+    public ResultadoDiagnostico executarPingSimulado(String hostDigitado) {
         return telemetriaLogger.medir("diagnostico", "ping_simulado", () -> {
-            validarHost(host);
+            String host = validarAlvo(hostDigitado);
             telemetriaLogger.logEvent("info", "diagnostico", "ping_executado", Map.of("host", host));
 
             int[] tempos = {18, 17, 35, 13};
@@ -92,12 +94,12 @@ public class DiagnosticoService {
 
     // ------------------------------------------------------------------- DNS
 
-    public ResultadoDiagnostico executarDnsSimulado(String dominio) {
+    public ResultadoDiagnostico executarDnsSimulado(String dominioDigitado) {
         return telemetriaLogger.medir("diagnostico", "dns_simulado", () -> {
-            validarHost(dominio);
+            String dominio = validarDominio(dominioDigitado);
             telemetriaLogger.logEvent("info", "diagnostico", "dns_executado", Map.of("dominio", dominio));
 
-            String ip = gerarIpAleatorio();
+            String ip = ipDeDocumentacao(dominio);
             int queryTime = (int) (Math.random() * 20 + 2);
             String bruta = "; <<>> DiG 9.16.1-Ubuntu <<>> " + dominio + "\n" +
                     ";; global options: +cmd\n" +
@@ -137,16 +139,16 @@ public class DiagnosticoService {
                             "NXDOMAIN no lugar de NOERROR = nome inexistente ou zona não delegada.",
                             "Query time muito baixo com TTL decrescente indica resposta vinda do cache.",
                             "Sem a flag 'ra', o servidor não faz recursão para você — use um resolver recursivo."),
-                    "Simulado — a resposta é ilustrativa. Veja Protocolos > DNS para a resolução completa e os ataques.",
+                    "Simulado — a resposta é ilustrativa: o IP sai da faixa de documentação 203.0.113.0/24 (RFC 5737). Veja Protocolos > DNS para a resolução completa e os ataques.",
                     bruta);
         });
     }
 
     // ----------------------------------------------------------- TRACEROUTE
 
-    public ResultadoDiagnostico executarTracerouteSimulado(String host) {
+    public ResultadoDiagnostico executarTracerouteSimulado(String hostDigitado) {
         return telemetriaLogger.medir("diagnostico", "traceroute_simulado", () -> {
-            validarHost(host);
+            String host = validarAlvo(hostDigitado);
             telemetriaLogger.logEvent("info", "diagnostico", "traceroute_executado", Map.of("host", host));
 
             String[][] saltos = {
@@ -209,22 +211,21 @@ public class DiagnosticoService {
 
     public ResultadoDiagnostico executarPingSweepSimulado(String rede) {
         return telemetriaLogger.medir("diagnostico", "ping_sweep_simulado", () -> {
-            validarHost(rede);
-            telemetriaLogger.logEvent("info", "diagnostico", "ping_sweep_executado", Map.of("rede", rede));
+            FaixaIpv4 faixa = validarRede(rede);
+            telemetriaLogger.logEvent("info", "diagnostico", "ping_sweep_executado", Map.of("rede", faixa.digitada()));
 
-            String base = prefixoDidatico(rede);
             // Endereços "vivos" — todos dentro do conjunto REALMENTE amostrado pelo laço
             // abaixo (1..24 de 1 em 1, depois 25,65,105,145,185,225), senão virariam dado morto.
             int[] ativos = {1, 10, 15, 20, 65, 105, 225};
             StringBuilder sb = new StringBuilder();
-            sb.append("Varredura de descoberta (ping sweep) em ").append(rede).append(" [Simulado]:\n\n");
+            sb.append("Varredura de descoberta (ping sweep) em ").append(faixa.digitada()).append(" [Simulado]:\n\n");
             List<Linha> linhas = new ArrayList<>();
             int testados = 0;
             int vivos = 0;
-            for (int host = 1; host <= 254; host += (host < 25 ? 1 : 40)) {
+            for (long deslocamento : faixa.amostra()) {
                 testados++;
-                boolean ativo = contemValor(ativos, host);
-                String ip = base + "." + host;
+                boolean ativo = contemValor(ativos, (int) deslocamento);
+                String ip = numeroComoIpv4(faixa.rede() + deslocamento);
                 if (ativo) {
                     vivos++;
                     int rtt = (int) (Math.random() * 12 + 1);
@@ -235,18 +236,19 @@ public class DiagnosticoService {
                     linhas.add(new Linha(List.of(ip, "sem resposta", "—"), ""));
                 }
             }
-            sb.append("\nHosts ativos encontrados: ").append(vivos).append(" (amostra didática da faixa).\n");
+            sb.append("\nHosts ativos encontrados: ").append(vivos).append(" (amostra didática de ")
+                    .append(faixa.cidr()).append(").\n");
 
             return new ResultadoDiagnostico(
                     "ping-sweep",
                     "Ping Sweep — descoberta de hosts vivos",
                     "travel_explore",
-                    "nmap -sn " + rede,
+                    "nmap -sn " + faixa.digitada(),
                     "Pinga cada endereço de uma faixa para mapear quais hosts estão ativos na rede.",
                     List.of(
                             new Kpi("Endereços testados", String.valueOf(testados), "info", "amostra da faixa"),
                             new Kpi("Hosts ativos", String.valueOf(vivos), "success", "responderam ao ICMP"),
-                            new Kpi("Faixa", rede, "info", "rede alvo")),
+                            new Kpi("Faixa", faixa.cidr(), "info", "endereço de rede + prefixo")),
                     new Tabela("Resultado por endereço",
                             List.of("Endereço", "Estado", "Observado"),
                             linhas),
@@ -270,9 +272,9 @@ public class DiagnosticoService {
 
     // ------------------------------------------------------- VARREDURA SYN
 
-    public ResultadoDiagnostico executarScanSimulado(String host) {
+    public ResultadoDiagnostico executarScanSimulado(String hostDigitado) {
         return telemetriaLogger.medir("diagnostico", "scan_simulado", () -> {
-            validarHost(host);
+            String host = validarAlvo(hostDigitado);
             telemetriaLogger.logEvent("info", "diagnostico", "scan_executado", Map.of("host", host));
 
             String[][] portas = {
@@ -346,12 +348,12 @@ public class DiagnosticoService {
      * trecho resolver↔autoritativo; o IP forjado é de documentação (198.51.100.66, RFC 5737) e o legítimo
      * também (203.0.113.10); nenhum pacote real é enviado.</p>
      *
-     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> domínio inválido sai pela {@code validarHost}, com a exceção
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> domínio inválido sai pela {@code validarDominio}, com a exceção
      * de entrada inválida do módulo; não há outra falha possível (a saída é montada em memória).</p>
      */
-    public ResultadoDiagnostico executarDnsSpoofingSimulado(String dominio) {
+    public ResultadoDiagnostico executarDnsSpoofingSimulado(String dominioDigitado) {
         return telemetriaLogger.medir("diagnostico", "dns_spoofing_simulado", () -> {
-            validarHost(dominio);
+            String dominio = validarDominio(dominioDigitado);
             telemetriaLogger.logEvent("info", "diagnostico", "dns_spoofing_executado", Map.of("dominio", dominio));
 
             StringBuilder sb = new StringBuilder();
@@ -415,16 +417,6 @@ public class DiagnosticoService {
         return v.length == 0 ? 0 : Math.round((float) s / v.length);
     }
 
-    /** Deriva um prefixo /24 didático a partir da faixa informada (só para exibição). */
-    private static String prefixoDidatico(String rede) {
-        String semMascara = rede.contains("/") ? rede.substring(0, rede.indexOf('/')) : rede;
-        int ultimoPonto = semMascara.lastIndexOf('.');
-        if (ultimoPonto > 0 && semMascara.chars().filter(c -> c == '.').count() == 3) {
-            return semMascara.substring(0, ultimoPonto);
-        }
-        return "192.168.1";
-    }
-
     private static boolean contemValor(int[] valores, int alvo) {
         for (int v : valores) {
             if (v == alvo) {
@@ -434,25 +426,206 @@ public class DiagnosticoService {
         return false;
     }
 
-    private void validarHost(String host) {
-        if (host == null || host.trim().isEmpty()) {
-            throw new DiagnosticoException("Host ou domínio não pode ser vazio.");
+    /**
+     * Confere o alvo de ping, traceroute e varredura de portas: um IPv4 ou um nome de host.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> o simulador ecoa o alvo como se tivesse falado com ele. A lista negra
+     * antiga (só {@code ; & | < >}) aceitava {@code xyz!@#} e {@code 999.999.999.999} e mostrava "4 de 4
+     * respostas" — ensinando que aquilo é um destino válido (auditoria FRONT-05).</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> só passa IPv4 com 4 octetos de 0 a 255 sem zero à esquerda, ou nome
+     * conforme a RFC 1123; IPv6 é recusado com explicação, porque os textos do simulador são do ICMP do
+     * IPv4 (tipo 8/0, TTL); espaço nas pontas, comum ao colar, é descartado.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> lança {@link DiagnosticoException} com a regra que a entrada
+     * quebrou (HTTP 400 pelo mapper); nunca devolve valor parcial.</p>
+     */
+    private static String validarAlvo(String bruto) {
+        String alvo = exigirTexto(bruto);
+        if (alvo.indexOf(':') >= 0) {
+            throw new DiagnosticoException("IPv6 não entra neste simulador: os textos são do ICMP do IPv4 "
+                    + "(tipo 8/0, TTL). Para IPv6, use o módulo IPv6.");
         }
-        if (host.length() > 255) {
-            throw new DiagnosticoException("Host inválido ou muito longo.");
+        if (pareceIpv4(alvo)) {
+            ipv4ComoNumero(alvo);
+            return alvo;
         }
-        // Bloqueia injeção de comando (; & |) E caracteres de HTML/script (defesa em profundidade).
-        for (char c : new char[]{' ', ';', '&', '|', '<', '>', '"', '\'', '`', '$', '\n', '\r'}) {
-            if (host.indexOf(c) >= 0) {
-                throw new DiagnosticoException("Caracteres inválidos detectados. Apenas hosts e IPs são permitidos.");
+        return validarNome(alvo);
+    }
+
+    /**
+     * Confere o domínio do dig e do envenenamento de DNS: só nome, nunca IP.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> o dig pergunta pelo registro A de um NOME; "dig 8.8.8.8" pergunta pelo
+     * nome "8.8.8.8." e não acha nada. Responder NOERROR a isso ensinava errado.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> nome conforme a RFC 1123, sem o ponto final (o simulador o acrescenta
+     * na ANSWER SECTION); IP literal é recusado apontando a consulta reversa.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> lança {@link DiagnosticoException} com a regra quebrada.</p>
+     */
+    private static String validarDominio(String bruto) {
+        String dominio = exigirTexto(bruto);
+        if (dominio.indexOf(':') >= 0 || pareceIpv4(dominio)) {
+            throw new DiagnosticoException("Informe um nome, não um IP: o dig pergunta pelo endereço de um nome. "
+                    + "Para o nome de um IP, a consulta é reversa (dig -x 8.8.8.8).");
+        }
+        return validarNome(dominio);
+    }
+
+    /**
+     * Confere a faixa do ping sweep e calcula o endereço de rede de verdade.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> a amostra antiga pegava os 3 primeiros octetos do que fosse digitado e
+     * listava .1 a .225 para qualquer prefixo — um /30 aparecia com 192.168.1.225, fora da própria faixa.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> IPv4 com prefixo de /0 a /32; sem prefixo é um host só (/32), como no
+     * nmap; a rede é o IP com os bits de host zerados; IPv6 é recusado com explicação (um /64 tem 2^64
+     * endereços).</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> lança {@link DiagnosticoException} com a regra quebrada.</p>
+     */
+    private static FaixaIpv4 validarRede(String bruto) {
+        String digitada = exigirTexto(bruto);
+        if (digitada.indexOf(':') >= 0) {
+            throw new DiagnosticoException("Ping sweep em IPv6 não é viável: um /64 tem 2^64 endereços. "
+                    + "Na rede local, a descoberta em IPv6 usa NDP e o multicast ff02::1.");
+        }
+        int barra = digitada.indexOf('/');
+        String endereco = barra < 0 ? digitada : digitada.substring(0, barra);
+        if (!pareceIpv4(endereco)) {
+            throw new DiagnosticoException("Informe uma rede IPv4, como 192.168.1.0/24.");
+        }
+        long ip = ipv4ComoNumero(endereco);
+        int prefixo = 32;
+        if (barra >= 0) {
+            String p = digitada.substring(barra + 1);
+            if (!p.matches("\\d{1,2}") || Integer.parseInt(p) > 32) {
+                throw new DiagnosticoException("O prefixo do IPv4 vai de /0 a /32.");
             }
+            prefixo = Integer.parseInt(p);
+        }
+        long mascara = prefixo == 0 ? 0L : (0xFFFFFFFFL << (32 - prefixo)) & 0xFFFFFFFFL;
+        return new FaixaIpv4(digitada, ip & mascara, prefixo);
+    }
+
+    /**
+     * A faixa de um ping sweep: o que foi digitado, o endereço de rede e o prefixo.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> dar à simulação endereços que pertencem de fato à faixa pedida.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> {@code rede} tem os bits de host zerados; a amostra fica dentro da
+     * faixa — /32 é o próprio endereço, /31 são os dois (RFC 3021), e nos demais rede e broadcast ficam de
+     * fora; em faixas maiores que /24 a amostra cobre só os primeiros 256 endereços.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> não falha: só é criada por {@link #validarRede}.</p>
+     */
+    private record FaixaIpv4(String digitada, long rede, int prefixo) {
+
+        String cidr() {
+            return numeroComoIpv4(rede) + "/" + prefixo;
+        }
+
+        List<Long> amostra() {
+            if (prefixo == 32) {
+                return List.of(0L);
+            }
+            if (prefixo == 31) {
+                return List.of(0L, 1L);
+            }
+            long ultimoHost = Math.min(1L << (32 - prefixo), 256L) - 2;
+            List<Long> deslocamentos = new ArrayList<>();
+            for (long d = 1; d <= 254 && d <= ultimoHost; d += (d < 25 ? 1 : 40)) {
+                deslocamentos.add(d);
+            }
+            return deslocamentos;
         }
     }
 
-    private String gerarIpAleatorio() {
-        return (int) (Math.random() * 254 + 1) + "." +
-                (int) (Math.random() * 255) + "." +
-                (int) (Math.random() * 255) + "." +
-                (int) (Math.random() * 254 + 1);
+    /** Texto obrigatório, sem espaço nas pontas e com no máximo 253 caracteres (limite do nome no DNS). */
+    private static String exigirTexto(String bruto) {
+        String texto = bruto == null ? "" : bruto.strip();
+        if (texto.isEmpty()) {
+            throw new DiagnosticoException("Host ou domínio não pode ser vazio.");
+        }
+        if (texto.length() > 253) {
+            throw new DiagnosticoException("Entrada muito longa: um nome no DNS tem no máximo 253 caracteres.");
+        }
+        return texto;
+    }
+
+    /** Só dígitos e pontos: é uma tentativa de IPv4, e como IPv4 será julgada. */
+    private static boolean pareceIpv4(String texto) {
+        return texto.matches("[0-9.]+");
+    }
+
+    /** IPv4 de 4 octetos (0 a 255, sem zero à esquerda) como número de 32 bits; senão {@link DiagnosticoException}. */
+    private static long ipv4ComoNumero(String texto) {
+        String[] octetos = texto.split("\\.", -1);
+        if (octetos.length != 4) {
+            throw new DiagnosticoException("Um IPv4 tem 4 octetos separados por ponto (ex.: 192.168.0.1).");
+        }
+        long valor = 0;
+        for (String o : octetos) {
+            if (o.isEmpty() || o.length() > 3) {
+                throw new DiagnosticoException("Cada octeto do IPv4 vai de 0 a 255.");
+            }
+            if (o.length() > 1 && o.charAt(0) == '0') {
+                throw new DiagnosticoException("Octeto com zero à esquerda (ex.: 010) é lido como octal por "
+                        + "algumas ferramentas; escreva sem o zero.");
+            }
+            int n = Integer.parseInt(o);
+            if (n > 255) {
+                throw new DiagnosticoException("Cada octeto do IPv4 vai de 0 a 255.");
+            }
+            valor = (valor << 8) | n;
+        }
+        return valor;
+    }
+
+    private static String numeroComoIpv4(long valor) {
+        return ((valor >> 24) & 0xFF) + "." + ((valor >> 16) & 0xFF) + "." + ((valor >> 8) & 0xFF) + "." + (valor & 0xFF);
+    }
+
+    /**
+     * Nome de host conforme a RFC 1123 §2.1, devolvido sem o ponto final.
+     *
+     * <p>Partes de 1 a 63 caracteres com letras sem acento, números e hífen, sem hífen nas pontas; a última
+     * parte não pode ser só número (RFC 3696 §2), senão {@code abc.123} passaria por nome.</p>
+     */
+    private static String validarNome(String texto) {
+        String nome = texto.endsWith(".") ? texto.substring(0, texto.length() - 1) : texto;
+        String[] partes = nome.split("\\.", -1);
+        for (String parte : partes) {
+            if (parte.isEmpty()) {
+                throw new DiagnosticoException("Nome com parte vazia: dois pontos seguidos ou ponto no início.");
+            }
+            if (parte.length() > 63) {
+                throw new DiagnosticoException("Cada parte do nome, entre pontos, tem no máximo 63 caracteres.");
+            }
+            if (!parte.matches("[A-Za-z0-9-]+")) {
+                throw new DiagnosticoException("Nome de host aceita só letras sem acento, números, hífen e ponto "
+                        + "(RFC 1123). Nome com acento vai ao DNS em punycode (xn--).");
+            }
+            if (parte.startsWith("-") || parte.endsWith("-")) {
+                throw new DiagnosticoException("Parte do nome não começa nem termina com hífen.");
+            }
+        }
+        if (partes[partes.length - 1].matches("\\d+")) {
+            throw new DiagnosticoException("A última parte do nome não pode ser só número; se é um IP, confira "
+                    + "os 4 octetos.");
+        }
+        return nome;
+    }
+
+    /**
+     * IP da resposta simulada do dig: faixa de documentação 203.0.113.0/24 (RFC 5737), fixo por nome.
+     *
+     * <p>O sorteio antigo cobria 1.0.0.0 a 254.255.255.255 e entregava multicast (224.x), loopback (127.x) e
+     * rede privada como "o endereço do site". A faixa de documentação nunca é de ninguém, e o mesmo nome
+     * devolve sempre o mesmo IP, como um registro A de verdade dentro do TTL.</p>
+     */
+    private static String ipDeDocumentacao(String dominio) {
+        return "203.0.113." + (Math.floorMod(dominio.toLowerCase(java.util.Locale.ROOT).hashCode(), 254) + 1);
     }
 }

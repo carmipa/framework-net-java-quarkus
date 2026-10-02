@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 class DiagnosticoHttpTest {
@@ -255,5 +256,137 @@ class DiagnosticoHttpTest {
                 .when().post("/diagnostico/api/ping")
                 .then()
                 .statusCode(400);
+    }
+
+    /**
+     * FRONT-05: a lista negra antiga deixava alvo impossível receber "4 de 4 respostas". Cada caso é
+     * recusado com a regra que quebrou — a mensagem é a aula.
+     */
+    @ParameterizedTest(name = "{0} recusa {2}")
+    @CsvSource(delimiter = '|', value = {
+            "/diagnostico/api/ping         | host    | xyz!@#             | letras sem acento",
+            "/diagnostico/api/ping         | host    | 999.999.999.999    | de 0 a 255",
+            "/diagnostico/api/ping         | host    | 1.2.3              | 4 octetos",
+            "/diagnostico/api/ping         | host    | 010.1.1.1          | zero à esquerda",
+            "/diagnostico/api/traceroute   | host    | a..b.com           | parte vazia",
+            "/diagnostico/api/traceroute   | host    | -a.example.com     | hífen",
+            "/diagnostico/api/scan         | host    | abc.123            | só número",
+            "/diagnostico/api/scan         | host    | 2001:db8::1        | IPv6 não entra",
+            "/diagnostico/api/dns          | dominio | 8.8.8.8            | dig -x",
+            "/diagnostico/api/dns          | dominio | exemplo_1.com      | letras sem acento",
+            "/diagnostico/api/dns-spoofing | dominio | 203.0.113.10       | dig -x",
+            "/diagnostico/api/ping-sweep   | rede    | 192.168.1.0/33     | /0 a /32",
+            "/diagnostico/api/ping-sweep   | rede    | 2001:db8::/64      | 2^64",
+            "/diagnostico/api/ping-sweep   | rede    | scanme.nmap.org/24 | rede IPv4"
+    })
+    void alvoImpossivelERecusadoComARegraQueQuebrou(String rota, String campo, String valor, String regra) {
+        String corpo = recusa(rota, campo, valor);
+        assertTrue(corpo.contains(regra), "esperava a regra '" + regra + "' em: " + corpo);
+    }
+
+    /** A1: o legítimo com o mesmo sinal do defeito passa — números e pontos no limite, hífen, ponto final. */
+    @ParameterizedTest(name = "{0} aceita {2}")
+    @CsvSource(delimiter = '|', value = {
+            "/diagnostico/api/ping       | host    | 255.255.255.255",
+            "/diagnostico/api/ping       | host    | 0.0.0.0",
+            "/diagnostico/api/traceroute | host    | a-b.example.com",
+            "/diagnostico/api/scan       | host    | scanme.nmap.org",
+            "/diagnostico/api/dns        | dominio | xn--caf-dma.com",
+            "/diagnostico/api/dns        | dominio | localhost",
+            "/diagnostico/api/ping-sweep | rede    | 10.0.0.0/8"
+    })
+    void alvoLegitimoNaFronteiraPassa(String rota, String campo, String valor) {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam(campo, valor)
+                .when().post(rota)
+                .then()
+                .statusCode(200);
+    }
+
+    /** A1 no limite do rótulo: 63 caracteres é o máximo da RFC 1035; 64 é recusado. */
+    @Test
+    void rotuloDe63PassaE64ERecusado() {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("host", "a".repeat(63) + ".example.com")
+                .when().post("/diagnostico/api/ping")
+                .then()
+                .statusCode(200);
+        String corpo = recusa("/diagnostico/api/ping", "host", "a".repeat(64) + ".example.com");
+        assertTrue(corpo.contains("63 caracteres"), corpo);
+    }
+
+    /** Espaço colado nas pontas é descartado, e o ponto final do FQDN não vira "example.com..". */
+    @Test
+    void entradaENormalizadaAntesDeSerEcoada() {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("host", "  8.8.8.8  ")
+                .when().post("/diagnostico/api/ping")
+                .then()
+                .statusCode(200)
+                .body(containsString("ping 8.8.8.8"));
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("dominio", "example.com.")
+                .when().post("/diagnostico/api/dns")
+                .then()
+                .statusCode(200)
+                .body(containsString("example.com."))
+                .body(not(containsString("example.com..")));
+    }
+
+    /** O dig sorteava 1.0.0.0–254.x (multicast, loopback); agora responde da faixa RFC 5737, sempre a mesma por nome. */
+    @Test
+    void digRespondeDaFaixaDeDocumentacaoESempreIgual() {
+        String primeira = given().contentType("application/x-www-form-urlencoded")
+                .formParam("dominio", "example.com")
+                .when().post("/diagnostico/api/dns").then().statusCode(200).extract().asString();
+        String segunda = given().contentType("application/x-www-form-urlencoded")
+                .formParam("dominio", "example.com")
+                .when().post("/diagnostico/api/dns").then().statusCode(200).extract().asString();
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("IN\\s+A\\s+(\\d+\\.\\d+\\.\\d+\\.\\d+)").matcher(primeira);
+        assertTrue(m.find(), "a ANSWER SECTION não trouxe registro A");
+        String ip = m.group(1);
+        assertTrue(ip.startsWith("203.0.113."), "IP fora da faixa de documentação: " + ip);
+        assertTrue(segunda.contains("A\t" + ip) || segunda.contains(ip), "o mesmo nome deu outro IP");
+    }
+
+    /** A amostra do ping sweep fica dentro da faixa: um /30 tem só dois hosts, e a rede é calculada. */
+    @Test
+    void pingSweepAmostraSoEnderecosDaFaixa() {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("rede", "192.168.1.77/30")
+                .when().post("/diagnostico/api/ping-sweep")
+                .then()
+                .statusCode(200)
+                .body(containsString("192.168.1.76/30"))
+                .body(containsString("192.168.1.77"))
+                .body(containsString("192.168.1.78"))
+                .body(not(containsString("192.168.1.79")))
+                .body(not(containsString("192.168.1.225")));
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("rede", "192.168.1.5")
+                .when().post("/diagnostico/api/ping-sweep")
+                .then()
+                .statusCode(200)
+                .body(containsString("192.168.1.5/32"))
+                .body(not(containsString("192.168.1.6")));
+    }
+
+    /** Corpo da recusa em UTF-8 (pedido htmx, como a página faz); reprova se não vier 400. */
+    private static String recusa(String rota, String campo, String valor) {
+        byte[] corpo = given()
+                .contentType("application/x-www-form-urlencoded")
+                .header("HX-Request", "true")
+                .formParam(campo, valor)
+                .when().post(rota)
+                .then()
+                .statusCode(400)
+                .extract().asByteArray();
+        return new String(corpo, java.nio.charset.StandardCharsets.UTF_8);
     }
 }

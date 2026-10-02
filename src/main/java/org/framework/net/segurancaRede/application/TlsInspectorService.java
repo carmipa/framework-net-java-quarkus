@@ -230,7 +230,8 @@ public class TlsInspectorService {
     private static boolean perigoso(String valor) {
         // HTML/script E caracteres de controle (\n \r \t) — estes últimos porque o host
         // é ecoado no corpo do evento de telemetria; sem barrá-los, um newline forja uma
-        // linha de log (injeção de log). Espelha o validarHost do DiagnosticoService.
+        // linha de log (injeção de log). O host aqui só é comparado ao SAN; quem o ecoa como resposta de
+        // rede é o DiagnosticoService, que por isso exige lista branca (validarAlvo).
         return valor.indexOf('<') >= 0 || valor.indexOf('>') >= 0
                 || valor.indexOf('"') >= 0 || valor.indexOf('\'') >= 0 || valor.indexOf('`') >= 0
                 || valor.indexOf('\n') >= 0 || valor.indexOf('\r') >= 0 || valor.indexOf('\t') >= 0;
