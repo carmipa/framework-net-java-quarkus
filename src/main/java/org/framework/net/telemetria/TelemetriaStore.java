@@ -155,6 +155,27 @@ public class TelemetriaStore {
         }
     }
 
+    /**
+     * Materializa o retrato OTLP agora, para quem vai ENTREGAR o arquivo.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> a exportação JSON lia o arquivo logo depois do {@link #flush()}; com
+     * a falha engolida ali, ela entregava o retrato anterior como se fosse o atual (auditoria OPS-12).</p>
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> mesma escrita serializada do {@link #flush()}.</p>
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> propaga a {@link IOException}; telemetria desligada não
+     * grava e não lança.</p>
+     */
+    public void flushOuFalhar() throws IOException {
+        if (!enabled) {
+            return;
+        }
+        lock.lock();
+        try {
+            persistirCanonico();
+        } finally {
+            lock.unlock();
+        }
+    }
+
     public TelemetriaResumo gerarResumo(int limiteUltimos) {
         lock.lock();
         try {

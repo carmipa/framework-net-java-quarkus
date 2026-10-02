@@ -100,7 +100,7 @@ public class TelemetriaResource {
             // JSON continua saindo do arquivo canonico OTLP, que e o formato
             // compartilhavel e a base do dataset publico.
             var arquivo = store.arquivoCompartilhado();
-            store.flush();
+            store.flushOuFalhar();
             byte[] conteudo = Files.readAllBytes(arquivo);
             return Response.ok(conteudo)
                     .type(MediaType.APPLICATION_JSON)
