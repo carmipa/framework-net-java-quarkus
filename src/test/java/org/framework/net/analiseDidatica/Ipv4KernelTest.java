@@ -218,6 +218,9 @@ class Ipv4KernelTest {
         assertEquals("Documentação (RFC 5737)", kernel.privacidadeRfc1918(new int[]{203, 0, 113, 9}).tipo());
         assertEquals("Benchmark (RFC 2544)", kernel.privacidadeRfc1918(new int[]{198, 18, 0, 1}).tipo());
         assertEquals("Benchmark (RFC 2544)", kernel.privacidadeRfc1918(new int[]{198, 19, 255, 255}).tipo());
+        // CONT-31: 192.0.0.0/24 (RFC 6890), com 192.0.0.8 "dummy" (RFC 7600); 192.0.1.1 fica fora (fronteira).
+        assertEquals("Reservado IETF (RFC 6890)", kernel.privacidadeRfc1918(new int[]{192, 0, 0, 8}).tipo());
+        assertEquals("Público", kernel.privacidadeRfc1918(new int[]{192, 0, 1, 1}).tipo());
 
         assertEquals("Público", kernel.privacidadeRfc1918(new int[]{100, 63, 255, 255}).tipo());
         assertEquals("Público", kernel.privacidadeRfc1918(new int[]{100, 128, 0, 0}).tipo());

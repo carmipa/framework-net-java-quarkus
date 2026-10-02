@@ -73,7 +73,7 @@ class Ipv6CalculatorTest {
         assertEquals("2001:db8::/32", doc.get("faixa"));
         assertEquals("Não", doc.get("roteavel"));
 
-        for (String foraDe2000 : new String[]{"4000::1", "::2", "fec0::1", "64:ff9b::1"}) {
+        for (String foraDe2000 : new String[]{"4000::1", "::2", "fec0::1"}) {
             Map<String, Object> r = calc.processar(foraDe2000);
             assertEquals("Outro/Reservado", r.get("tipo"), foraDe2000);
             assertEquals("Não", r.get("roteavel"), foraDe2000);
@@ -88,6 +88,61 @@ class Ipv6CalculatorTest {
         assertEquals("IPv4-mapeado", r.get("tipo"));
         assertEquals("::ffff:0:0/96", r.get("faixa"));
         assertEquals("Não", r.get("roteavel"));
+    }
+
+    /**
+     * Auditoria CONT-31/CALC-31 — gabarito independente (A3): registro IANA de propósito especial do IPv6
+     * (coluna "Globally Reachable"), RFC 9637 (3fff::/20), RFC 5180 (2001:2::/48), RFC 4380 (Teredo),
+     * RFC 3056 (6to4) e RFC 6052 §3.1 (NAT64 só com IPv4 público). Fronteiras (A1): 3fff:1000::1 está fora
+     * do /20 e 2001:3::1 (AMT) fora do benchmarking e do Teredo — os dois continuam globais.
+     */
+    @Test
+    void faixasEspeciaisDoRegistroIana() {
+        assertEquals("Documentação", calc.processar("3fff::1").get("tipo"));
+        assertEquals("Não", calc.processar("3fff::1").get("roteavel"));
+        assertEquals("Global unicast", calc.processar("3fff:1000::1").get("tipo"));
+        assertEquals("Benchmarking", calc.processar("2001:2::1").get("tipo"));
+        assertEquals("Não", calc.processar("2001:2::1").get("roteavel"));
+        assertEquals("Teredo", calc.processar("2001:0:4136:e378::1").get("tipo"));
+        assertEquals("Global unicast", calc.processar("2001:3::1").get("tipo"));
+        assertEquals("6to4", calc.processar("2002:c000:204::1").get("tipo"));
+        Map<String, Object> nat64Publico = calc.processar("64:ff9b::808:808");
+        assertEquals("NAT64", nat64Publico.get("tipo"));
+        assertEquals("Sim, via tradutor NAT64", nat64Publico.get("roteavel"));
+        Map<String, Object> nat64Doc = calc.processar("64:ff9b::c000:201");
+        assertEquals("NAT64", nat64Doc.get("tipo"));
+        assertTrue(String.valueOf(nat64Doc.get("roteavel")).startsWith("Não"), String.valueOf(nat64Doc.get("roteavel")));
+        assertEquals("Sim", calc.processar("2606:4700:4700::1111").get("roteavel"));
+    }
+
+    /**
+     * Auditoria CALC-06/CALC-25/CALC-30: com prefixo a análise dava 500 ("/64/64" no cálculo da rede);
+     * "endereço%zona/prefixo" perdia o prefixo; o IPv4-mapeado saía sem a notação mista.
+     */
+    @Test
+    void prefixoEZonaInformadosSaoPreservadosSemDuplicar() {
+        Map<String, Object> r = calc.processar("2001:db8::1/64");
+        assertEquals("2001:db8::1/64", r.get("comprimido"));
+        assertEquals("2001:db8::", r.get("rede_64"));
+        assertEquals("2001:db8::/64", r.get("rede_informada"));
+        assertEquals("0000:0000:0000:0001", r.get("ultimos_64"));
+        assertFalse(r.toString().contains("/64/64"), r.toString());
+
+        Map<String, Object> bloco = calc.processar("2001:db8:abcd::/48");
+        assertEquals("2001:db8:abcd::/48", bloco.get("rede_informada"));
+        assertEquals("2001:db8:abcd::", bloco.get("rede_64"));
+
+        Map<String, Object> zona = calc.processar("fe80::1%eth0/64");
+        assertEquals("eth0", zona.get("zone_index"));
+        assertEquals("fe80::1%eth0/64", zona.get("comprimido"));
+        assertEquals("fe80::/64", zona.get("rede_informada"));
+
+        Map<String, Object> semPrefixo = calc.processar("2001:db8::1");
+        assertEquals("", semPrefixo.get("rede_informada"));
+        assertEquals("2001:db8::1", semPrefixo.get("comprimido"));
+
+        assertEquals("::ffff:192.0.2.1", calc.processar("::ffff:c000:201").get("comprimido"));
+        assertTrue(calc.processar("::/0").toString().contains("rota padrão"));
     }
 
     @Test

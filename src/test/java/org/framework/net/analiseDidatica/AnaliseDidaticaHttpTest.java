@@ -220,6 +220,20 @@ class AnaliseDidaticaHttpTest {
                 .body(containsString("10.0.0.2 até 10.0.0.254"));
     }
 
+    /** Auditoria CALC-06: IPv6 com prefixo na aba IPv6 dava 500. */
+    @Test
+    void ipv6ComPrefixoNaoDerrubaAPagina() {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("modo", "ipv6")
+                .formParam("ipv6", "2001:db8::1/64")
+                .when().post("/analise")
+                .then()
+                .statusCode(200)
+                .body(containsString("2001:db8::/64"))
+                .body(not(containsString("/64/64")));
+    }
+
     /** Auditoria CALC-35: o "/8" digitado junto do endereço vence o prefixo que sobrou no outro campo. */
     @Test
     void barraNoCampoDeEnderecoVenceOPrefixoAntigoComAviso() {

@@ -176,6 +176,18 @@ public class Ipv4Kernel {
         };
     }
 
+    /**
+     * Tipo do endereço IPv4 pelo registro IANA de propósito especial.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> dizer ao aluno se o endereço é privado, público, de documentação,
+     * reservado ou especial — e daí se ele recebe gateway, DHCP e aviso de borda.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> "Público" só sobra para o que não casa com nenhuma faixa especial
+     * (RFC 1918, 6598, 5737, 2544, 6890, 3927, 1112, loopback e 0.0.0.0/8); a ordem testa do mais
+     * específico para o geral.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> não lança; recebe os quatro octetos já validados.</p>
+     */
     public PrivacidadeResult privacidadeRfc1918(int[] parts) {
         int o1 = parts[0];
         int o2 = parts[1];
@@ -205,6 +217,13 @@ public class Ipv4Kernel {
         if (o1 == 100 && o2 >= 64 && o2 <= 127) {
             return new PrivacidadeResult("CGNAT (RFC 6598)",
                     "Faixa 100.64.0.0 - 100.127.255.255 (espaço compartilhado do provedor; não roteável na Internet)");
+        }
+        // 192.0.0.0/24 era "Público" (auditoria CONT-31): o registro IANA de propósito especial o reserva às
+        // atribuições de protocolo da IETF (RFC 6890), como 192.0.0.8, o endereço "dummy" do RFC 7600.
+        if (o1 == 192 && o2 == 0 && o3 == 0) {
+            return new PrivacidadeResult("Reservado IETF (RFC 6890)",
+                    "Faixa 192.0.0.0/24 (atribuições de protocolo da IETF, ex.: 192.0.0.8 \"dummy\" do RFC 7600; "
+                            + "não é endereço público comum)");
         }
         if ((o1 == 192 && o2 == 0 && o3 == 2) || (o1 == 198 && o2 == 51 && o3 == 100)
                 || (o1 == 203 && o2 == 0 && o3 == 113)) {
