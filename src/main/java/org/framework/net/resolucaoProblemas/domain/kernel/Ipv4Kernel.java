@@ -19,10 +19,28 @@ import java.util.List;
 @ApplicationScoped
 public class Ipv4Kernel {
 
+    /**
+     * Lê uma rede IPv4 em CIDR ("192.168.1.0/24") e devolve o bloco.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> a rede base de todo o planejamento VLSM.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> só a forma pontuada com QUATRO octetos decimais, sem zero à
+     * esquerda. A biblioteca aceita a forma do inet_aton e reinterpretava em silêncio: "192.168.1/24" virava
+     * 192.168.0.0/24 (o último número ocupa 16 bits) e "10.1/16" virava 10.0.0.0/16; "010" seria octal
+     * (auditoria CALC-20). Bits de host no endereço são zerados (192.168.1.77/24 → 192.168.1.0/24).</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> texto vazio, forma incompleta, octeto com zero à esquerda ou
+     * endereço que não é IPv4 lançam {@link EntradaInvalidaException} com a mensagem para a tela.</p>
+     */
     public IPv4Address parseNetwork(String input, String fieldLabel) {
         String txt = input == null ? "" : input.strip();
         if (txt.isEmpty()) {
             throw new EntradaInvalidaException(fieldLabel + " deve ser informado.");
+        }
+        String semPrefixo = txt.contains("/") ? txt.substring(0, txt.indexOf('/')) : txt;
+        if (!semPrefixo.matches("(0|[1-9]\\d{0,2})(\\.(0|[1-9]\\d{0,2})){3}")) {
+            throw new EntradaInvalidaException(fieldLabel + " precisa dos quatro octetos, sem zero à esquerda "
+                    + "(ex.: 192.168.1.0/24): \"" + txt + "\" seria lido de outro jeito.");
         }
         IPAddressString addrString = new IPAddressString(txt);
         if (!addrString.isValid()) {

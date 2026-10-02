@@ -34,6 +34,20 @@ class ResolucaoIpv4KernelTest {
         assertEquals("E", kernel.classificacaoIpv4(240).classe());
     }
 
+    /**
+     * Auditoria CALC-20: a forma incompleta do inet_aton era reinterpretada em silêncio ("192.168.1/24" →
+     * 192.168.0.0/24). Fronteira (A1): a forma completa passa, inclusive 0.0.0.0/0 e host com bits ligados.
+     */
+    @Test
+    void redeBaseIncompletaOuComZeroAEsquerdaERecusada() {
+        for (String ruim : new String[]{"192.168.1/24", "10.1/16", "192.168.010.0/24", "10/8"}) {
+            assertThrows(EntradaInvalidaException.class, () -> kernel.parseNetwork(ruim, "Rede base"), ruim);
+        }
+        assertEquals("192.168.1.0/24", kernel.parseNetwork("192.168.1.0/24", "Rede base").toCanonicalString());
+        assertEquals("10.0.0.0/8", kernel.parseNetwork("10.0.0.77/8", "Rede base").toCanonicalString());
+        assertEquals("0.0.0.0/0", kernel.parseNetwork("0.0.0.0/0", "Rede base").toCanonicalString());
+    }
+
     @Test
     void parseIpv4PartsValido() {
         int[] parts = kernel.parseIpv4Parts("10.20.30.40", "IP");
