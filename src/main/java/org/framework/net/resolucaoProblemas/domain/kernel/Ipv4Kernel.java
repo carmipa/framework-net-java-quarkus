@@ -35,7 +35,7 @@ public class Ipv4Kernel {
     public IPv4Address parseNetwork(String input, String fieldLabel) {
         String txt = input == null ? "" : input.strip();
         if (txt.isEmpty()) {
-            throw new EntradaInvalidaException(fieldLabel + " deve ser informado.");
+            throw new EntradaInvalidaException("Campo obrigatório: " + fieldLabel + ".");
         }
         String semPrefixo = txt.contains("/") ? txt.substring(0, txt.indexOf('/')) : txt;
         if (!semPrefixo.matches("(0|[1-9]\\d{0,2})(\\.(0|[1-9]\\d{0,2})){3}")) {

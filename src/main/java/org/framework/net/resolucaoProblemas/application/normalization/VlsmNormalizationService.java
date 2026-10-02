@@ -60,7 +60,7 @@ public class VlsmNormalizationService {
     public int parsePositiveInt(String value, String fieldLabel) {
         String txt = value == null ? "" : value.strip();
         if (txt.isEmpty()) {
-            throw new EntradaInvalidaException(fieldLabel + " deve ser informado.");
+            throw new EntradaInvalidaException("Campo obrigatório: " + fieldLabel + ".");
         }
         java.util.OptionalInt lido = org.framework.net.shared.NumeroAscii.inteiro(txt, org.framework.net.shared.NumeroAscii.MAX_DIGITOS_INT);
         if (lido.isEmpty()) {

@@ -146,7 +146,7 @@ public class AdminApiKeyFilter implements ContainerRequestFilter {
             // "ACESSO BLOQUEADO" quando o cliente e navegador.
             requestContext.abortWith(Response.status(Response.Status.FORBIDDEN)
                     .type(MediaType.APPLICATION_JSON)
-                    .entity("{\"erro\":\"Esta acao e restrita ao dono da Telemetria.\"}")
+                    .entity("{\"erro\":\"Esta ação é restrita ao dono da Telemetria.\"}")
                     .build());
             return;
         }

@@ -559,7 +559,7 @@ public class ResolucaoProblemasResource {
                 locations.add(new LocationInput(name, ""));
                 return new LocationCollectionResult(
                         locations,
-                        "Hosts da localidade '" + name + "' deve ser informado.",
+                        "Hosts da localidade '" + name + "' devem ser informados.",
                         Set.of("loc_hosts")
                 );
             }

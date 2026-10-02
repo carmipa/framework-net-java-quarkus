@@ -550,7 +550,7 @@
             var r = await fetch("/telemetria/api/dataset/estado");
             var d = await r.json();
             if (!d.consultado) {
-                mostrar("warning", "help", "Nao foi possivel conferir o repositorio",
+                mostrar("warning", "help", "Não foi possível conferir o repositório",
                     d.observacao || "Sem resposta do GitHub.", "");
                 return;
             }
@@ -560,8 +560,8 @@
                 return;
             }
             mostrar("info", "inventory_2",
-                d.snapshots.length + " snapshot(s) publicado(s) · ultimo: " + d.snapshots[0],
-                "No repositorio: " + d.snapshots.join(" · "),
+                d.snapshots.length + " snapshot(s) publicado(s) · último: " + d.snapshots[0],
+                "No repositório: " + d.snapshots.join(" · "),
                 "https://github.com/carmipa/framework-net-telemetry-dataset/tree/main/dataset");
         } catch (err) {
             /* silencio: a ausencia do painel de estado nao pode quebrar a pagina */
@@ -571,8 +571,8 @@
     atualizarEstado();
 
     botao.addEventListener("click", async function () {
-        var aviso = "Publicar um snapshot novo no repositorio PUBLICO?\n\n"
-            + "Publicar nao tem desfazer, e snapshot ja publicado nao pode ser sobrescrito.";
+        var aviso = "Publicar um snapshot novo no repositório PÚBLICO?\n\n"
+            + "Publicar não tem desfazer, e snapshot já publicado não pode ser sobrescrito.";
         if (!window.confirm(aviso)) {
             return;
         }
@@ -587,10 +587,10 @@
                     d.registros + " registro(s), " + d.visitantes + " identificador(es) consultado(s) distinto(s) · " +
                     d.arquivos.length + " arquivo(s).", d.url);
             } else if (r.status === 409) {
-                mostrar("warning", "block", "Snapshot do dia ja existe",
+                mostrar("warning", "block", "Snapshot do dia já existe",
                     d.erro, "");
             } else {
-                mostrar("danger", "error", "Nao foi possivel publicar", d.erro || ("HTTP " + r.status), "");
+                mostrar("danger", "error", "Não foi possível publicar", d.erro || ("HTTP " + r.status), "");
             }
         } catch (err) {
             mostrar("danger", "error", "Falha de rede ao publicar", String(err), "");

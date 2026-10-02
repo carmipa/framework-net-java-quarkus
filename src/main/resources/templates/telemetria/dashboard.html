@@ -54,13 +54,13 @@
                     <ul class="dropdown-menu dropdown-menu-end tele-export-menu" aria-labelledby="btn-exportar-telemetria">
                         <li><a class="dropdown-item" href="/telemetria/api/exportar?formato=json">
                             <span class="material-symbols-outlined" translate="no" aria-hidden="true">data_object</span> JSON
-                            <small>OTLP compartilhavel</small></a></li>
+                            <small>OTLP compartilhável</small></a></li>
                         <li><a class="dropdown-item" href="/telemetria/api/exportar?formato=csv">
                             <span class="material-symbols-outlined" translate="no" aria-hidden="true">table</span> CSV
                             <small>abre no Excel</small></a></li>
                         <li><a class="dropdown-item" href="/telemetria/api/exportar?formato=txt">
                             <span class="material-symbols-outlined" translate="no" aria-hidden="true">description</span> TXT
-                            <small>relatorio para leitura</small></a></li>
+                            <small>relatório para leitura</small></a></li>
                         <li><a class="dropdown-item" href="/telemetria/api/exportar?formato=html">
                             <span class="material-symbols-outlined" translate="no" aria-hidden="true">html</span> HTML
                             <small>tabela pronta para imprimir</small></a></li>
@@ -69,7 +69,7 @@
                 {#if datasetConfigurado}
                 <button type="button" class="aed-btn aed-btn-teal" id="btn-sincronizar-dataset"
                         data-bs-toggle="tooltip" data-bs-placement="top"
-                        title="Gera o dataset sanitizado em memoria e publica no repositorio publico {datasetDestino}. Nada fica guardado no servidor.">
+                        title="Gera o dataset sanitizado em memória e publica no repositório público {datasetDestino}. Nada fica guardado no servidor.">
                     <span class="material-symbols-outlined" translate="no" aria-hidden="true">cloud_upload</span> Sincronizar dataset
                 </button>
                 {#else}
@@ -342,7 +342,7 @@
 {/content}
 {#extraScripts}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" integrity="sha384-e6nUZLBkQ86NJ6TVVKAeSaK8jWa3NhkYWZFomE39AvDbQWeie9PlQqM3pmYW5d1g" crossorigin="anonymous"></script>
-<script src="/telemetria/js/dashboard.js?v=20261002b"></script>
+<script src="/telemetria/js/dashboard.js?v=20261002c"></script>
 {/extraScripts}
 {/include}
         

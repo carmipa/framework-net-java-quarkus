@@ -199,7 +199,7 @@ public class GeoLookupService {
     }
 
     public String mensagemIpInvalido() {
-        return "Endereço IP inválido. Usa IPv4 ou IPv6 válidos.";
+        return "Endereço IP inválido. Use um IPv4 ou IPv6 válido.";
     }
 
     public Map<String, Object> enriquecerRespostaGeo(Map<String, Object> out) {
