@@ -111,3 +111,18 @@ test('texto absurdo não lança e não passa do teto', () => {
     recusa(N.binario(enorme), 'faixa');
     recusa(N.inteiro({ toString() { return 'x'; } }), 'formato');
 });
+
+test('ACAD-06: a mesma resposta repetida tem a mesma chave, inclusive fora da faixa', () => {
+    const faixa = N.inteiro('999', { min: 0, max: 255 });
+    assert.equal(faixa.classe, 'faixa');
+    const a = N.chaveRepeticao(faixa, null, '999');
+    assert.equal(a, N.chaveRepeticao(N.inteiro(' 9 99', { min: 0, max: 255 }), null, ' 9 99'),
+        'espaço não faz resposta nova');
+    assert.notEqual(a, N.chaveRepeticao(N.inteiro('998', { min: 0, max: 255 }), null, '998'),
+        'outra resposta fora da faixa conta');
+    const ok = N.inteiro('7', { min: 0, max: 255 });
+    assert.equal(N.chaveRepeticao(ok, ok.valor, '7'), N.chaveRepeticao(N.inteiro('007'), 7, '007'),
+        'mesmo valor escrito de outro jeito é a mesma resposta');
+    assert.equal(N.chaveRepeticao(N.inteiro(''), null, ''), null, 'vazio não conta e não bloqueia');
+    assert.equal(N.chaveRepeticao(N.inteiro('1.5'), null, '1.5'), null, 'formato não conta');
+});

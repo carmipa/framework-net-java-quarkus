@@ -213,7 +213,8 @@
                 responder('neutro', [r.mensagem, ' Isto não conta como tentativa.']);
                 return;
             }
-            if (r.ok && r.valor !== atual.numero && r.valor === ultimaErrada) {
+            var repeticao = N.chaveRepeticao(r, r.ok ? r.valor : null, campo.value);
+            if (!(r.ok && r.valor === atual.numero) && repeticao !== null && repeticao === ultimaErrada) {
                 responder('neutro', ['Essa é a mesma resposta de antes — não contou de novo.']);
                 return;
             }
@@ -237,7 +238,7 @@
                 return;
             }
             errosNestaPergunta += 1;
-            ultimaErrada = r.ok ? r.valor : null;
+            ultimaErrada = repeticao;
             if (!r.ok) {
                 responder('erro', [r.mensagem]);
             } else if (atual.tipo === 'para-binario') {

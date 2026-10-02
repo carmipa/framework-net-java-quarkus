@@ -506,6 +506,52 @@ for (const caso of [
   await page.context().close();
 }
 
+// ACAD-06 — Enter duas vezes na mesma resposta fora da faixa não conta de novo (nem revela o gabarito).
+{
+  const page = await novaPagina(browser);
+  await page.goto(BASE + '/academia/fundamentos/binario', { waitUntil: 'load', timeout: 45000 });
+  await assentar(page);
+  await page.fill('#provar-resposta', '111111111');
+  await page.press('#provar-resposta', 'Enter');
+  await page.waitForTimeout(200);
+  const primeira = await page.textContent('.acad-feedback');
+  await page.press('#provar-resposta', 'Enter');
+  await page.waitForTimeout(200);
+  const segunda = await page.textContent('.acad-feedback');
+  const ok = /não contou de novo/.test(segunda) && !/Resposta:/.test(segunda);
+  registrar('ACAD-06 resposta fora da faixa repetida não conta', ok, `1ª="${(primeira || '').trim().slice(0, 60)}" 2ª="${(segunda || '').trim().slice(0, 60)}"`);
+  await page.context().close();
+}
+
+// ACAD-03 — o resumo da visita sai uma vez, com o estado acumulado: trocar de aba e voltar não envia.
+{
+  const page = await novaPagina(browser);
+  const visitas = [];
+  page.on('request', (q) => {
+    if (q.url().includes('/academia/api/eventos') && q.method() === 'POST') {
+      try { const c = JSON.parse(q.postData() || '{}'); if (c.tipo === 'visita') visitas.push(c); } catch (e) { /* ignora */ }
+    }
+  });
+  await page.goto(BASE + '/academia/fundamentos/binario', { waitUntil: 'load', timeout: 45000 });
+  await assentar(page);
+  const mudar = (estado) => page.evaluate((e) => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => e });
+    document.dispatchEvent(new Event('visibilitychange'));
+  }, estado);
+  await page.evaluate(() => window.AcademiaSinais._definirPrazoOculta && window.AcademiaSinais._definirPrazoOculta(1500));
+  await mudar('hidden'); await page.waitForTimeout(300); await mudar('visible');
+  await page.waitForTimeout(2200);
+  const aposVoltar = visitas.length;
+  await mudar('hidden'); await page.waitForTimeout(2500);
+  const aposAbandono = visitas.length;
+  await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
+  await page.waitForTimeout(400);
+  const final = visitas.length;
+  registrar('ACAD-03 visita enviada uma vez, só ao abandonar', aposVoltar === 0 && aposAbandono === 1 && final === 1,
+    `troca rápida=${aposVoltar} aba abandonada=${aposAbandono} depois do pagehide=${final} segundos=${visitas[0] ? visitas[0].segundos : '-'}`);
+  await page.context().close();
+}
+
 await browser.close();
 const reprovados = resultados.filter((r) => !r.ok);
 console.log(`\n${resultados.length - reprovados.length}/${resultados.length} passaram`);

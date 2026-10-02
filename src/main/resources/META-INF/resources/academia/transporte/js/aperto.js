@@ -249,7 +249,8 @@
                 return;
             }
             var acertou = r.ok && r.valor === gabarito();
-            if (r.ok && !acertou && r.valor === ultimaErrada) {
+            var repeticao = N.chaveRepeticao(r, r.ok ? r.valor : null, campo.value);
+            if (!acertou && repeticao !== null && repeticao === ultimaErrada) {
                 responder('neutro', ['Essa é a mesma resposta de antes — não contou de novo.']);
                 return;
             }
@@ -272,7 +273,7 @@
                 return;
             }
             errosNestaPergunta += 1;
-            ultimaErrada = r.ok ? r.valor : null;
+            ultimaErrada = repeticao;
             responder('erro', r.ok ? dica(r.valor) : [r.mensagem]);
             if (errosNestaPergunta >= 2) {
                 feedback.appendChild(document.createTextNode(' Resposta: '));

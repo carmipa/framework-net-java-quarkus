@@ -38,6 +38,26 @@
         return { ok: true, valor: valor, eco: eco };
     }
 
+    /**
+     * Chave para reconhecer a MESMA resposta repetida (auditoria ACAD-06).
+     *
+     * PROPÓSITO DE NEGÓCIO: Enter duas vezes na mesma resposta errada não pode contar duas tentativas —
+     *   na segunda o gabarito aparece. A lição comparava só valor interpretável; a resposta "fora da
+     *   faixa" (que conta tentativa) voltava como null e a repetição contava de novo.
+     * INVARIANTES: só existe chave para o que conta tentativa; valor interpretável compara pela chave
+     *   do valor; fora da faixa compara pelo texto digitado sem espaços e sem caixa.
+     * FALHA: o que não conta tentativa devolve null (nunca bloqueia a próxima resposta).
+     */
+    function chaveRepeticao(resultado, chaveDoValor, entrada) {
+        if (!contaTentativa(resultado)) {
+            return null;
+        }
+        if (resultado.ok) {
+            return 'v:' + String(chaveDoValor);
+        }
+        return 'f:' + texto(entrada).replace(/\s+/g, '').toLowerCase();
+    }
+
     /** Conta tentativa? Só valor interpretável ou fora da faixa — nunca digitação incompleta. */
     function contaTentativa(resultado) {
         return Boolean(resultado) && (resultado.ok || resultado.classe === 'faixa');
@@ -191,7 +211,8 @@
         ipv4: ipv4,
         prefixo: prefixo,
         mascara: mascara,
-        contaTentativa: contaTentativa
+        contaTentativa: contaTentativa,
+        chaveRepeticao: chaveRepeticao
     };
 
     if (typeof module !== 'undefined' && module.exports) {

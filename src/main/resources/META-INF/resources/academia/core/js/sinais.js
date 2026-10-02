@@ -10,8 +10,11 @@
  *   - erro de outro domínio ("Script error.", sem detalhe) não é enviado: não diz nada e só gasta
  *     o orçamento;
  *   - no máximo MAX_ERROS erros por página, sem repetir a mesma mensagem;
- *   - o resumo da visita sai UMA vez, ao esconder/fechar a página, por fetch com keepalive
- *     (sendBeacon não leva o cabeçalho de CSRF e receberia 403 — R7);
+ *   - o resumo da visita sai UMA vez, com o estado ACUMULADO: ao fechar/sair da página (pagehide)
+ *     ou depois de OCULTA_MS seguidos com a aba escondida (visita abandonada). Antes saía no primeiro
+ *     "esconder a aba": trocar de aba e voltar para concluir mandava segundos 0 e concluiu false, e
+ *     nada mais (auditoria ACAD-03). Voltar para a aba antes do prazo cancela o envio;
+ *   - por fetch com keepalive (sendBeacon não leva o cabeçalho de CSRF e receberia 403 — R7);
  *   - o servidor faz o saneamento e as faixas; aqui só se corta o tamanho.
  *
  * COMPORTAMENTO EM CASO DE FALHA: rede fora, 4xx ou 5xx são ignorados em silêncio de propósito —
@@ -22,6 +25,9 @@
 
     var ROTA = '/academia/api/eventos';
     var MAX_ERROS = 3;
+    /** Aba escondida por este tempo conta como visita encerrada. */
+    var OCULTA_MS = 5 * 60 * 1000;
+    var timerOculta = null;
 
     var licaoAtual = null;
     var inicio = Date.now();
@@ -86,12 +92,19 @@
         raiz.addEventListener('pagehide', enviarVisita);
         document.addEventListener('visibilitychange', function () {
             if (document.visibilityState === 'hidden') {
-                enviarVisita();
+                if (timerOculta === null) {
+                    timerOculta = raiz.setTimeout(enviarVisita, OCULTA_MS);
+                }
+            } else if (timerOculta !== null) {
+                raiz.clearTimeout(timerOculta);
+                timerOculta = null;
             }
         });
     }
 
     raiz.AcademiaSinais = {
+        /** Só para teste: troca o prazo da aba oculta. */
+        _definirPrazoOculta: function (ms) { OCULTA_MS = ms; },
         iniciar: iniciar,
         interagiu: function () { interacoes += 1; },
         concluiu: function () { concluiuNestaVisita = true; }
