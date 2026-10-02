@@ -33,7 +33,7 @@
                         <tr>
                             <td class="fw-bold">Hosts úteis = total − 2</td>
                             <td class="text-danger">Não se aplica</td>
-                            <td>Sem rede/broadcast reservados: <strong>todos</strong> os 2^(128−prefixo) endereços são atribuíveis. A LAN é <code translate="no">/64</code> (SLAAC).</td>
+                            <td>Sem rede nem broadcast: ficam de fora só o anycast Subnet-Router (identificador de interface todo zero, RFC 4291) e os anycast reservados do topo do <code translate="no">/64</code> (RFC 2526). A LAN é <code translate="no">/64</code> (SLAAC).</td>
                         </tr>
                         <tr>
                             <td class="fw-bold">Classe A/B/C (classful)</td>

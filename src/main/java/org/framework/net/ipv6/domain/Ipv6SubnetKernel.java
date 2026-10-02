@@ -10,6 +10,7 @@ import org.framework.net.shared.InputLimits;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Kernel de cálculo de sub-redes IPv6.
@@ -31,6 +32,8 @@ import java.util.List;
 @ApplicationScoped
 public class Ipv6SubnetKernel {
 
+    private static final String SEM_GATEWAY_128 = "— (/128 é um endereço único: não há gateway no bloco)";
+
     /** Teto de interfaces por análise na Engenharia reversa IPv6 (um roteador real tem poucas dezenas). */
     public static final int MAX_INTERFACES_ENGENHARIA = 200;
 
@@ -41,6 +44,8 @@ public class Ipv6SubnetKernel {
             new FaixaEspecial("::ffff:0:0/96", "IPv4-mapped", "Carrega um IPv4 dentro do IPv6 (::ffff:a.b.c.d)"),
             new FaixaEspecial("64:ff9b::/96", "NAT64", "Tradução IPv6↔IPv4 (well-known prefix)"),
             new FaixaEspecial("2001:db8::/32", "Documentação", "Reservado para exemplos e material didático (RFC 3849)"),
+            new FaixaEspecial("3fff::/20", "Documentação", "Reservado para exemplos com prefixos maiores (RFC 9637)"),
+            new FaixaEspecial("2001:2::/48", "Benchmarking", "Testes de desempenho em laboratório; não roteável (RFC 5180)"),
             new FaixaEspecial("2001::/32", "Teredo", "Túnel IPv6 sobre UDP/IPv4"),
             new FaixaEspecial("2002::/16", "6to4", "Túnel IPv6 sobre IPv4"),
             new FaixaEspecial("fe80::/10", "Link-local", "Válido só no enlace; não roteável (auto-configuração/NDP)"),
@@ -209,11 +214,44 @@ public class Ipv6SubnetKernel {
         delegacao.add(delegacaoLinha(prefixo, 56, "Residência / filial — delegação comum do provedor"));
         delegacao.add(delegacaoLinha(prefixo, 64, "LAN — fronteira do SLAAC (uma sub-rede por enlace)"));
 
-        String cisco = "ipv6 unicast-routing\ninterface GigabitEthernet0/0\n ipv6 address "
-                + base.rede() + "/" + prefixo + "\n ipv6 ospf 1 area 0";
+        String cisco = dicaCisco(base, prefixo);
 
         return new DecomposicaoIpv6(base, hextetos, prefixo, 128 - prefixo,
                 gatewaySugerido(base.rede(), prefixo), delegacao, cisco, enunciadoProva(prefixo));
+    }
+
+    /**
+     * Exemplo de configuração Cisco para o endereço decomposto.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> mostrar como o prefixo estudado entra num roteador real.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> a interface recebe o gateway do bloco (::1), nunca o endereço de
+     * rede — o identificador de interface todo zero é o anycast Subnet-Router (RFC 4291 §2.6.1); /128 vai
+     * numa Loopback; multicast, não especificado, loopback e IPv4-mapeado não se configuram em interface;
+     * /0 é rota padrão; OSPFv3 sem IPv4 no roteador exige router-id (auditoria CALC-29, CONT-32).</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> não lança; o caso que não vira configuração devolve um
+     * comentário IOS ("!") explicando por quê.</p>
+     */
+    private String dicaCisco(AnaliseIpv6 base, int prefixo) {
+        String tipo = base.tipo();
+        if (prefixo == 0) {
+            return "! ::/0 não é endereço de interface: é a rota padrão.\n"
+                    + "ipv6 unicast-routing\nipv6 route ::/0 <próximo-salto>";
+        }
+        if (Set.of("Multicast", "Não especificado", "Loopback", "IPv4-mapped").contains(tipo)) {
+            return "! " + tipo + ": este endereço não se configura em interface de roteador.";
+        }
+        if ("Link-local".equals(tipo)) {
+            return "interface GigabitEthernet0/0\n ipv6 address " + base.comprimido() + " link-local";
+        }
+        String ospf = "ipv6 router ospf 1\n router-id 1.1.1.1\n";
+        if (prefixo == 128) {
+            return "ipv6 unicast-routing\n" + ospf + "interface Loopback0\n ipv6 address "
+                    + base.comprimido() + "/128\n ipv6 ospf 1 area 0";
+        }
+        return "ipv6 unicast-routing\n" + ospf + "interface GigabitEthernet0/0\n ipv6 address "
+                + gatewaySugerido(base.rede(), prefixo) + "/" + prefixo + "\n ipv6 ospf 1 area 0\n no shutdown";
     }
 
     /**
@@ -428,7 +466,8 @@ public class Ipv6SubnetKernel {
         for (int i = 0; i < limite; i++) {
             BigInteger valor = inicio.add(passo.multiply(BigInteger.valueOf(i)));
             IPv6Address rede = new IPv6Address(paraBytes16(valor));
-            String gw = new IPv6Address(paraBytes16(valor.add(BigInteger.ONE))).toCanonicalString();
+            String gw = prefixoAlvo >= 128 ? SEM_GATEWAY_128
+                    : new IPv6Address(paraBytes16(valor.add(BigInteger.ONE))).toCanonicalString();
             alocacoes.add(new AlocacaoLan(i + 1, limpos.get(i), rede.toCanonicalString(),
                     "/" + prefixoAlvo, rede.toCanonicalString(), ultimoDoBloco(valor, passo), gw));
         }
@@ -590,16 +629,18 @@ public class Ipv6SubnetKernel {
     /**
      * PROPÓSITO DE NEGÓCIO: Laboratório de Resolução IPv6 (aba Projetar) — dos requisitos ao plano de
      * endereçamento. Aloca uma LAN /prefixoLan por localidade, enlaces WAN /prefixoWan conforme a
-     * topologia, e gera gateways, rotas estáticas e CLI Cisco (OSPFv3 + EIGRP IPv6) por roteador. O
-     * análogo IPv6 do "Projetar" do IPv4 — mas por PREFIXO e QUANTIDADE de sub-redes, não por hosts.
+     * topologia, e gera gateways, rotas estáticas e CLI Cisco por roteador (OSPFv3 ativo; EIGRP IPv6
+     * como alternativa comentada). O análogo IPv6 do "Projetar" do IPv4 — mas por PREFIXO e QUANTIDADE
+     * de sub-redes, não por hosts.
      *
      * INVARIANTES DO DOMÍNIO: LAN comum é /64 (SLAAC); enlace ponto-a-ponto é /127 (RFC 6164) ou o
      * prefixo informado; sem broadcast e sem "hosts úteis". Alvos sempre mais específicos que a base;
      * LANs e WANs não se sobrepõem (alocação sequencial). Topologia (árvore) tem n−1 enlaces; malha
-     * tem n(n−1)/2.
+     * tem n(n−1)/2. A rota default de cada roteador de borda aponta para a outra ponta do PRÓPRIO
+     * enlace; AS do EIGRP e processo OSPFv3 vão de 1 a 65535.
      *
-     * COMPORTAMENTO EM CASO DE FALHA: base sem prefixo, prefixos incoerentes, nenhuma localidade ou
-     * estouro de capacidade lançam {@link Ipv6Exception}.
+     * COMPORTAMENTO EM CASO DE FALHA: base sem prefixo, prefixos incoerentes, AS/processo fora de
+     * 1–65535, nenhuma localidade ou estouro de capacidade lançam {@link Ipv6Exception}.
      */
     public ProjetoRede projetarRede(String baseCidr, int prefixoLan, int prefixoWan,
             String topologia, List<String> locais, int eigrpAs, int ospfProc) {
@@ -609,6 +650,13 @@ public class Ipv6SubnetKernel {
         }
         if (prefixoLan < 1 || prefixoLan > 128 || prefixoWan < 1 || prefixoWan > 128) {
             throw new Ipv6Exception("Prefixos de LAN e WAN devem estar entre /1 e /128.");
+        }
+        // O IOS recusa "ipv6 router eigrp 0" e "ipv6 router ospf -1" (auditoria CALC-09): 1 a 65535.
+        if (eigrpAs < 1 || eigrpAs > 65535) {
+            throw new Ipv6Exception("O AS do EIGRP vai de 1 a 65535 (informado: " + eigrpAs + ").");
+        }
+        if (ospfProc < 1 || ospfProc > 65535) {
+            throw new Ipv6Exception("O processo OSPFv3 vai de 1 a 65535 (informado: " + ospfProc + ").");
         }
         IPAddressString parser = new IPAddressString(bruto);
         if (!parser.isValid() || !parser.isIPv6()) {
@@ -746,16 +794,26 @@ public class Ipv6SubnetKernel {
             }
             cli.append("ipv6 router ospf ").append(ospfProc).append('\n');
             cli.append(" router-id ").append(i + 1).append(".").append(i + 1).append(".").append(i + 1).append(".").append(i + 1).append('\n');
-            cli.append("ipv6 router eigrp ").append(eigrpAs).append("\n eigrp router-id ")
-                    .append(i + 1).append(".").append(i + 1).append(".").append(i + 1).append(".").append(i + 1).append("\n no shutdown");
+            // EIGRP é ALTERNATIVA ao OSPFv3, em comentário: ativo junto, sem "ipv6 eigrp" nas interfaces, não
+            // anunciava nada; ativo nas interfaces, ganharia do OSPF pela distância administrativa (CALC-09).
+            String rid = (i + 1) + "." + (i + 1) + "." + (i + 1) + "." + (i + 1);
+            cli.append("! Alternativa ao OSPFv3 (use um OU outro): EIGRP IPv6\n");
+            cli.append("! ipv6 router eigrp ").append(eigrpAs).append("\n!  eigrp router-id ").append(rid)
+                    .append("\n!  no shutdown\n! e em cada interface acima: ipv6 eigrp ").append(eigrpAs);
             roteadores.add(new ProjetoRoteador("R" + (i + 1), nomes.get(i), cli.toString()));
         }
 
         List<String> rotas = new ArrayList<>();
         rotas.add("! Rotas estáticas de exemplo (alternativa ao OSPFv3/EIGRP):");
         if ("estrela".equals(topo) || "estrela-estendida".equals(topo)) {
-            rotas.add("! Nos roteadores de borda (spokes), rota default para o hub:");
-            rotas.add("ipv6 route ::/0 " + (wans.isEmpty() ? "<ip-do-hub>" : wans.get(0).ipA()));
+            // Cada roteador de baixo aponta a default para a ponta de CIMA do SEU enlace — antes todos
+            // apontavam para o IP do hub no primeiro enlace, que nenhum outro spoke alcança (CALC-09).
+            rotas.add("! Em cada roteador de borda, rota default para a outra ponta do próprio enlace:");
+            for (int k = 0; k < pares.size(); k++) {
+                int abaixo = pares.get(k)[1];
+                rotas.add("! R" + (abaixo + 1) + " (" + nomes.get(abaixo) + ")");
+                rotas.add("ipv6 route ::/0 " + wans.get(k).ipA());
+            }
             rotas.add("! No hub, uma rota para cada LAN remota via o enlace correspondente.");
         } else {
             rotas.add("! Em malha, prefira protocolo dinâmico (OSPFv3/EIGRP) — rotas estáticas não escalam.");
@@ -763,7 +821,8 @@ public class Ipv6SubnetKernel {
 
         String ospfv3 = "ipv6 unicast-routing\nipv6 router ospf " + ospfProc
                 + "\n! habilite 'ipv6 ospf " + ospfProc + " area 0' em cada interface";
-        String eigrp = "ipv6 unicast-routing\nipv6 router eigrp " + eigrpAs + "\n no shutdown";
+        String eigrp = "ipv6 unicast-routing\nipv6 router eigrp " + eigrpAs + "\n eigrp router-id <x.x.x.x>"
+                + "\n no shutdown\n! habilite 'ipv6 eigrp " + eigrpAs + "' em cada interface";
 
         List<String> passos = List.of(
                 "1) Base /" + prefixoBase + " → " + n + " LAN(s) /" + prefixoLan + " contíguas (uma por localidade).",
@@ -857,6 +916,9 @@ public class Ipv6SubnetKernel {
         String ifAtual = null;
         String descAtual = null;
         List<String> endsAtual = new ArrayList<>();
+        // Porta de switch (switchport) é L2: não leva IPv6 e não conta como "interface sem endereço"
+        // (auditoria CALC-15: o trunk de um switch L3 era acusado).
+        java.util.Set<String> interfacesL2 = new java.util.HashSet<>();
         for (String linhaBruta : txt.split("\\r?\\n")) {
             String linha = linhaBruta.strip();
             String low = linha.toLowerCase();
@@ -871,6 +933,8 @@ public class Ipv6SubnetKernel {
                 ifAtual = linha.substring(10).strip();
                 descAtual = null;
                 endsAtual = new ArrayList<>();
+            } else if (low.startsWith("switchport") && ifAtual != null) {
+                interfacesL2.add(ifAtual);
             } else if (low.startsWith("description ") && ifAtual != null) {
                 descAtual = linha.substring(12).strip();
             } else if (low.startsWith("ipv6 address ") && ifAtual != null) {
@@ -899,10 +963,19 @@ public class Ipv6SubnetKernel {
         List<EnderecoLido> enderecos = new ArrayList<>();
         for (InterfaceLida it : interfaces) {
             for (String e : it.enderecos()) {
+                // "ipv6 address fe80::1 link-local", "... 2001:db8::/64 eui-64" e "... anycast" são sintaxe
+                // válida do IOS; o modificador saía junto do endereço e tudo virava "inválido" (CALC-15).
+                String[] partes = e.split("\\s+");
+                String so = partes[0];
+                String modificador = partes.length > 1 ? partes[1].toLowerCase() : "";
                 String tipo;
-                String prefixo = e.contains("/") ? e.substring(e.indexOf('/')) : "/128";
+                String prefixo = so.contains("/") ? so.substring(so.indexOf('/'))
+                        : "link-local".equals(modificador) ? "/64" : "/128";
                 try {
-                    tipo = analisar(e).tipo();
+                    tipo = analisar(so).tipo();
+                    if ("eui-64".equals(modificador)) {
+                        tipo = tipo + " (host EUI-64)";
+                    }
                 } catch (Ipv6Exception ex) {
                     tipo = "inválido";
                     achados.add("Endereço IPv6 inválido em " + it.nome() + ": '" + e + "'");
@@ -912,18 +985,23 @@ public class Ipv6SubnetKernel {
         }
 
         // Achados de configuração.
-        if (!unicastRouting && (!protocolos.isEmpty() || interfaces.size() > 1)) {
+        long interfacesL3 = interfaces.stream().filter(i -> !interfacesL2.contains(i.nome())).count();
+        if (!unicastRouting && (!protocolos.isEmpty() || interfacesL3 > 1)) {
             achados.add("Falta 'ipv6 unicast-routing': sem isso o roteador não encaminha IPv6 entre interfaces.");
         }
-        long semEndereco = interfaces.stream().filter(i -> i.enderecos().isEmpty()).count();
+        long semEndereco = interfaces.stream()
+                .filter(i -> i.enderecos().isEmpty() && !interfacesL2.contains(i.nome())).count();
         if (semEndereco > 0) {
             achados.add(semEndereco + " interface(s) sem endereço IPv6 configurado.");
         }
         if (interfaces.isEmpty()) {
             achados.add("Nenhuma interface encontrada na configuração.");
         }
-        if (protocolos.isEmpty() && rotas.isEmpty() && interfaces.size() > 1) {
-            achados.add("Sem protocolo de roteamento nem rota estática: as LANs não se alcançam.");
+        if (protocolos.isEmpty() && rotas.isEmpty() && interfacesL3 > 1) {
+            // As redes conectadas ao próprio roteador se alcançam (com unicast-routing); só as de outros
+            // roteadores ficam sem caminho (CALC-15).
+            achados.add("Sem protocolo de roteamento nem rota estática: as redes ligadas a este roteador se "
+                    + "alcançam, mas as de outros roteadores ficam inalcançáveis.");
         }
         // Detecta enlaces /64 entre roteadores (recomendação /127).
         for (EnderecoLido e : enderecos) {
@@ -970,7 +1048,9 @@ public class Ipv6SubnetKernel {
      * configuração Cisco de SVI; gera também o trunk 802.1Q com as VLANs permitidas.
      *
      * INVARIANTES DO DOMÍNIO: VLAN ID entre 1 e 4094; LAN comum é /64; sem broadcast/hosts úteis. As
-     * LANs são alocadas contíguas a partir da base; não excedem a capacidade 2^(prefixoLan−base).
+     * LANs são alocadas contíguas a partir da base; não excedem a capacidade 2^(prefixoLan−base). O
+     * script liga "ipv6 unicast-routing" uma vez e, com DHCPv6, cria o pool que cada
+     * "ipv6 dhcp server" referencia.
      *
      * COMPORTAMENTO EM CASO DE FALHA: base sem prefixo, prefixo incoerente, VLAN ID fora de faixa,
      * lista vazia ou estouro de capacidade lançam {@link Ipv6Exception}.
@@ -1049,7 +1129,17 @@ public class Ipv6SubnetKernel {
                     : "vlan " + idLimpos.get(i) + "\n name " + nomeLimpos.get(i) + "\n";
             // SLAAC puro: o RA anuncia o prefixo com M=0 e O=0 (RFC 4861 §4.2) — nenhum flag extra.
             // other-config-flag (O=1) seria DHCPv6 stateless, não SLAAC puro.
-            String cli = declaracao
+            // Sem "ipv6 unicast-routing" o switch L3 não roteia entre as SVIs; "ipv6 dhcp server VLANn"
+            // apontava para um pool que nunca era criado (auditoria CALC-08). O pool nasce aqui, com o
+            // prefixo da VLAN; o roteamento global vai uma vez, antes da primeira VLAN.
+            String roteamento = i == 0
+                    ? "! Uma vez no switch L3: liga o roteamento IPv6 entre as SVIs\nipv6 unicast-routing\n"
+                    : "";
+            String pool = dhcpv6
+                    ? "ipv6 dhcp pool VLAN" + idLimpos.get(i) + "\n address prefix " + rede.toCanonicalString()
+                            + "/" + prefixoLan + "\n"
+                    : "";
+            String cli = roteamento + declaracao + pool
                     + "interface Vlan" + idLimpos.get(i)
                     + "\n ipv6 address " + gw + "/" + prefixoLan
                     + "\n ipv6 enable"
@@ -1195,14 +1285,18 @@ public class Ipv6SubnetKernel {
                 new Ipv6AnaliseRica.TermoRede("Solicited-node", base.solicitedNode() + " (multicast usado pelo NDP)."));
 
         String ospfv3 = dec.ciscoCli();
-        String eigrp = "ipv6 unicast-routing\nipv6 router eigrp 100\n no shutdown\ninterface GigabitEthernet0/0\n ipv6 eigrp 100";
+        // Sem IPv4 no roteador, o EIGRP IPv6 só sobe com router-id explícito.
+        String eigrp = "ipv6 unicast-routing\nipv6 router eigrp 100\n eigrp router-id 1.1.1.1\n no shutdown\n"
+                + "interface GigabitEthernet0/0\n ipv6 eigrp 100";
         String ciscoNota = "Em IPv6 não há wildcard: o roteamento é habilitado por interface, não por 'network' com máscara curinga.";
 
         List<Ipv6AnaliseRica.BannerItem> bannerItens = List.of(
                 new Ipv6AnaliseRica.BannerItem("Tipo", base.tipo() + " — " + base.descricaoTipo()),
                 new Ipv6AnaliseRica.BannerItem("Prefixo", "/" + prefixo + " (LAN padrão é /64 via SLAAC)"),
                 new Ipv6AnaliseRica.BannerItem("Endereços", "2^" + (128 - prefixo) + " = " + base.totalEnderecos()),
-                new Ipv6AnaliseRica.BannerItem("Sem broadcast", "todos os endereços do bloco são atribuíveis"));
+                new Ipv6AnaliseRica.BannerItem("Sem broadcast", "nenhum endereço de broadcast; fora do uso em host "
+                        + "ficam só o anycast Subnet-Router (identificador todo zero, RFC 4291) e os anycast "
+                        + "reservados do topo do /64 (RFC 2526)"));
 
         List<Ipv6AnaliseRica.ItemProva> provaItens = List.of(
                 new Ipv6AnaliseRica.ItemProva("🏷️ Tipo", base.tipo()),
@@ -1349,7 +1443,20 @@ public class Ipv6SubnetKernel {
         return String.format("%04x", Integer.parseInt(bin16, 2));
     }
 
+    /**
+     * Gateway convencional (::1) do bloco.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> sugerir o endereço do roteador na LAN.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> o gateway fica DENTRO do bloco; um /128 é um endereço só e não tem
+     * gateway (antes saía rede+1, fora do bloco — auditoria CALC-28).</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> não lança; /128 devolve um texto explicativo.</p>
+     */
     private String gatewaySugerido(String rede, int prefixo) {
+        if (prefixo >= 128) {
+            return SEM_GATEWAY_128;
+        }
         BigInteger inicio = new BigInteger(1, new IPAddressString(rede + "/" + prefixo)
                 .getAddress().toIPv6().toPrefixBlock().getLower().getBytes());
         return new IPv6Address(paraBytes16(inicio.add(BigInteger.ONE))).toCanonicalString();

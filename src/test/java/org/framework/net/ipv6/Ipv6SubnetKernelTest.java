@@ -572,6 +572,114 @@ class Ipv6SubnetKernelTest {
                 java.util.List.of(10), java.util.List.of("x"), false, 100));
     }
 
+    /**
+     * Auditoria CALC-29/CONT-32 — gabarito (A3): RFC 4291 §2.6.1 (identificador todo zero é o anycast
+     * Subnet-Router, não endereço de interface), IOS (OSPFv3 sem IPv4 precisa de router-id). Fronteira
+     * (A1): o mesmo prefixo sai com ::1; /128 vai numa Loopback; multicast e ::/0 não viram "ipv6 address".
+     */
+    @Test
+    void dicaCiscoNaoConfiguraAnycastNemEnderecoQueNaoEDeInterface() {
+        String lan = kernel.decompor("2001:db8:1::/64").ciscoCli();
+        assertTrue(lan.contains(" ipv6 address 2001:db8:1::1/64"), lan);
+        assertFalse(lan.contains(" ipv6 address 2001:db8:1::/64"), lan);
+        assertTrue(lan.contains(" router-id "), lan);
+
+        String loop = kernel.decompor("2001:db8::5/128").ciscoCli();
+        assertTrue(loop.contains("interface Loopback0") && loop.contains(" ipv6 address 2001:db8::5/128"), loop);
+        assertTrue(kernel.decompor("2001:db8::5/128").gatewayLinkLocal().startsWith("—"),
+                "/128 não tem gateway dentro do bloco");
+
+        for (String naoInterface : new String[]{"ff02::1/128", "::1/128"}) {
+            String cli = kernel.decompor(naoInterface).ciscoCli();
+            assertTrue(cli.startsWith("!") && !cli.contains("ipv6 address"), naoInterface + " -> " + cli);
+        }
+        String padrao = kernel.decompor("::/0").ciscoCli();
+        assertTrue(padrao.contains("ipv6 route ::/0") && !padrao.contains("ipv6 address"), padrao);
+    }
+
+    /**
+     * Auditoria CALC-09: cada roteador de borda aponta a default para a outra ponta do PRÓPRIO enlace;
+     * EIGRP só como alternativa comentada; AS e processo fora de 1–65535 são recusados (fronteira nos dois
+     * extremos aceita).
+     */
+    @Test
+    void projetoRotaDefaultPorEnlaceEEigrpComoAlternativa() {
+        ProjetoRede p = kernel.projetarRede("2001:db8::/48", 64, 127, "estrela",
+                java.util.List.of("Matriz", "Filial", "DataCenter"), 100, 1);
+        java.util.List<String> defaults = p.rotasEstaticas().stream().filter(r -> r.startsWith("ipv6 route ::/0")).toList();
+        assertEquals(2, defaults.size(), p.rotasEstaticas().toString());
+        assertEquals("ipv6 route ::/0 " + p.wans().get(0).ipA(), defaults.get(0));
+        assertEquals("ipv6 route ::/0 " + p.wans().get(1).ipA(), defaults.get(1));
+        String cli = p.roteadores().get(1).cli();
+        assertFalse(cli.contains("\nipv6 router eigrp"), "EIGRP ativo sem interface não anuncia nada:\n" + cli);
+        assertTrue(cli.contains("! ipv6 router eigrp 100"), cli);
+
+        assertThrows(Ipv6Exception.class, () -> kernel.projetarRede("2001:db8::/48", 64, 127, "estrela",
+                java.util.List.of("A", "B"), 0, 1));
+        assertThrows(Ipv6Exception.class, () -> kernel.projetarRede("2001:db8::/48", 64, 127, "estrela",
+                java.util.List.of("A", "B"), 100, -1));
+        kernel.projetarRede("2001:db8::/48", 64, 127, "estrela", java.util.List.of("A", "B"), 1, 65535);
+    }
+
+    /** Auditoria CALC-08: o plano de VLANs liga o roteamento IPv6 uma vez e cria o pool do DHCPv6. */
+    @Test
+    void vlansIpv6RoteiamECriamOPoolDoDhcpv6() {
+        var comDhcp = kernel.planejarVlans("2001:db8::/48", 64, java.util.List.of(10, 20),
+                java.util.List.of("ADM", "TI"), true, 100);
+        String primeira = comDhcp.vlans().get(0).cisco();
+        String segunda = comDhcp.vlans().get(1).cisco();
+        assertTrue(primeira.contains("ipv6 unicast-routing"), primeira);
+        assertFalse(segunda.contains("ipv6 unicast-routing"), "uma vez só:\n" + segunda);
+        assertTrue(primeira.contains("ipv6 dhcp pool VLAN10\n address prefix 2001:db8::/64"), primeira);
+        assertTrue(segunda.contains("ipv6 dhcp pool VLAN20\n address prefix 2001:db8:0:1::/64"), segunda);
+
+        var slaac = kernel.planejarVlans("2001:db8::/48", 64, java.util.List.of(10),
+                java.util.List.of("ADM"), false, 100);
+        assertFalse(slaac.vlans().get(0).cisco().contains("ipv6 dhcp pool"));
+        assertTrue(slaac.vlans().get(0).cisco().contains("ipv6 unicast-routing"));
+    }
+
+    /**
+     * Auditoria CALC-15: "link-local" e "eui-64" são sintaxe válida; porta de switch (switchport) não é
+     * "interface sem endereço"; redes conectadas se alcançam. Fronteira (A1): endereço realmente inválido
+     * continua acusado, e interface L3 sem endereço também.
+     */
+    @Test
+    void engenhariaReversaAceitaModificadoresEPortaDeSwitch() {
+        EngenhariaReversaIpv6 e = kernel.engenhariaReversa(String.join("\n",
+                "hostname SW1",
+                "ipv6 unicast-routing",
+                "interface GigabitEthernet0/1",
+                " switchport mode trunk",
+                "interface Vlan10",
+                " ipv6 address fe80::1 link-local",
+                " ipv6 address 2001:db8:a::/64 eui-64",
+                "interface Vlan20",
+                " ipv6 address 2001:db8:b::1/64"));
+        String achados = String.join(" | ", e.achados());
+        assertFalse(achados.contains("inválido"), achados);
+        assertFalse(achados.contains("sem endereço"), achados);
+        assertFalse(achados.contains("as LANs não se alcançam"), achados);
+        assertTrue(achados.contains("as redes ligadas a este roteador se alcançam"), achados);
+
+        EngenhariaReversaIpv6 ruim = kernel.engenhariaReversa(String.join("\n",
+                "ipv6 unicast-routing",
+                "interface GigabitEthernet0/0",
+                " ipv6 address 2001:zz::1/64",
+                "interface GigabitEthernet0/1"));
+        String achadosRuins = String.join(" | ", ruim.achados());
+        assertTrue(achadosRuins.contains("inválido"), achadosRuins);
+        assertTrue(achadosRuins.contains("1 interface(s) sem endereço"), achadosRuins);
+    }
+
+    /** Auditoria CONT-31/CALC-31: as duas telas IPv6 classificam 3fff::/20 e 2001:2::/48 igual. */
+    @Test
+    void faixasDocumentacaoEBenchmarkNoKernel() {
+        assertEquals("Documentação", kernel.analisar("3fff::1").tipo());
+        assertEquals("Benchmarking", kernel.analisar("2001:2::1").tipo());
+        assertEquals("Global unicast", kernel.analisar("3fff:1000::1").tipo());
+    }
+
     @Test
     void casoControleEntradaInvalidaXlegitima() {
         // A1: malformado e IPv4 puro rejeitados; o legítimo semelhante é aceito.

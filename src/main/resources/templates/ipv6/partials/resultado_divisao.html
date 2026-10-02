@@ -61,6 +61,7 @@
     <p class="calc-explicacao mt-3">
         <span class="material-symbols-outlined" aria-hidden="true" translate="no">school</span>
         Cada sub-rede /{d.prefixoAlvo} tem 2^(128−{d.prefixoAlvo}) endereços. Em IPv6 não se subtrai
-        rede/broadcast: <strong>todos</strong> são atribuíveis, e a LAN padrão é /64 (fronteira do SLAAC).
+        rede/broadcast: só o anycast Subnet-Router (identificador todo zero) e os anycast reservados do topo do /64
+        ficam fora do uso em host (RFC 4291, RFC 2526), e a LAN padrão é /64 (fronteira do SLAAC).
     </p>
 </div>
