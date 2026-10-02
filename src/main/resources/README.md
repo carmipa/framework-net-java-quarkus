@@ -22,7 +22,7 @@ Documentação, Sobre):
 - **Topologia → Certificados** — X.509/PKI: catálogo de 3 tabelas (formatos, campos, tipos) + **8 aprofundamentos** por grupo; a Anatomia traz a régua binária ASN.1/DER.
 - **Topologia → Camadas** — modelo **OSI × TCP/IP**: tabela das 7 camadas (PDU, protocolos, dispositivos) + aprofundamentos (OSI, TCP/IP, encapsulamento, dispositivos).
 - **Topologia → Criptografia** — algoritmos e forças (simétrica, assimétrica, hash, assinatura) + **playground de hash** (WebCrypto) e comparador de força.
-- **Topologia → Wi-Fi** — padrões 802.11 (Wi-Fi 1→7), canais e segurança (WEP→WPA3) + **planejador de canais** 2.4 GHz.
+- **Topologia → Wi-Fi** — padrões 802.11 (b/a/g e Wi-Fi 4→7), canais e segurança (WEP→WPA3) + **planejador de canais** 2.4 GHz.
 - **Operações → Localização · Tráfego · Ferramentas · Diagnóstico · Segurança** — GeoIP; decodificador/encapsulamento de pacotes + **construtor de pacotes** e **laboratório DNS/ICMP**; ferramentas CLI (com **construtor de comando**); simuladores de diagnóstico; e Segurança: ACL/TLS, firewall **com estado × sem estado**, **handshake TLS 1.3**, **alcançabilidade de fluxo** e **montador de topologia** (em texto ou **canvas de arrastar**).
 - **Resolução de Problemas (VLSM + WAN)** — planejamento VLSM dinâmico, topologia WAN, CLI Cisco e exportação para laboratório.
 - **Telemetria** — dashboard de eventos, console ao vivo e **origem do tráfego** (bots × pessoas pelo User-Agent e, quando houver borda que garanta o cabeçalho, país por `CF-IPCountry` — **sem guardar IP**) — server-side. O país fica em `??` enquanto `framework.telemetria.confiar-cf-ipcountry` for `false`, que é o padrão: sem um Cloudflare que **sobrescreva** o cabeçalho, ele é escolhido pelo visitante, e métrica ditada por quem é medido não é medição.
@@ -122,7 +122,7 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Certificados | `/certificados` (+ `/certificados/{x509,cadeia,tipos,formatos,ciclo-de-vida,revogacao,usos,ataques}`) | GET | X.509/PKI: catálogo de 3 tabelas (formatos, campos, tipos) + 8 aprofundamentos por grupo; Anatomia com régua binária ASN.1/DER |
 | Camadas | `/camadas` (+ `/camadas/{osi,tcpip,encapsulamento,dispositivos}`) | GET | Modelo OSI × TCP/IP: tabela das 7 camadas (PDU, protocolos, dispositivos) + aprofundamentos |
 | Criptografia | `/criptografia` (+ `/criptografia/{simetrica,assimetrica,hash,troca-de-chaves,assinatura}`) | GET | Algoritmos e forças + **playground de hash** (WebCrypto, client-side) e comparador de força |
-| Wi-Fi | `/wifi` (+ `/wifi/{padroes,canais,seguranca,ataques}`) | GET | Padrões 802.11 (Wi-Fi 1→7) + **planejador de canais** 2.4 GHz (1/6/11) |
+| Wi-Fi | `/wifi` (+ `/wifi/{padroes,canais,seguranca,ataques}`) | GET | Padrões 802.11 (b/a/g e Wi-Fi 4→7) + **planejador de canais** 2.4 GHz (1/6/11) |
 | Ferramentas | `/ferramentas` (+ `/ferramentas/{conectividade,dns-tools,captura,varredura,http-tls,sockets}`) | GET | Ferramentas CLI (ping, dig, tcpdump, nmap, curl, openssl…) + **construtor de comando** |
 | Ferramentas | `/ferramentas/rede` | GET | **Rede: Windows × Linux** — comandos comparados por intenção (IP, rotas, ARP, DNS, conectividade, portas, processos) com parâmetros, saída simulada dissecável, limites, busca/filtros e investigações guiadas |
 | Resolução VLSM | `/resolucao-problemas` | GET/POST | Aba **Projetar**: cenários VLSM/WAN, demos e exportações |

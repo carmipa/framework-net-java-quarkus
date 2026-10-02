@@ -1,8 +1,8 @@
 /*
  * Planejador de canais Wi-Fi 2.4 GHz (client-side).
  *
- * Propósito: mostrar, de forma interativa, por que só os canais 1, 6 e 11 não se
- * sobrepõem na banda de 2.4 GHz. Cada canal ocupa ~22 MHz e os centros distam
+ * Propósito: mostrar, de forma interativa, por que só canais a 5 de distância (1/6/11;
+ * com os 13 canais do Brasil, também 2/7/12 e 3/8/13) não se sobrepõem na banda de 2.4 GHz. Cada canal ocupa ~22 MHz e os centros distam
  * 5 MHz; dois canais se sobrepõem quando a diferença é menor que 5.
  *
  * Comportamento em caso de falha: sem os elementos esperados, não faz nada.
@@ -57,7 +57,7 @@
         } else {
             linha2 = '<div class="text-warning mt-1"><span class="material-symbols-outlined" style="font-size:1rem;vertical-align:-0.15em;" translate="no" aria-hidden="true">warning</span> ' + conflitos.length +
                 ' par(es) sobrepondo: ' + conflitos.join(", ") +
-                '. Prefira apenas 1, 6 e 11.</div>';
+                '. Prefira um trio a 5 canais de distância, como 1, 6 e 11.</div>';
         }
         out.innerHTML = linha1 + linha2;
     }

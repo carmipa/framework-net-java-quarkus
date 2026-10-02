@@ -1,10 +1,10 @@
 {
-  "resumo": "Toda rede Wi-Fi vive dentro de faixas de radiofrequência divididas em canais. Escolher bem o canal e a largura dele é o que separa uma rede rápida e estável de uma rede lenta e instável, mesmo com sinal cheio. Existem três bandas em uso: 2.4 GHz (longo alcance, poucos canais e muita concorrência), 5 GHz (muitos canais, mais velocidade, mas parte deles depende de DFS por causa de radares) e 6 GHz (Wi-Fi 6E/7, espectro amplo e limpo). No 2.4 GHz cada canal ocupa cerca de 20-22 MHz, mas os centros ficam a apenas 5 MHz de distância, então os canais se sobrepõem; por isso, dos 13 canais, apenas 1, 6 e 11 não interferem entre si. Canais mais largos (40/80/160 MHz) somam mais velocidade porque juntam mais espectro, mas também capturam mais ruído e reduzem quantos canais independentes cabem na banda. O planejador de canais do site cruza a banda escolhida, a largura e a ocupação dos vizinhos para sugerir o canal com menor sobreposição.",
+  "resumo": "Toda rede Wi-Fi vive dentro de faixas de radiofrequência divididas em canais. Escolher bem o canal e a largura dele é o que separa uma rede rápida e estável de uma rede lenta e instável, mesmo com sinal cheio. Existem três bandas em uso: 2.4 GHz (longo alcance, poucos canais e muita concorrência), 5 GHz (muitos canais, mais velocidade, mas parte deles depende de DFS por causa de radares) e 6 GHz (Wi-Fi 6E/7, espectro amplo e limpo). No 2.4 GHz cada canal ocupa cerca de 20-22 MHz, mas os centros ficam a apenas 5 MHz de distância, então os canais se sobrepõem; por isso, dos 13 canais, só três por vez não interferem entre si (1, 6 e 11 é o trio padrão; 2/7/12 e 3/8/13 também servem). Canais mais largos (40/80/160 MHz) somam mais velocidade porque juntam mais espectro, mas também capturam mais ruído e reduzem quantos canais independentes cabem na banda. O planejador de canais do site cruza a banda escolhida, a largura e a ocupação dos vizinhos para sugerir o canal com menor sobreposição.",
   "ficha": [
     {
       "rotulo": "Banda 2.4 GHz",
       "valor": "2400-2483,5 MHz",
-      "dica": "13 canais (14 só no Japão/DSSS). Apenas 1, 6 e 11 não se sobrepõem em 20 MHz."
+      "dica": "13 canais no Brasil (11 nos EUA; o 14 só no Japão, em DSSS). Em 20 MHz não se sobrepõem 1, 6 e 11 — e, onde há 13 canais, também 2, 7, 12 ou 3, 8, 13."
     },
     {
       "rotulo": "Banda 5 GHz",
@@ -37,13 +37,13 @@
     {
       "titulo": "Por que 1, 6 e 11",
       "icone": "wifi",
-      "texto": "Para dois canais de 20 MHz não se sobreporem, seus centros precisam estar a pelo menos 20-25 MHz de distância. No plano de 2.4 GHz, a única combinação de três canais que cabe sem sobreposição dentro da banda é 1 (2412), 6 (2437) e 11 (2462), cada um a 25 MHz do próximo. Por isso todo bom planejamento de 2.4 GHz usa só esses três.",
-      "destaque": "1, 6 e 11 são os únicos três canais ortogonais (não sobrepostos) no 2.4 GHz."
+      "texto": "Para dois canais de 20 MHz não se sobreporem, seus centros precisam estar a pelo menos 20-25 MHz de distância. No plano de 2.4 GHz, três canais a 25 MHz um do outro não se sobrepõem: 1 (2412), 6 (2437) e 11 (2462). Onde há 13 canais, como no Brasil, 2/7/12 e 3/8/13 também servem; o 1/6/11 é o padrão porque cabe também nos 11 canais dos EUA e todo equipamento o reconhece — e misturar trios na mesma vizinhança volta a sobrepor.",
+      "destaque": "1, 6 e 11 é o trio sem sobreposição que vale em qualquer país; com 13 canais, 2/7/12 e 3/8/13 também."
     },
     {
       "titulo": "DFS no 5 GHz",
       "icone": "radar",
-      "texto": "Boa parte dos canais de 5 GHz (tipicamente 52 a 144) é compartilhada com radares meteorológicos e militares. Nesses canais o access point precisa usar DFS (Dynamic Frequency Selection): fica ouvindo por pulsos de radar e, se detectar um, precisa desocupar o canal em segundos e migrar para outro. Isso libera muito espectro extra, mas pode causar quedas rápidas ou um atraso de alguns segundos ao ligar o AP (CAC, escuta obrigatória antes de transmitir).",
+      "texto": "Boa parte dos canais de 5 GHz (tipicamente 52 a 144) é compartilhada com radares meteorológicos e militares. Nesses canais o access point precisa usar DFS (Dynamic Frequency Selection): fica ouvindo por pulsos de radar e, se detectar um, precisa desocupar o canal em até 10 segundos e migrar para outro (e não volta a ele por 30 minutos). Isso libera muito espectro extra, mas pode causar quedas rápidas e uma espera de 60 segundos ao ligar o AP ou ao entrar num canal DFS (CAC, escuta obrigatória antes de transmitir — Anatel, Ato 14448, item 11.6).",
       "destaque": "DFS = mais canais, mas o AP pode ser obrigado a trocar de canal se um radar aparecer."
     },
     {
@@ -68,7 +68,7 @@
   "diagrama": {
     "titulo": "Sobreposição no 2.4 GHz e os canais 1 / 6 / 11",
     "definicao": "flowchart LR\n    C1[\"Canal 1 - 2412 MHz\"]:::ok\n    C3[\"Canal 3 - 2422 MHz\"]:::bad\n    C6[\"Canal 6 - 2437 MHz\"]:::ok\n    C9[\"Canal 9 - 2452 MHz\"]:::bad\n    C11[\"Canal 11 - 2462 MHz\"]:::ok\n    C1 -->|\"sobrepoe\"| C3\n    C3 -->|\"sobrepoe\"| C6\n    C6 -->|\"sobrepoe\"| C9\n    C9 -->|\"sobrepoe\"| C11\n    C1 -.->|\"nao sobrepoe\"| C6\n    C6 -.->|\"nao sobrepoe\"| C11\n    classDef ok fill:#1a7f37,color:#ffffff,stroke:#0f5323,stroke-width:2px;\n    classDef bad fill:#b35900,color:#ffffff,stroke:#7a3d00,stroke-width:1px;",
-    "legenda": "Em verde, os três canais ortogonais (1, 6 e 11), separados por 25 MHz cada. As setas cheias mostram que qualquer canal intermediário (3, 9, etc.) invade os vizinhos; as setas tracejadas mostram os únicos saltos sem sobreposição. Usar 1, 6 e 11 é a única forma de ter três redes independentes no 2.4 GHz."
+    "legenda": "Em verde, o trio ortogonal padrão (1, 6 e 11), separados por 25 MHz cada. As setas cheias mostram que qualquer canal intermediário (3, 9, etc.) invade os vizinhos; as setas tracejadas mostram os saltos sem sobreposição. Com 11 canais, 1, 6 e 11 é a única forma de ter três redes independentes no 2.4 GHz; com os 13 canais do Brasil, 2/7/12 e 3/8/13 também servem."
   },
   "tabelas": [
     {
@@ -141,7 +141,7 @@
         ],
         [
           "Canais de 20 MHz",
-          "13 (só 1/6/11 úteis)",
+          "13 (trios sem sobreposição: 1/6/11, 2/7/12, 3/8/13)",
           "até ~25",
           "até 59"
         ],
@@ -189,7 +189,7 @@
       "linhas": [
         [
           "20 MHz",
-          "3 (1/6/11)",
+          "3 (ex.: 1/6/11)",
           "~25",
           "59",
           "Mais estável em ambiente lotado"
@@ -237,7 +237,7 @@
   "mitigacoes": [
     {
       "nome": "Planejamento de canais 1/6/11 e seleção automática",
-      "como_funciona": "No 2.4 GHz, fixar cada AP em 1, 6 ou 11 e, no 5/6 GHz, deixar a seleção automática de canal (ACS) escolher a faixa menos ocupada. O planejador de canais do site cruza banda, largura e ocupação dos vizinhos para indicar o canal com menor sobreposição.",
+      "como_funciona": "No 2.4 GHz, fixar cada AP em 1, 6 ou 11 e, no 5/6 GHz, deixar a seleção automática de canal (ACS) escolher a faixa menos ocupada. O planejador de canais do site (2.4 GHz) mostra a sobreposição entre os canais que você marca e aplica o trio 1/6/11.",
       "cobre": "Interferência co-canal e por sobreposição entre APs próprios e de vizinhos.",
       "limite": "Não resolve jamming deliberado nem ruído de fontes não Wi-Fi (micro-ondas, câmeras analógicas)."
     },
@@ -271,7 +271,7 @@
       "sintoma": "Velocidade muito abaixo do contratado mesmo perto do roteador em ambiente cheio de redes",
       "causa_provavel": "Canal largo (80/160 MHz) capturando ruído de muitas redes vizinhas.",
       "comando": "iw dev wlan0 link",
-      "leitura": "Se a largura reportada é 80 ou 160 MHz e há muitas redes na faixa, reduzir para 40 ou 20 MHz costuma estabilizar e até aumentar a taxa útil. Confirmar a ocupação no planejador de canais antes de trocar."
+      "leitura": "Se a largura reportada é 80 ou 160 MHz e há muitas redes na faixa, reduzir para 40 ou 20 MHz costuma estabilizar e até aumentar a taxa útil. Confirmar a ocupação com a varredura (nmcli dev wifi list) antes de trocar."
     }
   ],
   "laboratorios": [

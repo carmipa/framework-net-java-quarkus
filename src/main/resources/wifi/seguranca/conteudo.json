@@ -13,8 +13,8 @@
     },
     {
       "rotulo": "Canais no 2.4 GHz",
-      "valor": "1, 6 e 11 são os não sobrepostos",
-      "dica": "Apenas esses três canais não se sobrepõem na banda de 2.4 GHz (espaçamento de 5 canais, cerca de 25 MHz de separação)."
+      "valor": "1, 6 e 11 (o trio padrão sem sobreposição)",
+      "dica": "Espaçados de 5 canais (cerca de 25 MHz), não se sobrepõem; com os 13 canais do Brasil, 2/7/12 e 3/8/13 também servem."
     },
     {
       "rotulo": "Cifra dominante hoje",

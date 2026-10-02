@@ -1,5 +1,5 @@
 {
-  "resumo": "O Wi-Fi (IEEE 802.11) evoluiu de 11 Mbps a dezenas de Gbps. Abaixo, os padrões com ano, banda, velocidade máxima teórica e largura de canal; os aprofundamentos cobrem frequências/canais, segurança (WEP→WPA3) e ataques.",
+  "resumo": "O Wi-Fi (IEEE 802.11) evoluiu dos 2 Mbps do padrão original de 1997 a dezenas de Gbps. Abaixo, os padrões com ano, banda, velocidade máxima teórica e largura de canal; os aprofundamentos cobrem frequências/canais, segurança (WEP→WPA3) e ataques.",
   "tabelas": [
     {
       "titulo": "Padrões 802.11 (Wi-Fi)",
@@ -14,7 +14,7 @@
       "linhas": [
         [
           "802.11b",
-          "Wi-Fi 1",
+          "— (sem nome comercial)",
           "1999",
           "2.4 GHz",
           "11 Mbps",
@@ -22,7 +22,7 @@
         ],
         [
           "802.11a",
-          "Wi-Fi 2",
+          "— (sem nome comercial)",
           "1999",
           "5 GHz",
           "54 Mbps",
@@ -30,7 +30,7 @@
         ],
         [
           "802.11g",
-          "Wi-Fi 3",
+          "— (sem nome comercial)",
           "2003",
           "2.4 GHz",
           "54 Mbps",

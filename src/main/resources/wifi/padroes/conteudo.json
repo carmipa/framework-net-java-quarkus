@@ -1,5 +1,5 @@
 {
-  "resumo": "A família de padrões IEEE 802.11 evoluiu de forma contínua desde 1999, saindo de dezenas de Mbps para dezenas de Gbps. A linha original b/a/g estabeleceu as bandas de 2.4 GHz e 5 GHz e a modulação OFDM. A partir do 802.11n (Wi-Fi 4) a Wi-Fi Alliance passou a usar nomes comerciais simplificados: Wi-Fi 4 (802.11n) trouxe MIMO e uso simultâneo de duas bandas; Wi-Fi 5 (802.11ac) concentrou-se em 5 GHz com canais de até 160 MHz e MU-MIMO de downlink; Wi-Fi 6/6E (802.11ax) introduziu OFDMA, MU-MIMO bidirecional, modulação 1024-QAM e a banda de 6 GHz; e Wi-Fi 7 (802.11be) adicionou canais de 320 MHz, 4096-QAM e o Multi-Link Operation (MLO), que agrega bandas simultaneamente. Entender qual padrão e qual banda um dispositivo usa é a chave para diagnosticar velocidade baixa, pois um cliente antigo derruba a experiência da rede inteira.",
+  "resumo": "A família de padrões IEEE 802.11 evoluiu de forma contínua desde o padrão original de 1997 (1 e 2 Mbps), saindo de dezenas de Mbps para dezenas de Gbps. A linha original b/a/g estabeleceu as bandas de 2.4 GHz e 5 GHz e a modulação OFDM. A partir do 802.11n (Wi-Fi 4) a Wi-Fi Alliance passou a usar nomes comerciais simplificados: Wi-Fi 4 (802.11n) trouxe MIMO e uso simultâneo de duas bandas; Wi-Fi 5 (802.11ac) concentrou-se em 5 GHz com canais de até 160 MHz e MU-MIMO de downlink; Wi-Fi 6/6E (802.11ax) introduziu OFDMA, MU-MIMO bidirecional, modulação 1024-QAM e a banda de 6 GHz; e Wi-Fi 7 (802.11be) adicionou canais de 320 MHz, 4096-QAM e o Multi-Link Operation (MLO), que agrega bandas simultaneamente. Entender qual padrão e qual banda um dispositivo usa é a chave para diagnosticar velocidade baixa, pois um cliente antigo derruba a experiência da rede inteira.",
   "ficha": [
     {
       "rotulo": "Padrões no foco",
@@ -18,7 +18,7 @@
     },
     {
       "rotulo": "Largura de canal",
-      "valor": "20 MHz (b/g) até 320 MHz (Wi-Fi 7)",
+      "valor": "22 MHz (b) e 20 MHz (a/g) até 320 MHz (Wi-Fi 7)",
       "dica": "Canal mais largo = mais velocidade, porém mais suscetível a interferência e menos canais livres"
     },
     {
@@ -31,7 +31,7 @@
     {
       "titulo": "Banda 2.4 GHz: alcance, mais interferência",
       "icone": "wifi",
-      "texto": "Ondas mais longas atravessam paredes e alcançam mais longe, mas a banda é estreita e lotada: dividida em canais que se sobrepõem, só 1, 6 e 11 não interferem entre si. Sofre com micro-ondas, Bluetooth e redes vizinhas.",
+      "texto": "Ondas mais longas atravessam paredes e alcançam mais longe, mas a banda é estreita e lotada: dividida em canais que se sobrepõem, só três canais por vez não interferem entre si (1, 6 e 11 é o trio padrão). Sofre com micro-ondas, Bluetooth e redes vizinhas.",
       "destaque": "Melhor alcance, pior desempenho em ambientes cheios"
     },
     {
@@ -87,7 +87,7 @@
           "1999",
           "2.4 GHz",
           "11 Mbps",
-          "20 MHz",
+          "22 MHz",
           "DSSS"
         ],
         [
@@ -152,7 +152,7 @@
       "linhas": [
         [
           "2.4 GHz",
-          "3 (canais 1, 6 e 11)",
+          "3 (ex.: canais 1, 6 e 11)",
           "Maior",
           "Alta",
           "Compartilhada com Bluetooth, micro-ondas e IoT; muito congestionada"
@@ -272,7 +272,7 @@
     },
     {
       "nome": "Planejamento de canais e monitoramento de espectro",
-      "como_funciona": "Usar apenas os canais 1, 6 e 11 em 2.4 GHz, escolher canais 5/6 GHz com menos ocupação e monitorar o espectro para detectar ruído e APs não autorizados.",
+      "como_funciona": "Usar um trio sem sobreposição em 2.4 GHz (1, 6 e 11 é o padrão), escolher canais 5/6 GHz com menos ocupação e monitorar o espectro para detectar ruído e APs não autorizados.",
       "cobre": "Interferência, jamming e detecção de evil twin",
       "limite": "Não impede o ataque; apenas reduz o impacto e ajuda a detectar."
     }
