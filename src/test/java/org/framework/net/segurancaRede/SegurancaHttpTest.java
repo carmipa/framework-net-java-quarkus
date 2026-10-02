@@ -313,6 +313,22 @@ class SegurancaHttpTest {
                 .body(containsString("EXPIRADO"));
     }
 
+    /** Auditoria CALC-37: vence hoje ainda vale (até o notAfter); "EXPIRADO, 0 dia atrás" era falso. Fronteira: -1 expira. */
+    @Test
+    void tlsVencendoHojeAindaNaoEstaExpirado() {
+        tls("exemplo.com", "exemplo.com", "0", "nao", "TLS 1.3", "TLS_AES_128_GCM_SHA256")
+                .when().post("/seguranca/api/tls")
+                .then()
+                .statusCode(200)
+                .body(containsString("Vence HOJE"))
+                .body(not(containsString("EXPIRADO")));
+        tls("exemplo.com", "exemplo.com", "-1", "nao", "TLS 1.3", "TLS_AES_128_GCM_SHA256")
+                .when().post("/seguranca/api/tls")
+                .then()
+                .statusCode(200)
+                .body(containsString("EXPIRADO"));
+    }
+
     @Test
     void tlsAtencaoComTls12ECipherCbc() {
         tls("exemplo.com", "exemplo.com", "60", "nao", "TLS 1.2", "ECDHE-RSA-AES128-CBC-SHA")

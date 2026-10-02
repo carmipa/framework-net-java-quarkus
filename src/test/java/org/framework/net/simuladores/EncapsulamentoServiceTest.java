@@ -27,6 +27,10 @@ class EncapsulamentoServiceTest {
         // O quadro é maior que a mensagem (cabeçalhos somados)
         int appBytes = "GET / HTTP/1.1".getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
         assertTrue(r.totalBytes() > appBytes);
+        // CALC-37: o segmento que leva o GET vai numa conexão aberta (ACK/PSH), nunca com SYN.
+        String flags = r.camadas().get(1).cabecalho().stream().filter(c -> c.nome().equals("Flags"))
+                .findFirst().orElseThrow().valor();
+        assertTrue(flags.contains("ACK") && !flags.contains("SYN"), flags);
     }
 
     @Test

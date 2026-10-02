@@ -50,7 +50,13 @@ class AnomaliaTcpServiceTest {
                 () -> assertFalse(r.mitigacoes().isEmpty()),
                 () -> assertTrue(r.mitigacoes().stream().anyMatch(m -> m.comoFunciona().contains("6528")
                                 || m.nome().contains("6528")),
-                        "a defesa raiz é o ISN imprevisível da RFC 6528"));
+                        "a defesa raiz é o ISN imprevisível da RFC 6528"),
+                // CONT-07/CALC-37 (RFC 5961 §3.2): RST FORA da janela é descartado; o challenge ACK é para o
+                // RST dentro da janela com número inexato. A chance do palpite cego é janela/2^32.
+                () -> assertTrue(r.passos().stream().noneMatch(p -> p.acao().contains("fora da janela → challenge")),
+                        r.passos().toString()),
+                () -> assertTrue(r.passos().stream().anyMatch(p -> p.detalhe().contains("descartado em silêncio"))),
+                () -> assertTrue(r.kpis().stream().noneMatch(k -> k.valor().equals("1 em 2^32")), r.kpis().toString()));
     }
 
     @Test

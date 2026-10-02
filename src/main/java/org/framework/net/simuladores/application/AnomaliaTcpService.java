@@ -118,8 +118,9 @@ public class AnomaliaTcpService {
                 new Kpi("ISN previsível (legado)", "~1 palpite", "danger",
                         "Geradores antigos incrementavam o ISN por tempo/conexão. Sabendo a regra, o próximo "
                                 + "valor é estimável."),
-                new Kpi("ISN aleatório (RFC 6528)", "1 em 2^32", "success",
-                        "ISN = M + hash(segredo, 4-tuple). Sem o segredo, adivinhar off-path é inviável."),
+                new Kpi("ISN aleatório (RFC 6528)", "≈ janela ÷ 2^32", "success",
+                        "ISN = M + hash(segredo, 4-tuple). Basta cair na janela, então a chance por palpite é "
+                                + "o tamanho da janela sobre 2^32 — pequena, mas não 1 em 2^32."),
                 new Kpi("Janela de recepção", "aceita seq na faixa", "warning",
                         "O alvo aceita qualquer seq dentro da janela — não precisa ser exato, só cair no intervalo."),
                 new Kpi("Origem do atacante", "off-path (cego)", "info",
@@ -147,9 +148,10 @@ public class AnomaliaTcpService {
                                 + "atacante off-path teria de acertar 1 valor em 2^32 — e a janela reduz pouco isso "
                                 + "diante do volume necessário.",
                         "adivinhação inviável", "ok"),
-                new Passo(6, "Servidor", "RST fora da janela → challenge ACK",
-                        "Mesmo um RST plausível não derruba na hora: o TCP moderno responde com um challenge ACK "
-                                + "(RFC 5961) e só aceita o reset se a outra ponta confirmar o número exato.",
+                new Passo(6, "Servidor", "RST na janela, seq inexato → challenge ACK",
+                        "Fora da janela, o RST é descartado em silêncio. Dentro da janela mas sem o número exato, "
+                                + "o TCP moderno responde com um challenge ACK (RFC 5961 §3.2) e só derruba a sessão "
+                                + "com o número exato — que o atacante cego não sabe.",
                         "reset desafiado", "ok"));
 
         List<Mitigacao> mitigacoes = List.of(

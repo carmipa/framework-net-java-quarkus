@@ -76,8 +76,11 @@ public class EncapsulamentoService {
                             Campo.fornecido("Porta origem", String.valueOf(spNum), "Porta efêmera do cliente."),
                             Campo.fornecido("Porta destino", String.valueOf(dpNum), "Identifica o serviço no servidor."),
                             new Campo("Nº sequência", "0x0000000A", "Controle de ordem/confiabilidade (exemplo)."),
-                            new Campo("Nº ACK", "0x00000000", "Confirmação do próximo byte esperado (exemplo)."),
-                            new Campo("Flags", "SYN", "Bits de controle (SYN/ACK/FIN/RST/PSH/URG)."),
+                            new Campo("Nº ACK", "0x00000001", "Confirmação do próximo byte esperado (exemplo)."),
+                            // Segmento com dados vai numa conexão já aberta: ACK + PSH. SYN só abre a conexão
+                            // e não leva a requisição (auditoria CALC-37).
+                            new Campo("Flags", "ACK, PSH",
+                                    "Conexão já aberta (o SYN do handshake veio antes, sem dados); PSH entrega já à aplicação."),
                             new Campo("Janela", "64240", "Controle de fluxo (bytes que o receptor aceita)."),
                             new Campo("Checksum", "não calculado aqui", "Valor real: use o Construtor de pacotes."),
                             Campo.calculado("Cabeçalho", TCP_HDR + " bytes", "Header TCP mínimo (sem opções).")),

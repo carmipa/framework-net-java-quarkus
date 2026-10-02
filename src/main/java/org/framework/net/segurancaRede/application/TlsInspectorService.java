@@ -98,9 +98,14 @@ public class TlsInspectorService {
     }
 
     private Checagem checarValidade(int dias) {
-        if (dias <= 0) {
+        if (dias < 0) {
             return falha("Validade", "O certificado está EXPIRADO (" + (-dias) + " dia(s) atrás). "
                     + "Renovação automática costuma ter parado — o navegador recusa.");
+        }
+        if (dias == 0) {
+            // Vence hoje: ainda vale até o instante do notAfter (auditoria CALC-37: saía "EXPIRADO, 0 dia atrás").
+            return atencao("Validade", "Vence HOJE: ainda vale até o horário do notAfter. Renove agora "
+                    + "(ACME/certbot) — depois disso o navegador recusa.");
         }
         if (dias <= 15) {
             return atencao("Validade", "Expira em " + dias + " dia(s). Ainda válido, mas perto do limite: "
