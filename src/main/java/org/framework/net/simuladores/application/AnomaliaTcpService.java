@@ -90,8 +90,9 @@ public class AnomaliaTcpService {
 
         List<Mitigacao> mitigacoes = List.of(
                 new Mitigacao("SYN cookies",
-                        "O servidor não guarda estado no SYN. O ISN do SYN-ACK É o estado (hash do 4-tuple + "
-                                + "timestamp). Sem ACK válido de volta, nada é alocado — o flood forjado não enche fila alguma."),
+                        "O servidor não guarda estado no SYN. O ISN do SYN-ACK É o estado: um hash do 4-tuple com "
+                                + "um SEGREDO do servidor, mais um contador de tempo e o MSS (RFC 4987 §3.6). Sem o "
+                                + "segredo ninguém fabrica um cookie válido; sem ACK válido de volta, nada é alocado."),
                 new Mitigacao("Aumentar o backlog e reduzir o timeout de SYN-RECV",
                         "Mais slots e retransmissões de SYN-ACK mais curtas diminuem a janela, mas sozinho é "
                                 + "corrida perdida contra a banda do atacante — paliativo, não solução."),

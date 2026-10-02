@@ -39,6 +39,14 @@ class AnomaliaTcpServiceTest {
                         "SYN cookies é a defesa raiz do SYN flood e precisa aparecer"));
     }
 
+    /** CONT-07 (RFC 4987 §3.6): o cookie é um hash com SEGREDO do servidor; sem ele, qualquer um forjaria o ACK. */
+    @Test
+    void synCookieTemSegredo() {
+        ResultadoAnomaliaTcp r = service.simular("syn-flood");
+        assertTrue(r.mitigacoes().stream().filter(m -> m.nome().equals("SYN cookies"))
+                .anyMatch(m -> m.comoFunciona().contains("SEGREDO")), r.mitigacoes().toString());
+    }
+
     @Test
     @DisplayName("Sequestro de sequência vem completo e cita RFC 6528")
     void sequenceHijackCompleto() {
