@@ -62,6 +62,38 @@
         }
     }
 
+    /**
+     * Aba selecionada anunciada ao leitor de tela.
+     *
+     * PROPÓSITO DE NEGÓCIO: 46 abas role="tab" em 8 páginas não diziam qual estava aberta (só a
+     *   Calculadora definia aria-selected) — auditoria FRONT-08. As páginas usam três implementações de
+     *   abas (aed-tabs.js, analise.js e as próprias), todas marcando a aba aberta com a classe "active".
+     * INVARIANTES: um mecanismo só, para as abas de hoje e as de amanhã: todo [role=tab] tem
+     *   aria-selected igual a ter a classe "active", na carga e a cada troca de classe.
+     * FALHA: sem MutationObserver, vale só o estado da carga.
+     */
+    function sincronizarAbas(raiz) {
+        (raiz.matches && raiz.matches("[role='tab']") ? [raiz] : [])
+            .concat(Array.from(raiz.querySelectorAll ? raiz.querySelectorAll("[role='tab']") : []))
+            .forEach((aba) => {
+                const valor = aba.classList.contains("active") ? "true" : "false";
+                if (aba.getAttribute("aria-selected") !== valor) {
+                    aba.setAttribute("aria-selected", valor);
+                }
+            });
+    }
+    sincronizarAbas(document);
+    if (window.MutationObserver) {
+        new MutationObserver((mutacoes) => {
+            mutacoes.forEach((m) => {
+                if (m.type === "attributes" && m.target.getAttribute && m.target.getAttribute("role") === "tab") {
+                    sincronizarAbas(m.target);
+                }
+                m.addedNodes && m.addedNodes.forEach((n) => n.nodeType === 1 && sincronizarAbas(n));
+            });
+        }).observe(document.body, { attributes: true, attributeFilter: ["class"], childList: true, subtree: true });
+    }
+
     /** Desabilita tooltips nativos vazios (regra do prompt). */
     document.querySelectorAll("[title='']").forEach((el) => el.removeAttribute("title"));
 

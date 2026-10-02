@@ -9,33 +9,48 @@
         return (text || "").replace(/\s+/g, " ").trim();
     }
 
+    /**
+     * Texto que uma pessoa lê no rótulo, sem o nome do glifo e sem os controles de dentro dele.
+     * Auditoria FRONT-02/12: textContent trazia "lan Bloco base" (o nome do ícone Material Symbols) e,
+     * com o select dentro do label, "Linhas por página 8 10 25...".
+     */
+    function textoVisivel(no) {
+        const copia = no.cloneNode(true);
+        copia.querySelectorAll(
+            ".material-symbols-outlined, [aria-hidden='true'], select, option, input, textarea, button, .visually-hidden-focusable"
+        ).forEach((n) => n.remove());
+        return cleanText(copia.textContent);
+    }
+
+    /**
+     * Propósito: a dica automática de um campo sem title diz o que o campo é.
+     * Invariante: só usa rótulo DO PRÓPRIO campo; o rótulo de outro campo da mesma coluna nunca vira a
+     * dica (FRONT-02: o VLAN ID recebia "Bloco base"). O aria-label vem antes da busca por vizinhança.
+     * Falha: sem rótulo próprio devolve o placeholder ou vazio — sem dica, nunca dica errada.
+     */
     function labelTextFor(el) {
-        // 1. <label for="id">
-        if (el.id) {
-            try {
-                const lbl = document.querySelector('label[for="' + (w.CSS && CSS.escape ? CSS.escape(el.id) : el.id) + '"]');
-                if (lbl) {
-                    return cleanText(lbl.textContent);
-                }
-            } catch (_) {
-                /* seletor inválido: ignora */
+        if (el.labels && el.labels.length) {
+            const t = textoVisivel(el.labels[0]);
+            if (t) {
+                return t;
             }
         }
-        // 2. campo dentro de um <label>
-        const wrapLabel = el.closest("label");
-        if (wrapLabel) {
-            return cleanText(wrapLabel.textContent);
+        const aria = cleanText(el.getAttribute("aria-label"));
+        if (aria) {
+            return aria;
         }
-        // 3. <label> no mesmo container (col/campo)
         const container = el.closest(".col, [class*='col-'], .mb-3, .form-group, .field") || el.parentElement;
         if (container) {
             const lbl = container.querySelector("label.form-label, label");
-            if (lbl) {
-                return cleanText(lbl.textContent);
+            const camposNoContainer = container.querySelectorAll("input, select, textarea").length;
+            if (lbl && !lbl.htmlFor && camposNoContainer === 1) {
+                const t = textoVisivel(lbl);
+                if (t) {
+                    return t;
+                }
             }
         }
-        // 4. aria-label / placeholder
-        return cleanText(el.getAttribute("aria-label") || el.getAttribute("placeholder"));
+        return cleanText(el.getAttribute("placeholder"));
     }
 
     function ensureTooltip(el) {
@@ -45,7 +60,11 @@
                 return;
             }
         }
-        let title = el.getAttribute("title") || el.getAttribute("data-bs-title");
+        if (w.bootstrap && w.bootstrap.Tooltip && w.bootstrap.Tooltip.getInstance(el)) {
+            return; // já tem tooltip: recriar o title faria a dica nativa aparecer junto (FRONT-12)
+        }
+        let title = el.getAttribute("title") || el.getAttribute("data-bs-title")
+            || el.getAttribute("data-bs-original-title");
         if (!title || !title.trim()) {
             const base = labelTextFor(el);
             if (base) {
@@ -104,7 +123,14 @@
             scope.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
                 if (!w.bootstrap.Tooltip.getInstance(el)) {
                     preservarDescricao(el);
+                    const tinhaAria = el.hasAttribute("aria-label");
                     new w.bootstrap.Tooltip(el);
+                    // O Bootstrap põe a dica como aria-label em elemento sem texto (todo campo): o nome
+                    // acessível do campo deixava de ser o rótulo e virava a dica (FRONT-02). Campo com
+                    // rótulo próprio fica com o rótulo; a dica segue como descrição.
+                    if (!tinhaAria && el.labels && el.labels.length) {
+                        el.removeAttribute("aria-label");
+                    }
                 }
             });
         }
@@ -117,6 +143,23 @@
             });
         }
     }
+
+    /**
+     * Esc fecha qualquer dica ou popover aberto (WCAG 1.4.13, auditoria FRONT-10): quem navega por
+     * teclado não tinha como tirar a dica de cima do conteúdo.
+     */
+    document.addEventListener("keydown", (ev) => {
+        if (ev.key !== "Escape" || !w.bootstrap) {
+            return;
+        }
+        document.querySelectorAll('[data-bs-toggle="tooltip"], [data-bs-toggle="popover"]').forEach((el) => {
+            const dica = (w.bootstrap.Tooltip && w.bootstrap.Tooltip.getInstance(el))
+                || (w.bootstrap.Popover && w.bootstrap.Popover.getInstance(el));
+            if (dica) {
+                dica.hide();
+            }
+        });
+    });
 
     document.addEventListener("DOMContentLoaded", () => init(document));
     w.FieldTooltips = { init };

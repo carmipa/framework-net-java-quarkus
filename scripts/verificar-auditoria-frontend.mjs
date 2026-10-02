@@ -377,6 +377,135 @@ for (const caso of [
   await page.context().close();
 }
 
+// FRONT-02/12 (auditoria de 2026-10-01) — a dica automática trazia o nome do glifo ("lan Bloco base") ou o
+// rótulo de outro campo, e o Bootstrap a copiava para o aria-label (nome acessível). Re-init dinâmico
+// recriava o title e a dica nativa aparecia junto da do Bootstrap.
+{
+  const page = await novaPagina(browser);
+  const achados = [];
+  for (const rota of ['/calculadora', '/seguranca', '/analise', '/ipv6']) {
+    await page.goto(BASE + rota, { waitUntil: 'load', timeout: 45000 });
+    await assentar(page);
+    const r = await page.evaluate(() => {
+      const glifos = new Set([...document.querySelectorAll('.material-symbols-outlined')].map((e) => e.textContent.trim()).filter(Boolean));
+      const comGlifo = (t) => !!t && [...glifos].some((g) => t === g || t.startsWith(g + ' '));
+      const ruins = [];
+      document.querySelectorAll('input, select, textarea').forEach((el) => {
+        const dica = el.getAttribute('data-bs-original-title') || el.getAttribute('title') || '';
+        const aria = el.getAttribute('aria-label') || '';
+        if (comGlifo(dica) || comGlifo(aria)) ruins.push((el.id || el.name || el.tagName) + ' dica="' + dica + '" aria="' + aria + '"');
+        if (el.labels && el.labels.length && aria && aria === dica && !el.hasAttribute('data-aria-proprio')) {
+          ruins.push((el.id || el.name) + ' aria-label sobrescrito pela dica');
+        }
+      });
+      if (window.FieldTooltips) window.FieldTooltips.init(document);
+      const duplas = [...document.querySelectorAll('[data-bs-original-title]')]
+        .filter((el) => (el.getAttribute('title') || '').trim() && window.bootstrap.Tooltip.getInstance(el)).length;
+      return { ruins, duplas };
+    });
+    r.ruins.forEach((x) => achados.push(rota + ': ' + x));
+    if (r.duplas) achados.push(rota + ': ' + r.duplas + ' com dica nativa e Bootstrap juntas');
+  }
+  registrar('FRONT-02/12 dica sem glifo, nome acessível do rótulo, sem dica dupla', achados.length === 0,
+    achados.length ? achados.slice(0, 6).join(' | ') : '4 páginas limpas');
+  await page.context().close();
+}
+
+// FRONT-10 — Esc fecha a dica aberta (WCAG 1.4.13).
+{
+  const page = await novaPagina(browser);
+  await page.goto(BASE + '/calculadora', { waitUntil: 'load', timeout: 45000 });
+  await assentar(page);
+  const alvo = await page.evaluate(() => {
+    const el = [...document.querySelectorAll('[data-bs-toggle="tooltip"]')].find((e) => e.offsetParent !== null && /INPUT|SELECT|TEXTAREA|BUTTON/.test(e.tagName));
+    if (!el) return null;
+    el.setAttribute('data-verif', 'esc');
+    return true;
+  });
+  let aberta = false, depois = true;
+  if (alvo) {
+    await page.focus('[data-verif="esc"]');
+    await page.waitForTimeout(400);
+    aberta = await page.evaluate(() => !!document.querySelector('.tooltip.show'));
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(400);
+    depois = await page.evaluate(() => !!document.querySelector('.tooltip.show'));
+  }
+  registrar('FRONT-10 Esc fecha a dica', !!alvo && aberta && !depois, `alvo=${!!alvo} aberta no foco=${aberta} aberta depois do Esc=${depois}`);
+  await page.context().close();
+}
+
+// FRONT-08 — toda aba role="tab" diz se está selecionada, e o valor acompanha a troca.
+{
+  const page = await novaPagina(browser);
+  const achados = [];
+  for (const rota of ['/analise', '/seguranca', '/trafego', '/diagnostico', '/localizacao', '/ipv6']) {
+    await page.goto(BASE + rota, { waitUntil: 'load', timeout: 45000 });
+    await assentar(page);
+    const r = await page.evaluate(() => {
+      const abas = [...document.querySelectorAll('[role="tab"]')];
+      const sem = abas.filter((a) => !['true', 'false'].includes(a.getAttribute('aria-selected'))).length;
+      const verdadeiras = abas.filter((a) => a.getAttribute('aria-selected') === 'true').length;
+      const outra = abas.find((a) => a.getAttribute('aria-selected') === 'false' && a.offsetParent !== null);
+      if (outra) outra.setAttribute('data-verif', 'aba');
+      return { total: abas.length, sem, verdadeiras, temOutra: !!outra };
+    });
+    let trocou = true;
+    if (r.temOutra) {
+      await page.click('[data-verif="aba"]');
+      await page.waitForTimeout(200);
+      trocou = await page.evaluate(() => document.querySelector('[data-verif="aba"]').getAttribute('aria-selected') === 'true');
+    }
+    if (!r.total || r.sem || !r.verdadeiras || !trocou) achados.push(`${rota}: ${JSON.stringify(r)} trocou=${trocou}`);
+  }
+  registrar('FRONT-08 aria-selected nas abas e na troca', achados.length === 0, achados.length ? achados.join(' | ') : '6 páginas');
+  await page.context().close();
+}
+
+// FRONT-07 — valor técnico pintado depois do carregamento ganha translate="no"; texto humano não.
+{
+  const page = await novaPagina(browser);
+  await page.goto(BASE + '/calculadora', { waitUntil: 'load', timeout: 45000 });
+  await assentar(page);
+  const r = await page.evaluate(async () => {
+    const box = document.createElement('div');
+    box.innerHTML = '<table><tr><td id="v1">10.0.0.0/24</td><td id="v2">00:1A:2B:3C:4D:5E</td>'
+      + '<td id="v3">2001:db8::/48</td><td id="v4">permit tcp any any eq 80</td>'
+      + '<td id="h1">Rede da sala de aula</td><td id="h2">permite 10 hosts por rede</td></tr></table>';
+    document.body.appendChild(box);
+    await new Promise((ok) => setTimeout(ok, 150));
+    const t = (id) => document.getElementById(id).getAttribute('translate');
+    const res = { v1: t('v1'), v2: t('v2'), v3: t('v3'), v4: t('v4'), h1: t('h1'), h2: t('h2') };
+    box.remove();
+    return res;
+  });
+  const ok = ['v1', 'v2', 'v3', 'v4'].every((k) => r[k] === 'no') && r.h1 !== 'no' && r.h2 !== 'no';
+  registrar('FRONT-07 valor técnico protegido, texto humano traduzível', ok, JSON.stringify(r));
+  await page.context().close();
+}
+
+// OPS-06 — o ao vivo consulta a cada 2 s e para com a aba oculta.
+{
+  const page = await novaPagina(browser);
+  let consultas = 0;
+  page.on('request', (q) => { if (q.url().includes('/trafego/api/aovivo')) consultas++; });
+  await page.goto(BASE + '/trafego', { waitUntil: 'load', timeout: 45000 });
+  await assentar(page);
+  const tem = await page.evaluate(() => !!document.getElementById('live-start'));
+  let visivel = 0, oculta = 0, voltou = 0;
+  if (tem) {
+    await page.evaluate(() => document.getElementById('live-start').click());
+    consultas = 0; await page.waitForTimeout(4500); visivel = consultas;
+    await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => true }); document.dispatchEvent(new Event('visibilitychange')); });
+    consultas = 0; await page.waitForTimeout(4500); oculta = consultas;
+    await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => false }); document.dispatchEvent(new Event('visibilitychange')); });
+    consultas = 0; await page.waitForTimeout(2500); voltou = consultas;
+  }
+  registrar('OPS-06 ao vivo pausa com a aba oculta', tem && visivel >= 2 && visivel <= 3 && oculta === 0 && voltou >= 1,
+    `em 4,5 s: visível=${visivel} oculta=${oculta}; ao voltar=${voltou}`);
+  await page.context().close();
+}
+
 await browser.close();
 const reprovados = resultados.filter((r) => !r.ok);
 console.log(`\n${resultados.length - reprovados.length}/${resultados.length} passaram`);

@@ -177,6 +177,28 @@ function aedTranslate(lang) {
         }
     }
 
+    // Valor técnico pintado como texto solto (auditoria FRONT-07): IP, prefixo, máscara, MAC, IPv6,
+    // binário, hexadecimal e linha de ACL. O tradutor trocava "permit" por "permitir" e reformatava
+    // número; a ilha precisa ser a folha que contém SÓ o valor (texto misto com palavras continua
+    // traduzível, de propósito).
+    var VALOR_TECNICO = new RegExp('^(?:' + [
+        '\\d{1,3}(?:\\.\\d{1,3}){3}(?:\\/\\d{1,2})?',                 // IPv4, máscara, CIDR
+        '\\/\\d{1,3}',                                                  // prefixo solto
+        '(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}',                          // MAC
+        '[0-9A-Fa-f]{0,4}(?::[0-9A-Fa-f]{0,4}){2,7}(?:\\/\\d{1,3})?',     // IPv6 (com prefixo)
+        '[01]{4,}(?:[ .][01]{4,})*',                                        // binário
+        '0x[0-9A-Fa-f]+',                                                   // hexadecimal
+        '(?:permit|deny|access-list|ip access-list)\\b.*'                 // linha de ACL
+    ].join('|') + ')$', 'i');
+
+    function ehFolhaTecnica(el) {
+        if (el.children.length !== 0 || el.closest('[translate="no"]')) {
+            return false;
+        }
+        var texto = (el.textContent || '').trim();
+        return texto.length > 0 && texto.length <= 200 && VALOR_TECNICO.test(texto);
+    }
+
     function varrer(raiz) {
         if (!raiz || raiz.nodeType !== 1) {
             return;
@@ -185,6 +207,14 @@ function aedTranslate(lang) {
             carimbar(raiz);
         }
         raiz.querySelectorAll(SELETOR).forEach(carimbar);
+        if (ehFolhaTecnica(raiz)) {
+            carimbar(raiz);
+        }
+        raiz.querySelectorAll('td, th, span, strong, b, dd, li, div, p, output, small').forEach(function (el) {
+            if (ehFolhaTecnica(el)) {
+                carimbar(el);
+            }
+        });
     }
 
     function iniciar() {
