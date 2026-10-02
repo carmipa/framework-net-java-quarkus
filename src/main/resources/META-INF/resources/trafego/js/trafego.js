@@ -3,11 +3,12 @@
 (function () {
     "use strict";
 
-    // Ethernet + IPv4 + TCP (SYN para porta 80) — exemplo didático.
+    // Ethernet + IPv4 + TCP (SYN para porta 80) — exemplo didático: MAC de origem unicast e os dois
+    // checksums corretos (auditoria CONT-35; guarda em ExemploDecodificadorGuardTest).
     var EXEMPLO =
-        "aabb ccdd eeff 1122 3344 5566 0800\n" +
-        "4500 0028 1c46 4000 4006 b1e6 c0a8 0001 c0a8 0002\n" +
-        "d431 0050 0000 0000 0000 0000 5002 7210 e577 0000";
+        "aabb ccdd eeff 0211 2233 4455 0800\n" +
+        "4500 0028 1c46 4000 4006 9d36 c0a8 0001 c0a8 0002\n" +
+        "d431 0050 0000 0000 0000 0000 5002 7210 e7fc 0000";
 
     document.addEventListener("DOMContentLoaded", function () {
         var hex = document.getElementById("trafego-hex");

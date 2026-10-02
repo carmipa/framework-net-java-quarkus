@@ -68,7 +68,8 @@ public class TrafegoDecoderService {
                 case "ipv6" -> decodeIpv6(bytes, offset);
                 case "tcp" -> decodeTcp(bytes, offset);
                 case "udp" -> decodeUdp(bytes, offset);
-                case "icmp" -> decodeIcmp(bytes, offset);
+                case "icmp" -> decodeIcmp(bytes, offset, false);
+                case "icmpv6" -> decodeIcmp(bytes, offset, true);
                 default -> null;
             };
             if (passo == null) {
@@ -124,13 +125,31 @@ public class TrafegoDecoderService {
                 campo("MAC origem", src, "Endereço físico de origem (48 bits)."),
                 campo("EtherType", String.format("0x%04X (%s)", ethertype, tipoNome),
                         "Identifica o protocolo da camada superior."));
-        String prox = switch (ethertype) {
+        if (ethertype == 0x8100 && !falta(b, off, 18)) {
+            // 802.1Q: 4 bytes de tag entre os MACs e o EtherType de verdade. Antes o quadro com tag ia
+            // inteiro para "dados da aplicação" (auditoria CALC-38).
+            int tci = u16(b, off + 14);
+            int interno = u16(b, off + 16);
+            List<Campo> comTag = new ArrayList<>(campos);
+            comTag.add(campo("PCP / DEI", (tci >> 13) + " / " + ((tci >> 12) & 1),
+                    "Prioridade 802.1p (0-7) e o bit de descarte preferencial."));
+            comTag.add(campo("VLAN ID", String.valueOf(tci & 0x0FFF), "VLAN do quadro (12 bits, 1-4094)."));
+            comTag.add(campo("EtherType interno", String.format("0x%04X (%s)", interno, ethertypeNome(interno)),
+                    "Protocolo carregado dentro da tag."));
+            return new Passo(new Camada("Ethernet II + 802.1Q", src + " → " + dst + " · VLAN " + (tci & 0x0FFF)
+                    + " · " + ethertypeNome(interno), comTag), off + 18, proximaPorEthertype(interno));
+        }
+        return new Passo(new Camada("Ethernet II", src + " → " + dst + " · " + tipoNome, campos), off + 14,
+                proximaPorEthertype(ethertype));
+    }
+
+    private static String proximaPorEthertype(int ethertype) {
+        return switch (ethertype) {
             case 0x0800 -> "ipv4";
             case 0x86DD -> "ipv6";
             case 0x0806 -> "arp";
             default -> null;
         };
-        return new Passo(new Camada("Ethernet II", src + " → " + dst + " · " + tipoNome, campos), off + 14, prox);
     }
 
     private Passo decodeArp(byte[] b, int off) {
@@ -174,13 +193,17 @@ public class TrafegoDecoderService {
                 campo("Flags", "0b" + Integer.toBinaryString(flags)
                         + descFlags((flags & 0b010) != 0 ? "DF" : "", (flags & 0b001) != 0 ? "MF" : ""),
                         "DF = não fragmentar; MF = mais fragmentos."),
-                campo("Fragment offset", String.valueOf(flagsFrag & 0x1FFF), "Posição do fragmento."),
+                campo("Fragment offset", (flagsFrag & 0x1FFF) + " (× 8 = " + (flagsFrag & 0x1FFF) * 8 + " bytes)",
+                        "Posição do fragmento em unidades de 8 bytes."),
                 campo("TTL", String.valueOf(u8(b, off + 8)), "Tempo de vida (saltos restantes)."),
                 campo("Protocolo", proto + " (" + protoNome + ")", "Protocolo encapsulado."),
                 campo("Header checksum", String.format("0x%04X", u16(b, off + 10)), "Verificação do cabeçalho."),
                 campo("IP origem", ipv4(b, off + 12), "Endereço de origem."),
                 campo("IP destino", ipv4(b, off + 16), "Endereço de destino."));
-        String prox = switch (proto) {
+        // Fragmento que não é o primeiro carrega o MEIO dos dados: não há cabeçalho TCP/UDP nele
+        // (auditoria CALC-23 — os bytes eram lidos como portas e flags).
+        boolean fragmentoNaoInicial = (flagsFrag & 0x1FFF) != 0;
+        String prox = fragmentoNaoInicial ? null : switch (proto) {
             case 6 -> "tcp";
             case 17 -> "udp";
             case 1 -> "icmp";
@@ -188,7 +211,9 @@ public class TrafegoDecoderService {
         };
         int nextOff = Math.max(off + 20, off + headerLen);
         return new Passo(new Camada("IPv4",
-                ipv4(b, off + 12) + " → " + ipv4(b, off + 16) + " · " + protoNome, campos), nextOff, prox);
+                ipv4(b, off + 12) + " → " + ipv4(b, off + 16) + " · " + protoNome
+                        + (fragmentoNaoInicial ? " · fragmento não inicial (sem cabeçalho " + protoNome + ")" : ""),
+                campos), nextOff, prox);
     }
 
     private Passo decodeIpv6(byte[] b, int off) {
@@ -210,7 +235,7 @@ public class TrafegoDecoderService {
         String prox = switch (nextHeader) {
             case 6 -> "tcp";
             case 17 -> "udp";
-            case 58 -> "icmp";
+            case 58 -> "icmpv6";
             default -> null;
         };
         return new Passo(new Camada("IPv6",
@@ -256,17 +281,37 @@ public class TrafegoDecoderService {
         return new Passo(new Camada("UDP", src + " → " + dst, campos), off + 8, null);
     }
 
-    private Passo decodeIcmp(byte[] b, int off) {
-        if (falta(b, off, 4)) {
-            return truncado("ICMP", off);
+    /**
+     * ICMP (IPv4) ou ICMPv6, cada um com a sua tabela de tipos.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> mostrar o tipo da mensagem e os 8 bytes do cabeçalho.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> o cabeçalho tem 8 bytes — tipo, código, checksum e mais 4 que
+     * dependem do tipo (identificador e sequência no Echo) — e não 4 (RFC 792, RFC 4443). As tabelas são
+     * distintas: no ICMPv6 o 3 é Time Exceeded e o 1 é Destination Unreachable (auditoria CALC-24).</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> menos de 8 bytes devolve a camada truncada.</p>
+     */
+    private Passo decodeIcmp(byte[] b, int off, boolean v6) {
+        String nome = v6 ? "ICMPv6" : "ICMP";
+        if (falta(b, off, 8)) {
+            return truncado(nome, off);
         }
         int tipo = u8(b, off);
         int code = u8(b, off + 1);
+        String tipoNome = v6 ? icmp6Tipo(tipo) : icmpTipo(tipo);
+        boolean echo = v6 ? (tipo == 128 || tipo == 129) : (tipo == 0 || tipo == 8);
+        Campo resto = echo
+                ? campo("Identifier / Sequence", u16(b, off + 4) + " / " + u16(b, off + 6),
+                        "No Echo, casam o pedido com a resposta.")
+                : campo("Resto do cabeçalho", hex(b, off + 4, 4),
+                        "4 bytes cujo significado depende do tipo (ex.: MTU no Packet Too Big).");
         List<Campo> campos = List.of(
-                campo("Type", tipo + " (" + icmpTipo(tipo) + ")", "Tipo de mensagem ICMP."),
+                campo("Type", tipo + " (" + tipoNome + ")", "Tipo de mensagem " + nome + "."),
                 campo("Code", String.valueOf(code), "Subtipo/código."),
-                campo("Checksum", String.format("0x%04X", u16(b, off + 2)), "Verificação da mensagem."));
-        return new Passo(new Camada("ICMP", icmpTipo(tipo), campos), off + 4, null);
+                campo("Checksum", String.format("0x%04X", u16(b, off + 2)), "Verificação da mensagem."),
+                resto);
+        return new Passo(new Camada(nome, tipoNome, campos), off + 8, null);
     }
 
     private Camada payload(byte[] b, int off, int fim) {
@@ -466,10 +511,28 @@ public class TrafegoDecoderService {
         return switch (t) {
             case 0 -> "Echo Reply";
             case 3 -> "Destination Unreachable";
+            case 5 -> "Redirect";
             case 8 -> "Echo Request";
             case 11 -> "Time Exceeded";
-            case 128 -> "Echo Request (v6)";
-            case 129 -> "Echo Reply (v6)";
+            case 12 -> "Parameter Problem";
+            default -> "tipo " + t;
+        };
+    }
+
+    private static String icmp6Tipo(int t) {
+        return switch (t) {
+            case 1 -> "Destination Unreachable";
+            case 2 -> "Packet Too Big";
+            case 3 -> "Time Exceeded";
+            case 4 -> "Parameter Problem";
+            case 128 -> "Echo Request";
+            case 129 -> "Echo Reply";
+            case 133 -> "Router Solicitation";
+            case 134 -> "Router Advertisement";
+            case 135 -> "Neighbor Solicitation";
+            case 136 -> "Neighbor Advertisement";
+            case 137 -> "Redirect";
+            case 143 -> "MLDv2 Report";
             default -> "tipo " + t;
         };
     }
