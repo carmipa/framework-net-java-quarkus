@@ -199,7 +199,7 @@
       "ordem": 3,
       "estado": "Active",
       "significado": "Tentando abrir o TCP ativamente depois de uma falha.",
-      "trava_comum": "Oscilar entre Active e Connect é o sintoma clássico de porta 179 bloqueada por ACL/firewall, IP de vizinho errado ou update-source incorreto."
+      "trava_comum": "Oscilar entre Active e Connect é o sintoma clássico de porta 179 bloqueada por ACL/firewall, IP de vizinho errado, update-source incorreto ou senha MD5 divergente — com a senha errada o TCP é descartado antes de abrir (no Cisco, log %TCP-6-BADAUTH)."
     },
     {
       "ordem": 4,
@@ -211,7 +211,7 @@
       "ordem": 5,
       "estado": "OpenConfirm",
       "significado": "OPEN aceito; espera o primeiro KEEPALIVE.",
-      "trava_comum": "Falha de autenticação MD5 costuma se manifestar entre este estado e o anterior."
+      "trava_comum": "Se o KEEPALIVE não chega antes do Hold Time, a sessão cai com NOTIFICATION (Hold Timer Expired). Senha MD5 errada não chega até aqui: o TCP nem abre."
     },
     {
       "ordem": 6,
@@ -316,19 +316,19 @@
       "nome": "RPKI / ROV",
       "ameaca": "Hijack: outro AS anuncia o seu prefixo e sequestra o tráfego.",
       "aplicacao": "Publicar ROA para os seus prefixos e validar na entrada, descartando rotas com estado Invalid. Estado NotFound ainda é maioria e não deve ser descartado sem análise.",
-      "comando": "router bgp 65001\n bgp rpki server tcp 10.0.0.9 port 3323 refresh 600\n bgp bestpath prefix-validate signal ibgp"
+      "comando": "router bgp 65001\n bgp rpki server tcp 10.0.0.9 port 3323 refresh 600\n neighbor 198.51.100.1 route-map RPKI-ENTRADA in\n!\nroute-map RPKI-ENTRADA deny 10\n match rpki invalid\nroute-map RPKI-ENTRADA permit 20"
     },
     {
       "nome": "Autenticação da sessão (MD5 / TCP-AO) e GTSM",
       "ameaca": "Injeção de pacote e reset de sessão TCP por terceiro.",
       "aplicacao": "Chave na sessão e, para eBGP diretamente conectado, exigir TTL alto na chegada (GTSM, RFC 5082) — pacote forjado de longe chega com TTL baixo e é descartado.",
-      "comando": "router bgp 65001\n neighbor 198.51.100.1 password 7 <segredo>\n neighbor 198.51.100.1 ttl-security hops 1"
+      "comando": "router bgp 65001\n ! senha em texto: sem o 7, que é para colar uma senha já cifrada em tipo 7\n neighbor 198.51.100.1 password <segredo>\n neighbor 198.51.100.1 ttl-security hops 1"
     },
     {
       "nome": "Dampening com parcimônia",
       "ameaca": "Route flapping consumindo CPU e propagando instabilidade.",
-      "aplicacao": "Penaliza prefixo que oscila. Parâmetros agressivos punem prefixo legítimo por tempo demais — a recomendação atual (RIPE-378) é usar limiares brandos ou não usar.",
-      "comando": "router bgp 65001\n bgp dampening 15 750 2000 60"
+      "aplicacao": "Penaliza prefixo que oscila. Parâmetros agressivos punem prefixo legítimo por tempo demais. A recomendação antiga (RIPE-378, 2006) era desligar; a atual (RIPE-580, 2013, e RFC 7196) é usar com limiar de supressão de pelo menos 6000 — o padrão 2000 é agressivo demais.",
+      "comando": "router bgp 65001\n bgp dampening 15 750 6000 60"
     },
     {
       "nome": "Blackhole por community (RFC 7999)",

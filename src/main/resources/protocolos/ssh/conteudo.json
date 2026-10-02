@@ -244,8 +244,8 @@
     },
     {
       "diretiva": "Ciphers / MACs / KexAlgorithms",
-      "valor": "Apenas AEAD e curvas modernas",
-      "porque": "Remove CBC e MACs legados e fecha o ataque Terrapin (CVE-2023-48795) quando o par não suporta strict kex.",
+      "valor": "AES-GCM (chacha20 só com strict kex) e curvas modernas",
+      "porque": "Remove CBC e MACs legados. Contra o Terrapin (CVE-2023-48795) a correção é o strict kex (OpenSSH 9.6+ dos dois lados); com par antigo, tire o chacha20-poly1305 — que é AEAD e é afetado — e os MACs -etm. A AES-GCM não é afetada.",
       "risco": "Fixar lista à mão envelhece: revise a cada atualização maior do OpenSSH em vez de copiar um guia antigo."
     },
     {

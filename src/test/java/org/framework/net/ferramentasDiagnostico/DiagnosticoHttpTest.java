@@ -159,6 +159,24 @@ class DiagnosticoHttpTest {
                 .body(containsString("DNSSEC"));
     }
 
+    /**
+     * CONT-08: no envenenamento de cache a resposta forjada vai ao RESOLVER, na corrida com o autoritativo
+     * (RFC 5452 §3). A simulação mandava a forjada ao cliente e ainda dizia "cache envenenado".
+     */
+    @Test
+    void envenenamentoMostraARespostaForjadaIndoAoResolver() {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("dominio", "banco.example.com")
+                .when().post("/diagnostico/api/dns-spoofing")
+                .then()
+                .statusCode(200)
+                .body(containsString("Resolver → Autoritativo"))
+                .body(containsString("Atacante → Resolver"))
+                .body(not(containsString("Atacante → Cliente")))
+                .body(containsString("Autoritativo → Resolver"));
+    }
+
     @ParameterizedTest(name = "{0} rejeita injeção de comando com 400")
     @CsvSource({
             "/diagnostico/api/ping,         host",

@@ -183,7 +183,7 @@ public class DiagnosticoService {
                     List.of(
                             new Kpi("Saltos", String.valueOf(saltos.length), "info", "roteadores até o destino"),
                             new Kpi("Destino alcançado", "sim", "success", "o último nó respondeu"),
-                            new Kpi("TTL inicial", "1", "info", "e cresce a cada sonda")),
+                            new Kpi("TTL inicial", "1", "info", "cresce 1 a cada salto (3 sondas por TTL)")),
                     new Tabela("Saltos da rota",
                             List.of("Salto", "TTL enviado", "RTT (3 sondas)", "Nó que respondeu"),
                             linhas),
@@ -256,11 +256,11 @@ public class DiagnosticoService {
                             new Termo("sem resposta", "Nenhum Echo Reply — pode estar desligado OU com ICMP bloqueado por firewall."),
                             new Termo("nmap -sn", "O modo 'host discovery' do nmap: descobre hosts sem varrer portas.")),
                     List.of(
-                            "Para cada endereço da faixa, envia um ICMP Echo Request.",
+                            "Para cada endereço da faixa, envia um ICMP Echo Request (o nmap -sn real, como root, manda também SYN na 443, ACK na 80 e ICMP Timestamp; na LAN, ARP).",
                             "Quem responde Echo Reply é marcado como ativo; o resto fica como sem resposta.",
                             "É o primeiro passo de um mapeamento: descobrir alvos antes de varrer portas."),
                     List.of(
-                            "Ausência de resposta NÃO prova host inexistente — firewall que descarta ICMP o esconde.",
+                            "Ausência de resposta NÃO prova host inexistente — firewall que descarta o ICMP e as sondas TCP o esconde (o -Pn pula a descoberta).",
                             "Redes grandes (/16) levam muito tempo por ICMP; ferramentas reais paralelizam.",
                             "Ping sweep barulhento acende alertas em IDS — muitos ICMP de uma origem só."),
                     "Simulado — a amostra é ilustrativa; nenhuma varredura real foi feita.",
@@ -334,24 +334,44 @@ public class DiagnosticoService {
 
     // ---------------------------------------------------------- DNS SPOOFING
 
+    /**
+     * Simula o envenenamento do cache de um resolver DNS (a corrida das respostas forjadas).
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> mostrar ao aluno ONDE o ataque acontece: o resolver, sem a resposta
+     * em cache, pergunta ao autoritativo; o atacante off-path dispara respostas forjadas para o RESOLVER
+     * fingindo ser o autoritativo; a que casar Transaction ID + porta antes da real fica no cache e é
+     * entregue a todos os clientes até o TTL vencer (RFC 5452 §3).</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> a resposta forjada vai ao resolver, nunca ao cliente — a corrida é no
+     * trecho resolver↔autoritativo; o IP forjado é de documentação (198.51.100.66, RFC 5737) e o legítimo
+     * também (203.0.113.10); nenhum pacote real é enviado.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> domínio inválido sai pela {@code validarHost}, com a exceção
+     * de entrada inválida do módulo; não há outra falha possível (a saída é montada em memória).</p>
+     */
     public ResultadoDiagnostico executarDnsSpoofingSimulado(String dominio) {
         return telemetriaLogger.medir("diagnostico", "dns_spoofing_simulado", () -> {
             validarHost(dominio);
             telemetriaLogger.logEvent("info", "diagnostico", "dns_spoofing_executado", Map.of("dominio", dominio));
 
             StringBuilder sb = new StringBuilder();
-            sb.append("Simulação didática de DNS spoofing para ").append(dominio).append(" (53/UDP):\n\n");
-            sb.append("[t=0.000s] Cliente  -> Resolver : consulta  A? ").append(dominio)
+            sb.append("Simulação didática de DNS spoofing (envenenamento do cache do resolver) para ").append(dominio).append(" (53/UDP):\n\n");
+            sb.append("[t=0.000s] Cliente     -> Resolver    : consulta  A? ").append(dominio).append("\n");
+            sb.append("[t=0.002s] Resolver    -> Autoritativo: consulta  A? ").append(dominio)
                     .append("   (Transaction ID=0x7f3a, porta origem=54721)\n");
-            sb.append("[t=0.008s] Atacante -> Cliente  : RESPOSTA FORJADA  ").append(dominio)
-                    .append(" A 6.6.6.6   (chuta ID + porta)\n");
-            sb.append("[t=0.021s] Resolver -> Cliente  : resposta legítima ").append(dominio)
-                    .append(" A 203.0.113.10\n");
+            sb.append("[t=0.008s] Atacante    -> Resolver    : RESPOSTA FORJADA  ").append(dominio)
+                    .append(" A 198.51.100.66   (finge ser o autoritativo; chuta ID + porta)\n");
+            sb.append("[t=0.031s] Autoritativo-> Resolver    : resposta legítima ").append(dominio)
+                    .append(" A 203.0.113.10   (chegou tarde: descartada)\n");
+            sb.append("[t=0.032s] Resolver    -> Cliente     : ").append(dominio)
+                    .append(" A 198.51.100.66   (servido do cache envenenado até o TTL vencer)\n");
 
             List<Linha> linhas = List.of(
-                    new Linha(List.of("t=0.000s", "Cliente → Resolver", "consulta A? " + dominio + " (ID=0x7f3a, porta=54721)"), ""),
-                    new Linha(List.of("t=0.008s", "Atacante → Cliente", "RESPOSTA FORJADA → 6.6.6.6 (chuta ID + porta)"), "danger"),
-                    new Linha(List.of("t=0.021s", "Resolver → Cliente", "resposta legítima → 203.0.113.10 (chegou tarde)"), "success"));
+                    new Linha(List.of("t=0.000s", "Cliente → Resolver", "consulta A? " + dominio), ""),
+                    new Linha(List.of("t=0.002s", "Resolver → Autoritativo", "consulta A? " + dominio + " (ID=0x7f3a, porta=54721)"), ""),
+                    new Linha(List.of("t=0.008s", "Atacante → Resolver", "RESPOSTA FORJADA → 198.51.100.66 (finge ser o autoritativo; chuta ID + porta)"), "danger"),
+                    new Linha(List.of("t=0.031s", "Autoritativo → Resolver", "resposta legítima → 203.0.113.10 (chegou tarde: descartada)"), "success"),
+                    new Linha(List.of("t=0.032s", "Resolver → Cliente", "198.51.100.66 servido do cache envenenado até o TTL vencer"), "danger"));
 
             return new ResultadoDiagnostico(
                     "dns-spoofing",
@@ -373,13 +393,13 @@ public class DiagnosticoService {
                             new Termo("cache poisoning", "Envenenar a entrada no cache do resolver, redirecionando todos os clientes dele."),
                             new Termo("off-path × on-path", "Off-path chuta os valores; on-path (mesma rede) os enxerga e não precisa chutar.")),
                     List.of(
-                            "O cliente pergunta A? do domínio ao resolver, com um Transaction ID e uma porta de origem.",
-                            "O atacante dispara uma resposta forjada tentando casar esses dois valores antes da real.",
-                            "Se a forjada chega primeiro E acerta ID + porta, o resolver a aceita e cacheia o IP falso."),
+                            "O cliente pergunta A? ao resolver; sem a resposta em cache, o resolver pergunta ao autoritativo com um Transaction ID e uma porta de origem.",
+                            "O atacante dispara respostas forjadas para o RESOLVER, fingindo ser o autoritativo, tentando casar esses dois valores antes da real.",
+                            "Se a forjada chega primeiro E acerta ID + porta, o resolver a aceita, guarda no cache e entrega o IP falso a todos os clientes até o TTL vencer."),
                     List.of(
                             "Sem DNSSEC, a defesa é probabilística: mais entropia (porta aleatória + 0x20) = mais difícil acertar.",
-                            "DNSSEC recusa a resposta forjada porque ela não tem assinatura válida.",
-                            "DoT/DoH cifram o canal cliente↔resolver, tirando o on-path da jogada."),
+                            "DNSSEC com validação no resolver recusa a resposta forjada porque ela não tem assinatura válida.",
+                            "DoT/DoH cifram só o trecho cliente↔resolver: protegem do on-path na rede do cliente, não do envenenamento do resolver."),
                     "Simulado — nenhum pacote real; valores didáticos. Veja Protocolos > DNS para DNSSEC e mitigações.",
                     sb.toString());
         });

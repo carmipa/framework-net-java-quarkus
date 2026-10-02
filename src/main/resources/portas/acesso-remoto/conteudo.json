@@ -280,9 +280,9 @@
     },
     {
       "sintoma": "Servidor Windows com reinícios ou travamentos inesperados e RDP aberto",
-      "causa_provavel": "RDP 3389 exposto e sem patch, possível exploração do BlueKeep (CVE-2019-0708).",
-      "comando": "nmap -p 3389 --script rdp-vuln-ms12-020 alvo",
-      "leitura": "RDP acessível pela internet em Windows antigo é risco crítico. Feche a porta, aplique patches e só libere por VPN."
+      "causa_provavel": "RDP 3389 exposto e sem patch: o MS12-020 (CVE-2012-0152) derruba o serviço com pacotes montados, e o BlueKeep (CVE-2019-0708) dá execução remota e costuma travar o Windows quando falha.",
+      "comando": "nmap -p 3389 --script rdp-vuln-ms12-020 alvo\nnmap -p 3389 --script rdp-enum-encryption alvo",
+      "leitura": "O primeiro script testa o MS12-020 (CVE-2012-0002/0152), não o BlueKeep: o nmap não tem script oficial para ele — confira o patch do Windows e se o NLA (CredSSP) é exigido, que o segundo script mostra. RDP acessível pela internet em Windows antigo é risco crítico. Feche a porta, aplique patches e só libere por VPN."
     },
     {
       "sintoma": "Conexão VNC abre a tela sem pedir senha",

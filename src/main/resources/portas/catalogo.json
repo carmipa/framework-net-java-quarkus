@@ -155,7 +155,7 @@
     "servico": "SMTPS",
     "categoria": "Well-known (0-1023)",
     "risco": "Baixo",
-    "recomendacao": "Substituído pela 587 (Submission), mas ainda usado",
+    "recomendacao": "Submissão com TLS implícito; a RFC 8314 a prefere à 587 com STARTTLS. Exija autenticação",
     "badge": "🟢 Seguro",
     "badge_color": "success"
   },

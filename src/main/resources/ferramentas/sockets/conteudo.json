@@ -222,8 +222,8 @@
     {
       "sintoma": "Address already in use ao iniciar o serviço",
       "causa_provavel": "Outro processo (ou uma instância antiga do próprio serviço) já está com a porta em LISTEN, ou um socket ficou em TIME-WAIT segurando a porta.",
-      "comando": "sudo ss -tulpn | grep :8080",
-      "leitura": "A saída mostra o PID e o nome do processo que já ocupa a porta. Se for uma instância órfã, encerre-a (kill <PID>) e reinicie. Se for TIME-WAIT de um restart recente, aguarde alguns segundos ou habilite SO_REUSEADDR na aplicação."
+      "comando": "sudo ss -tulpn | grep :8080\nss -tan state time-wait '( sport = :8080 )'",
+      "leitura": "A 1ª linha mostra o PID e o nome do processo que ocupa a porta em LISTEN; se for uma instância órfã, encerre-a (kill <PID>) e reinicie. O -l não lista TIME-WAIT: é a 2ª linha que mostra os sockets de um restart recente — aguarde alguns segundos ou habilite SO_REUSEADDR na aplicação."
     },
     {
       "sintoma": "Connection refused ao conectar",

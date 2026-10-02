@@ -306,7 +306,7 @@
       "sintoma": "Consultas muito lentas ou intermitentes",
       "causa_provavel": "Resposta grande caindo para TCP com a 53/TCP bloqueada, ou MTU/fragmentação de UDP grande.",
       "comando": "dig nome A +tcp\ndig nome DNSKEY +bufsize=1232",
-      "leitura": "Se +tcp resolve e o UDP normal falha, um firewall bloqueia a 53/TCP ou descarta o UDP grande. Limitar o bufsize a 1232 evita a fragmentação IP que muitos caminhos descartam."
+      "leitura": "Se +tcp resolve e o UDP normal falha, a 53/TCP está liberada: o problema é o UDP grande descartado no caminho (fragmentação) ou a 53/UDP filtrada. Se o UDP volta truncado (flag tc) e o +tcp não responde, aí sim um firewall bloqueia a 53/TCP. Limitar o bufsize a 1232 evita a fragmentação IP que muitos caminhos descartam."
     }
   ],
   "diagrama": {
@@ -316,7 +316,7 @@
   },
   "cabecalho": {
     "titulo": "Cabeçalho da mensagem DNS (12 bytes / 96 bits)",
-    "nota": "O cabeçalho fixo do DNS tem 6 campos de 16 bits cada: 16 + 16 + 16 + 16 + 16 + 16 = 96 bits, que equivalem a 96 / 8 = 12 bytes. O campo Flags, também de 16 bits, subdivide-se internamente em: QR (1 bit, consulta ou resposta), Opcode (4 bits, tipo de operação), AA (1 bit, resposta autoritativa), TC (1 bit, mensagem truncada), RD (1 bit, recursão desejada), RA (1 bit, recursão disponível), Z (3 bits, reservado, deve ser zero) e RCODE (4 bits, código de resultado). Somando: 1 + 4 + 1 + 1 + 1 + 1 + 3 + 4 = 16 bits.",
+    "nota": "O cabeçalho fixo do DNS tem 6 campos de 16 bits cada: 16 + 16 + 16 + 16 + 16 + 16 = 96 bits, que equivalem a 96 / 8 = 12 bytes. O campo Flags, também de 16 bits, subdivide-se internamente em: QR (1 bit, consulta ou resposta), Opcode (4 bits, tipo de operação), AA (1 bit, resposta autoritativa), TC (1 bit, mensagem truncada), RD (1 bit, recursão desejada), RA (1 bit, recursão disponível), Z (1 bit, reservado, deve ser zero), AD (1 bit, dado autenticado pelo DNSSEC), CD (1 bit, checagem DNSSEC desligada) e RCODE (4 bits, código de resultado). Somando: 1 + 4 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 4 = 16 bits.",
     "campos": [
       {
         "nome": "ID",
@@ -327,7 +327,7 @@
       {
         "nome": "Flags",
         "bits": 16,
-        "descricao": "Conjunto de indicadores de controle. Subdivide-se em QR(1), Opcode(4), AA(1), TC(1), RD(1), RA(1), Z(3) e RCODE(4).",
+        "descricao": "Conjunto de indicadores de controle. Subdivide-se em QR(1), Opcode(4), AA(1), TC(1), RD(1), RA(1), Z(1), AD(1), CD(1) e RCODE(4).",
         "cor": "#7c3aed"
       },
       {

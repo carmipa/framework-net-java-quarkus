@@ -49,7 +49,7 @@
     {
       "titulo": "Descoberta de host (ping sweep)",
       "icone": "radar",
-      "texto": "Antes de varrer portas, o nmap descobre quais IPs estão ativos. O -sn faz apenas essa varredura de presença (ping sweep), sem tocar em nenhuma porta.",
+      "texto": "Antes de varrer portas, o nmap descobre quais IPs estão ativos. O -sn faz apenas essa varredura de presença (ping sweep), sem varrer portas — mas não sem tocar nelas: como root, a descoberta padrão manda ICMP Echo, um SYN na 443, um ACK na 80 e um ICMP Timestamp; na rede local, só ARP.",
       "destaque": "-sn"
     },
     {
@@ -166,7 +166,7 @@
       "titulo": "Ping sweep: quem está vivo na rede",
       "cenario": "Antes de varrer portas, mapear quais IPs de uma sub-rede autorizada estão ligados.",
       "comandos": "nmap -sn 192.168.0.0/24",
-      "explicacao": "O -sn faz apenas a descoberta de hosts (ping sweep) na faixa inteira /24, sem tocar em nenhuma porta. Retorna a lista de máquinas ativas, ponto de partida para decidir o que varrer em seguida."
+      "explicacao": "O -sn faz apenas a descoberta de hosts (ping sweep) na faixa inteira /24, sem varrer portas (na própria LAN ele pergunta por ARP; fora dela, ICMP e sondas TCP na 443 e na 80). Retorna a lista de máquinas ativas, ponto de partida para decidir o que varrer em seguida."
     },
     {
       "titulo": "SYN scan discreto com detecção de SO",

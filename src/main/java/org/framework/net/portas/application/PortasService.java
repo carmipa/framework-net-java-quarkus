@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class PortasService {
 
     private static final String FALLBACK_ALTERNATIVA =
-            "Aplicar segmentacao, firewall e criptografia ponta a ponta";
+            "Aplicar segmentação, firewall e criptografia ponta a ponta";
 
     private static final Map<String, String> ALTERNATIVAS_POR_SERVICO = Map.ofEntries(
             Map.entry("ftp", "SFTP ou FTPS"),
@@ -29,7 +29,7 @@ public class PortasService {
             Map.entry("netbios", "SMBv3 restrito + VPN"),
             Map.entry("smb", "SMB assinado via VPN"),
             Map.entry("rdp", "Acesso via VPN + MFA"),
-            Map.entry("vnc", "VNC via tunel SSH"),
+            Map.entry("vnc", "VNC via túnel SSH"),
             Map.entry("sql server", "Acesso privado via VPN/bastion"),
             Map.entry("oracle", "Acesso privado + criptografia"),
             Map.entry("mysql", "Acesso privado via VPN/bastion"),
@@ -37,17 +37,17 @@ public class PortasService {
             Map.entry("redis", "Redis local com auth e TLS"),
             Map.entry("elasticsearch", "Acesso privado com auth e TLS"),
             Map.entry("mongodb", "Acesso privado com auth e TLS"),
-            Map.entry("dns", "DNS restrito + DNSSEC (quando aplicavel)"),
-            Map.entry("dhcp", "DHCP Snooping + segmentacao VLAN"),
+            Map.entry("dns", "DNS restrito + DNSSEC (quando aplicável)"),
+            Map.entry("dhcp", "DHCP Snooping + segmentação VLAN"),
             Map.entry("ntp", "NTP autenticado e restrito"),
-            Map.entry("https", "Manter TLS 1.2/1.3 e certificados validos"),
-            Map.entry("https alternativo", "Manter TLS 1.2/1.3 e certificados validos"),
-            Map.entry("smtps", "MTA-STS + TLS forte"),
-            Map.entry("submission", "Submission 587 com STARTTLS obrigatorio"),
+            Map.entry("https", "Manter TLS 1.2/1.3 e certificados válidos"),
+            Map.entry("https alternativo", "Manter TLS 1.2/1.3 e certificados válidos"),
+            Map.entry("smtps", "Submissão com TLS implícito (RFC 8314), TLS 1.2/1.3 e autenticação obrigatória"),
+            Map.entry("submission", "Submission 587 com STARTTLS obrigatório"),
             Map.entry("imaps", "IMAPS com TLS forte"),
             Map.entry("pop3s", "POP3S com TLS forte"),
-            Map.entry("ssh", "SSH com chave publica e MFA"),
-            Map.entry("tftp", "SFTP/HTTPS para transferencia segura"));
+            Map.entry("ssh", "SSH com chave pública e MFA"),
+            Map.entry("tftp", "SFTP/HTTPS para transferência segura"));
 
     @Inject
     PortasCatalog portasCatalog;
