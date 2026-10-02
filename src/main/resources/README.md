@@ -127,7 +127,7 @@ O framework cobre um fluxo didático completo para aula, laboratório e revisão
 | Ferramentas | `/ferramentas/rede` | GET | **Rede: Windows × Linux** — comandos comparados por intenção (IP, rotas, ARP, DNS, conectividade, portas, processos) com parâmetros, saída simulada dissecável, limites, busca/filtros e investigações guiadas |
 | Resolução VLSM | `/resolucao-problemas` | GET/POST | Aba **Projetar**: cenários VLSM/WAN, demos e exportações |
 | Resolução — reversa | `/resolucao-problemas?aba=reversa` | GET/POST | Aba **Engenharia reversa**: interpreta configuração Cisco colada, audita, corrige e reconstrói o projeto |
-| Páginas de erro | qualquer rota que falhe | — | Página única em `paginaErros/erro.html` servindo os 12 códigos (400…504) |
+| Páginas de erro | qualquer rota que falhe | — | Página única em `paginaErros/erro.html` servindo os 18 códigos (400…507) |
 | Telemetria | `/telemetria` | GET | Dashboard de eventos, console e **origem do tráfego** (por módulo, rotas, país e bots × pessoas — sem IP) |
 | Telemetria (API) | `/telemetria/api/*` | GET/POST | `resumo`, `dashboard`, `console`, `console/limpar`, `exportar`, `pasta`, `dataset/estado`, `dataset/sincronizar` — as que alteram estado ou extraem dado são só do dono |
 | Login da telemetria | `/login/`, `/login/chave`, `/login/github`, `/login/github/callback`, `/login/sair` | GET/POST | Login pelo GitHub (OAuth) e acesso de contingência por chave (`/login/?modo=contingencia`) |
@@ -328,14 +328,13 @@ com a sua camada. Ele entra sozinho no sub-menu, no `sitemap.xml` e na varredura
 Qualquer falha não tratada devolve a página do Framework no lugar da tela padrão do servidor:
 mesmo desenho command-center, texto em português, **`trace_id` real** e atalhos de volta.
 
-**Um template serve os 12 códigos** (400, 401, 403, 404, 405, 409, 422, 429, 500, 502, 503,
-504). O estado vem da classe do `<body>` (`err-404`, `err-500`…), e o CSS deriva dela a cor de
+**Um template serve os 18 códigos** (400, 401, 403, 404, 405, 409, 410, 413, 414, 415, 422, 429, 431, 500, 502, 503, 504 e 507). O estado vem da classe do `<body>` (`err-404`, `err-500`…), e o CSS deriva dela a cor de
 acento, a aura e a cor da chuva Matrix — não há CSS duplicado por código. Código fora do
 catálogo cai no representante da família (4xx → 400, resto → 500); nunca em tela branca.
 
 | Peça | Onde |
 |---|---|
-| Textos dos 12 estados | `paginaErros/domain/CatalogoErros.java` |
+| Textos dos 18 estados | `paginaErros/domain/CatalogoErros.java` |
 | Montagem + telemetria | `paginaErros/application/PaginaErroService.java` |
 | Interceptação | `paginaErros/presentation/PaginaErroMapper.java` |
 | Template | `templates/paginaErros/erro.html` |
@@ -532,7 +531,7 @@ flowchart LR
     Ctx --> Res[JAX-RS Resource]
     Res --> Ev[TelemetriaLogger.logEvent / medir]
     Ev --> Store[TelemetriaStore + TelemetriaConsoleBuffer]
-    Ev --> Log[Logger Quarkus: console + arquivo rotacionado]
+    Ev --> Log[Logger Quarkus: console stdout · o Docker rotaciona 3 x 10 MB]
     Flt --> Resp[TelemetriaRequestFilter response]
     Resp --> Acc[logHttpAccess + X-Request-Id / X-Trace-Id]
     Store --> Dash[Dashboard /telemetria/api/*]
@@ -597,7 +596,8 @@ flowchart TD
 ```mermaid
 flowchart LR
     subgraph build [Stage 1 — build]
-        SRC[src/ + Gradle] --> GRAD[./gradlew build -x test]
+        SRC[src/ + Gradle] --> TEST[./gradlew test · portao da imagem]
+        TEST --> GRAD[./gradlew build -x test]
         GRAD --> JAR[quarkus-app fast-jar perfil prod]
     end
     subgraph runtime [Stage 2 — UBI OpenJDK 25 runtime]
@@ -612,7 +612,7 @@ flowchart LR
 
 | Etapa | Detalhe |
 |-------|---------|
-| **Build** | `eclipse-temurin:25-jdk-noble` → `./gradlew build -x test` com `-Dquarkus.package.jar.type=fast-jar -Dquarkus.profile=prod` |
+| **Build** | `eclipse-temurin:25-jdk-noble` → `./gradlew test` (a suíte barra a imagem) → `./gradlew build -x test` com `-Dquarkus.package.jar.type=fast-jar -Dquarkus.profile=prod`; o `~/.gradle` fica em cache de montagem do BuildKit entre builds |
 | **Runtime** | `registry.access.redhat.com/ubi9/openjdk-25-runtime` — usuário `185`, healthcheck em `/health` |
 | **Volume** | `framework-net-data:/deployments/data` — logs, GeoIP e dados da aplicação |
 | **Env obrigatórias (prod)** | `ADMIN_API_KEY`, `CSRF_SECRET`, `QUARKUS_PROFILE=prod` |
@@ -653,27 +653,34 @@ truncamento é declarado na tela.
 
 ### Camadas de proteção da requisição
 
-Cada filtro assume que o anterior falhou. A ordem importa: a telemetria abre a
-correlação antes de tudo, e o rate limit fecha a fila antes de o recurso ser tocado.
+Cada filtro assume que o anterior falhou. A ordem vem da prioridade JAX-RS de cada um
+(`AUTHENTICATION`, `+5`, `+10`, `+20`): a telemetria abre a correlação antes de tudo, a
+autenticação vem antes do CSRF, e o rate limit fecha a fila antes de o recurso ser tocado.
 
 ```mermaid
 flowchart TB
-    REQ[Requisicao] --> H{rota = /health?}
-    H -->|sim| SONDA[HealthResource · sem telemetria]
-    H -->|nao| T[TelemetriaRequestFilter · abre traceId]
-    T --> C{metodo mutante?}
+    REQ[Requisicao] --> H{/health ou polling do ao vivo?}
+    H -->|sim| SONDA[sem telemetria por requisicao]
+    H -->|nao| T[TelemetriaRequestFilter · abre traceId · id e caminho saneados]
+    SONDA --> ADM
+    T --> ADM{rota protegida?}
+    ADM -->|/export · /telemetria| KEY[AdminApiKeyFilter · sessao assinada ou cabecalho]
+    ADM -->|publica| C
+    KEY -->|sem credencial| L401[401 ou redirect para o login]
+    KEY -->|chave errada em serie| L429a[429]
+    KEY -->|credencial valida| C{metodo mutante?}
     C -->|sim| CSRF[CsrfRequestFilter · HMAC double-submit]
-    C -->|nao| ADM
-    CSRF --> ADM{rota protegida?}
-    ADM -->|/export · /telemetria| KEY[AdminApiKeyFilter]
-    ADM -->|publica| RL
-    KEY -->|sem chave| L401[401 ou redirect /admin/login]
-    KEY -->|chave valida| RL[RateLimitFilter]
-    RL -->|chave = remoteAddress| REC[Resource]
+    C -->|nao| RL
+    CSRF --> RL[RateLimitFilter · chave = remoteAddress]
+    RL -->|dentro do limite| REC[Resource]
     RL -->|estourou| L429[429]
     REC --> SAN[shared · sanitizers e guards]
     SAN --> APP[application]
 ```
+
+Rota inexistente não passa por esses filtros (nenhum é `@PreMatching`): o `PaginaErroMapper`
+aplica o limite a ela, e o `TetoDeEventos` limita os eventos de erro de cliente (4xx) por origem
+e minuto, com os suprimidos contados no evento seguinte.
 
 No boot, `SegredosObrigatoriosVerificador` recusa iniciar em produção sem
 `ADMIN_API_KEY`/`CSRF_SECRET` — antes, a variável ausente desligava a proteção em
@@ -785,7 +792,8 @@ stateDiagram-v2
 
 - **JDK 25**
 - Gradle (wrapper incluído — `gradlew` / `gradlew.bat`)
-- Docker (opcional, para deploy)
+- Docker — **obrigatório para o deploy em produção** (a imagem roda a suíte inteira antes de
+  montar o artefato); opcional no desenvolvimento, que roda com `quarkusDev`
 
 Dependências principais (`build.gradle`): `quarkus-rest`, `quarkus-rest-jackson`, `quarkus-rest-qute`, `quarkus-qute`, `quarkus-cache`, `quarkus-vertx-http`, `com.github.seancfoley:ipaddress:5.5.1`, `com.maxmind.geoip2:geoip2:4.2.0`.
 
@@ -973,44 +981,29 @@ Coleta recomendada em produção: `docker logs` / `compose logs` e agregador cen
 
 ### Dataset público (sanitização)
 
-A telemetria é artefato temporário destinado a virar **dataset público**. Entre o
-arquivo cru e o repositório existe uma etapa obrigatória de sanitização, executada
-na VPS por dois scripts sem dependências externas:
-
-```bash
-./scripts/exportar-dataset.sh            # extrai do container, sanitiza, gera dataset/AAAA-MM-DD/
-```
-
-| Script | Papel |
-|--------|-------|
-| `scripts/exportar-dataset.sh` | Extrai o NDJSON do container, garante o sal no `.env` e chama o sanitizador |
-| `scripts/sanitizar_telemetria.py` | Sanitiza, audita e gera `eventos.jsonl` + `README.md` + `schema.json` + `estatisticas.json` (Python 3, só stdlib) |
-
-**A distinção que sustenta as regras: identidade × conteúdo didático.** O mesmo campo
-`framework.field.ip` guarda tanto o endereço que o servidor observou (identidade)
-quanto o que o usuário digitou no formulário de GeoIP (exercício). O nome do campo não
-distingue — **o valor sim**: IPv4 roteável ou IPv6 é identidade e vira hash; faixa
-privada, loopback, documentação e resolvedores públicos conhecidos (`8.8.8.8`,
-`1.1.1.1`…) permanecem legíveis. Pseudonimizar conteúdo didático esvaziaria o dataset
-sem proteger ninguém: `baseNetwork=192.19.0.0/16` digitado num exercício de VLSM **é**
-o dado que dá valor ao arquivo.
+A telemetria é artefato temporário destinado a virar **dataset público**. O caminho vivo é o
+botão **Sincronizar dataset** em `/telemetria` (só o dono): o `DatasetPublicavelService` gera o
+pacote em memória, a auditoria final roda sobre o arquivo pronto e só então o
+`GitHubDatasetPublisher` grava o snapshot do dia no repositório público.
 
 | Dado | Tratamento |
 |------|------------|
-| IP identificador | `SHA-256(sal + valor)` truncado em 12 hex — estável (conta visitantes únicos), irreversível sem o sal |
-| `lat` / `lon` | **Removidos** — 6 casas decimais são ~10 cm; nem hash nem arredondamento tornam publicável |
-| `body` (texto livre) | **Reconstruído** a partir dos atributos já sanitizados, nunca filtrado por regex — o body repetia os valores (`evento=geo_lookup status=ok ip=…`) |
-| `traceId` / `spanId` / `request_id` | Preservados — aleatórios por requisição, não identificam, e são o que torna o dataset analisável |
-| Estáticos, `/q/*`, `/web/*`, `/telemetria/api*`, `/health` | Descartados como ruído de infraestrutura |
+| IP, host ou endereço consultado | `id-NNN`, sequencial **dentro do pacote** — sem sal, sem segredo; não correlaciona entre snapshots |
+| Campos de evento | **esquema fechado** (`CAMPOS_PUBLICAVEIS`): só contagens, booleanos e vocabulário fixo. Mensagem de exceção, hostname, domínio, regra de ACL e rede digitada ficam de fora; campo novo é contado por nome em `estatisticas.json` (`campos_fora_do_esquema`) |
+| Rota (`http.route` e o campo `rota`) | segmento que não é palavra fixa vira `{param}` |
+| `lat` / `lon` / GPS | **Removidos** |
+| `body` (texto livre) | **Reconstruído** a partir dos atributos já sanitizados, nunca filtrado por regex |
+| `traceId` | Preservado — aleatório por requisição, é o que torna o dataset analisável |
+| Estáticos, `/q/*`, `/web/*`, `/telemetria/api*`, `/health`, polling do ao vivo | Descartados como ruído de infraestrutura |
 
-O sal vive no `.env` da VPS, é gerado uma vez e **nunca** entra no dataset; trocá-lo
-quebra a continuidade dos pseudônimos entre datasets já publicados.
+A **auditoria final** varre o arquivo gerado (IP público, coordenada, e-mail residual): se achar,
+a geração falha com 422 e nada é publicado. Publicar não tem desfazer.
 
-Ao final, uma **auditoria bloqueante** varre o arquivo gerado provando que nenhum valor
-de identidade sobreviveu, em qualquer campo — se achar, apaga a saída e falha. IPv4
-roteáveis que restaram (conteúdo de exercício) são listados para conferência humana.
-O script **não** faz `git push`: publicação é irreversível assim que indexada, então é
-decisão humana e não de cron.
+`scripts/exportar-dataset.sh` + `scripts/sanitizar_telemetria.py` são o **caminho antigo**
+(pseudônimo por hash com sal fixo no `.env`). O script **aborta de propósito** quando o sal não
+existe — gerar um sal novo produziria pseudônimos incompatíveis com o snapshot de 2026-08-04 já
+publicado. Só serve para quem precisa do JSONL inteiro (o botão recorta a janela lida) e assume
+conscientemente a divergência entre os dois modelos.
 
 ---
 
@@ -1022,15 +1015,30 @@ framework-net-java-quarkus/
 ├── Dockerfile · docker-compose.yml · docker-compose.dev.yml · .env.example
 ├── logs/
 ├── src/main/java/org/framework/net/
+│   ├── academia/            # escola de redes: core (kernel), trilha, inicio, fundamentos, ipv4, transporte, eventos
 │   ├── analiseDidatica/     # application, config, domain/kernel, infrastructure (dns/geo/historico), presentation, support
+│   ├── analiseTrafego/      # decodificador de pacotes, construtor, laboratório DNS/ICMP, ao vivo (aovivo/)
 │   ├── calculadora/         # application, config, domain, exception, presentation
-│   ├── portas/              # application, domain, exception, presentation
-│   ├── protocolos/          # application, domain, exception, presentation
+│   ├── camadas/             # aprofundamento OSI × TCP/IP
+│   ├── certificados/        # aprofundamentos X.509/PKI
+│   ├── criptografia/        # aprofundamentos e playground de hash
+│   ├── ferramentas/         # catálogo de CLI e construtor de comando
+│   ├── ferramentasDiagnostico/ # diagnóstico simulado (ping, traceroute, dig, varreduras)
+│   ├── health/              # /health do container (fora da telemetria)
+│   ├── ipv6/                # análise, divisão, projeto e engenharia reversa IPv6
+│   ├── laboratorios/        # laboratórios guiados
+│   ├── localizacao/         # GeoIP, CEP (ViaCEP), geocodificação (Nominatim), mapa
+│   ├── paginaErros/         # página de erro única para os 18 códigos
+│   ├── portas/              # catálogo e aprofundamentos de portas
+│   ├── protocolos/          # catálogo e aprofundamentos (BGP, SSH, DNS, TLS…)
 │   ├── resolucaoProblemas/  # application (export/importing/normalization/planning/routing), domain (kernel/model), presentation
-│   ├── security/            # Admin API key, CSRF, rate limit, sensitive APIs
-│   ├── shared/              # sanitizers, guards e normalizadores de entrada
-│   ├── telemetria/          # store, dashboard, filter, presentation
-│   └── web/                 # documentacao, admin login, ícone, filtros, support
+│   ├── security/            # chave admin, sessão assinada, CSRF, rate limit, APIs sensíveis
+│   ├── segurancaRede/       # ACL, firewall com/sem estado, TLS, alcançabilidade de fluxo
+│   ├── shared/              # kernel: sanitizers, guards, IpLiteral, cache (L1/L2), disjuntor, fuso do site
+│   ├── simuladores/         # handshake, encapsulamento, anomalias TCP
+│   ├── telemetria/          # store, Stream, dashboard, dataset, filtro, teto de eventos
+│   ├── web/                 # home, documentação, login admin, SEO, menu, filtros de resposta
+│   └── wifi/                # aprofundamentos 802.11 e planejador de canais
 ├── src/main/resources/
 │   ├── application.properties · application-prod.properties
 │   ├── README.md            # esta documentação (renderizada em /documentacao)
