@@ -25,6 +25,10 @@ class ComposeDevEspelhaProducaoGuardTest {
 
     @Test
     void devEspelhaProducao() throws IOException {
+        // Dentro do build da imagem os compose não estão no contexto (o Dockerfile copia só src e
+        // scripts/erro-proxy): lá a guarda não tem alvo e se ignora — estado 2, nunca aprovação.
+        org.junit.jupiter.api.Assumptions.assumeTrue(Files.exists(Path.of("docker-compose.dev.yml"))
+                && Files.exists(Path.of("docker-compose.yml")), "compose fora do contexto: guarda sem alvo");
         List<String> dev = Files.readAllLines(Path.of("docker-compose.dev.yml"), StandardCharsets.UTF_8);
         List<String> prod = Files.readAllLines(Path.of("docker-compose.yml"), StandardCharsets.UTF_8);
         assertTrue(dev.size() > 20 && prod.size() > 20, "instrumento cego: compose não lido");

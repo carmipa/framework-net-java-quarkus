@@ -11,6 +11,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends nodejs && rm -r
 COPY gradle gradle
 COPY gradlew gradlew.bat settings.gradle build.gradle gradle.properties ./
 RUN sed -i 's/\r$//' gradlew && chmod +x gradlew
+# Cache do Gradle entre builds (auditoria OPS-18): sem ele, toda mudança em src baixava de novo a
+# distribuição do Gradle e todas as dependências. O cache de montagem do BuildKit não entra na imagem.
+# Esta etapa, só com os arquivos de build, resolve o que depende deles antes de copiar o código.
+RUN --mount=type=cache,target=/root/.gradle ./gradlew --no-daemon dependencies > /dev/null
 
 COPY src src
 # O teste das páginas de erro do proxy (502/503/504) gera e confere os arquivos em scripts/erro-proxy.
@@ -20,8 +24,8 @@ COPY scripts/erro-proxy scripts/erro-proxy
 # (auditoria F21). Etapa separada e antes do build de produção: os testes rodam no perfil de teste,
 # e o artefato de produção só é montado se passarem. Testes que dependem de internet se ignoram
 # sozinhos quando não há rede (Assumptions), em vez de reprovar por causa ambiental.
-RUN ./gradlew test --no-daemon
-RUN ./gradlew build -x test --no-daemon -Dquarkus.package.jar.type=fast-jar -Dquarkus.profile=prod
+RUN --mount=type=cache,target=/root/.gradle ./gradlew test --no-daemon
+RUN --mount=type=cache,target=/root/.gradle ./gradlew build -x test --no-daemon -Dquarkus.package.jar.type=fast-jar -Dquarkus.profile=prod
 
 FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24
 
