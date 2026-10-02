@@ -260,7 +260,7 @@
     },
     {
       "nome": "Habilitar PMF (802.11w) e WPA3",
-      "como_funciona": "O Protected Management Frames protege quadros de gerenciamento contra falsificação, dificultando deauth e evil twin; o WPA3 adiciona o SAE (Simultaneous Authentication of Equals), resistente à captura e à quebra offline do handshake.",
+      "como_funciona": "O Protected Management Frames protege contra falsificação os quadros de deauthentication, disassociation e action (beacon e probe seguem abertos), o que tira do atacante a deauth forjada que empurra o cliente para o evil twin; o WPA3 adiciona o SAE (Simultaneous Authentication of Equals), resistente à captura e à quebra offline do handshake.",
       "cobre": "Evil Twin e rebaixamento de segurança",
       "limite": "Exige clientes e AP compatíveis; PMF obrigatório pode excluir aparelhos antigos."
     },

@@ -1,5 +1,5 @@
 {
-  "resumo": "Redes Wi-Fi (IEEE 802.11) carregam fragilidades históricas na camada de enlace: quadros de gerenciamento (beacon, probe, deauthentication) trafegam sem autenticação no WPA/WPA2 tradicional, e a autenticação PSK expõe um handshake capturável. Este material didático-defensivo detalha os ataques clássicos — Evil Twin, inundação de deauth, força bruta de WPS e captura de handshake com ataque de dicionário — explicando o mecanismo de cada um e as defesas efetivas. O eixo das mitigações modernas é o WPA3 (SAE, resistente a dicionário offline) e o 802.11w (PMF), que protege os quadros de gerenciamento e neutraliza a deauth forjada. Todo o conteúdo pressupõe uso autorizado, em laboratório próprio ou em pentest contratado.",
+  "resumo": "Redes Wi-Fi (IEEE 802.11) carregam fragilidades históricas na camada de enlace: quadros de gerenciamento (beacon, probe, deauthentication) trafegam sem autenticação no WPA/WPA2 tradicional, e a autenticação PSK expõe um handshake capturável. Este material didático-defensivo detalha os ataques clássicos — Evil Twin, inundação de deauth, força bruta de WPS e captura de handshake com ataque de dicionário — explicando o mecanismo de cada um e as defesas efetivas. O eixo das mitigações modernas é o WPA3 (SAE, resistente a dicionário offline) e o 802.11w (PMF), que protege os quadros de deauthentication, disassociation e action — não os beacons nem os probes — e neutraliza a deauth forjada. Todo o conteúdo pressupõe uso autorizado, em laboratório próprio ou em pentest contratado.",
   "ficha": [
     {
       "rotulo": "Camada alvo",
@@ -14,7 +14,7 @@
     {
       "rotulo": "Defesa central",
       "valor": "WPA3-SAE + 802.11w (PMF) obrigatório",
-      "dica": "SAE mata o dicionário offline; PMF assina os quadros de gerenciamento"
+      "dica": "SAE mata o dicionário offline; PMF protege deauth, disassoc e action (beacon e probe continuam abertos)"
     },
     {
       "rotulo": "Vetor mais comum",
@@ -38,7 +38,7 @@
       "titulo": "Deauthentication attack",
       "icone": "link_off",
       "texto": "Explora que o quadro de deauthentication (subtipo de gerenciamento 802.11) não é autenticado no WPA2. O atacante forja quadros com o BSSID do AP e derruba o cliente, forçando reconexão. Serve como isca para Evil Twin e como janela para capturar o handshake. O 802.11w (PMF) elimina esse vetor.",
-      "destaque": "802.11w (PMF) protege os quadros de gerenciamento"
+      "destaque": "802.11w (PMF) protege deauth, disassoc e action; beacon e probe seguem abertos"
     },
     {
       "titulo": "Captura de handshake",
@@ -87,7 +87,7 @@
         [
           "Deauth flood",
           "Forja quadros de deauthentication com o BSSID do AP e derruba clientes",
-          "802.11w (PMF) assina os quadros de gerenciamento"
+          "802.11w (PMF): deauth e disassoc passam a ser autenticados e o forjado é descartado"
         ],
         [
           "WPS PIN brute force",
@@ -171,7 +171,7 @@
     },
     {
       "nome": "802.11w (PMF)",
-      "como_funciona": "Protected Management Frames adiciona integridade e autenticação aos quadros de gerenciamento (deauth, disassociation), rejeitando quadros forjados. É obrigatório no WPA3 e no Wi-Fi 6E.",
+      "como_funciona": "Protected Management Frames adiciona integridade e autenticação aos quadros de gerenciamento robustos — deauthentication, disassociation e action —, rejeitando os forjados. Beacon, probe, authentication e association continuam sem proteção. É obrigatório no WPA3 e no Wi-Fi 6E.",
       "cobre": "Deauth flood e a isca do Evil Twin",
       "limite": "Não impede um AP falso que atrai clientes sem usar deauth (ex.: Karma)"
     },

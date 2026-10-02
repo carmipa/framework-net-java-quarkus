@@ -3,7 +3,7 @@
   "ficha": [
     {
       "rotulo": "Padrão base",
-      "valor": "IEEE 802.11i (WPA2) / 802.11 (WEP/WPA)",
+      "valor": "IEEE 802.11 (WEP) e 802.11i (base do WPA2); WPA, WPA2 e WPA3 são certificações da Wi-Fi Alliance",
       "dica": "O WPA2 implementa o RSN definido no 802.11i, ratificado em 2004."
     },
     {
@@ -18,7 +18,7 @@
     },
     {
       "rotulo": "Cifra dominante hoje",
-      "valor": "AES-CCMP (WPA2) e AES-GCMP-256 (WPA3-Enterprise)",
+      "valor": "AES-CCMP (WPA2/WPA3) e AES-GCMP-256 (WPA3-Enterprise 192 bits; no Wi-Fi 7 também no Personal)",
       "dica": "O CCMP usa AES de 128 bits em modo CCM (contador + CBC-MAC)."
     },
     {
@@ -36,7 +36,7 @@
     {
       "titulo": "WEP está definitivamente quebrado",
       "icone": "lock_open",
-      "texto": "O WEP usa RC4 com um vetor de inicialização (IV) de apenas 24 bits, que se repete rapidamente numa rede movimentada. Ataques estatísticos (FMS, KoreK, PTW) exploram essas colisões de IV e recuperam a chave em minutos, capturando tráfego suficiente. Não há configuração que torne o WEP seguro: ele deve ser desativado em qualquer equipamento.",
+      "texto": "O WEP usa RC4 com um vetor de inicialização (IV) de apenas 24 bits, que se repete rapidamente numa rede movimentada. Os ataques estatísticos (FMS, KoreK, PTW) exploram outra coisa: o key scheduling do RC4 vaza bits da chave quando ela é formada por IV conhecido + senha fixa (chaves relacionadas) — cada pacote ajuda, e com tráfego suficiente a chave sai em minutos. A repetição do IV ainda reusa keystream, o que é um segundo problema. Não há configuração que torne o WEP seguro: ele deve ser desativado em qualquer equipamento.",
       "destaque": "IV de 24 bits + RC4 = chave recuperável em minutos."
     },
     {
@@ -204,7 +204,7 @@
     },
     {
       "nome": "Ataques a WEP (FMS / PTW)",
-      "como_funciona": "Explora a fraqueza estrutural do RC4 com IV de 24 bits. Coletando tráfego suficiente (às vezes acelerado por injeção de ARP replay), as colisões de IV vazam informação estatística sobre a chave, que é recuperada por completo em minutos. Torna o WEP trivialmente decifrável.",
+      "como_funciona": "Explora o key scheduling do RC4 com chaves relacionadas (IV conhecido de 24 bits + senha fixa): cada pacote vaza um pouco da chave. Coletando tráfego suficiente (às vezes acelerado por injeção de ARP replay), ela é recuperada por completo em minutos. Torna o WEP trivialmente decifrável.",
       "sinal": "Alto volume de reinjeção de pacotes ARP e captura massiva de IVs numa rede que ainda use WEP.",
       "gravidade": "Crítica",
       "gravidade_cor": "danger"
@@ -260,7 +260,7 @@
     {
       "sintoma": "Rajadas de desautenticação e clientes reconectando sem parar",
       "causa_provavel": "Possível ataque de deauth para forçar reemissão do handshake antes de brute force offline.",
-      "leitura": "Padrão clássico de captura de handshake WPA2; em WPA3 use Protected Management Frames (PMF) para bloquear deauth forjado.",
+      "leitura": "Padrão clássico de captura de handshake WPA2; com Protected Management Frames (PMF), obrigatório no WPA3, o deauth forjado é descartado.",
       "comando": "airodump-ng wlan0mon   # observar contagem anormal de quadros deauth por BSSID"
     },
     {
