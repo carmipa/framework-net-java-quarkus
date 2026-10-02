@@ -876,10 +876,32 @@ for (const caso of [
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
   const fechou = await page.evaluate(() => !document.querySelector('.aed-nav-drop-menu.show'));
+  // Com o foco de volta no botão, seta para cima abre o menu no último item.
+  await page.keyboard.press('ArrowUp');
+  await page.waitForTimeout(120);
+  passos.push(`ArrowUp no botão→${await posicao()}`);
   const n = passos[2] ? passos[2].split('/')[1] : '?';
-  const esperado = ['ArrowDown→1/' + n, 'ArrowDown→2/' + n, 'End→' + n + '/' + n, 'ArrowDown→1/' + n, 'Home→1/' + n, 'ArrowUp→' + n + '/' + n];
+  const esperado = ['ArrowDown→1/' + n, 'ArrowDown→2/' + n, 'End→' + n + '/' + n, 'ArrowDown→1/' + n, 'Home→1/' + n, 'ArrowUp→' + n + '/' + n,
+    'ArrowUp no botão→' + n + '/' + n];
   registrar('FRONT-24 setas no menu suspenso do topo', aberto && fechou && passos.join(' ') === esperado.join(' '),
     `${passos.join(' ')} aberto=${aberto} Esc fechou=${fechou}`);
+  await page.context().close();
+}
+
+// Achado da varredura de 02/10: o campo de prefixo cortava em 2 dígitos também no IPv6 (/127 virava /12).
+// Fronteira: o prefixo IPv6 aceita 3 dígitos; o de IPv4 continua em 2.
+{
+  const page = await novaPagina(browser);
+  const digitar = async (rota, sel, texto) => {
+    await page.goto(BASE + rota, { waitUntil: 'load', timeout: 45000 });
+    await assentar(page);
+    await page.fill(sel, '');
+    await page.type(sel, texto);
+    return page.inputValue(sel);
+  };
+  const v6 = await digitar('/ipv6/resolucao', '#projWan', '127');
+  const v4 = await digitar('/calculadora', '#divPrefixoAlvo', '128');
+  registrar('PREFIXO-IPV6 campo aceita /127; o de IPv4 segue em 2 dígitos', v6 === '127' && v4 === '12', `IPv6="${v6}" IPv4="${v4}"`);
   await page.context().close();
 }
 

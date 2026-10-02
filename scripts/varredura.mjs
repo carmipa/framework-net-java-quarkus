@@ -465,6 +465,20 @@ async function limparBaloes(pagina) {
  */
 function valorPara(campo) {
   const chave = `${campo.classe} ${campo.name || ''} ${campo.seletor}`.toLowerCase();
+  // Formulários de IPv6 (página IPv6 e projeto de rede IPv6) e a ACL: o valor genérico de IPv4
+  // levava o backend a recusar com 400 (correto) e a varredura nunca via a tela de resultado.
+  if (/#ipv6|#proj|#vlanbase|#vlanpfx/.test(chave)) {
+    if (/bloco|base/.test(chave)) { return '2001:db8:abcd::/48'; }
+    if (/alvo|prefixolan|vlanpfx/.test(chave)) { return '64'; }
+    if (/prefixowan/.test(chave)) { return '127'; }
+    if (/pref64/.test(chave)) { return '2001:db8:1:2::/64'; }
+    if (/mac/.test(chave)) { return '00:1A:2B:3C:4D:5E'; }
+    if (/faixaini/.test(chave)) { return '2001:db8::1'; }
+    if (/faixafim/.test(chave)) { return '2001:db8::ff'; }
+    if (/sumprefixos/.test(chave)) { return '2001:db8:0::/64\n2001:db8:1::/64'; }
+    if (/endereco|compa|compb|nibend/.test(chave)) { return '2001:db8::1'; }
+  }
+  if (/#aclregra/.test(chave)) { return 'permit tcp any any eq 443'; }
   if (/input-ipv4|\bip\b|ipv4|endereco/.test(chave)) { return '192.168.10.25'; }
   if (/input-cidr|cidr|prefixo|mascara/.test(chave)) { return '24'; }
   if (/ipv6/.test(chave)) { return '2001:db8::1'; }
@@ -939,7 +953,10 @@ async function varrer() {
           if (motivo) { pulados.push(`${rota}  ${gat.seletor} — ${motivo[1]}`); continue; }
           await abrir(pagina, BASE + rota);
           const estado = await pagina.evaluate((sel) => {
-            const el = document.querySelector(sel);
+            // O inventário vem dos templates: id montado pelo Qute ("#aba-{nivel.id}") não é seletor
+            // válido e derrubava a varredura inteira. Vira "não coberto", com o motivo.
+            let el;
+            try { el = document.querySelector(sel); } catch (e) { return 'seletor de template (id montado pelo Qute)'; }
             if (!el) { return 'ausente'; }
             if (el.disabled || el.getAttribute('aria-disabled') === 'true') { return 'desabilitado'; }
             const r = el.getBoundingClientRect();

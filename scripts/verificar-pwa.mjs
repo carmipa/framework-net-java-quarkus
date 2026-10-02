@@ -6,13 +6,17 @@
  * registro por MIME. So o navegador diz a verdade.
  *
  * USO:  node scripts/verificar-pwa.mjs [base-url]
- * SAIDA: codigo 1 se o service worker nao registrar ou o manifest nao carregar.
+ * SAIDA: 0 instalavel; 1 se o service worker nao registrar ou o manifest nao carregar;
+ *        2 se nem a pagina abriu (nao verificou).
  */
 import { chromium } from 'playwright';
 
 const base = process.argv[2] || 'https://frameworknet.carminati.dev.br';
 const navegador = await chromium.launch();
 const contexto = await navegador.newContext();
+// O widget do Google Tradutor mantém a rede ocupada (o "networkidle" nunca chegava) e, em volume,
+// leva o IP ao captcha: a tradução tem roteiro próprio (verificar-tradutor.mjs).
+await contexto.route(/translate\.google(apis)?\.com|translate-pa\.googleapis\.com|www\.google\.com/, (r) => r.abort());
 const pagina = await contexto.newPage();
 
 const erros = [];
@@ -24,7 +28,14 @@ pagina.on('console', (m) => {
 });
 pagina.on('pageerror', (e) => erros.push(String(e).slice(0, 200)));
 
-await pagina.goto(base + '/', { waitUntil: 'networkidle', timeout: 45000 });
+try {
+  await pagina.goto(base + '/', { waitUntil: 'load', timeout: 45000 });
+} catch (e) {
+  // Não conseguir abrir a página é NÃO VERIFICOU (2), não reprovação do PWA.
+  console.log('NAO VERIFICOU —', String(e).split('\n')[0]);
+  await navegador.close();
+  process.exit(2);
+}
 
 // 1. O manifest foi reconhecido pelo browser?
 const manifest = await pagina.evaluate(async () => {
