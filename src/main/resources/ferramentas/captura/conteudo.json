@@ -271,15 +271,15 @@
     },
     {
       "nome": "Switch com port security",
-      "como_funciona": "O switch entrega quadros só para a porta de destino e limita/fixa os MACs por porta, bloqueando MAC flooding e ARP spoofing que fariam o tráfego vazar para o atacante.",
-      "cobre": "Interceptação em rede comutada",
+      "como_funciona": "O switch entrega quadros só para a porta de destino e limita/fixa os MACs por porta, o que bloqueia o MAC flooding (encher a tabela para o switch virar hub). ARP spoofing é outra coisa: contra ele vão o DHCP snooping e a Dynamic ARP Inspection (DAI), que descarta ARP que não bate com a tabela do snooping.",
+      "cobre": "Interceptação em rede comutada (MAC flooding; com DHCP snooping + DAI, também ARP spoofing)",
       "limite": "Não protege a porta de espelhamento (SPAN) legítima nem o Wi-Fi; exige configuração ativa em cada switch."
     },
     {
       "nome": "Evitar hub; segmentar a rede",
       "como_funciona": "O hub repete todo quadro para todas as portas, entregando tudo ao sniffer. Trocar por switch e segmentar em VLANs reduz o domínio de colisão e o que cada host consegue enxergar.",
       "cobre": "Exposição por difusão em mídia compartilhada",
-      "limite": "Não é defesa por si só contra ARP spoofing; precisa de port security e cifra por cima."
+      "limite": "Não é defesa por si só contra ARP spoofing; precisa de DHCP snooping + Dynamic ARP Inspection e cifra por cima."
     }
   ],
   "diagnosticos": [

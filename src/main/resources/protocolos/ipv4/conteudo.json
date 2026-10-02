@@ -419,7 +419,7 @@
       "sintoma": "Fragmentação necessária, mas com DF setado",
       "causa_provavel": "Um enlace no caminho tem MTU menor que o pacote, e o bit DF impede fragmentar — comum em túneis (VPN, PPPoE) que reduzem o MTU.",
       "comando": "ping -M do -s 1472 <destino>",
-      "leitura": "O retorno 'frag needed and DF set' (ICMP Type 3, Code 4) confirma black hole de PMTUD. Ajuste o MTU/MSS da interface ou do túnel."
+      "leitura": "Se volta 'frag needed and DF set' (ICMP tipo 3, código 4), o PMTUD está funcionando: um roteador avisou o MTU menor. O black hole é o contrário — esse ICMP é filtrado no caminho, o ping grande some sem resposta e o pequeno passa. Libere o ICMP 3/4 ou ajuste o MTU/MSS (ex.: ip tcp adjust-mss) no túnel."
     },
     {
       "sintoma": "Destino inalcançável (host / rede)",

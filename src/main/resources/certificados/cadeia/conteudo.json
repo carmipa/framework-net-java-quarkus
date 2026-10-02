@@ -1,5 +1,5 @@
 {
-  "resumo": "A cadeia de confiança é o mecanismo que permite ao seu navegador confiar num certificado de site que ele nunca viu antes. Em vez de conhecer todos os certificados do mundo, o navegador conhece apenas um punhado de certificados raiz (as âncoras de confiança), guardados numa trust store. Quando você abre um site em HTTPS (TLS na porta 443), o servidor apresenta o certificado da folha (o do domínio) mais os certificados intermediários. O cliente então monta e sobe a cadeia -- folha assinada por uma intermediária, intermediária assinada por uma raiz -- até encontrar uma raiz que ele já confia. A cada elo ele verifica três coisas: a assinatura criptográfica (o elo de cima realmente assinou o de baixo), a validade (datas notBefore/notAfter) e o nome (o SAN cobre o hostname acessado). Se a corrente fechar numa âncora confiável e todos os elos passarem, a conexão é confiável. A raiz assina poucas intermediárias e fica offline num cofre; as intermediárias é que trabalham no dia a dia emitindo folhas. Reforços como Certificate Transparency (CT) e CAA tornam emissões indevidas detectáveis e restringíveis. No site há o protocolo TLS explicado e o Inspetor TLS, que mostra a cadeia real de um servidor.",
+  "resumo": "A cadeia de confiança é o mecanismo que permite ao seu navegador confiar num certificado de site que ele nunca viu antes. Em vez de conhecer todos os certificados do mundo, o navegador conhece apenas um punhado de certificados raiz (as âncoras de confiança), guardados numa trust store. Quando você abre um site em HTTPS (TLS na porta 443), o servidor apresenta o certificado da folha (o do domínio) mais os certificados intermediários. O cliente então monta e sobe a cadeia -- folha assinada por uma intermediária, intermediária assinada por uma raiz -- até encontrar uma raiz que ele já confia. Em cada elo ele confere a assinatura (o elo de cima realmente assinou o de baixo, e o emissor de um é o sujeito do outro), a validade (datas notBefore/notAfter) e a revogação; nos elos de CA confere também que o certificado pode assinar outros (basicConstraints cA=TRUE e keyUsage keyCertSign). O nome — o SAN cobrir o hostname acessado — é conferido só na folha. Se a corrente fechar numa âncora confiável e tudo passar, a conexão é confiável. A raiz assina poucas intermediárias e fica offline num cofre; as intermediárias é que trabalham no dia a dia emitindo folhas. Reforços como Certificate Transparency (CT) e CAA tornam emissões indevidas detectáveis e restringíveis. No site há o protocolo TLS explicado e o Inspetor TLS, que mostra a cadeia real de um servidor.",
   "ficha": [
     {
       "rotulo": "Grupo",
@@ -23,7 +23,7 @@
     },
     {
       "rotulo": "Verificações por elo",
-      "valor": "Assinatura + validade (datas) + nome (SAN)",
+      "valor": "Assinatura + validade + revogação (o SAN só na folha)",
       "dica": "Falhar qualquer uma quebra a cadeia inteira."
     },
     {
@@ -145,7 +145,7 @@
       ]
     },
     {
-      "titulo": "As três verificações por elo",
+      "titulo": "O que se confere na cadeia",
       "colunas": [
         "Verificação",
         "O que confere",
@@ -163,7 +163,17 @@
           "Certificado expirado ou relógio do cliente errado"
         ],
         [
-          "Nome",
+          "Revogação",
+          "O certificado não consta como revogado (CRL; OCSP onde ainda houver)",
+          "Certificado revogado pela CA -- ERR_CERT_REVOKED"
+        ],
+        [
+          "Poder de assinar (só nos elos de CA)",
+          "basicConstraints cA=TRUE e keyUsage keyCertSign no emissor",
+          "Folha usada como se fosse CA -- a cadeia é recusada"
+        ],
+        [
+          "Nome (só na folha)",
           "O SAN cobre o hostname acessado",
           "SAN não inclui o domínio -- ERR_CERT_COMMON_NAME_INVALID"
         ]

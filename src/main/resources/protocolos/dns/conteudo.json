@@ -224,7 +224,7 @@
       "ordem": 1,
       "elemento": "Trust anchor da raiz (.)",
       "papel": "O ponto de partida da confiança, distribuído com o resolver.",
-      "detalhe": "O resolver validante já conhece a chave pública da raiz (a KSK da root). Toda validação sobe até ela — se a cadeia não chega na âncora, a resposta é 'bogus'."
+      "detalhe": "O resolver validante já conhece a chave pública da raiz (a KSK da root). Toda validação sobe até ela. Zona sem DS no pai (sem cadeia) é 'insecure': a resposta chega, só que sem o bit AD. 'Bogus' é quando a cadeia DEVERIA existir e a assinatura não confere — aí o resolver devolve SERVFAIL."
     },
     {
       "ordem": 2,

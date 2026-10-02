@@ -18,7 +18,7 @@
     },
     {
       "rotulo": "Validade típica",
-      "valor": "90 dias (Let's Encrypt) / até 398 dias (TLS público)",
+      "valor": "90 dias (Let's Encrypt) / até 200 dias (TLS público desde 15/03/2026; 47 dias em 2029)",
       "dica": "Janela curta = menor exposição e renovação obrigatoriamente automatizada."
     },
     {

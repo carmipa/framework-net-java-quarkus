@@ -66,7 +66,7 @@
     {
       "titulo": "SPF, DKIM e DMARC",
       "icone": "verified_user",
-      "texto": "O SMTP sozinho não prova quem enviou. SPF autoriza os IPs que podem enviar pelo domínio, DKIM assina a mensagem com chave publicada no DNS e DMARC exige o alinhamento desses dois com o From visível, além de gerar relatórios.",
+      "texto": "O SMTP sozinho não prova quem enviou. SPF autoriza os IPs que podem enviar pelo domínio, DKIM assina a mensagem com chave publicada no DNS e o DMARC passa quando pelo menos UM dos dois está alinhado com o domínio do From visível, além de gerar relatórios.",
       "destaque": "Três camadas de DNS contra falsificação de domínio"
     }
   ],
@@ -367,7 +367,7 @@
       "sintoma": "E-mail cai no spam / DMARC fail",
       "causa_provavel": "SPF ou DKIM ausente ou desalinhado com o domínio do From visível.",
       "comando": "dig +short TXT exemplo.com ; dig +short TXT _dmarc.exemplo.com ; dig +short TXT seletor._domainkey.exemplo.com",
-      "leitura": "Espere v=spf1 ... -all, v=DMARC1; p=... e v=DKIM1; k=rsa; p=... - a ausência de qualquer um explica a reprovação."
+      "leitura": "Espere v=spf1 ... -all, v=DMARC1; p=... e v=DKIM1; k=rsa; p=... Sem o registro DMARC não há política; para o DMARC passar basta SPF OU DKIM alinhado com o From — reprova quando NENHUM dos dois alinha."
     },
     {
       "sintoma": "STARTTLS não aparece / cliente cai para texto puro",

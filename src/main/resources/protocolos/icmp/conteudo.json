@@ -231,7 +231,7 @@
     },
     {
       "nome": "Filtrar com critério, nunca bloquear tudo",
-      "como_funciona": "Em vez de derrubar todo o ICMP, bloqueia apenas tipos perigosos (ex.: Redirect não solicitado) e MANTÉM liberados os essenciais: 'fragmentação necessária' (tipo 3 código 4) para o PMTUD e os tipos 133 a 136 do NDP no IPv6.",
+      "como_funciona": "Em vez de derrubar todo o ICMP, bloqueia apenas tipos perigosos (ex.: Redirect não solicitado) e MANTÉM liberados os essenciais: 'fragmentação necessária' (tipo 3 código 4) para o PMTUD no IPv4; no IPv6, o Packet Too Big (tipo 2, sem ele o PMTUD do IPv6 quebra), Destination Unreachable (1), Time Exceeded (3/0), Parameter Problem (4) e os tipos 133 a 136 do NDP (RFC 4890).",
       "cobre": "Redirect malicioso, sem quebrar PMTUD nem NDP",
       "limite": "Exige entender quais tipos são essenciais; filtro cego reintroduz os problemas de conectividade."
     },

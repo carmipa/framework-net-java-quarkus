@@ -171,8 +171,8 @@
     <section id="dnssec" class="dns-secao">
         <h3 class="dns-secao-titulo"><span class="material-symbols-outlined" aria-hidden="true" translate="no">verified_user</span> DNSSEC: a cadeia de confiança</h3>
         <p class="small text-secondary">
-            Cada elo assina o seguinte, da raiz até o seu registro. Se a cadeia não fecha na âncora da raiz,
-            o resolver validante recusa a resposta.
+            Cada elo assina o seguinte, da raiz até o seu registro. Zona sem cadeia (sem DS no pai) é entregue
+            como não assinada, sem o bit AD; o resolver validante só recusa (SERVFAIL) quando a cadeia existe e não confere.
         </p>
         <ol class="dns-fluxo">
             {#for d in conteudo.dnssec}

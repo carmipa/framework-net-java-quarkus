@@ -93,7 +93,7 @@
       "campo": "Validity (Not Before / Not After)",
       "oque": "Janela de validade: instante inicial (Not Before) e de expiração (Not After), em UTC",
       "exemplo": "Not Before: 2026-01-10 00:00:00 UTC; Not After: 2026-04-10 23:59:59 UTC",
-      "nota": "Fora da janela o certificado é inválido. Certificados TLS públicos hoje duram no máximo 398 dias (cerca de um ano) e esse limite vai encolher nos próximos anos; automatize a renovação (ACME)"
+      "nota": "Fora da janela o certificado é inválido. Certificados TLS públicos emitidos desde 15/03/2026 duram no máximo 200 dias; o teto cai para 100 dias em 15/03/2027 e para 47 dias em 15/03/2029 (CA/Browser Forum, SC-081). Automatize a renovação (ACME)"
     },
     {
       "campo": "Subject",

@@ -220,8 +220,8 @@
     {
       "titulo": "3. Testar quais versões/ciphers o servidor aceita",
       "cenario": "Auditar se ainda há protocolo ou cipher legado habilitado.",
-      "comandos": "# TLS 1.0 ainda responde? (esperado: falhar)\nopenssl s_client -connect exemplo.com:443 -tls1 </dev/null\n\n# varredura completa, se disponível:\ntestssl.sh --quiet exemplo.com",
-      "explicacao": "Se o -tls1 conecta, o servidor ainda aceita TLS 1.0 — desligue. O testssl.sh classifica protocolo, cipher, forward secrecy, vulnerabilidades conhecidas e a cadeia, tudo de uma vez, sem tocar em nada no servidor."
+      "comandos": "# TLS 1.0 ainda responde? (esperado: falhar)\n# no OpenSSL 3 o cliente recusa TLS 1.0 sozinho; o SECLEVEL=0 tira essa trava do LADO DO TESTE\nopenssl s_client -connect example.com:443 -tls1 -cipher 'DEFAULT:@SECLEVEL=0' </dev/null\n\n# varredura completa, se disponível:\ntestssl.sh --quiet example.com",
+      "explicacao": "Se o -tls1 conecta, o servidor ainda aceita TLS 1.0 — desligue. Sem o @SECLEVEL=0, um OpenSSL 3 falha por conta própria e o teste diria 'não aceita' mesmo com o servidor aceitando. O testssl.sh classifica protocolo, cipher, forward secrecy, vulnerabilidades conhecidas e a cadeia, tudo de uma vez, sem tocar em nada no servidor."
     },
     {
       "titulo": "4. Conferir emissões do seu domínio no Certificate Transparency",

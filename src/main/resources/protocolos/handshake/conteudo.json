@@ -61,7 +61,7 @@
       "titulo": "SSH: troca de chaves + host key",
       "icone": "key",
       "texto": "O SSH troca banners de versão, negocia algoritmos (KEXINIT), executa Diffie-Hellman para gerar a chave de sessão e valida a host key do servidor (aquele fingerprint que você confirma no primeiro acesso). Só depois vem a autenticação do usuário.",
-      "destaque": "A host key protege contra man-in-the-middle na primeira conexão"
+      "destaque": "Na primeira conexão a host key ainda não é conhecida: só protege contra man-in-the-middle se você conferir o fingerprint (depois, o known_hosts faz isso sozinho)"
     },
     {
       "titulo": "Handshake não é autenticação",

@@ -77,8 +77,8 @@
   ],
   "diagrama": {
     "titulo": "SLAAC: como o host monta o endereço escutando o roteador",
-    "definicao": "sequenceDiagram\n    participant H as Host novo\n    participant M as Multicast todos-roteadores\n    participant R as Roteador\n    H->>H: Forma endereco link-local fe80\n    H->>M: Router Solicitation RS - quem e o roteador\n    M->>R: Encaminha a solicitacao\n    R-->>H: Router Advertisement RA com o prefixo 2001-db8-64\n    H->>H: Combina prefixo mais ID de interface igual endereco global\n    H->>M: DAD - Neighbor Solicitation para o proprio endereco\n    Note over H,M: Se ninguem responder o endereco esta livre\n    M-->>H: Silencio nenhum vizinho reivindica\n    H->>H: Endereco global confirmado e ativo\n    H->>R: Usa o roteador como rota default",
-    "legenda": "O host primeiro cria um endereço link-local, pergunta pelo roteador (RS), recebe o prefixo (RA), monta o endereço global e só o ativa depois de confirmar via DAD que ninguém mais o usa."
+    "definicao": "sequenceDiagram\n    participant H as Host novo\n    participant S as Multicast solicited-node\n    participant R as Roteador\n    H->>H: Forma endereco link-local fe80\n    H->>S: DAD do link-local - Neighbor Solicitation\n    Note over H,S: Ninguem respondeu - o link-local esta livre\n    H->>R: Router Solicitation RS para o grupo de todos os roteadores\n    R-->>H: Router Advertisement RA com o prefixo 2001-db8-64\n    H->>H: Combina prefixo mais ID de interface igual endereco global\n    H->>S: DAD - Neighbor Solicitation ao solicited-node do novo endereco\n    Note over H,S: Se ninguem responder o endereco esta livre\n    H->>H: Endereco global confirmado e ativo\n    H->>R: Usa o roteador como rota default",
+    "legenda": "O host cria o endereço link-local e confirma por DAD que ninguém o usa, pergunta pelo roteador (RS), recebe o prefixo (RA), monta o endereço global e só o ativa depois de um novo DAD. O Neighbor Solicitation do DAD vai para o grupo solicited-node do próprio endereço testado (RFC 4862), não para os roteadores."
   },
   "cabecalho": {
     "titulo": "Cabeçalho base IPv6 (fixo, 40 bytes / 320 bits)",
@@ -156,7 +156,7 @@
         [
           "Unicast global",
           "2000::/3",
-          "Endereços públicos roteáveis na internet (na prática começa em 2001:...). Um por interface voltada para fora."
+          "Endereços públicos roteáveis na internet. Os blocos em uso começam em 2001:, 2400:, 2600:, 2800:, 2a00:, 2c00: (cada registro regional tem os seus), não só em 2001:. Uma interface pode ter vários ao mesmo tempo (SLAAC, temporário de privacidade, fixo)."
         ],
         [
           "Multicast",
