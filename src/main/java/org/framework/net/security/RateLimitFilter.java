@@ -7,13 +7,27 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.container.ResourceInfo;
 import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.framework.net.paginaErros.presentation.PaginaErroResposta;
 import jakarta.ws.rs.ext.Provider;
 
 import java.io.IOException;
 import java.util.Set;
 
+/**
+ * Limite de requisições por origem e por rota.
+ *
+ * <p><b>PROPÓSITO DE NEGÓCIO:</b> proteger as rotas que custam CPU, disco ou cota de serviço externo de uma
+ * origem que dispara requisições em série, sem travar a turma inteira atrás do mesmo NAT nas rotas baratas.</p>
+ *
+ * <p><b>INVARIANTES DO DOMÍNIO:</b> a recusa é sempre 429. Quem navega (o navegador pedindo uma página)
+ * recebe a página de erro do site; quem chama por fetch, htmx ou API recebe o JSON de sempre — a regra é a
+ * mesma do mapper de exceções, em {@link PaginaErroResposta} (auditoria FRONT-01: a página inteira virava JSON
+ * cru).</p>
+ *
+ * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> recurso não resolvido usa o caminho normalizado como chave do
+ * balde; limite excedido aborta com o 429 (página ou JSON, conforme o cliente).</p>
+ */
 @Provider
 @Priority(Priorities.AUTHENTICATION + 20)
 public class RateLimitFilter implements ContainerRequestFilter {
@@ -49,6 +63,9 @@ public class RateLimitFilter implements ContainerRequestFilter {
     @Inject
     RequestRateLimiter rateLimiter;
 
+    @Inject
+    PaginaErroResposta paginaErroResposta;
+
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         String path = normalizePath(requestContext.getUriInfo().getPath());
@@ -64,10 +81,8 @@ public class RateLimitFilter implements ContainerRequestFilter {
                 || HEAVY_PREFIXES.stream().anyMatch(path::startsWith)
                 || postApi;
         if (!rateLimiter.allow(requestContext, chaveDeRota(path), heavy)) {
-            requestContext.abortWith(Response.status(429)
-                    .type(MediaType.APPLICATION_JSON)
-                    .entity("{\"erro\":\"Muitas requisições. Aguarde um minuto e tente novamente.\"}")
-                    .build());
+            requestContext.abortWith(paginaErroResposta.recusa(requestContext, Response.Status.TOO_MANY_REQUESTS.getStatusCode(),
+                    "{\"erro\":\"Muitas requisições. Aguarde um minuto e tente novamente.\"}"));
         }
     }
 

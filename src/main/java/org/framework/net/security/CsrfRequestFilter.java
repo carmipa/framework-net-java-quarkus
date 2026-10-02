@@ -8,6 +8,7 @@ import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
+import org.framework.net.paginaErros.presentation.PaginaErroResposta;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -16,6 +17,20 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
+/**
+ * Conferência do token CSRF (cookie × cabeçalho/formulário) em toda requisição que altera estado.
+ *
+ * <p><b>PROPÓSITO DE NEGÓCIO:</b> impedir que outro site faça o navegador do aluno enviar formulário para
+ * este, usando a sessão dele.</p>
+ *
+ * <p><b>INVARIANTES DO DOMÍNIO:</b> POST/PUT/DELETE/PATCH sem par válido é recusado com 403, comparado em
+ * tempo constante. Quem navega (formulário comum) recebe a página de erro do site, que explica o token
+ * vencido; fetch, htmx e API recebem o JSON de sempre — a regra é a mesma do mapper de exceções, em
+ * {@link PaginaErroResposta} (auditoria FRONT-01).</p>
+ *
+ * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> token ausente, malformado ou divergente aborta com 403 (página ou
+ * JSON, conforme o cliente); corpo de formulário ilegível conta como token ausente.</p>
+ */
 @Provider
 @Priority(Priorities.AUTHENTICATION + 10)
 public class CsrfRequestFilter implements ContainerRequestFilter {
@@ -24,6 +39,9 @@ public class CsrfRequestFilter implements ContainerRequestFilter {
 
     @Inject
     CsrfTokenService csrfTokenService;
+
+    @Inject
+    PaginaErroResposta paginaErroResposta;
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
@@ -42,10 +60,8 @@ public class CsrfRequestFilter implements ContainerRequestFilter {
         );
 
         if (!isValidPair(cookieToken, submitted)) {
-            requestContext.abortWith(Response.status(403)
-                    .type(MediaType.APPLICATION_JSON)
-                    .entity("{\"erro\":\"Token CSRF inválido ou ausente. Recarregue a página e tente novamente.\"}")
-                    .build());
+            requestContext.abortWith(paginaErroResposta.recusa(requestContext, Response.Status.FORBIDDEN.getStatusCode(),
+                    "{\"erro\":\"Token CSRF inválido ou ausente. Recarregue a página e tente novamente.\"}"));
         }
     }
 

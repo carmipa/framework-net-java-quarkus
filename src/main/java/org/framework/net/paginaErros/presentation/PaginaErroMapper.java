@@ -1,7 +1,5 @@
 package org.framework.net.paginaErros.presentation;
 
-import io.quarkus.qute.Location;
-import io.quarkus.qute.Template;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Context;
@@ -12,8 +10,6 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
-import org.framework.net.paginaErros.application.PaginaErroService;
-import org.framework.net.paginaErros.application.PaginaErroService.DadosPaginaErro;
 import org.framework.net.telemetria.TelemetriaLogger;
 
 /**
@@ -41,17 +37,11 @@ import org.framework.net.telemetria.TelemetriaLogger;
 @Provider
 public class PaginaErroMapper implements ExceptionMapper<Throwable> {
 
-    private static final String TIPO_HTML = MediaType.TEXT_HTML + ";charset=UTF-8";
-
     @Inject
-    PaginaErroService paginaErroService;
+    PaginaErroResposta paginaErroResposta;
 
     @Inject
     TelemetriaLogger telemetriaLogger;
-
-    @Inject
-    @Location("paginaErros/erro.html")
-    Template pagina;
 
     @Context
     UriInfo uriInfo;
@@ -75,22 +65,7 @@ public class PaginaErroMapper implements ExceptionMapper<Throwable> {
         if (!querHtml(caminho)) {
             return respostaTecnica(exception, status);
         }
-
-        try {
-            DadosPaginaErro dados = paginaErroService.montar(status, caminho, metodo);
-            String html = pagina
-                    .data("erro", dados.erro())
-                    .data("dados", dados)
-                    .render();
-            return Response.status(status).entity(html).type(TIPO_HTML).build();
-        } catch (RuntimeException falhaNaPagina) {
-            // A página de erro não pode gerar erro: cai para texto simples.
-            telemetriaLogger.logException("paginaErros", "falha_na_pagina_de_erro", null, falhaNaPagina);
-            return Response.status(status)
-                    .entity("HTTP " + status + " — não foi possível renderizar a página de erro.")
-                    .type(MediaType.TEXT_PLAIN + ";charset=UTF-8")
-                    .build();
-        }
+        return paginaErroResposta.pagina(status, caminho, metodo);
     }
 
     /**
@@ -116,13 +91,8 @@ public class PaginaErroMapper implements ExceptionMapper<Throwable> {
      * {@code response.json()} sem mensagem de erro compreensível.</p>
      */
     private boolean querHtml(String caminho) {
-        if (caminho.contains("/api/") || caminho.endsWith("/api")) {
-            return false;
-        }
         try {
-            return httpHeaders.getAcceptableMediaTypes().stream()
-                    .anyMatch(tipo -> tipo.isCompatible(MediaType.TEXT_HTML_TYPE)
-                            && !tipo.isWildcardType());
+            return paginaErroResposta.querPagina(caminho, httpHeaders.getAcceptableMediaTypes());
         } catch (RuntimeException ex) {
             return false;
         }
