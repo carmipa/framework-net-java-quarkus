@@ -8,6 +8,10 @@
     };
 
     var timer = null;
+    // Ciclo de consulta. Era 1 s e não parava com a aba oculta: uma aba esquecida fazia 86.400
+    // requisições por dia (auditoria OPS-06). Agora 2 s, e a aba oculta pausa sem perder o "ligado".
+    var INTERVALO_MS = 2000;
+    var ligado = false;
     var chartProto = null;
     var chartPps = null;
     var chartHosts = null;
@@ -162,12 +166,23 @@
         if (!chartProto) initCharts();
         $("live-start").disabled = true;
         $("live-stop").disabled = false;
+        ligado = true;
+        retomar();
+    }
+
+    function retomar() {
+        if (timer || !ligado || document.hidden) return;
         tick();
-        timer = setInterval(tick, 1000);
+        timer = setInterval(tick, INTERVALO_MS);
+    }
+
+    function pausar() {
+        if (timer) { clearInterval(timer); timer = null; }
     }
 
     function stop() {
-        if (timer) { clearInterval(timer); timer = null; }
+        ligado = false;
+        pausar();
         $("live-start").disabled = false;
         $("live-stop").disabled = true;
         var st = $("live-status"); if (st) { st.textContent = "parado"; st.className = "small text-secondary"; }
@@ -177,5 +192,8 @@
         if (!$("chart-proto")) return; // página sem o painel ao vivo
         $("live-start").addEventListener("click", start);
         $("live-stop").addEventListener("click", stop);
+        document.addEventListener("visibilitychange", function () {
+            if (document.hidden) { pausar(); } else { retomar(); }
+        });
     });
 })(window);

@@ -241,7 +241,8 @@ public class TelemetriaDashboardService {
         if (path == null || path.isBlank()) {
             return true;
         }
-        if (path.startsWith("/telemetria/api") || path.startsWith("/q/") || path.startsWith("/web/")) {
+        if (path.startsWith("/telemetria/api") || path.startsWith("/q/") || path.startsWith("/web/")
+                || path.startsWith("/trafego/api/aovivo")) {
             return true;
         }
         int dot = path.lastIndexOf('.');

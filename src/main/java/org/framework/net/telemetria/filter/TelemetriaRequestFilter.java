@@ -23,6 +23,13 @@ public class TelemetriaRequestFilter implements ContainerRequestFilter, Containe
 
     private static final String HEALTH_PATH = "/health";
 
+    /**
+     * Endpoints consultados em ciclo pela própria página (polling): uma aba esquecida no Tráfego ao vivo
+     * fazia 86.400 requisições por dia, cada uma com evento (auditoria OPS-06). Ficam fora da telemetria
+     * por requisição, como o healthcheck; a visita à página que os consulta continua registrada.
+     */
+    public static final java.util.Set<String> CAMINHOS_DE_POLLING = java.util.Set.of("/trafego/api/aovivo");
+
     @Inject
     TelemetriaContext telemetriaContext;
 
@@ -59,7 +66,8 @@ public class TelemetriaRequestFilter implements ContainerRequestFilter, Containe
 
     /**
      * Propósito de negócio: inicia a correlação de uma requisição funcional atendida pela aplicação.
-     * Invariantes do domínio: o healthcheck operacional nunca entra na telemetria funcional nem provoca I/O.
+     * Invariantes do domínio: o healthcheck operacional e os endpoints de polling
+     * ({@link #CAMINHOS_DE_POLLING}) nunca entram na telemetria funcional nem provocam I/O.
      * Comportamento em caso de falha: propaga a falha de filtro ao runtime JAX-RS e não cria contexto parcial
      * para o endpoint de saúde.
      */
@@ -68,7 +76,7 @@ public class TelemetriaRequestFilter implements ContainerRequestFilter, Containe
         String requestId = requestContext.getHeaderString("X-Request-Id");
         String method = requestContext.getMethod();
         String path = requestContext.getUriInfo().getRequestUri().getPath();
-        if (HEALTH_PATH.equals(path)) {
+        if (HEALTH_PATH.equals(path) || CAMINHOS_DE_POLLING.contains(path)) {
             return;
         }
         TelemetriaRequestContext ctx = telemetriaContext.iniciarRequisicao(requestId, method, path);

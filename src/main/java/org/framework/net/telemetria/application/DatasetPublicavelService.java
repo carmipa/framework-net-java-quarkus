@@ -52,7 +52,8 @@ public class DatasetPublicavelService {
 
     /** Rotas que são ruído de infraestrutura e não descrevem uso do sistema. */
     private static final List<String> PREFIXOS_RUIDO =
-            List.of("/q/", "/web/", "/telemetria/api", "/health", "/favicon", "/pwa/", "/sw.js");
+            List.of("/q/", "/web/", "/telemetria/api", "/health", "/favicon", "/pwa/", "/sw.js",
+                    "/trafego/api/aovivo");
 
     /** Atributos que não têm tratamento seguro e saem inteiros. */
     private static final List<String> CAMPOS_REMOVIDOS =
