@@ -905,6 +905,30 @@ for (const caso of [
   await page.context().close();
 }
 
+// SEC-05 — o globo 3D funciona com esm.sh e jsdelivr BLOQUEADOS: biblioteca e texturas vêm do site.
+{
+  const ctx = await browser.newContext();
+  await ctx.route(/translate\.google(apis)?\.com|www\.google\.com/, (r) => r.abort());
+  const externos = [];
+  await ctx.route(/esm\.sh|cdn\.jsdelivr\.net\/npm\/three/, (r) => { externos.push(r.request().url()); return r.abort(); });
+  const page = await ctx.newPage();
+  const erros = [];
+  page.on('pageerror', (e) => erros.push(String(e).slice(0, 120)));
+  const texturas = [];
+  page.on('response', (r) => { if (/\/localizacao\/vendor\/texturas\//.test(r.url())) texturas.push(r.status()); });
+  await page.goto(BASE + '/localizacao', { waitUntil: 'load', timeout: 45000 });
+  await page.waitForTimeout(4000);
+  const r = await page.evaluate(() => ({
+    api: !!(window.GeoGlobe && window.GeoGlobe.setLocation),
+    canvas: !!document.querySelector('#geo-globe canvas'),
+    falhou: !!document.querySelector('.geo-globe-wrap.d-none, .geo-globe-wrap .geo-globe-falha'),
+  }));
+  registrar('SEC-05 globo 3D local com CDN bloqueado',
+    r.api && r.canvas && texturas.length >= 2 && texturas.every((s) => s === 200) && externos.length === 0 && erros.length === 0,
+    `${JSON.stringify(r)} texturas=${texturas.join(',')} pedidos ao CDN=${externos.length} erros=${erros.slice(0, 2).join(' | ') || 'nenhum'}`);
+  await ctx.close();
+}
+
 await browser.close();
 const reprovados = resultados.filter((r) => !r.ok);
 console.log(`\n${resultados.length - reprovados.length}/${resultados.length} passaram`);

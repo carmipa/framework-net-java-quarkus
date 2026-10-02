@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -35,14 +36,19 @@ class CdnIntegridadeGuardTest {
     private static final Pattern URL_NO_IMPORTMAP = Pattern.compile("\"(https?://[^\"]+)\"");
 
     /**
-     * Linha de base (catraca, A4): URLs de CDN em importmap que já existiam quando a guarda nasceu. O módulo
-     * ES carregado por importmap não tem integrity por URL (esm.sh gera o grafo no servidor), e trazer as
-     * bibliotecas para o repositório depende de decisão do Paulo. A dívida só desce: URL nova reprova.
+     * Linha de base (catraca, A4) das URLs de CDN em importmap. Nasceu com as três do esm.sh do globo 3D;
+     * em 02/10/2026, com o aval do Paulo, o globo passou a ser servido pelo próprio site (scripts/vendor-globo)
+     * e a dívida zerou. Continua vazia: módulo ES de CDN não tem integrity por URL.
      */
-    static final java.util.Set<String> IMPORTMAP_LINHA_DE_BASE = java.util.Set.of(
-            "https://esm.sh/three@0.185.1",
-            "https://esm.sh/three@0.185.1/",
-            "https://esm.sh/globe.gl@2.34.4?external=three&deps=three@0.185.1");
+    static final java.util.Set<String> IMPORTMAP_LINHA_DE_BASE = java.util.Set.of();
+
+    /** import/export estático ou import() dinâmico apontando para fora do site. */
+    private static final Pattern IMPORT_EXTERNO = Pattern.compile(
+            "(?:\\bfrom\\s*|\\bimport\\s*\\(?\\s*)[\"'](https?:)?//");
+
+    static boolean importaDeFora(String js) {
+        return IMPORT_EXTERNO.matcher(js).find();
+    }
 
     static List<String> violacoesImportmap(String texto) {
         List<String> out = new ArrayList<>();
@@ -89,8 +95,33 @@ class CdnIntegridadeGuardTest {
         assertEquals(0, violacoes("<script src=\"https://translate.google.com/translate_a/element.js?cb=x\"></script>").size());
         // importmap (SEC-05): URL de CDN nova reprova; a da linha de base e o caminho local passam.
         assertEquals(1, violacoesImportmap("<script type=\"importmap\">{\"imports\":{\"x\":\"https://esm.sh/x@1.0.0\"}}</script>").size());
-        assertEquals(0, violacoesImportmap("<script type=\"importmap\">{\"imports\":{\"three\":\"https://esm.sh/three@0.185.1\","
-                + "\"y\":\"/localizacao/vendor/y.mjs\"}}</script>").size());
+        assertEquals(1, violacoesImportmap("<script type=\"importmap\">{\"imports\":{\"three\":\"https://esm.sh/three@0.185.1\"}}</script>").size());
+        assertEquals(0, violacoesImportmap("<script type=\"importmap\">{\"imports\":{\"y\":\"/localizacao/vendor/y.mjs\"}}</script>").size());
+        // módulo ES: import de CDN reprova; o mesmo import com caminho do site passa (fronteira, A1).
+        assertTrue(importaDeFora("import { THREE } from \"https://esm.sh/three@0.185.1\";"));
+        assertTrue(importaDeFora("const m = await import('//cdn.example/x.mjs');"));
+        assertFalse(importaDeFora("import { THREE, Globe } from \"/localizacao/vendor/globo-three.mjs?v=1\";"));
+        assertFalse(importaDeFora("var EARTH = \"https://exemplo.invalid/textura.jpg\"; // não é import"));
+    }
+
+    /**
+     * SEC-05: o globo 3D vinha do esm.sh por import de módulo, que a guarda de &lt;script src&gt; não via.
+     * Nenhum JS do site (fora o pacote gerado em vendor/) importa de outra origem.
+     */
+    @Test
+    void moduloDoSiteNaoImportaDeCdn() throws IOException {
+        Path raiz = Path.of("src/main/resources/META-INF/resources");
+        List<String> ruins = new ArrayList<>();
+        int lidos = 0;
+        try (Stream<Path> t = Files.walk(raiz)) {
+            for (Path p : t.filter(x -> x.toString().matches(".*\\.m?js$")).toList()) {
+                if (p.toString().replace('\\', '/').contains("/vendor/")) continue;
+                lidos++;
+                if (importaDeFora(Files.readString(p))) ruins.add(raiz.relativize(p).toString());
+            }
+        }
+        assertTrue(lidos > 20, "instrumento cego: só " + lidos + " arquivos JS lidos");
+        assertEquals(List.of(), ruins, "JS importando módulo de CDN");
     }
 
     @Test

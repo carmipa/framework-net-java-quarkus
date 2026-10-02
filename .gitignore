@@ -84,3 +84,4 @@ screenshots/
 
 # Dependencias do Playwright dos roteiros de navegador: reinstalar com "npm ci" em scripts/ (OPS-19).
 scripts/node_modules/
+scripts/vendor-globo/node_modules/

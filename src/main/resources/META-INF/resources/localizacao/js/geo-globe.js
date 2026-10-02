@@ -1,17 +1,17 @@
 /* Globo 3D (Globe.gl + Three.js). Fábrica que cria globos independentes:
  *  - #geo-globe  → aba GeoIP (controlado por geo-panel.js via window.GeoGlobe)
  *  - #priv-globe → aba Vazamento/Privacidade (controlado por privacidade.js via window.PrivGlobe)
- * Cada globo plota o ponto do IP com marcador + anel. Texturas via CDN (three-globe).
+ * Cada globo plota o ponto do IP com marcador + anel. Biblioteca e texturas servidas pelo próprio site
+ * (localizacao/vendor, gerado por scripts/vendor-globo): sem esm.sh nem jsdelivr (auditoria SEC-05).
  * Se o WebGL falhar, chama opts.onFail. */
-import * as THREE from "three";
-import Globe from "globe.gl";
+import { THREE, Globe } from "/localizacao/vendor/globo-three.mjs?v=20261002";
 
 (function () {
     "use strict";
 
-    var EARTH_IMG = "https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg";
-    var BUMP_IMG = "https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png";
-    var CLOUDS_IMG = "https://cdn.jsdelivr.net/npm/three-globe/example/clouds/clouds.png";
+    var EARTH_IMG = "/localizacao/vendor/texturas/earth-blue-marble.webp";
+    var BUMP_IMG = "/localizacao/vendor/texturas/earth-topology.webp";
+    var CLOUDS_IMG = "/localizacao/vendor/texturas/clouds.webp";
     var CLOUDS_ALT = 0.01;
     var CLOUDS_SPEED = -0.006;
 
