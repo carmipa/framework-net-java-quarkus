@@ -5,51 +5,68 @@ import jakarta.inject.Inject;
 import org.framework.net.segurancaRede.exception.SegurancaException;
 import org.framework.net.telemetria.TelemetriaLogger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 /**
  * Simulador didático de avaliação de UMA linha de ACL Cisco contra um pacote.
  *
- * <p><b>Propósito de negócio:</b> mostrar ao estudante como o roteador decide
- * permitir ou bloquear um pacote diante de uma regra de ACL, comparando IP de
- * origem, IP de destino e porta de destino com o que a regra especifica.</p>
+ * <p><b>Propósito de negócio:</b> mostrar ao estudante como o roteador decide se uma linha de ACL
+ * captura um pacote (MATCH) e o que essa linha manda fazer (permit libera, deny descarta). A sintaxe
+ * é a do IOS, porque o aluno leva a linha para o Packet Tracer e para a prova.</p>
  *
- * <p><b>Invariantes do domínio:</b> a comparação é EXATA e tipada — a porta é
- * inteiro (80 nunca casa 8080), os endereços são casados por máscara-curinga
- * (wildcard) de verdade e o IP de destino participa da decisão quando a regra o
- * especifica. Só a sintaxe suportada é aceita: comando fora dela é RECUSADO,
- * nunca reinterpretado como "não corresponde". "Não corresponde" (NO MATCH) e
- * "bloqueado" (deny que casa) são resultados distintos.</p>
+ * <p><b>Invariantes do domínio (auditoria de 01/10/2026, CALC-10/CONT-01 — fonte: Cisco IOS Security
+ * Command Reference, "access-list (IP extended)" e "access-list (IP standard)"):</b></p>
+ * <ul>
+ *   <li>ACL estendida: {@code {permit|deny} protocolo origem [op porta] destino [op porta]} — o
+ *       DESTINO é obrigatório, e o operador logo depois da origem compara a porta de ORIGEM; o que vem
+ *       depois do destino compara a porta de destino;</li>
+ *   <li>ACL padrão (número 1–99 ou 1300–1999, ou linha sem protocolo): só a origem;</li>
+ *   <li>o protocolo da regra precisa casar o do pacote ({@code ip} casa qualquer um): uma regra
+ *       icmp não captura TCP;</li>
+ *   <li>comparação exata e tipada — porta é inteiro, endereço casa por máscara-curinga;</li>
+ *   <li>MATCH é correspondência; permitir ou bloquear é a AÇÃO da linha. "Não corresponde" é outro
+ *       resultado: o roteador seguiria para a próxima linha.</li>
+ * </ul>
  *
- * <p><b>Sintaxe suportada:</b>
- * {@code [access-list <n>] {permit|deny} {ip|tcp|udp|icmp} <origem> [<destino>] [eq <porta>]},
- * onde cada endereço é {@code any}, {@code host <ip>}, {@code <ip> <wildcard>} ou
- * {@code <ip>} (equivale a host). {@code eq <porta>} só vale para tcp/udp e é
- * comparado à porta de DESTINO do pacote.</p>
- *
- * <p><b>Comportamento em caso de falha:</b> entrada inválida (IPv4 malformado,
- * porta fora de faixa, sintaxe não suportada, caractere perigoso) lança
- * {@link SegurancaException}, convertida em HTTP 400 com mensagem — o simulador
- * nunca "chuta" um veredito diante de entrada que não entende.</p>
- *
- * <p><b>Limitação declarada:</b> o formulário não informa o protocolo do pacote
- * nem a porta de origem; a regra pode declarar tcp/udp/ip/icmp e a porta de
- * destino, mas a incompatibilidade de protocolo do pacote em si não é modelada.</p>
+ * <p><b>Comportamento em caso de falha:</b> entrada inválida (IPv4 malformado, porta fora de faixa,
+ * sintaxe fora do suportado, caractere perigoso) lança {@link SegurancaException}, convertida em
+ * HTTP 400 com a mensagem — o simulador nunca "chuta" veredito diante do que não entende.</p>
  */
 @ApplicationScoped
 public class AclSimulatorService {
 
+    /** Porta de origem quando o formulário não informa: efêmera de cliente (IANA 49152–65535). */
+    public static final int PORTA_ORIGEM_PADRAO = 49152;
+
     @Inject
     TelemetriaLogger telemetriaLogger;
 
+    /** Compatibilidade: pacote TCP saindo da porta efêmera padrão. */
     public String testarPacote(String regra, String ipOrigem, String ipDestino, String portaDestinoRaw) {
+        return testarPacote(regra, "tcp", ipOrigem, String.valueOf(PORTA_ORIGEM_PADRAO), ipDestino, portaDestinoRaw);
+    }
+
+    /**
+     * Avalia a linha contra o pacote informado.
+     *
+     * <p><b>Comportamento em caso de falha:</b> ver a classe — entrada inválida lança
+     * {@link SegurancaException}.</p>
+     */
+    public String testarPacote(String regra, String protocoloRaw, String ipOrigem, String portaOrigemRaw,
+                               String ipDestino, String portaDestinoRaw) {
         return telemetriaLogger.medir("seguranca", "teste_acl", () -> {
-            int portaDestino = validarEntradas(regra, ipOrigem, ipDestino, portaDestinoRaw);
+            validarEntradas(regra, ipOrigem, ipDestino);
+            String protocolo = protocoloDoPacote(protocoloRaw);
+            boolean temPorta = !protocolo.equals("icmp");
+            int portaOrigem = temPorta ? lerPortaPacote(portaOrigemRaw, PORTA_ORIGEM_PADRAO, "origem") : -1;
+            int portaDestino = temPorta ? lerPortaPacote(portaDestinoRaw, -1, "destino") : -1;
             long origem = ipParaLong(ipOrigem);
             long destino = ipParaLong(ipDestino);
 
-            RegraAcl regraAcl = RegraAcl.parse(regra);
+            RegraAcl r = RegraAcl.parse(regra);
 
             telemetriaLogger.logEvent("info", "seguranca", "acl_avaliada", Map.of(
                     "regra", regra,
@@ -57,46 +74,35 @@ public class AclSimulatorService {
                     "ipDestino", ipDestino,
                     "portaDestino", portaDestino));
 
-            boolean origemBate = regraAcl.origem().casa(origem);
-            boolean destinoBate = regraAcl.destino().casa(destino);
-            boolean portaBate = regraAcl.porta() < 0 || regraAcl.porta() == portaDestino;
-
-            if (origemBate && destinoBate && portaBate) {
-                return regraAcl.permite()
-                        ? "MATCH (PERMITIDO) — origem, destino e porta atendem à regra; o pacote é liberado."
-                        : "MATCH (BLOQUEADO) — o pacote atende à regra de deny e é descartado.";
+            List<String> falhas = new ArrayList<>();
+            if (!r.protocolo().equals("ip") && !r.protocolo().equals(protocolo)) {
+                falhas.add("protocolo diferente (a regra é " + r.protocolo() + ", o pacote é " + protocolo + ")");
             }
-            return "NÃO CORRESPONDE (NO MATCH) — " + motivo(origemBate, destinoBate, portaBate)
-                    + " O roteador avaliaria a próxima linha (ou o deny implícito no fim da lista).";
+            if (!r.origem().casa(origem)) {
+                falhas.add("origem fora do alcance");
+            }
+            if (!r.destino().casa(destino)) {
+                falhas.add("destino fora do alcance");
+            }
+            if (r.portaOrigem() != null && !r.portaOrigem().casa(portaOrigem)) {
+                falhas.add("porta de origem fora do critério (" + r.portaOrigem().descrever() + ")");
+            }
+            if (r.portaDestino() != null && !r.portaDestino().casa(portaDestino)) {
+                falhas.add("porta de destino fora do critério (" + r.portaDestino().descrever() + ")");
+            }
+
+            if (falhas.isEmpty()) {
+                String tipo = r.padrao() ? "ACL padrão: só a origem é conferida" : "protocolo, origem, destino e portas conferem";
+                return r.permite()
+                        ? "MATCH (PERMITIDO) — a regra captura o pacote (" + tipo + ") e a ação da linha é permit: o pacote é liberado."
+                        : "MATCH (BLOQUEADO) — a regra captura o pacote (" + tipo + ") e a ação da linha é deny: o pacote é descartado.";
+            }
+            return "NÃO CORRESPONDE (NO MATCH) — a regra não captura este pacote (" + String.join("; ", falhas)
+                    + "). O roteador avaliaria a próxima linha (ou o deny implícito no fim da lista).";
         });
     }
 
-    /** Explica qual condição impediu o match — separa "não corresponde" de "bloqueado". */
-    private static String motivo(boolean origemBate, boolean destinoBate, boolean portaBate) {
-        StringBuilder sb = new StringBuilder("a regra não captura este pacote (");
-        boolean primeiro = true;
-        if (!origemBate) {
-            sb.append("origem fora do alcance");
-            primeiro = false;
-        }
-        if (!destinoBate) {
-            if (!primeiro) {
-                sb.append("; ");
-            }
-            sb.append("destino fora do alcance");
-            primeiro = false;
-        }
-        if (!portaBate) {
-            if (!primeiro) {
-                sb.append("; ");
-            }
-            sb.append("porta de destino diferente");
-        }
-        sb.append(").");
-        return sb.toString();
-    }
-
-    private int validarEntradas(String regra, String ipOrigem, String ipDestino, String portaDestinoRaw) {
+    private void validarEntradas(String regra, String ipOrigem, String ipDestino) {
         exigir(regra, "Regra ACL não informada.");
         exigir(ipOrigem, "IP de Origem não informado.");
         exigir(ipDestino, "IP de Destino não informado.");
@@ -113,14 +119,28 @@ public class AclSimulatorService {
         if (!ipValido(ipDestino)) {
             throw new SegurancaException("IP de Destino inválido (use IPv4, ex.: 10.0.0.1).");
         }
+    }
+
+    private static String protocoloDoPacote(String raw) {
+        String p = raw == null || raw.isBlank() ? "tcp" : raw.trim().toLowerCase(Locale.ROOT);
+        if (!p.equals("tcp") && !p.equals("udp") && !p.equals("icmp")) {
+            throw new SegurancaException("Protocolo do pacote inválido: use tcp, udp ou icmp.");
+        }
+        return p;
+    }
+
+    private static int lerPortaPacote(String raw, int padrao, String qual) {
+        if ((raw == null || raw.isBlank()) && padrao > 0) {
+            return padrao;
+        }
         int porta;
         try {
-            porta = Integer.parseInt(portaDestinoRaw == null ? "" : portaDestinoRaw.trim());
+            porta = Integer.parseInt(raw == null ? "" : raw.trim());
         } catch (NumberFormatException ex) {
-            throw new SegurancaException("Porta de destino inválida (informe um número).");
+            throw new SegurancaException("Porta de " + qual + " inválida (informe um número).");
         }
         if (porta <= 0 || porta > 65535) {
-            throw new SegurancaException("Porta de destino fora do intervalo (1–65535).");
+            throw new SegurancaException("Porta de " + qual + " fora do intervalo (1–65535).");
         }
         return porta;
     }
@@ -144,16 +164,10 @@ public class AclSimulatorService {
             return false;
         }
         for (String parte : octetos) {
-            if (parte.isEmpty() || parte.length() > 3) {
+            if (parte.isEmpty() || parte.length() > 3 || !parte.chars().allMatch(c -> c >= '0' && c <= '9')) {
                 return false;
             }
-            int valor;
-            try {
-                valor = Integer.parseInt(parte);
-            } catch (NumberFormatException e) {
-                return false;
-            }
-            if (valor < 0 || valor > 255) {
+            if (Integer.parseInt(parte) > 255) {
                 return false;
             }
         }
@@ -182,48 +196,92 @@ public class AclSimulatorService {
         }
     }
 
-    /** Uma linha de ACL já tipada. {@code porta = -1} quando a regra não restringe porta. */
-    private record RegraAcl(boolean permite, EnderecoAcl origem, EnderecoAcl destino, int porta) {
+    /** Critério de porta: eq, neq, lt, gt ou range (inclusivo nas duas pontas). */
+    private record CriterioPorta(String op, int a, int b) {
+
+        boolean casa(int porta) {
+            return switch (op) {
+                case "eq" -> porta == a;
+                case "neq" -> porta != a;
+                case "lt" -> porta < a;
+                case "gt" -> porta > a;
+                default -> porta >= a && porta <= b;
+            };
+        }
+
+        String descrever() {
+            return op.equals("range") ? "range " + a + " " + b : op + " " + a;
+        }
+    }
+
+    /**
+     * Uma linha de ACL já tipada. {@code portaOrigem}/{@code portaDestino} nulos = sem critério de porta;
+     * {@code padrao} = ACL padrão (só origem).
+     */
+    private record RegraAcl(boolean permite, String protocolo, EnderecoAcl origem, CriterioPorta portaOrigem,
+                            EnderecoAcl destino, CriterioPorta portaDestino, boolean padrao) {
 
         static RegraAcl parse(String texto) {
             String[] t = texto.trim().toLowerCase(Locale.ROOT).split("\\s+");
             int i = 0;
+            Integer numero = null;
             if (i < t.length && t[i].equals("access-list")) {
-                i += 2; // pula "access-list <n>"
+                if (i + 1 >= t.length) {
+                    throw new SegurancaException("Regra ACL não suportada: 'access-list' sem número.");
+                }
+                try {
+                    numero = Integer.parseInt(t[i + 1]);
+                } catch (NumberFormatException e) {
+                    throw new SegurancaException("Regra ACL não suportada: número de access-list inválido '" + t[i + 1] + "'.");
+                }
+                i += 2;
             }
             if (i >= t.length || !(t[i].equals("permit") || t[i].equals("deny"))) {
                 throw new SegurancaException("Regra ACL não suportada: comece com 'permit' ou 'deny'.");
             }
             boolean permite = t[i].equals("permit");
             i++;
-            if (i >= t.length || !ehProtocolo(t[i])) {
+            if (i >= t.length) {
+                throw new SegurancaException("Regra ACL não suportada: falta o protocolo ou a origem.");
+            }
+            boolean numeroPadrao = numero != null && ((numero >= 1 && numero <= 99) || (numero >= 1300 && numero <= 1999));
+            boolean numeroEstendido = numero != null && ((numero >= 100 && numero <= 199) || (numero >= 2000 && numero <= 2699));
+            if (numero != null && !numeroPadrao && !numeroEstendido) {
+                throw new SegurancaException("Número de access-list fora das faixas IPv4 (1–199, 1300–2699).");
+            }
+            int[] cursor = {i};
+            if (numeroPadrao || (!numeroEstendido && ehInicioEndereco(t[i]))) {
+                // ACL padrão: só a origem. Palavra de protocolo aqui é erro de quem confundiu os tipos.
+                if (ehProtocolo(t[i])) {
+                    throw new SegurancaException("ACL padrão (1–99, 1300–1999) não tem protocolo nem destino: "
+                            + "use 'access-list " + numero + " permit <origem> [wildcard]'.");
+                }
+                EnderecoAcl origem = lerEndereco(t, cursor, "origem");
+                exigirFim(t, cursor);
+                return new RegraAcl(permite, "ip", origem, null, EnderecoAcl.ANY, null, true);
+            }
+            if (!ehProtocolo(t[i])) {
                 throw new SegurancaException("Protocolo não suportado: use ip, tcp, udp ou icmp.");
             }
-            boolean portaPermitida = t[i].equals("tcp") || t[i].equals("udp");
-            i++;
-
-            int[] cursor = {i};
+            String protocolo = t[i];
+            boolean portaPermitida = protocolo.equals("tcp") || protocolo.equals("udp");
+            cursor[0] = i + 1;
             EnderecoAcl origem = lerEndereco(t, cursor, "origem");
-            EnderecoAcl destino = EnderecoAcl.ANY;
-            if (cursor[0] < t.length && ehInicioEndereco(t[cursor[0]])) {
-                destino = lerEndereco(t, cursor, "destino");
+            CriterioPorta portaOrigem = lerCriterioPorta(t, cursor, portaPermitida, "origem");
+            if (cursor[0] >= t.length) {
+                throw new SegurancaException("ACL estendida exige o destino depois da origem "
+                        + "(ex.: 'permit tcp any any eq 80'). Sem protocolo e destino, use uma ACL padrão (1–99).");
             }
-            int porta = -1;
-            if (cursor[0] < t.length && t[cursor[0]].equals("eq")) {
-                if (!portaPermitida) {
-                    throw new SegurancaException("Operador de porta 'eq' só vale para tcp/udp.");
-                }
-                if (cursor[0] + 1 >= t.length) {
-                    throw new SegurancaException("Regra ACL não suportada: 'eq' sem número de porta.");
-                }
-                porta = lerPorta(t[cursor[0] + 1]);
-                cursor[0] += 2;
-            }
+            EnderecoAcl destino = lerEndereco(t, cursor, "destino");
+            CriterioPorta portaDestino = lerCriterioPorta(t, cursor, portaPermitida, "destino");
+            exigirFim(t, cursor);
+            return new RegraAcl(permite, protocolo, origem, portaOrigem, destino, portaDestino, false);
+        }
+
+        private static void exigirFim(String[] t, int[] cursor) {
             if (cursor[0] < t.length) {
-                throw new SegurancaException("Regra ACL não suportada: trecho não reconhecido '"
-                        + t[cursor[0]] + "'.");
+                throw new SegurancaException("Regra ACL não suportada: trecho não reconhecido '" + t[cursor[0]] + "'.");
             }
-            return new RegraAcl(permite, origem, destino, porta);
         }
 
         private static boolean ehProtocolo(String s) {
@@ -232,6 +290,39 @@ public class AclSimulatorService {
 
         private static boolean ehInicioEndereco(String s) {
             return s.equals("any") || s.equals("host") || ipValido(s);
+        }
+
+        private static boolean ehOperador(String s) {
+            return s.equals("eq") || s.equals("neq") || s.equals("lt") || s.equals("gt") || s.equals("range");
+        }
+
+        private static CriterioPorta lerCriterioPorta(String[] t, int[] cursor, boolean portaPermitida, String qual) {
+            int i = cursor[0];
+            if (i >= t.length || !ehOperador(t[i])) {
+                return null;
+            }
+            if (!portaPermitida) {
+                throw new SegurancaException("Operador de porta '" + t[i] + "' só vale para tcp/udp.");
+            }
+            String op = t[i];
+            if (op.equals("range")) {
+                if (i + 2 >= t.length) {
+                    throw new SegurancaException("Regra ACL não suportada: 'range' precisa de duas portas.");
+                }
+                int a = lerPorta(t[i + 1]);
+                int b = lerPorta(t[i + 2]);
+                if (a > b) {
+                    throw new SegurancaException("Regra ACL não suportada: 'range " + a + " " + b + "' com início maior que o fim.");
+                }
+                cursor[0] = i + 3;
+                return new CriterioPorta(op, a, b);
+            }
+            if (i + 1 >= t.length) {
+                throw new SegurancaException("Regra ACL não suportada: '" + op + "' sem número de porta (" + qual + ").");
+            }
+            int a = lerPorta(t[i + 1]);
+            cursor[0] = i + 2;
+            return new CriterioPorta(op, a, a);
         }
 
         private static EnderecoAcl lerEndereco(String[] t, int[] cursor, String qual) {

@@ -24,7 +24,7 @@
         <span class="aed-eyebrow">Ferramenta</span>
         <div class="aed-mode-grid tab-nav mb-3" role="tablist">
             <button type="button" class="aed-mode-btn tab-trigger active" data-tab="acl" role="tab"
-                    title="Firewall (ACL): forje um pacote e veja se a regra dá MATCH (permite) ou bloqueia">
+                    title="Firewall (ACL): forje um pacote e veja se a regra o captura (MATCH) e se a linha libera ou descarta">
                 <span class="material-symbols-outlined" translate="no" aria-hidden="true">rule</span><span>Firewall (ACL)</span>
             </button>
             <button type="button" class="aed-mode-btn tab-trigger" data-tab="tls" role="tab"
@@ -73,20 +73,38 @@
                                 <div class="mb-3">
                                     <label for="aclRegra" class="form-label text-secondary">Sintaxe da Regra ACL (estilo Cisco)</label>
                                     <input type="text" class="aed-input form-control" id="aclRegra" name="regra"
-                                           value="permit tcp any eq 80" placeholder="permit tcp 192.168.1.0 0.0.0.255 eq 80" required>
+                                           value="permit tcp any any eq 80" placeholder="permit tcp 192.168.1.0 0.0.0.255 any eq 80" required>
                                     <div class="form-text aed-ajuda">
                                         <span class="material-symbols-outlined" aria-hidden="true" translate="no">lightbulb</span>
-                                        <span><strong>permit</strong> (libera) ou <strong>deny</strong> (bloqueia) + protocolo + origem + <code translate="no">eq porta</code>.
-                                        <strong>Exemplos:</strong> <code translate="no">permit ip any any</code>, <code translate="no">deny tcp host 10.0.0.1 eq 22</code>.</span>
+                                        <span><strong>Estendida:</strong> <strong>permit</strong> (libera) ou <strong>deny</strong> (bloqueia) + protocolo + origem + destino,
+                                        com <code translate="no">eq</code>/<code translate="no">range</code> de porta <em>depois</em> de quem ele filtra
+                                        (logo após a origem = porta de origem; após o destino = porta de destino).
+                                        <strong>Padrão</strong> (1–99): só a origem.
+                                        <strong>Exemplos:</strong> <code translate="no">permit ip any any</code>, <code translate="no">deny tcp host 10.0.0.1 any eq 22</code>,
+                                        <code translate="no">access-list 10 permit 192.168.1.0 0.0.0.255</code>.</span>
                                     </div>
                                 </div>
                                 <hr class="border-secondary opacity-25">
 
                                 <h6 class="text-white mb-3">Pacote Forjado <span class="text-secondary small fw-normal">— o pacote de teste que você "joga" na regra</span></h6>
                                 <div class="mb-3">
+                                    <label for="aclProtocolo" class="form-label text-secondary">Protocolo do pacote</label>
+                                    <select class="aed-input form-select" id="aclProtocolo" name="protocolo"
+                                            title="Protocolo do pacote de teste: uma regra tcp não captura UDP nem ICMP; ip captura todos">
+                                        <option value="tcp" selected>TCP</option>
+                                        <option value="udp">UDP</option>
+                                        <option value="icmp">ICMP</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
                                     <label for="ipOrigem" class="form-label text-secondary">IP de Origem</label>
                                     <input type="text" class="aed-input form-control" id="ipOrigem" name="ipOrigem" value="192.168.1.15" placeholder="192.168.1.15" required>
                                     <div class="form-text aed-ajuda"><span class="material-symbols-outlined" aria-hidden="true" translate="no">lightbulb</span><span>Quem envia o pacote. <strong>Ex.:</strong> <code translate="no">192.168.1.15</code>.</span></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="portaOrigem" class="form-label text-secondary">Porta Origem</label>
+                                    <input type="number" class="aed-input form-control" id="portaOrigem" name="portaOrigem" placeholder="49152" value="49152" min="1" max="65535">
+                                    <div class="form-text aed-ajuda"><span class="material-symbols-outlined" aria-hidden="true" translate="no">lightbulb</span><span>De qual porta o pacote sai. Cliente comum usa uma porta alta, efêmera: <code translate="no">49152</code>–<code translate="no">65535</code>.</span></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="ipDestino" class="form-label text-secondary">IP de Destino</label>
@@ -100,9 +118,9 @@
                                 </div>
 
                                 <button type="submit" class="aed-btn aed-btn-amber w-100" id="btnTestar"
-                                        title="Avaliar se o pacote forjado atende aos critérios da regra de Firewall (MATCH/PERMIT ou DENY)">
+                                        title="Confere se a regra captura o pacote (MATCH) e o que a linha manda fazer: permit libera, deny descarta">
                                     <span class="spinner-border spinner-border-sm htmx-indicator" role="status" aria-hidden="true"></span>
-                                    Testar Regra (MATCH / DENY)
+                                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">play_arrow</span> Testar regra
                                 </button>
                                 <button type="button" class="aed-btn aed-btn-neutral w-100 mt-2" data-limpar
                                         title="Esvaziar os campos e apagar o resultado">

@@ -14,7 +14,7 @@ class SegurancaHttpTest {
     void aclPermitDaMatch() {
         given()
                 .contentType("application/x-www-form-urlencoded")
-                .formParam("regra", "permit tcp any eq 80")
+                .formParam("regra", "permit tcp any any eq 80")
                 .formParam("ipOrigem", "192.168.1.5")
                 .formParam("ipDestino", "10.0.0.1")
                 .formParam("portaDestino", "80")
@@ -32,7 +32,7 @@ class SegurancaHttpTest {
     void aclRecusaIpComPontoSobrando() {
         given()
                 .contentType("application/x-www-form-urlencoded")
-                .formParam("regra", "permit tcp any eq 80")
+                .formParam("regra", "permit tcp any any eq 80")
                 .formParam("ipOrigem", "192.168.1.5.")
                 .formParam("ipDestino", "10.0.0.1")
                 .formParam("portaDestino", "80")
@@ -54,7 +54,7 @@ class SegurancaHttpTest {
     void aclDenyDaMatchBloqueado() {
         given()
                 .contentType("application/x-www-form-urlencoded")
-                .formParam("regra", "deny tcp any eq 80")
+                .formParam("regra", "deny tcp any any eq 80")
                 .formParam("ipOrigem", "192.168.1.5")
                 .formParam("ipDestino", "10.0.0.1")
                 .formParam("portaDestino", "80")
@@ -69,7 +69,7 @@ class SegurancaHttpTest {
     void pacoteForaDaRegraDaNoMatch() {
         given()
                 .contentType("application/x-www-form-urlencoded")
-                .formParam("regra", "permit tcp 10.0.0.5 eq 443")
+                .formParam("regra", "permit tcp host 10.0.0.5 any eq 443")
                 .formParam("ipOrigem", "192.168.1.5")
                 .formParam("ipDestino", "10.0.0.1")
                 .formParam("portaDestino", "80")
@@ -84,7 +84,7 @@ class SegurancaHttpTest {
     void fragmentoNaoTrazOLayoutCompleto() {
         given()
                 .contentType("application/x-www-form-urlencoded")
-                .formParam("regra", "permit tcp any eq 80")
+                .formParam("regra", "permit tcp any any eq 80")
                 .formParam("ipOrigem", "192.168.1.5")
                 .formParam("ipDestino", "10.0.0.1")
                 .formParam("portaDestino", "80")
@@ -111,7 +111,7 @@ class SegurancaHttpTest {
         given()
                 .contentType("application/x-www-form-urlencoded")
                 .header("HX-Request", "true")
-                .formParam("regra", "permit tcp any eq 80")
+                .formParam("regra", "permit tcp any any eq 80")
                 .formParam("ipOrigem", "192.168.1.5")
                 .formParam("ipDestino", "10.0.0.1")
                 .formParam("portaDestino", "abc")
@@ -127,7 +127,7 @@ class SegurancaHttpTest {
     void portaNaoNumericaRetorna400Amigavel() {
         given()
                 .contentType("application/x-www-form-urlencoded")
-                .formParam("regra", "permit tcp any eq 80")
+                .formParam("regra", "permit tcp any any eq 80")
                 .formParam("ipOrigem", "192.168.1.5")
                 .formParam("ipDestino", "10.0.0.1")
                 .formParam("portaDestino", "abc")
@@ -141,7 +141,7 @@ class SegurancaHttpTest {
     void portaVaziaRetorna400() {
         given()
                 .contentType("application/x-www-form-urlencoded")
-                .formParam("regra", "permit tcp any eq 80")
+                .formParam("regra", "permit tcp any any eq 80")
                 .formParam("ipOrigem", "192.168.1.5")
                 .formParam("ipDestino", "10.0.0.1")
                 .formParam("portaDestino", "")
@@ -170,7 +170,7 @@ class SegurancaHttpTest {
         // Antes: contains("eq 80") casava com "eq 8080". Porta 80 NÃO deve casar 8080.
         given()
                 .contentType("application/x-www-form-urlencoded")
-                .formParam("regra", "permit tcp any eq 8080")
+                .formParam("regra", "permit tcp any any eq 8080")
                 .formParam("ipOrigem", "192.168.1.5")
                 .formParam("ipDestino", "10.0.0.1")
                 .formParam("portaDestino", "80")
@@ -215,7 +215,7 @@ class SegurancaHttpTest {
         // 192.168.1.0 0.0.0.255 cobre 192.168.1.99, mas não 192.168.2.5.
         given()
                 .contentType("application/x-www-form-urlencoded")
-                .formParam("regra", "permit tcp 192.168.1.0 0.0.0.255 eq 80")
+                .formParam("regra", "permit tcp 192.168.1.0 0.0.0.255 any eq 80")
                 .formParam("ipOrigem", "192.168.1.99")
                 .formParam("ipDestino", "10.0.0.1")
                 .formParam("portaDestino", "80")
@@ -229,7 +229,7 @@ class SegurancaHttpTest {
     void curingaDeRedeForaDaFaixaDaNoMatch() {
         given()
                 .contentType("application/x-www-form-urlencoded")
-                .formParam("regra", "permit tcp 192.168.1.0 0.0.0.255 eq 80")
+                .formParam("regra", "permit tcp 192.168.1.0 0.0.0.255 any eq 80")
                 .formParam("ipOrigem", "192.168.2.5")
                 .formParam("ipDestino", "10.0.0.1")
                 .formParam("portaDestino", "80")
@@ -581,5 +581,76 @@ class SegurancaHttpTest {
                 .when().post("/seguranca/api/topologia")
                 .then()
                 .statusCode(400);
+    }
+
+    // ---- Sintaxe e semântica do IOS (auditoria de 01/10/2026, CALC-10 / CONT-01) ----
+    // Gabarito: Cisco IOS Security Command Reference, "access-list (IP extended/standard)" —
+    // destino obrigatório na estendida; operador depois da ORIGEM compara a porta de ORIGEM;
+    // ACL padrão (1–99) só tem origem; regra icmp não captura TCP.
+
+    private static String testar(String regra, String protocolo, String portaOrigem, String portaDestino, int status) {
+        return given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("regra", regra)
+                .formParam("protocolo", protocolo)
+                .formParam("ipOrigem", "192.168.1.15")
+                .formParam("portaOrigem", portaOrigem)
+                .formParam("ipDestino", "8.8.8.8")
+                .formParam("portaDestino", portaDestino)
+                .when().post("/seguranca/api/testar")
+                .then().statusCode(status)
+                .extract().asString();
+    }
+
+    @Test
+    void estendidaSemDestinoERecusada() {
+        // A forma que o exemplo antigo da tela ensinava e o IOS recusa.
+        String r = testar("permit tcp any eq 80", "tcp", "49152", "80", 400);
+        org.junit.jupiter.api.Assertions.assertTrue(r.contains("exige o destino"), r);
+    }
+
+    @Test
+    void portaDepoisDaOrigemEPortaDeOrigem() {
+        // "permit tcp any eq 80 any": origem saindo da 80 — um cliente comum (49152 → 80) NÃO casa.
+        org.junit.jupiter.api.Assertions.assertTrue(
+                testar("permit tcp any eq 80 any", "tcp", "49152", "80", 200).contains("NO MATCH"));
+        org.junit.jupiter.api.Assertions.assertTrue(
+                testar("permit tcp any eq 80 any", "tcp", "80", "50000", 200).contains("MATCH - PERMITIDO"));
+        // e a porta de destino vem depois do destino
+        org.junit.jupiter.api.Assertions.assertTrue(
+                testar("permit tcp any any eq 80", "tcp", "49152", "80", 200).contains("MATCH - PERMITIDO"));
+    }
+
+    @Test
+    void aclPadraoSoComOrigem() {
+        org.junit.jupiter.api.Assertions.assertTrue(
+                testar("access-list 10 permit 192.168.1.0 0.0.0.255", "tcp", "49152", "80", 200).contains("MATCH - PERMITIDO"));
+        org.junit.jupiter.api.Assertions.assertTrue(
+                testar("access-list 10 permit 10.0.0.0 0.255.255.255", "tcp", "49152", "80", 200).contains("NO MATCH"));
+        String r = testar("access-list 10 permit tcp any any", "tcp", "49152", "80", 400);
+        org.junit.jupiter.api.Assertions.assertTrue(r.contains("ACL padrão"), r);
+    }
+
+    @Test
+    void protocoloDaRegraPrecisaCasarODoPacote() {
+        org.junit.jupiter.api.Assertions.assertTrue(
+                testar("deny icmp any any", "tcp", "49152", "80", 200).contains("NO MATCH"));
+        org.junit.jupiter.api.Assertions.assertTrue(
+                testar("deny icmp any any", "icmp", "", "", 200).contains("MATCH - BLOQUEADO"));
+        // ip casa qualquer protocolo
+        org.junit.jupiter.api.Assertions.assertTrue(
+                testar("deny ip any any", "udp", "5353", "53", 200).contains("MATCH - BLOQUEADO"));
+    }
+
+    @Test
+    void operadoresDePortaNaFronteira() {
+        org.junit.jupiter.api.Assertions.assertTrue(
+                testar("permit tcp any any range 20 21", "tcp", "49152", "21", 200).contains("MATCH - PERMITIDO"));
+        org.junit.jupiter.api.Assertions.assertTrue(
+                testar("permit tcp any any range 20 21", "tcp", "49152", "22", 200).contains("NO MATCH"));
+        org.junit.jupiter.api.Assertions.assertTrue(
+                testar("permit tcp any any gt 1023", "tcp", "49152", "1024", 200).contains("MATCH - PERMITIDO"));
+        org.junit.jupiter.api.Assertions.assertTrue(
+                testar("permit tcp any any gt 1023", "tcp", "49152", "1023", 200).contains("NO MATCH"));
     }
 }

@@ -142,11 +142,13 @@ public class SegurancaRedeResource {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance testarAcl(
             @FormParam("regra") String regra,
+            @FormParam("protocolo") String protocolo,
             @FormParam("ipOrigem") String ipOrigem,
+            @FormParam("portaOrigem") String portaOrigem,
             @FormParam("ipDestino") String ipDestino,
             @FormParam("portaDestino") String portaDestino) {
 
-        String resultado = aclSimulatorService.testarPacote(regra, ipOrigem, ipDestino, portaDestino);
+        String resultado = aclSimulatorService.testarPacote(regra, protocolo, ipOrigem, portaOrigem, ipDestino, portaDestino);
         return resultadoFragmento
                 .data("veredito", vereditoDe(resultado))
                 .data("explicacao", resultado)
