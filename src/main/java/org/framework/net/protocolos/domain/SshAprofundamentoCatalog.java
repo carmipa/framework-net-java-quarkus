@@ -1,6 +1,7 @@
 package org.framework.net.protocolos.domain;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.quarkus.runtime.Startup;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -25,6 +26,8 @@ import java.util.List;
  * <p><b>Comportamento em caso de falha:</b> lança {@link ProtocolosException}
  * nomeando o recurso e a seção ausente.</p>
  */
+// OPS-20: carrega e valida no boot, como o Javadoc promete (sem isto a validação só rodava na 1a visita).
+@Startup
 @ApplicationScoped
 public class SshAprofundamentoCatalog {
 
