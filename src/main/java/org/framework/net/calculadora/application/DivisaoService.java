@@ -100,9 +100,14 @@ public class DivisaoService {
     /**
      * Escolhe o menor prefixo capaz de endereçar {@code hosts} hosts por sub-rede.
      *
-     * <p><b>Invariantes do domínio:</b> a conta reserva rede e broadcast
-     * ({@code hosts + 2}) para prefixos até /30 — é por isso que 500 hosts
-     * exigem /23 e não /24.</p>
+     * <p><b>Propósito de negócio:</b> responder "que prefixo eu uso para N hosts?" com a mesma conta de
+     * hosts úteis que o resto da calculadora mostra.</p>
+     *
+     * <p><b>Invariantes do domínio:</b> o alvo é o menor bloco cujos hosts úteis cobrem o pedido, pela
+     * mesma regra de {@link SubnetKernel#hostsUteis}: até /30 reserva rede e broadcast (por isso 500 hosts
+     * exigem /23 e não /24); /31 tem 2 hosts (RFC 3021) e /32 tem 1. Antes a conta fixa {@code hosts + 2}
+     * mandava 2 hosts para /30 e recusava a base /31 dizendo, na mesma frase, que ela comportava 2 hosts
+     * (auditoria CALC-26).</p>
      *
      * <p><b>Comportamento em caso de falha:</b> {@link CalculadoraException} se
      * a quantidade de hosts não couber nem no bloco base inteiro.</p>
@@ -113,24 +118,31 @@ public class DivisaoService {
             long hosts = lerInteiroPositivo(hostsTexto, "Hosts por sub-rede",
                     "Digite quantos hosts cada sub-rede precisa comportar (ex.: 500), "
                             + "ou volte para o critério \"por prefixo alvo\".");
-            int hostBits = kernel.bitsPara(hosts + 2L);
-            if (hostBits > 32) {
+            int alvo = 32;
+            while (alvo > 0 && kernel.hostsUteis(alvo) < hosts) {
+                alvo--;
+            }
+            if (kernel.hostsUteis(alvo) < hosts) {
                 throw new CalculadoraException(
                         "Com rede e broadcast, " + hosts + " hosts exigiriam mais de 32 bits — "
                                 + "não cabe em IPv4. O maior bloco possível (/0) tem "
                                 + kernel.hostsUteis(0) + " hosts úteis.");
             }
-            int alvo = 32 - hostBits;
+            int hostBits = 32 - alvo;
             if (alvo < base.prefixo()) {
                 throw new CalculadoraException(
                         "Cada sub-rede com " + hosts + " hosts exigiria um /" + alvo
                                 + ", maior que o bloco base /" + base.prefixo() + ". "
                                 + "O bloco base inteiro comporta " + kernel.hostsUteis(base.prefixo()) + " hosts.");
             }
-            String explicacao = "Pedido: " + hosts + " hosts por sub-rede. Reservando rede e broadcast são "
-                    + (hosts + 2) + " endereços, que exigem " + hostBits + " bits de host → /" + alvo
-                    + ", com " + kernel.hostsUteis(alvo) + " hosts úteis (sobra de "
-                    + (kernel.hostsUteis(alvo) - hosts) + ").";
+            String explicacao = alvo >= 31
+                    ? "Pedido: " + hosts + " host(s) por sub-rede → /" + alvo + (alvo == 31
+                            ? ": enlace ponto a ponto, os dois endereços são de host (RFC 3021)."
+                            : ": um endereço só (rota de host / loopback).")
+                    : "Pedido: " + hosts + " hosts por sub-rede. Reservando rede e broadcast são "
+                            + (hosts + 2) + " endereços, que exigem " + hostBits + " bits de host → /" + alvo
+                            + ", com " + kernel.hostsUteis(alvo) + " hosts úteis (sobra de "
+                            + (kernel.hostsUteis(alvo) - hosts) + ").";
             return montarPlano(base, alvo, explicacao);
         });
     }

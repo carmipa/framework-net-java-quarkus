@@ -227,6 +227,22 @@ class CalculadoraHttpTest {
                 .body(containsString("access-list 101 permit ip 192.168.1.0 0.0.0.255 any"));
     }
 
+    /** Auditoria CALC-27: em /31 e /32 o "Último endereço do bloco" existe; saía "N/A". */
+    @Test
+    void faixaComBarra31E32MostraOUltimoEndereco() {
+        given()
+                .contentType(FORM)
+                .formParam("inicio", "10.0.0.2")
+                .formParam("fim", "10.0.0.4")
+                .when().post("/calculadora/api/faixa")
+                .then()
+                .statusCode(200)
+                .body(containsString("10.0.0.2/31"))
+                .body(containsString("10.0.0.4/32"))
+                .body(not(containsString("N/A (/31")))
+                .body(not(containsString("N/A (/32")));
+    }
+
     @Test
     void exportacaoCsvDaDivisaoTrazCabecalhoEContexto() {
         given()

@@ -103,6 +103,19 @@ class DivisaoServiceTest {
         assertEquals(254L, plano.hostsUteisPorSubrede());
     }
 
+    /**
+     * Auditoria CALC-26 — gabarito (A3): RFC 3021 (/31 tem 2 hosts) e a própria tabela de hosts úteis da
+     * calculadora. Antes 2 hosts iam para /30 e a base /31 era recusada "porque comporta 2 hosts".
+     * Fronteira (A1): 3 hosts continuam exigindo /29 (o /30 só tem 2 úteis).
+     */
+    @Test
+    void poucosHostsUsamBarra31EBarra32SemSeContradizer() {
+        assertEquals(31, divisaoService.dividirPorHosts("10.0.0.0/24", "", "2").prefixoAlvo());
+        assertEquals(32, divisaoService.dividirPorHosts("10.0.0.0/24", "", "1").prefixoAlvo());
+        assertEquals(31, divisaoService.dividirPorHosts("10.0.0.0/31", "", "2").prefixoAlvo());
+        assertEquals(29, divisaoService.dividirPorHosts("10.0.0.0/24", "", "3").prefixoAlvo());
+    }
+
     @Test
     void listagemGrandeEhTruncadaMasTotalRealPermanece() {
         PlanoDivisao plano = divisaoService.dividirPorPrefixo("10.0.0.0/8", "", "30");

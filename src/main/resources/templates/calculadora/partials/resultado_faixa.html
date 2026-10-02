@@ -58,7 +58,7 @@
                 <td class="font-monospace text-secondary">{bloco.mascara}</td>
                 <td class="font-monospace text-secondary">{bloco.wildcard}</td>
                 <td class="font-monospace">{bloco.rede}</td>
-                <td class="font-monospace">{bloco.broadcast}</td>
+                <td class="font-monospace">{#if bloco.prefixo >= 31}{bloco.ultimoHost}{#else}{bloco.broadcast}{/if}</td>
                 <td>{bloco.totalIps}</td>
             </tr>
             {/for}
