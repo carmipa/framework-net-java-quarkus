@@ -63,6 +63,14 @@ public class Ipv4Kernel {
         if (primeiroOcteto >= 1 && primeiroOcteto <= 126) {
             return new ClassificacaoIpv4("A", "1-126", "255.0.0.0");
         }
+        // 0 e 127 caíam no "E" do fim (auditoria CALC-36): pelo bit inicial são do espaço da classe A,
+        // reservados (0.0.0.0/8 "este host"; 127.0.0.0/8 loopback).
+        if (primeiroOcteto == 0) {
+            return new ClassificacaoIpv4("A", "0 · Reservada (0.0.0.0/8, \"este host\")", "255.0.0.0");
+        }
+        if (primeiroOcteto == 127) {
+            return new ClassificacaoIpv4("A", "127 · Reservada (loopback)", "255.0.0.0");
+        }
         if (primeiroOcteto >= 128 && primeiroOcteto <= 191) {
             return new ClassificacaoIpv4("B", "128-191", "255.255.0.0");
         }

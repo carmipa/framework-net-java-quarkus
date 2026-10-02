@@ -6,6 +6,7 @@ import org.framework.net.analiseDidatica.exception.EntradaInvalidaException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -115,23 +116,22 @@ public class Ipv4Kernel {
         return List.of();
     }
 
+    /**
+     * Classe que a máscara SOZINHA indica — só as três máscaras padrão.
+     *
+     * <p>Antes, /1–/8 viravam A, /9–/23 B, o resto C e /4 E (auditoria CALC-36): 172.16.0.0/12 é um bloco
+     * de 16 redes classe B e saía "classe B" por acaso; /12 dentro de 10.0.0.0/8 saía "B" errado. Fora de
+     * /8, /16 e /24 a máscara é classless (RFC 4632) e a classe vem do 1º octeto do endereço.</p>
+     *
+     * @return "A", "B", "C" ou {@code null} (prefixo sem classe própria)
+     */
     public String classeReferenciaPorPrefixo(int cidr) {
-        if (cidr < 0 || cidr > 32) {
-            return null;
-        }
-        if (cidr == 4) {
-            return "E";
-        }
-        if (cidr == 0) {
-            return "A";
-        }
-        if (cidr >= 1 && cidr <= 8) {
-            return "A";
-        }
-        if (cidr >= 9 && cidr <= 23) {
-            return "B";
-        }
-        return "C";
+        return switch (cidr) {
+            case 8 -> "A";
+            case 16 -> "B";
+            case 24 -> "C";
+            default -> null;
+        };
     }
 
     public ClasseDidatica classeIpv4Didatica(int o1) {
@@ -144,13 +144,14 @@ public class Ipv4Kernel {
         if (o1 >= 192 && o1 <= 223) {
             return new ClasseDidatica("C", "1º octeto 192–223 — máscara padrão /24 (255.255.255.0)", null);
         }
+        // 0 e 127 estão no espaço da classe A pelo bit inicial (RFC 791 §3.2), mas fora da faixa útil 1–126.
         if (o1 == 0) {
-            return new ClasseDidatica("—", "Fora das faixas A, B e C (unicast do 1º octeto).",
+            return new ClasseDidatica("—", "Espaço da classe A (bit inicial 0), fora da faixa útil 1–126: reservado.",
                     "Observação: faixa 0.0.0.0/8 é reservada (não usada como host de produção na Internet).");
         }
         if (o1 == 127) {
-            return new ClasseDidatica("—", "Fora das faixas A, B e C (unicast do 1º octeto).",
-                    "Observação: 127.0.0.0/8 é loopback (localhost); não é tratada como classe A/B/C aplicável.");
+            return new ClasseDidatica("—", "Espaço da classe A (bit inicial 0), fora da faixa útil 1–126: reservado.",
+                    "Observação: 127.0.0.0/8 é loopback (localhost); não se atribui a interface de rede.");
         }
         if (o1 >= 224 && o1 <= 239) {
             return new ClasseDidatica("—", "Fora das faixas A, B e C (unicast do 1º octeto).",
@@ -190,7 +191,7 @@ public class Ipv4Kernel {
             return new PrivacidadeResult("Loopback", "Faixa 127.0.0.0/8 (localhost, teste local)");
         }
         if (o1 == 169 && o2 == 254) {
-            return new PrivacidadeResult("APIPA", "Faixa 169.254.0.0/16 (auto-configuração sem DHCP)");
+            return new PrivacidadeResult("APIPA", "Faixa 169.254.0.0/16 (autoconfiguração sem DHCP)");
         }
         if (o1 == 10) {
             return new PrivacidadeResult("Privado (RFC 1918)", "Faixa privada 10.0.0.0 - 10.255.255.255");
@@ -295,9 +296,11 @@ public class Ipv4Kernel {
             return new InferenciaCidr(24, "Inferido (classful): classe C => /24");
         }
         if (o1 >= 224 && o1 <= 239) {
-            return new InferenciaCidr(4, "Inferido (classful): classe D (multicast) => /4");
+            return new InferenciaCidr(4, "Inferido (classful): classe D (multicast) => bloco 224.0.0.0/4 — "
+                    + "faixa de endereços de grupo, não sub-rede de hosts");
         }
-        return new InferenciaCidr(4, "Inferido (classful): classe E (reservada) => /4");
+        return new InferenciaCidr(4, "Inferido (classful): classe E (reservada) => bloco 240.0.0.0/4 — "
+                + "faixa reservada, não sub-rede de hosts");
     }
 
     public Integer mascaraDottedParaCidr(String maskS) {
@@ -493,12 +496,15 @@ public class Ipv4Kernel {
 
         if (cidr == 4) {
             out.put("classe_observacao",
-                    "Representa teoricamente o bloco 240.0.0.0/4, associado à faixa Classe E/reservada: "
-                            + "240.0.0.0 até 255.255.255.255. Não é usado como máscara comum em redes locais.");
+                    "/4 é o tamanho dos blocos das antigas classes D (224.0.0.0/4, multicast) e E (240.0.0.0/4, "
+                            + "reservada) — não é máscara de rede local e não indica classe sozinha.");
+        } else if (letraRef == null) {
+            out.put("classe_observacao",
+                    "Prefixo classless (CIDR): fora de /8, /16 e /24 a máscara não indica classe — a classe vem do "
+                            + "1º octeto do endereço. O que importa no exercício é o / (barra) e a máscara.");
         } else {
             out.put("classe_observacao",
-                    "Foco em aula: o que importa é o / (barra) e a máscara no quadro; o cartão mostra só a referência A/B/C "
-                            + "que costuma acompanhar esse prefixo no material (ex.: /18 → B).");
+                    "/" + cidr + " é a máscara padrão da classe " + letraRef + " (modelo classful).");
         }
         out.put("classe", letraRef != null ? letraRef : "—");
         out.put("classe_faixa",
@@ -538,6 +544,74 @@ public class Ipv4Kernel {
             return new HostsSubrede(fmtIp(redeI + 1), fmtIp(broadI - 1));
         }
         return new HostsSubrede("—", "—");
+    }
+
+    /**
+     * Papel de um endereço que não é de host comum, pelo tipo da faixa.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> a tela dizia "Host válido" para 224.0.0.5 logo abaixo de
+     * "Multicast — não host unicast" (auditoria CONT-02); o papel tem de vir do TIPO do endereço antes
+     * da posição no bloco.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> multicast é grupo (RFC 1112 §4); classe E é reservada; loopback,
+     * 0.0.0.0/8 e o broadcast limitado não se atribuem a interface (RFC 1122 §3.2.1.3).</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> tipo de host comum (público, privado, CGNAT, APIPA...)
+     * devolve {@code null}: quem chama usa a posição no bloco.</p>
+     */
+    public PapelIpNoBloco papelEspecial(String tipo) {
+        return switch (tipo) {
+            case "Multicast" -> new PapelIpNoBloco("Endereço de grupo multicast (não é host)",
+                    "Multicast identifica um GRUPO de receptores: não tem rede, broadcast nem hosts, e nunca é "
+                            + "endereço de origem (RFC 1112).");
+            case "Reservado/Experimental" -> new PapelIpNoBloco("Reservado (classe E)",
+                    "240.0.0.0/4 é reservado (RFC 1112 §4); não se atribui a host.");
+            case "Broadcast Limitado" -> new PapelIpNoBloco("Broadcast limitado",
+                    "255.255.255.255 alcança todos os hosts do enlace local; roteador não o encaminha.");
+            case "Loopback" -> new PapelIpNoBloco("Loopback (localhost)",
+                    "127.0.0.0/8 nunca sai da própria máquina; não se usa em interface de rede.");
+            case "Especial" -> new PapelIpNoBloco("Este host / esta rede (0.0.0.0/8)",
+                    "0.0.0.0/8 só aparece como origem enquanto o host ainda se configura (ex.: DHCP); "
+                            + "não se atribui a host (RFC 1122 §3.2.1.3).");
+            default -> null;
+        };
+    }
+
+    /**
+     * Faixa que um servidor DHCP entregaria neste bloco, sem o gateway sugerido.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> a faixa sugerida começava no próprio gateway (.1) e era oferecida até
+     * para loopback e multicast (auditoria CONT-30, CALC-22).</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> só endereço de host com gateway tem faixa; o gateway (1º host) fica
+     * fora; /31 e /32 não têm faixa dinâmica.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> não lança; devolve o texto "N/A" com o motivo.</p>
+     */
+    public String faixaDhcp(boolean hostsRecomendados, String tipo, int cidr, long redeI, long broadI) {
+        if (!hostsRecomendados) {
+            return "N/A — " + tipo + " não recebe endereço por DHCP.";
+        }
+        if (cidr >= 31) {
+            return "N/A em /" + cidr + " (enlace ponto a ponto ou endereço único).";
+        }
+        long inicio = redeI + 2;
+        long fim = broadI - 1;
+        if (inicio > fim) {
+            return "N/A — o bloco só tem o endereço do gateway.";
+        }
+        return "Faixa dinâmica sugerida: " + fmtIp(inicio) + " até " + fmtIp(fim)
+                + " (o gateway " + fmtIp(redeI + 1) + " fica fora).";
+    }
+
+    /** Máscara padrão da classe (classful); D, E, 0.x e 127.x (classe "—") não têm uma para uso. */
+    public String mascaraPadraoDaClasse(String classe) {
+        return switch (classe) {
+            case "A" -> "/8 (255.0.0.0)";
+            case "B" -> "/16 (255.255.0.0)";
+            case "C" -> "/24 (255.255.255.0)";
+            default -> "— (sem máscara padrão para este endereço)";
+        };
     }
 
     public PapelIpNoBloco papelIpNoBloco(long ipI, long redeI, long broadI, int cidr) {
@@ -660,7 +734,14 @@ public class Ipv4Kernel {
         PrivacidadeResult privacidade = privacidadeRfc1918(parts);
         String ipTipoPrivacidade = privacidade.tipo();
         String ipFaixaPrivacidade = privacidade.faixa();
-        boolean hostsRecomendados = !Set.of("Multicast", "Reservado/Experimental").contains(ipTipoPrivacidade);
+        // Auditoria de 01/10/2026 (CONT-02, CONT-30, CALC-22): rede, broadcast, hosts, gateway, faixa DHCP e
+        // "ip address" de host só existem para endereço de HOST (RFC 1122 §3.2.1.3). Multicast é endereço de
+        // grupo (RFC 1112 §4), a classe E é reservada, e loopback, 0.0.0.0/8 e o broadcast limitado não se
+        // atribuem a interface; link-local (APIPA) é host, mas sem gateway nem DHCP por definição (RFC 3927).
+        boolean enderecoDeHost = !Set.of("Multicast", "Reservado/Experimental", "Broadcast Limitado",
+                "Loopback", "Especial").contains(ipTipoPrivacidade);
+        boolean semBroadcast = Set.of("Multicast", "Reservado/Experimental").contains(ipTipoPrivacidade);
+        boolean hostsRecomendados = enderecoDeHost && !"APIPA".equals(ipTipoPrivacidade);
 
         List<Map<String, Object>> andTable = new ArrayList<>();
         for (int octIdx = 0; octIdx < 4; octIdx++) {
@@ -696,7 +777,10 @@ public class Ipv4Kernel {
             proximasSubredes.add(subnet);
         }
 
-        PapelIpNoBloco papel = papelIpNoBloco(ipI, rI, bI, cidr);
+        PapelIpNoBloco papel = papelEspecial(ipTipoPrivacidade);
+        if (papel == null) {
+            papel = papelIpNoBloco(ipI, rI, bI, cidr);
+        }
         String ipPapel = papel.papel();
         String ipPapelAlerta = papel.alerta();
 
@@ -712,14 +796,42 @@ public class Ipv4Kernel {
         Map<String, Object> out = new LinkedHashMap<>(c);
         out.remove("_m_i");
 
-        String gatewaySugerido = hostsRecomendados ? primeiroHost : "N/A para este tipo de IP";
-        String gatewayAlternativo = hostsRecomendados ? ultimoHost : "N/A para este tipo de IP";
+        String naoSeAplica = "N/A para este tipo de IP (" + ipTipoPrivacidade + ")";
+        String gatewaySugerido;
+        String gatewayAlternativo;
+        if (!hostsRecomendados) {
+            gatewaySugerido = naoSeAplica;
+            gatewayAlternativo = naoSeAplica;
+        } else if (cidr == 32) {
+            gatewaySugerido = "N/A em /32 (endereço único; a saída é por rota)";
+            gatewayAlternativo = gatewaySugerido;
+        } else if (cidr == 31) {
+            // RFC 3021: num enlace /31 o próximo salto é a outra ponta.
+            gatewaySugerido = fmtIp(ipI ^ 1L) + " (a outra ponta do /31)";
+            gatewayAlternativo = gatewaySugerido;
+        } else {
+            gatewaySugerido = primeiroHost;
+            gatewayAlternativo = ultimoHost;
+        }
+        // /31 e /32 não têm broadcast próprio (RFC 3021: usa-se o broadcast limitado); multicast e classe E
+        // não têm rede nem broadcast.
+        String broadExibicao;
+        if (semBroadcast) {
+            broadExibicao = "— (" + ipTipoPrivacidade.toLowerCase(Locale.ROOT) + " não tem broadcast)";
+        } else if (cidr == 31) {
+            broadExibicao = "— (/31 não tem broadcast — RFC 3021)";
+        } else if (cidr == 32) {
+            broadExibicao = "— (/32: endereço único)";
+        } else {
+            broadExibicao = fmtIp(bI);
+        }
+        Object hostsUteisExibicao = enderecoDeHost ? c.get("uteis") : "N/A (não é rede de hosts)";
         String resumoProva = "IP informado: " + fmtIp(ipI) + "\n"
                 + "Máscara/CIDR: " + c.get("mask") + " /" + cidr + "\n"
                 + "Rede: " + fmtIp(rI) + "\n"
-                + "Broadcast: " + fmtIp(bI) + "\n"
+                + "Broadcast: " + broadExibicao + "\n"
                 + "Wildcard: " + c.get("wildcard") + "\n"
-                + "Hosts úteis: " + c.get("uteis") + "\n"
+                + "Hosts úteis: " + hostsUteisExibicao + "\n"
                 + "Tipo de IP: " + ipTipoPrivacidade + "\n"
                 + "Papel do IP: " + ipPapel + "\n"
                 + "Gateway sugerido: " + gatewaySugerido;
@@ -728,9 +840,9 @@ public class Ipv4Kernel {
                 resumoItem("🌐 IP informado", fmtIp(ipI)),
                 resumoItem("📏 Máscara/CIDR", c.get("mask") + " /" + cidr),
                 resumoItem("🧭 Rede", fmtIp(rI)),
-                resumoItem("📣 Broadcast", fmtIp(bI)),
+                resumoItem("📣 Broadcast", broadExibicao),
                 resumoItem("🧩 Wildcard", (String) c.get("wildcard")),
-                resumoItem("✅ Hosts úteis", c.get("uteis")),
+                resumoItem("✅ Hosts úteis", hostsUteisExibicao),
                 resumoItem("🔐 Tipo de IP", ipTipoPrivacidade),
                 resumoItem("📌 Papel do IP", ipPapel),
                 resumoItem("🚪 Gateway sugerido", gatewaySugerido)
@@ -744,7 +856,7 @@ public class Ipv4Kernel {
         out.put("contexto_didatico", "ip_host");
         out.put("cidr_origem", "");
         out.put("rede", fmtIp(rI));
-        out.put("broad", fmtIp(bI));
+        out.put("broad", broadExibicao);
         out.put("primeiro_host", primeiroHost);
         out.put("ultimo_host", ultimoHost);
         out.put("classe", classe);
@@ -758,7 +870,7 @@ public class Ipv4Kernel {
         out.put("and_table", andTable);
         out.put("proximas_subredes", proximasSubredes);
         out.put("dns_info", "Servidor de nomes (ex.: 8.8.8.8, 1.1.1.1 ou DNS interno)");
-        out.put("dhcp_info", "Faixa dinâmica sugerida: " + primeiroHost + " até " + ultimoHost);
+        out.put("dhcp_info", faixaDhcp(hostsRecomendados, ipTipoPrivacidade, cidr, rI, bI));
         out.put("vlan_info", "Segmentação lógica de rede (o ID da VLAN não vem do IP/máscara)");
         out.put("wan_info", "Conexão de longa distância/Internet; normalmente usa IP público");
         out.put("gateway_sugerido", gatewaySugerido);
@@ -778,40 +890,49 @@ public class Ipv4Kernel {
         out.put("tabela_referencia", tabelaRef);
         out.put("tabela_conversao_bits", conv.linhas());
         out.put("conversao_atual", conv.conversaoAtual());
-        out.put("cisco_cli",
-                "conf t\n"
+        out.put("cisco_cli", enderecoDeHost
+                ? "conf t\n"
                         + "interface g0/0\n"
-                        + "ip address " + primeiroHost + " " + c.get("mask") + "\n"
-                        + "no shutdown");
-        out.put("cisco_eigrp_exemplo",
-                "router eigrp 100\n"
+                        + "ip address " + (cidr >= 31 ? fmtIp(ipI) : primeiroHost) + " " + c.get("mask") + "\n"
+                        + "no shutdown"
+                : "! " + ipTipoPrivacidade + ": este endereço não se configura em interface de host.\n"
+                        + "! " + ipPapelAlerta);
+        out.put("cisco_eigrp_exemplo", enderecoDeHost
+                ? "router eigrp 100\n"
                         + " network " + fmtIp(rI) + " " + c.get("wildcard") + "\n"
-                        + " no auto-summary");
-        out.put("cisco_ospf_exemplo",
-                "router ospf 1\n"
-                        + " network " + fmtIp(rI) + " " + c.get("wildcard") + " area 0");
+                        + " no auto-summary"
+                : null);
+        out.put("cisco_ospf_exemplo", enderecoDeHost
+                ? "router ospf 1\n"
+                        + " network " + fmtIp(rI) + " " + c.get("wildcard") + " area 0"
+                : null);
+        out.put("mascara_padrao_classe", mascaraPadraoDaClasse(classe));
         out.put("cisco_roteamento_nota",
                 "Em EIGRP e OSPFv2 (IOS), o comando network associa interfaces ao processo de roteamento usando "
                         + "endereço de rede + wildcard (não a máscara decimal). O IOS verifica se o IP de cada interface casa "
-                        + "com esse par. Use o Network ID e a wildcard do mesmo prefixo que estás a estudar — os valores "
+                        + "com esse par. Use o Network ID e a wildcard do mesmo prefixo que você está estudando — os valores "
                         + "abaixo coincidem com a rede e wildcard calculados nesta página.");
         out.put("nota_cidr_cisco", notaCidrCisco(cidr));
         out.put("banner_contexto", bannerContextoAnaliseComIp(
                 fmtIp(ipI), cidr, (String) c.get("mask"), (String) c.get("wildcard"),
-                fmtIp(rI), fmtIp(bI), (Long) c.get("total"), (Long) c.get("uteis"), (Long) c.get("pulo")));
+                fmtIp(rI), broadExibicao, (Long) c.get("total"), enderecoDeHost ? (Long) c.get("uteis") : 0L,
+                (Long) c.get("pulo")));
         out.put("ip_informado", fmtIp(ipI));
+        // O texto copiado repete o que a tela mostra: sem broadcast, hosts nem "network" para quem não é host.
         out.put("texto_copia",
                 "IP analisado: " + fmtIp(ipI) + "\n"
                         + "CIDR: /" + cidr + "\n"
                         + "Máscara: " + c.get("mask") + "\n"
                         + "Wildcard: " + c.get("wildcard") + "\n"
                         + "Rede: " + fmtIp(rI) + "\n"
-                        + "Broadcast: " + fmtIp(bI) + "\n"
-                        + "Hosts válidos: " + primeiroHost + " até " + ultimoHost + "\n"
-                        + "Total de hosts: " + c.get("total") + "\n"
-                        + "RFC1918: " + (ipTipoPrivacidade.contains("Privado") ? "Sim" : "Não") + "\n"
-                        + "\nReferência Cisco (EIGRP/OSPF):\n"
-                        + "  network " + fmtIp(rI) + " " + c.get("wildcard"));
+                        + "Broadcast: " + broadExibicao + "\n"
+                        + "Hosts válidos: " + (enderecoDeHost ? primeiroHost + " até " + ultimoHost
+                                : "N/A (" + ipTipoPrivacidade + " não é rede de hosts)") + "\n"
+                        + "Total de endereços no bloco: " + c.get("total") + "\n"
+                        + "RFC1918: " + (ipTipoPrivacidade.contains("Privado") ? "Sim" : "Não")
+                        + (enderecoDeHost
+                                ? "\n\nReferência Cisco (EIGRP/OSPF):\n  network " + fmtIp(rI) + " " + c.get("wildcard")
+                                : ""));
         out.putAll(tema);
         return out;
     }

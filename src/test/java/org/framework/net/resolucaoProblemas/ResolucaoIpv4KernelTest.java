@@ -20,6 +20,20 @@ class ResolucaoIpv4KernelTest {
     @Inject
     Ipv4Kernel kernel;
 
+    /**
+     * Auditoria CALC-36: 0.x e 127.x caíam no "E" do fim. Pelo bit inicial (0) são do espaço da classe A,
+     * reservados; a vizinhança (126 = A, 128 = B, 240 = E) não muda.
+     */
+    @Test
+    void octetosZeroE127SaoEspacoDaClasseAReservado() {
+        assertEquals("A", kernel.classificacaoIpv4(0).classe());
+        assertEquals("A", kernel.classificacaoIpv4(127).classe());
+        assertEquals(true, kernel.classificacaoIpv4(127).faixaOcteto().contains("loopback"));
+        assertEquals("1-126", kernel.classificacaoIpv4(126).faixaOcteto());
+        assertEquals("B", kernel.classificacaoIpv4(128).classe());
+        assertEquals("E", kernel.classificacaoIpv4(240).classe());
+    }
+
     @Test
     void parseIpv4PartsValido() {
         int[] parts = kernel.parseIpv4Parts("10.20.30.40", "IP");

@@ -108,6 +108,7 @@ public class HomeAnaliseService {
         IpCidrInputNormalizer.SplitResult ipCidr = IpCidrInputNormalizer.splitIpAndCidr(ipP, cidrRaw);
         ipP = ipCidr.ip();
         cidrRaw = ipCidr.cidrRaw();
+        String avisoPrefixo = ipCidr.aviso();
         String maskDecP = trim(form.get("mask_decimal"));
         String wildcardP = trim(form.get("wildcard_mask"));
         int reguaCount = parseRegua(form.get("regua_count"));
@@ -157,8 +158,12 @@ public class HomeAnaliseService {
             vm.setComparadorCards(modoResult.comparadorCards());
         }
 
+        String cidrOrigemModo = modoResult.cidrOrigem() == null ? "" : modoResult.cidrOrigem();
+        if (avisoPrefixo != null) {
+            cidrOrigemModo = (avisoPrefixo + " " + cidrOrigemModo).strip();
+        }
         Map<String, Object> ipv4 = processarIpv4(
-                erro, modoResult.cidrVal(), ipP, modoResult.forcarSomenteMascara(), modoResult.cidrOrigem(),
+                erro, modoResult.cidrVal(), ipP, modoResult.forcarSomenteMascara(), cidrOrigemModo,
                 reguaCount, modo, ipEntradaOriginal, cidrRaw, maskDecP, wildcardP, invalidFields);
 
         erro = (String) ipv4.get("erro");
@@ -324,7 +329,17 @@ public class HomeAnaliseService {
             return out;
         }
 
+        // O texto do campo de endereço só vira máscara quando começa com "255." (auditoria CALC-01).
+        // 128.0.0.0, 192.0.0.0, 224.0.0.0 e 0.0.0.0 também têm forma de máscara contígua, mas são ENDEREÇOS
+        // de estudo (1ª rede classe B, bloco IANA 192.0.0.0/24, bloco de controle multicast) — viravam
+        // "/1", "/2", "/3" e o prefixo digitado era descartado. Nenhum exercício usa host 255.x.
         Integer ciComoMascara = !ipP.isBlank() ? ipv4Kernel.mascaraDottedParaCidr(ipP) : null;
+        if (ciComoMascara != null && !forcarSomenteMascara && !ipP.strip().startsWith("255.")) {
+            cidrOrigem = ((cidrOrigem == null ? "" : cidrOrigem).strip() + " O endereço " + ipP
+                    + " também tem forma de máscara contígua (/" + ciComoMascara + "), mas foi analisado como "
+                    + "endereço; para estudar a máscara, use a aba Máscara.").strip();
+            ciComoMascara = null;
+        }
         if (ciComoMascara != null && !forcarSomenteMascara) {
             if (!ciComoMascara.equals(cidrVal)) {
                 cidrVal = ciComoMascara;

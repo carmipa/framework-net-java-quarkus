@@ -13,7 +13,7 @@
                     <span class="aed-class-cidr">/{res.cidr}</span>
                 </div>
                 {#if !res.somente_mascara}
-                <p class="small text-secondary mb-0">1º octeto do IP: <span class="text-warning fw-bold">{res.primeiro_octeto}</span> · máscara padrão /{res.cidr}</p>
+                <p class="small text-secondary mb-0">1º octeto do IP: <span class="text-warning fw-bold">{res.primeiro_octeto}</span> · máscara padrão da classe <span translate="no">{res.mascara_padrao_classe}</span> · prefixo em uso /{res.cidr}</p>
                 {/if}
             </div>
             <div class="text-end small text-secondary">

@@ -234,6 +234,62 @@ class Ipv4KernelTest {
         assertTrue(dicasTexto(kernel.processar("8.8.8.8", 32)).contains("IP Público"), "controle positivo");
     }
 
+    // ---- Auditoria de 01/10/2026: CONT-02, CONT-03, CONT-30, CALC-22, CALC-36 ----
+    // Gabarito: RFC 1112 §4 (D é grupo, E reservada), RFC 1122 §3.2.1.3 (rede/host/broadcast só em A/B/C),
+    // RFC 3021 (/31 sem broadcast), RFC 3927 (link-local sem gateway).
+
+    @Test
+    void multicastNaoViraRedeDeHosts() {
+        Map<String, Object> res = kernel.processar("224.0.0.5", 4);
+        assertEquals("Endereço de grupo multicast (não é host)", res.get("ip_papel"));
+        assertTrue(res.get("broad").toString().contains("não tem broadcast"), res.get("broad").toString());
+        assertTrue(res.get("dhcp_info").toString().startsWith("N/A"), res.get("dhcp_info").toString());
+        assertTrue(!res.get("cisco_cli").toString().contains("ip address"), res.get("cisco_cli").toString());
+        assertNull(res.get("cisco_ospf_exemplo"));
+        assertTrue(res.get("resumo_prova").toString().contains("Hosts úteis: N/A"));
+        // fronteira: o mesmo /4 com host unicast (classe A) continua tendo rede de hosts
+        Map<String, Object> controle = kernel.processar("10.0.0.5", 8);
+        assertEquals("Host válido", controle.get("ip_papel"));
+        assertEquals("10.255.255.255", controle.get("broad"));
+    }
+
+    @Test
+    void classeELoopbackEApipaSemGatewayNemDhcp() {
+        Map<String, Object> e = kernel.processar("240.0.0.1", 4);
+        assertEquals("Reservado (classe E)", e.get("ip_papel"));
+        Map<String, Object> lo = kernel.processar("127.0.0.1", 8);
+        assertEquals("Loopback (localhost)", lo.get("ip_papel"));
+        assertTrue(lo.get("gateway_sugerido").toString().startsWith("N/A"));
+        assertTrue(lo.get("dhcp_info").toString().startsWith("N/A"));
+        Map<String, Object> apipa = kernel.processar("169.254.10.20", 16);
+        assertTrue(apipa.get("gateway_sugerido").toString().startsWith("N/A"));
+        assertTrue(apipa.get("dhcp_info").toString().startsWith("N/A"));
+    }
+
+    @Test
+    void dhcpNaoIncluiOGatewayEBarra31Ou32NaoTemBroadcast() {
+        Map<String, Object> r24 = kernel.processar("192.168.10.50", 24);
+        assertEquals("192.168.10.1", r24.get("gateway_sugerido"));
+        assertTrue(r24.get("dhcp_info").toString().contains("192.168.10.2 até 192.168.10.254"),
+                r24.get("dhcp_info").toString());
+        Map<String, Object> r31 = kernel.processar("10.0.0.0", 31);
+        assertTrue(r31.get("broad").toString().contains("RFC 3021"));
+        assertEquals("10.0.0.1 (a outra ponta do /31)", r31.get("gateway_sugerido"));
+        Map<String, Object> r32 = kernel.processar("10.0.0.7", 32);
+        assertTrue(r32.get("broad").toString().startsWith("—"));
+    }
+
+    @Test
+    void mascaraPadraoEDaClasseNaoDoPrefixo() {
+        assertEquals("/24 (255.255.255.0)", kernel.processar("192.168.1.10", 26).get("mascara_padrao_classe"));
+        assertTrue(kernel.processar("224.0.0.5", 4).get("mascara_padrao_classe").toString().startsWith("—"));
+        // a máscara sozinha só indica classe nas três máscaras padrão
+        assertEquals("B", kernel.classeReferenciaPorPrefixo(16));
+        assertNull(kernel.classeReferenciaPorPrefixo(12));
+        assertNull(kernel.classeReferenciaPorPrefixo(4));
+        assertNull(kernel.classeReferenciaPorPrefixo(18));
+    }
+
     @SuppressWarnings("unchecked")
     private static String dicasTexto(Map<String, Object> res) {
         StringBuilder sb = new StringBuilder();

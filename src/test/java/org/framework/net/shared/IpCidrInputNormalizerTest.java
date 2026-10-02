@@ -16,12 +16,24 @@ class IpCidrInputNormalizerTest {
         assertEquals("16", result.cidrRaw());
     }
 
+    /**
+     * Auditoria CALC-35: o campo de prefixo volta preenchido com a consulta anterior; o "/16" digitado
+     * junto do endereço é a intenção nova e prevalece — com aviso, para a tela dizer qual valeu.
+     */
     @Test
-    void splitIpAndCidrPreservaCidrExplicito() {
+    void barraDoCampoIpPrevaleceSobreOCampoDePrefixoComAviso() {
         IpCidrInputNormalizer.SplitResult result =
                 IpCidrInputNormalizer.splitIpAndCidr("172.19.0.0/16", "24");
         assertEquals("172.19.0.0", result.ip());
-        assertEquals("24", result.cidrRaw());
+        assertEquals("16", result.cidrRaw());
+        assertTrue(result.aviso().contains("/16") && result.aviso().contains("/24"), result.aviso());
+    }
+
+    @Test
+    void semConflitoNaoHaAviso() {
+        assertEquals(null, IpCidrInputNormalizer.splitIpAndCidr("172.19.0.0/16", "16").aviso());
+        assertEquals(null, IpCidrInputNormalizer.splitIpAndCidr("172.19.0.0", "24").aviso());
+        assertEquals("24", IpCidrInputNormalizer.splitIpAndCidr("172.19.0.0", "24").cidrRaw());
     }
 
     @Test

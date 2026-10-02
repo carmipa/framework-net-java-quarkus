@@ -147,6 +147,95 @@ class AnaliseDidaticaHttpTest {
                 .body(containsString("entre 0 e 32"));
     }
 
+    /**
+     * Auditoria CALC-01: 128.0.0.0 tem forma de máscara contígua (/1). Antes virava "/1" e o /16 digitado
+     * sumia; agora é a primeira rede classe B, 65.536 endereços, com nota dizendo o que foi feito.
+     */
+    @Test
+    void enderecoComFormaDeMascaraContinuaSendoEndereco() {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("modo", "cidr")
+                .formParam("ip", "128.0.0.0")
+                .formParam("cidr", "16")
+                .when().post("/analise")
+                .then()
+                .statusCode(200)
+                .body(containsString("128.0.255.255"))
+                .body(containsString("prefixo em uso /16"))
+                .body(containsString("foi analisado como endereço"));
+    }
+
+    @Test
+    void mascaraNoCampoDeEnderecoContinuaVirandoMascara() {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("modo", "cidr")
+                .formParam("ip", "255.255.255.0")
+                .formParam("cidr", "24")
+                .when().post("/analise")
+                .then()
+                .statusCode(200)
+                .body(containsString("reconhecido como máscara pontuada"))
+                .body(not(containsString("foi analisado como endereço")));
+    }
+
+    /**
+     * Auditoria CONT-02/CALC-22: multicast e loopback renderizam (strict) sem gateway, DHCP, broadcast nem
+     * o exemplo de roteamento montado com o próprio endereço (a página tem um exemplo fixo 172.16.0.0, que
+     * não conta); o unicast logo ao lado continua com tudo.
+     */
+    @Test
+    void enderecoQueNaoEHostRenderizaSemConfiguracaoDeHost() {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("modo", "cidr")
+                .formParam("ip", "224.0.0.5")
+                .formParam("cidr", "")
+                .when().post("/analise")
+                .then()
+                .statusCode(200)
+                .body(containsString("multicast não tem broadcast"))
+                .body(containsString("não recebe endereço por DHCP"))
+                .body(not(containsString("network 224.0.0.")));
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("modo", "cidr")
+                .formParam("ip", "127.0.0.1")
+                .formParam("cidr", "8")
+                .when().post("/analise")
+                .then()
+                .statusCode(200)
+                .body(containsString("Loopback (localhost)"))
+                .body(not(containsString("network 127.0.0.0")));
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("modo", "cidr")
+                .formParam("ip", "10.0.0.5")
+                .formParam("cidr", "24")
+                .when().post("/analise")
+                .then()
+                .statusCode(200)
+                .body(containsString("network 10.0.0.0 0.0.0.255"))
+                .body(containsString("10.0.0.2 até 10.0.0.254"));
+    }
+
+    /** Auditoria CALC-35: o "/8" digitado junto do endereço vence o prefixo que sobrou no outro campo. */
+    @Test
+    void barraNoCampoDeEnderecoVenceOPrefixoAntigoComAviso() {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("modo", "cidr")
+                .formParam("ip", "10.0.0.0/8")
+                .formParam("cidr", "24")
+                .when().post("/analise")
+                .then()
+                .statusCode(200)
+                .body(containsString("10.255.255.255"))
+                .body(containsString("prefixo em uso /8"))
+                .body(containsString("O /8 digitado junto do endereço prevaleceu sobre o /24"));
+    }
+
     @Test
     void postComparador() {
         given()
