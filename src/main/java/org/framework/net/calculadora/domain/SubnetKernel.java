@@ -99,13 +99,15 @@ public class SubnetKernel {
             }
         }
 
+        // O endereço é validado ANTES do prefixo: a mensagem de prefixo ausente repete o endereço como
+        // exemplo, e com o prefixo primeiro ela sugeria "informe xyz!@#/24" (auditoria FRONT-20).
+        long endereco = parseIpv4(enderecoTxt, nomeCampo);
         if (prefixo == null) {
             throw new CalculadoraException(
                     nomeCampo + " precisa do prefixo: informe " + enderecoTxt + "/24, "
                             + enderecoTxt + " 255.255.255.0 ou preencha o campo de prefixo.");
         }
 
-        long endereco = parseIpv4(enderecoTxt, nomeCampo);
         long rede = endereco & mascara(prefixo);
         return new Rede(rede, prefixo, rede != endereco, formatIpv4(endereco));
     }
