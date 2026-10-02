@@ -155,9 +155,11 @@ html {
             border-color: #d29922;
             color: #f8e3b5;
         }
+        /* outline-width não aceita % (CSS UI 4): "0.156%" invalidava a declaração e o foco por
+           teclado sumia nos cartões, cujo box-shadow é zerado com !important (FRONT-09). */
         .form-control:focus-visible, .form-select:focus-visible, .btn:focus-visible, a:focus-visible {
-            outline: 0.156% solid #79c0ff !important;
-            outline-offset: 0.156%;
+            outline: 2px solid #79c0ff !important;
+            outline-offset: 2px;
             box-shadow: 0 0 0 0.2rem rgba(121, 192, 255, 0.25) !important;
         }
         .is-invalid {

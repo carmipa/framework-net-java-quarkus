@@ -75,7 +75,6 @@
     transform: translateY(-3px);
     border-color: rgba(45, 212, 191, 0.5);
     box-shadow: 0 0.5rem 1.6rem rgba(2, 6, 12, 0.55);
-    outline: none;
 }
 
 .home-module-icon {

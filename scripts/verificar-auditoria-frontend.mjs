@@ -350,6 +350,33 @@ for (const caso of [
   await page.context().close();
 }
 
+// FRONT-09 (auditoria de 2026-10-01) — "outline: 0.156%" é CSS inválido (outline-width não aceita %) e o
+// tema zera o box-shadow do cartão com !important: o foco por TECLADO não aparecia nos cartões da home.
+// Navega com Tab (só o teclado ativa :focus-visible) e mede o contorno calculado.
+{
+  const page = await novaPagina(browser);
+  await page.goto(BASE + '/', { waitUntil: 'load', timeout: 45000 });
+  await assentar(page);
+  const medir = () => page.evaluate(() => {
+    const el = document.activeElement;
+    const cs = el ? getComputedStyle(el) : null;
+    return el ? { cartao: el.classList.contains('home-module'), nav: el.classList.contains('aed-nav-link'),
+      estilo: cs.outlineStyle, largura: parseFloat(cs.outlineWidth) || 0 } : {};
+  });
+  const achados = { cartao: null, nav: null };
+  for (let i = 0; i < 120 && (!achados.cartao || !achados.nav); i++) {
+    await page.keyboard.press('Tab');
+    const m = await medir();
+    if (m.cartao && !achados.cartao) achados.cartao = m;
+    if (m.nav && !achados.nav) achados.nav = m;
+  }
+  const visivel = (m) => m && m.estilo !== 'none' && m.largura >= 2;
+  registrar('FRONT-09 foco por teclado visível (cartão da home e link do menu)',
+    visivel(achados.cartao) && visivel(achados.nav),
+    `cartão=${JSON.stringify(achados.cartao)} menu=${JSON.stringify(achados.nav)}`);
+  await page.context().close();
+}
+
 await browser.close();
 const reprovados = resultados.filter((r) => !r.ok);
 console.log(`\n${resultados.length - reprovados.length}/${resultados.length} passaram`);
