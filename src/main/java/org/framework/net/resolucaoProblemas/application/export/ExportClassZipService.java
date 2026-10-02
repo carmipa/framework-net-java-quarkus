@@ -69,8 +69,10 @@ public class ExportClassZipService {
                 writeEntry(zf, prefix + "LAB_TOPOLOGY.mermaid",
                         scenario.getTopologyMermaid() == null ? "" : scenario.getTopologyMermaid());
 
+                java.util.Set<String> arquivos = new java.util.HashSet<>();
                 for (Map.Entry<String, String> block : exportTxtService.generateRouterLabBlocks(scenario).entrySet()) {
-                    String filename = exportTxtService.routerExportFilename(block.getKey());
+                    String filename = ExportTxtService.nomeUnico(
+                            exportTxtService.routerExportFilename(block.getKey()), arquivos);
                     writeEntry(zf, prefix + "configs_individuais/" + filename, block.getValue() + "\n");
                 }
 

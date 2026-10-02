@@ -181,6 +181,32 @@ public class ExportTxtService {
         return indice < SERIAIS_DO_2911.size() ? SERIAIS_DO_2911.get(indice) : "Serial0/3/" + indice;
     }
 
+    /**
+     * Nome de arquivo que ainda não foi usado no mesmo ZIP.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> "Filial 1" e "Filial-1" (ou dois alunos "Lucas Silva") viram o mesmo
+     * identificador; o segundo arquivo derrubava o ZIP inteiro com "duplicate entry" (auditoria CALC-19).</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> o primeiro fica com o nome original; os seguintes ganham "_2", "_3"...
+     * antes da extensão; o nome devolvido entra em {@code usados}.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> não lança; nome sem extensão recebe o sufixo no fim.</p>
+     */
+    public static String nomeUnico(String nome, java.util.Set<String> usados) {
+        if (usados.add(nome)) {
+            return nome;
+        }
+        int ponto = nome.lastIndexOf('.');
+        String raiz = ponto > 0 ? nome.substring(0, ponto) : nome;
+        String extensao = ponto > 0 ? nome.substring(ponto) : "";
+        for (int n = 2; ; n++) {
+            String candidato = raiz + "_" + n + extensao;
+            if (usados.add(candidato)) {
+                return candidato;
+            }
+        }
+    }
+
     public String routerExportFilename(String locationName) {
         return "R-" + normalizationService.normalizeCliIdentifier(locationName, "ROTEADOR") + ".txt";
     }

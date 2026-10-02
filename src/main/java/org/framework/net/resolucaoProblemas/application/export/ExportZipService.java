@@ -59,8 +59,10 @@ public class ExportZipService {
              ZipOutputStream zf = new ZipOutputStream(memoryFile)) {
             writeEntry(zf, "GUIA_MONTAGEM_PACKET_TRACER.txt", montagemGuide);
             writeEntry(zf, "config_packet_tracer_consolidado.txt", consolidatedScript);
+            java.util.Set<String> arquivos = new java.util.HashSet<>();
             for (Map.Entry<String, String> entry : routerBlocks.entrySet()) {
-                String filename = exportTxtService.routerExportFilename(entry.getKey());
+                String filename = ExportTxtService.nomeUnico(
+                        exportTxtService.routerExportFilename(entry.getKey()), arquivos);
                 writeEntry(zf, "configs_individuais/" + filename, entry.getValue() + "\n");
             }
             writeEntry(zf, "LAB_TOPOLOGY.mermaid", topologyMermaid);

@@ -52,6 +52,8 @@ public class BulkClassImportService {
                 ? List.of("Matriz", "Filial")
                 : defaultLocationLabels;
 
+        // Dois alunos com o mesmo nome (ou nomes que normalizam igual) não podem dividir a pasta do ZIP.
+        java.util.Set<String> pastasUsadas = new java.util.HashSet<>();
         for (String rawLine : text.split("\\R")) {
             String line = rawLine.strip();
             if (line.isEmpty()) {
@@ -100,7 +102,8 @@ public class BulkClassImportService {
 
             ClassRosterRow row = new ClassRosterRow();
             row.setStudentName(studentName);
-            row.setFolderSlug(normalizationService.normalizeCliIdentifier(studentName, "ALUNO" + lineNo));
+            row.setFolderSlug(org.framework.net.resolucaoProblemas.application.export.ExportTxtService.nomeUnico(
+                    normalizationService.normalizeCliIdentifier(studentName, "ALUNO" + lineNo), pastasUsadas));
             row.setBaseNetwork(baseNetwork);
             row.setLocations(locations);
             rows.add(row);

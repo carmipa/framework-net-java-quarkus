@@ -90,6 +90,44 @@ class VlsmServiceTest {
     @Inject
     org.framework.net.resolucaoProblemas.application.parsing.EngenhariaReversaService engenhariaReversa;
 
+    @Inject
+    org.framework.net.resolucaoProblemas.application.importing.BulkClassImportService bulkClassImport;
+
+    @Inject
+    org.framework.net.resolucaoProblemas.application.export.ExportClassZipService exportClassZip;
+
+    /**
+     * Auditoria CALC-19: "Filial 1" e "Filial-1" viram o mesmo arquivo, e dois alunos "Lucas Silva" a mesma
+     * pasta; o ZIP caía inteiro com "duplicate entry". Agora cada um tem o seu arquivo, relido no ZIP.
+     */
+    @Test
+    void zipNaoCaiComNomesQueColidem() throws Exception {
+        NetworkScenarioResult s = vlsmService.solveNetworkProblem("10.0.0.0/16",
+                List.of(new LocationInput("Filial 1", "50"), new LocationInput("Filial-1", "50")),
+                "star", 30, 71, "telnet", "eigrp_only", 1);
+        List<String> nomes = nomesNoZip(exportZipService.generatePacketTracerZipBuffer(s));
+        assertEquals(2, nomes.stream().filter(n -> n.startsWith("configs_individuais/")).distinct().count(), nomes.toString());
+
+        var turma = bulkClassImport.parseClassRosterPaste(
+                "Lucas Silva\t172.51.0.0/16\t100\t50\nLucas Silva\t172.52.0.0/16\t100\t50");
+        assertEquals(2, turma.stream().map(r -> r.getFolderSlug()).distinct().count());
+        List<String> daTurma = nomesNoZip(exportClassZip.generateClassRosterZipBuffer(turma,
+                new org.framework.net.resolucaoProblemas.domain.model.ResolucaoFormData()));
+        assertEquals(2, daTurma.stream().filter(n -> n.endsWith("/GUIA_MONTAGEM_PACKET_TRACER.txt")).count(),
+                daTurma.toString());
+    }
+
+    private static List<String> nomesNoZip(byte[] zip) throws Exception {
+        List<String> nomes = new java.util.ArrayList<>();
+        try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zip))) {
+            java.util.zip.ZipEntry e;
+            while ((e = zis.getNextEntry()) != null) {
+                nomes.add(e.getName());
+            }
+        }
+        return nomes;
+    }
+
     /**
      * Auditoria CALC-17/CALC-18: o hub de 8 roteadores tem 7 seriais, todas portas reais do 2911 (HWIC-2T
      * tem 0 e 1), e cada enlace leva clock rate em UMA ponta — o script do Projetar, colado na Engenharia
