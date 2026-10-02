@@ -108,10 +108,11 @@ public class GeoLookupService {
             String entradaOriginal = normalized;
             // Só IP LITERAL: com nome de host o getByName resolvia DNS — oráculo de nomes de container
             // (existe × não existe) e thread presa em DNS lento. Literal não gera consulta DNS.
-            if (!looksLikeLiteralIpv4(normalized) && !looksLikeLiteralIpv6(normalized)) {
+            Optional<InetAddress> literal = org.framework.net.shared.IpLiteral.ler(normalized);
+            if (literal.isEmpty()) {
                 return enriquecerRespostaGeo(erroBase("invalid", "Endereço IP inválido.", normalized));
             }
-            InetAddress addr = InetAddress.getByName(normalized);
+            InetAddress addr = literal.get();
             normalized = addr.getHostAddress();
             byte[] b = addr.getAddress();
             boolean cgnat = b.length == 4 && (b[0] & 0xFF) == 100 && (b[1] & 0xC0) == 64;   // 100.64.0.0/10
@@ -192,36 +193,9 @@ public class GeoLookupService {
     }
 
     private String parseLiteralIp(String ip) throws java.net.UnknownHostException {
-        if (!looksLikeLiteralIpv4(ip) && !looksLikeLiteralIpv6(ip)) {
-            throw new java.net.UnknownHostException("Somente literais IPv4/IPv6 são aceitos.");
-        }
-        InetAddress addr = InetAddress.getByName(ip);
-        if (!addr.getHostAddress().equalsIgnoreCase(ip)
-                && !(looksLikeLiteralIpv6(ip) && addr.getHostAddress().contains(":"))) {
-            throw new java.net.UnknownHostException("Hostname não permitido no campo IP.");
-        }
-        return addr.getHostAddress();
-    }
-
-    private static boolean looksLikeLiteralIpv4(String value) {
-        String[] parts = value.split("\\.", -1);
-        if (parts.length != 4) {
-            return false;
-        }
-        for (String part : parts) {
-            if (org.framework.net.shared.NumeroAscii.inteiro(part, 3).isEmpty()) {
-                return false;
-            }
-            int n = Integer.parseInt(part);
-            if (n < 0 || n > 255) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static boolean looksLikeLiteralIpv6(String value) {
-        return value.contains(":") && !value.contains(".");
+        return org.framework.net.shared.IpLiteral.ler(ip)
+                .map(InetAddress::getHostAddress)
+                .orElseThrow(() -> new java.net.UnknownHostException("Somente literais IPv4/IPv6 são aceitos."));
     }
 
     public String mensagemIpInvalido() {

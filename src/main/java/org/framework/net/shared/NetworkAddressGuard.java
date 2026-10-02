@@ -37,6 +37,32 @@ public final class NetworkAddressGuard {
         }
     }
 
+    /**
+     * O endereço é roteável na internet pública?
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> a mesma régua de "público" para o bloqueio de SSRF e para a escolha
+     * do IP do visitante entre os candidatos que o proxy repassou.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> loopback, link-local, privado (RFC 1918 e ULA), multicast, não
+     * especificado, CGNAT, faixas de documentação e reservadas nunca são públicos.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> não lança; {@code null} devolve {@code false}.</p>
+     */
+    public static boolean ehPublico(InetAddress address) {
+        if (address == null
+                || address.isLoopbackAddress()
+                || address.isLinkLocalAddress()
+                || address.isSiteLocalAddress()
+                || address.isMulticastAddress()
+                || address.isAnyLocalAddress()) {
+            return false;
+        }
+        if (address instanceof Inet4Address inet4) {
+            return !isIpv4NonPublic(inet4);
+        }
+        return !(address instanceof Inet6Address inet6 && isIpv6NonPublic(inet6));
+    }
+
     public static void rejectNonPublicAddress(InetAddress address, String context) {
         if (address == null) {
             throw new EnderecoBloqueadoException("Endereço inválido em " + context + ".");

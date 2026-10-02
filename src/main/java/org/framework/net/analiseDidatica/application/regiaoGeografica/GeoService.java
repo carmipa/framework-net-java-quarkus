@@ -5,6 +5,8 @@ import jakarta.inject.Inject;
 import org.framework.net.analiseDidatica.exception.HistoricoPersistenciaException;
 import org.framework.net.analiseDidatica.infrastructure.geo.GeoLookupService;
 import org.framework.net.analiseDidatica.infrastructure.historico.HistoricoStore;
+import org.framework.net.shared.IpLiteral;
+import org.framework.net.shared.NetworkAddressGuard;
 import org.jboss.logging.Logger;
 
 import java.net.InetAddress;
@@ -23,10 +25,31 @@ public class GeoService {
     @Inject
     HistoricoStore historicoStore;
 
+    /** Teto de entradas lidas do X-Forwarded-For: a cadeia legítima tem uma ou duas. */
+    static final int MAX_ENTRADAS_FORWARDED = 8;
+
+    /**
+     * IP do visitante para a página de geolocalização.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> mostra ao aluno "o seu IP" e consulta a geolocalização dele, a
+     * partir do que o proxy repassou ({@code X-Forwarded-For}, {@code X-Real-IP}) ou do endereço da
+     * conexão.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> valor de cabeçalho nunca é resolvido por DNS — só IP escrito por
+     * extenso é aceito ({@link IpLiteral}); no máximo {@value #MAX_ENTRADAS_FORWARDED} entradas do
+     * {@code X-Forwarded-For} são lidas; prefere o primeiro IPv4 público (privado, loopback, link-local
+     * e CGNAT não contam como público).</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> não lança; sem nenhum literal válido devolve
+     * {@code ""}; sem IPv4 público devolve o primeiro literal válido.</p>
+     */
     public String clienteIpEfetivo(String xForwardedFor, String xRealIp, String remoteAddr) {
         java.util.List<String> candidatosRaw = new java.util.ArrayList<>();
         if (xForwardedFor != null && !xForwardedFor.isBlank()) {
-            for (String part : xForwardedFor.split(",")) {
+            for (String part : xForwardedFor.split(",", MAX_ENTRADAS_FORWARDED + 1)) {
+                if (candidatosRaw.size() >= MAX_ENTRADAS_FORWARDED) {
+                    break;
+                }
                 if (!part.isBlank()) {
                     candidatosRaw.add(part.strip());
                 }
@@ -39,24 +62,19 @@ public class GeoService {
             candidatosRaw.add(remoteAddr.strip());
         }
 
-        java.util.List<String> candidatos = candidatosRaw.stream()
-                .map(this::normalizarIpTexto)
-                .filter(s -> !s.isBlank())
+        java.util.List<InetAddress> candidatos = candidatosRaw.stream()
+                .map(IpLiteral::ler)
+                .flatMap(Optional::stream)
                 .toList();
         if (candidatos.isEmpty()) {
             return "";
         }
-
-        for (String ip : candidatos) {
-            try {
-                InetAddress addr = InetAddress.getByName(ip);
-                if (!addr.isSiteLocalAddress() && !addr.isLoopbackAddress() && addr.getAddress().length == 4) {
-                    return ip;
-                }
-            } catch (Exception ignored) {
+        for (InetAddress addr : candidatos) {
+            if (addr.getAddress().length == 4 && NetworkAddressGuard.ehPublico(addr)) {
+                return addr.getHostAddress();
             }
         }
-        return candidatos.get(0);
+        return candidatos.get(0).getHostAddress();
     }
 
     public Map<String, Object> executarApiInformacoesGeo(String clienteIp, String rawDigitado) {
@@ -169,18 +187,6 @@ public class GeoService {
             historicoStore.registrarConsulta(entrada, res);
         } catch (HistoricoPersistenciaException ex) {
             LOG.warnf("Falha ao registrar histórico geo: %s", ex.getMessage());
-        }
-    }
-
-    private String normalizarIpTexto(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return "";
-        }
-        try {
-            InetAddress addr = InetAddress.getByName(raw.strip());
-            return addr.getHostAddress();
-        } catch (Exception ex) {
-            return "";
         }
     }
 }
