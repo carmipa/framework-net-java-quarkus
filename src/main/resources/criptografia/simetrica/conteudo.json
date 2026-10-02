@@ -259,10 +259,10 @@
   ],
   "laboratorios": [
     {
-      "titulo": "Cifrar e decifrar um arquivo com AES-256-GCM",
-      "cenario": "Proteger um arquivo com cifra autenticada, derivando a chave de uma senha. O -pbkdf2 aplica derivação segura e o modo GCM adiciona a tag de integridade.",
-      "comandos": "# Cifrar (pede a senha e deriva a chave com PBKDF2)\nopenssl enc -aes-256-gcm -pbkdf2 -iter 200000 -salt \\\n  -in segredo.txt -out segredo.enc\n\n# Decifrar (a mesma senha reconstroi a MESMA chave)\nopenssl enc -d -aes-256-gcm -pbkdf2 -iter 200000 \\\n  -in segredo.enc -out segredo.dec\n\n# Conferir que voltou identico ao original\ndiff segredo.txt segredo.dec && echo OK",
-      "explicacao": "A mesma senha, via PBKDF2, gera a mesma chave simétrica nos dois lados. Se o arquivo cifrado for adulterado, a decifragem em GCM falha por tag inválida em vez de devolver dados corrompidos. Nota: em versões antigas do OpenSSL a CLI enc pode não anexar/verificar a tag GCM corretamente; para uso sério prefira a API EVP ou uma biblioteca de alto nível."
+      "titulo": "Cifrar e decifrar um arquivo com AES-256 (CBC + HMAC) — e por que não GCM aqui",
+      "cenario": "Proteger um arquivo derivando a chave de uma senha. O openssl enc NÃO aceita modos AEAD (GCM/CCM): recusa com 'AEAD ciphers not supported'. Então cifra-se em CBC e a integridade vem de um HMAC à parte.",
+      "comandos": "# Cifrar (pede a senha e deriva a chave com PBKDF2)\nopenssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt \\\n  -in segredo.txt -out segredo.enc\n\n# Integridade: HMAC do arquivo cifrado, com outra chave\nopenssl dgst -sha256 -hmac \"outra_chave\" -out segredo.enc.mac segredo.enc\n\n# Antes de decifrar: o HMAC tem de bater\nopenssl dgst -sha256 -hmac \"outra_chave\" segredo.enc | diff - segredo.enc.mac && echo integro\n\n# Decifrar (a mesma senha reconstroi a MESMA chave)\nopenssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \\\n  -in segredo.enc -out segredo.dec\n\n# Conferir que voltou identico ao original\ndiff segredo.txt segredo.dec && echo OK",
+      "explicacao": "A mesma senha, via PBKDF2, gera a mesma chave simétrica nos dois lados. CBC sozinho não detecta adulteração — é o HMAC conferido ANTES de decifrar que faz isso (encrypt-then-MAC). Para cifra autenticada de verdade num comando só, use uma ferramenta com AEAD (age, gpg --symmetric) ou a API EVP do OpenSSL; o openssl enc recusa GCM."
     },
     {
       "titulo": "Ver na prática por que ECB é inseguro",
