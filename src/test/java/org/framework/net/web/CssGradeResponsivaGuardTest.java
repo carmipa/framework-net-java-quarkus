@@ -81,4 +81,27 @@ class CssGradeResponsivaGuardTest {
         assertTrue(problemas.isEmpty(), "grade com mínimo fixo maior que um celular, sem min(100%, …):\n  "
                 + String.join("\n  ", problemas));
     }
+
+    /**
+     * Regra de CSS do Paulo: {@code auto-fit}, nunca {@code auto-fill} — o auto-fill cria colunas vazias e cola
+     * os itens à esquerda quando sobram poucos (abas de um modo só, a home numa tela larga).
+     */
+    @Test
+    void gradeRepetidaUsaAutoFit() throws IOException {
+        Pattern autoFill = Pattern.compile("repeat\\(\\s*auto-fill\\b");
+        assertTrue(autoFill.matcher("repeat(auto-fill, minmax(7rem, 1fr))").find(), "calibração: tem de achar o doente");
+        assertTrue(!autoFill.matcher("repeat(auto-fit, minmax(7rem, 1fr))").find(), "calibração: o legítimo passa");
+        List<String> problemas = new ArrayList<>();
+        int lidos = 0;
+        try (Stream<Path> s = Files.walk(ESTATICOS)) {
+            for (Path p : s.filter(x -> x.toString().endsWith(".css") && !x.toString().endsWith(".min.css")).toList()) {
+                lidos++;
+                if (autoFill.matcher(Files.readString(p, StandardCharsets.UTF_8)).find()) {
+                    problemas.add(ESTATICOS.relativize(p).toString());
+                }
+            }
+        }
+        assertTrue(lidos > 10, "a guarda leu " + lidos + " CSS — alvo vazio não é aprovação");
+        assertTrue(problemas.isEmpty(), "grade com auto-fill (use auto-fit): " + problemas);
+    }
 }

@@ -400,7 +400,7 @@ body.aed-app .header-tech {
 /* --- Mode selector grid --- */
 .aed-mode-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); /* auto-fit: preenche a linha (regra de CSS) */
     gap: 0.5rem;
     margin-bottom: 1rem;
 }
