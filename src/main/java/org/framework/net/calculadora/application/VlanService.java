@@ -32,7 +32,10 @@ import java.util.stream.Collectors;
  * Token Ring legados) e também são recusados; o gateway de cada VLAN é sempre o
  * primeiro host utilizável do bloco; o número de VLANs nunca excede a
  * capacidade do bloco base no prefixo escolhido; a lista do
- * {@code switchport trunk allowed vlan} contém exatamente as VLANs geradas.</p>
+ * {@code switchport trunk allowed vlan} contém exatamente as VLANs geradas; o
+ * script roteia de fato nas duas opções ({@code ip routing} no switch L3,
+ * {@code no shutdown} na interface física do router-on-a-stick, VLAN 1 como
+ * {@code native}); a capacidade exibida nunca passa dos VLAN IDs atribuíveis.</p>
  *
  * <p><b>Comportamento em caso de falha:</b> VLAN ID reservado, prefixo que não
  * comporta gateway mais pool (/31 e /32), quantidade acima da capacidade do
@@ -60,6 +63,9 @@ public class VlanService {
 
     /** Maior VLAN ID que cabe no terceiro octeto — teto da convenção por octeto. */
     private static final int MAX_VLAN_NO_OCTETO = 255;
+
+    /** VLAN IDs atribuíveis: 1–4094 menos as quatro reservadas da Cisco (1002–1005). */
+    private static final int VLAN_IDS_ATRIBUIVEIS = VLAN_ID_MAX - (LEGADO_CISCO_FIM - LEGADO_CISCO_INICIO + 1);
 
     @Inject
     SubnetKernel kernel;
@@ -139,11 +145,11 @@ public class VlanService {
         int quantidade = lerQuantidade(quantidadeTexto);
 
         // Na convenção por octeto o teto não é o do bloco: a VLAN precisa caber no
-        // terceiro octeto. Usar a fórmula sequencial aprovava quantidades impossíveis
-        // e exibia "de 65536 possíveis" quando o limite real é 256.
+        // terceiro octeto, e o 0 é reservado pelo 802.1Q — sobram os IDs 1 a 255
+        // (auditoria CONT-34: exibia "de 256 possíveis").
         boolean porOcteto = "octeto".equals(estrategia);
         long capacidade = porOcteto
-                ? MAX_VLAN_NO_OCTETO + 1L
+                ? MAX_VLAN_NO_OCTETO
                 : 1L << (prefixoVlan - base.prefixo());
         if (porOcteto) {
             long ultimoId = (long) vlanInicial + (long) (quantidade - 1) * passo;
@@ -213,7 +219,9 @@ public class VlanService {
                 base.prefixo(),
                 prefixoVlan,
                 vlans.size(),
-                capacidade,
+                // O "de N possíveis" da tela: o bloco pode comportar 65.536 sub-redes, mas
+                // o 802.1Q só tem 4.090 VLAN IDs atribuíveis (CONT-34).
+                Math.min(capacidade, VLAN_IDS_ATRIBUIVEIS),
                 kernel.hostsUteis(prefixoVlan),
                 estrategia,
                 trunkAllowed,
@@ -388,6 +396,9 @@ public class VlanService {
         linhas.add(" switchport trunk allowed vlan " + trunkAllowed);
         linhas.add("!");
         linhas.add("! ===== Roteamento entre VLANs — opção A: SVI em switch L3 =====");
+        // Sem "ip routing" o switch L3 responde em cada SVI mas não encaminha entre elas
+        // (auditoria CALC-07/CONT-21).
+        linhas.add("ip routing");
         for (VlanEntry vlan : vlans) {
             linhas.add("interface Vlan" + vlan.vlanId());
             linhas.add(" ip address " + vlan.gateway() + " " + vlan.bloco().mascara());
@@ -395,9 +406,13 @@ public class VlanService {
         }
         linhas.add("!");
         linhas.add("! ===== Roteamento entre VLANs — opção B: router-on-a-stick =====");
+        // A interface física do roteador nasce em shutdown: sem o "no shutdown" nela, nenhuma
+        // subinterface sobe. A VLAN 1 é a native do tronco e chega sem tag.
+        linhas.add("interface GigabitEthernet0/0");
+        linhas.add(" no shutdown");
         for (VlanEntry vlan : vlans) {
             linhas.add("interface GigabitEthernet0/0." + vlan.vlanId());
-            linhas.add(" encapsulation dot1Q " + vlan.vlanId());
+            linhas.add(" encapsulation dot1Q " + vlan.vlanId() + (vlan.vlanId() == 1 ? " native" : ""));
             linhas.add(" ip address " + vlan.gateway() + " " + vlan.bloco().mascara());
         }
         linhas.add("!");

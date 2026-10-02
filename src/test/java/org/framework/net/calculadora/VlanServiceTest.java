@@ -183,12 +183,13 @@ class VlanServiceTest {
     }
 
     @Test
-    @DisplayName("regressão: capacidade da estratégia octeto é 256, não a do bloco")
+    @DisplayName("regressão: capacidade da estratégia octeto é 255 (VLAN 0 é reservada), não a do bloco")
     void capacidadeDaEstrategiaOcteto() {
         PlanoVlan plano = vlanService.gerarPlano(
                 "10.0.0.0/8", "", "24", "10", "10", "3", "", "octeto");
-        assertEquals(256L, plano.capacidadeMaxima(),
-                "Com bloco /8 a fórmula sequencial daria 65536, mas o 3º octeto só comporta 256");
+        // CONT-34: o 3º octeto tem 256 valores, mas o VLAN ID 0 é reservado pelo 802.1Q (1–255).
+        assertEquals(255L, plano.capacidadeMaxima(),
+                "Com bloco /8 a fórmula sequencial daria 65536, mas o 3º octeto só comporta os IDs 1–255");
 
         CalculadoraException erro = assertThrows(CalculadoraException.class,
                 () -> vlanService.gerarPlano("10.0.0.0/8", "", "24", "250", "10", "3", "", "octeto"));
@@ -205,6 +206,36 @@ class VlanServiceTest {
         assertFalse(cli.contains("\nvlan 1\n"), "O IOS recusa recriar a VLAN 1:\n" + cli);
         assertTrue(cli.contains("VLAN 1 é a default"), "Deveria explicar por que a VLAN 1 é pulada");
         assertTrue(cli.contains("vlan 2"), "A VLAN 2 deveria continuar sendo criada");
+    }
+
+    /** CONT-34: o bloco /8 comporta 65.536 sub-redes /24, mas só existem 4.090 VLAN IDs atribuíveis. */
+    @Test
+    void capacidadeSequencialNaoPassaDosVlanIdsAtribuiveis() {
+        PlanoVlan grande = vlanService.gerarPlano(
+                "10.0.0.0/8", "", "24", "10", "10", "3", "", "sequencial");
+        assertEquals(4090L, grande.capacidadeMaxima());
+        PlanoVlan pequeno = vlanService.gerarPlano(
+                "192.168.0.0/16", "", "24", "10", "10", "3", "", "sequencial");
+        assertEquals(256L, pequeno.capacidadeMaxima(), "Abaixo do teto de IDs vale a conta do bloco");
+    }
+
+    /** CALC-07/CONT-21: o script tem de rotear colado como está, nas duas opções. */
+    @Test
+    void scriptRoteiaNasDuasOpcoes() {
+        PlanoVlan plano = vlanService.gerarPlano(
+                "192.168.0.0/16", "", "24", "1", "9", "2", "", "sequencial");
+        List<String> cli = plano.comandosCisco();
+        String texto = String.join("\n", cli);
+
+        int ipRouting = cli.indexOf("ip routing");
+        assertTrue(ipRouting >= 0 && ipRouting < cli.indexOf("interface Vlan1"),
+                "ip routing tem de vir antes das SVIs:\n" + texto);
+        int fisica = cli.indexOf("interface GigabitEthernet0/0");
+        assertTrue(fisica >= 0 && " no shutdown".equals(cli.get(fisica + 1)),
+                "a interface física do router-on-a-stick precisa de no shutdown:\n" + texto);
+        assertTrue(cli.contains(" encapsulation dot1Q 1 native"), "VLAN 1 é a native do tronco:\n" + texto);
+        assertTrue(cli.contains(" encapsulation dot1Q 10"), "VLAN com tag continua sem native:\n" + texto);
+        assertFalse(cli.contains(" encapsulation dot1Q 10 native"));
     }
 
     @Test
