@@ -54,7 +54,6 @@ public class TrafegoAoVivoService {
             for (int i = 0; i < novos; i++) {
                 gerarPacoteDemo();
             }
-            demoTotal.addAndGet(novos);
             demoSerie.addLast(new PontoTempo(HMS.format(Instant.now()), novos));
             while (demoSerie.size() > MAX_SERIE) {
                 demoSerie.removeFirst();
@@ -77,12 +76,23 @@ public class TrafegoAoVivoService {
 
     // ------------------------------------------------------------------ demo helpers
 
+    /**
+     * Gera um pacote da simulação.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> o painel didático tem de parecer um analisador de verdade.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> cada pacote tem número próprio e crescente (antes todos os do mesmo
+     * tick saíam com o mesmo número); ARP só existe dentro da LAN, nunca com IP público; Client Hello sai do
+     * cliente e Server Hello do servidor; consulta DNS sai e resposta volta (auditoria CALC-38, CONT-35).</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> não lança; chamado sob o lock do snapshot.</p>
+     */
     private void gerarPacoteDemo() {
         ThreadLocalRandom r = ThreadLocalRandom.current();
         String proto = protoAleatorio();
         boolean saindo = r.nextBoolean();
         String local = "192.168.0." + r.nextInt(2, 40);
-        String remoto = ipRemoto(proto);
+        String remoto = "ARP".equals(proto) ? "192.168.0.1" : ipRemoto(proto);
         String origem = saindo ? local : remoto;
         String destino = saindo ? remoto : local;
         Integer sp = portaPara(proto, saindo, true);
@@ -90,9 +100,13 @@ public class TrafegoAoVivoService {
         int tam = tamanhoPara(proto);
         demoBytesTick += tam;
         demoProto.merge(proto, 1L, Long::sum);
-        demoHosts.merge(remoto, 1L, Long::sum);
-        String info = infoPara(proto, dp);
-        demoPacotes.addFirst(new PacoteResumo(demoTotal.get() + 1, HMS.format(Instant.now()),
+        if (!"ARP".equals(proto)) {
+            demoHosts.merge(remoto, 1L, Long::sum);
+        }
+        String info = "ARP".equals(proto)
+                ? "Who has " + destino + "? Tell " + origem
+                : infoPara(proto, dp, saindo);
+        demoPacotes.addFirst(new PacoteResumo(demoTotal.incrementAndGet(), HMS.format(Instant.now()),
                 proto, origem, destino, sp, dp, tam, info));
         while (demoPacotes.size() > MAX_PACOTES) {
             demoPacotes.removeLast();
@@ -149,12 +163,13 @@ public class TrafegoAoVivoService {
         };
     }
 
-    private static String infoPara(String proto, Integer dp) {
+    private static String infoPara(String proto, Integer dp, boolean saindo) {
         return switch (proto) {
-            case "TLS" -> ThreadLocalRandom.current().nextBoolean() ? "Application Data" : "Client Hello";
-            case "DNS" -> "Standard query A";
+            case "TLS" -> ThreadLocalRandom.current().nextBoolean() ? "Application Data"
+                    : (saindo ? "Client Hello" : "Server Hello");
+            case "DNS" -> saindo ? "Standard query A" : "Standard query response A";
             case "ARP" -> "Who has ...? Tell ...";
-            case "ICMP" -> "Echo (ping) request";
+            case "ICMP" -> saindo ? "Echo (ping) request" : "Echo (ping) reply";
             case "TCP" -> dp != null && dp == 80 ? "GET / HTTP/1.1" : "ACK";
             default -> "";
         };
@@ -168,7 +183,8 @@ public class TrafegoAoVivoService {
                 new RedeWifi("MinhaCasa_5G", "88:99:aa:bb:cc:dd", "WPA2-PSK", -42 + r.nextInt(-4, 5), false),
                 new RedeWifi("NET_2G4", "10:20:30:40:50:60", "WPA2-PSK", -60 + r.nextInt(-5, 6), false),
                 new RedeWifi("Vizinho6", "aa:bb:cc:dd:ee:ff", "WPA3-SAE", -75 + r.nextInt(-5, 6), false),
-                new RedeWifi("IoT_Camera", "12:34:56:78:9a:bc", "WEP", -66 + r.nextInt(-5, 6), true));
+                // WEP cifra (mal): não é rede aberta — o risco é a cifra quebrável, mostrado à parte.
+                new RedeWifi("IoT_Camera", "12:34:56:78:9a:bc", "WEP", -66 + r.nextInt(-5, 6), false));
     }
 
     private static List<DispositivoBluetooth> bluetoothDemo() {
