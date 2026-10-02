@@ -1,5 +1,5 @@
 {
-  "resumo": "O IPv6 é a versão mais recente do protocolo de rede que resolve o esgotamento de endereços do IPv4, ampliando o espaço de 32 para 128 bits. Além do número gigantesco de endereços, ele traz um cabeçalho base de tamanho fixo (40 bytes) e mais enxuto, elimina o checksum e a fragmentação no roteador, e substitui o ARP e o DHCP por mecanismos próprios (NDP e SLAAC) que permitem ao host se autoconfigurar. O resultado é uma internet projetada para conectividade fim a fim, sem a dependência de NAT que marcou a era IPv4.",
+  "resumo": "O IPv6 é a versão mais recente do protocolo de rede que resolve o esgotamento de endereços do IPv4, ampliando o espaço de 32 para 128 bits. Além do número gigantesco de endereços, ele traz um cabeçalho base de tamanho fixo (40 bytes) e mais enxuto, elimina o checksum e a fragmentação no roteador, substitui o ARP pelo NDP e acrescenta o SLAAC, com que o host se autoconfigura sem servidor — o DHCPv6 continua existindo, e os dois convivem. O resultado é uma internet projetada para conectividade fim a fim, sem a dependência de NAT que marcou a era IPv4.",
   "ficha": [
     {
       "rotulo": "RFC principal",

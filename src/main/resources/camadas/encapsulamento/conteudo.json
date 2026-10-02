@@ -46,7 +46,7 @@
       "destaque": "IPv4 + TCP + Ethernet somam cerca de 54 bytes de controle por quadro."
     },
     {
-      "titulo": "MTU: o teto de tamanho do quadro",
+      "titulo": "MTU: o teto do pacote dentro do quadro",
       "icone": "straighten",
       "texto": "MTU (Maximum Transmission Unit) é o maior payload que uma tecnologia de Enlace aceita transportar, tipicamente 1500 bytes na Ethernet. Se um pacote IP ultrapassa a MTU do caminho, ele precisa ser fragmentado (IPv4) ou é descartado com um aviso ICMP para que a origem reduza o tamanho (Path MTU Discovery)."
     },

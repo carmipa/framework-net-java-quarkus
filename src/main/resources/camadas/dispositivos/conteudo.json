@@ -1,5 +1,5 @@
 {
-  "resumo": "Cada equipamento de rede toma decisões apenas com base na camada em que opera, e entender isso é a chave do módulo. O hub trabalha na camada 1 (física): ele não decide nada, só repete os bits elétricos para todas as portas. O switch trabalha na camada 2 (enlace): ele lê o endereço MAC de destino do quadro e encaminha só pela porta certa, usando uma tabela aprendida (CAM). O roteador trabalha na camada 3 (rede): ele olha o endereço IP de destino e escolhe a rota, sendo o único que separa domínios de broadcast e liga redes diferentes. O firewall atua entre as camadas 3 e 4 (IP, porta e estado da conexão) e, quando é do tipo aplicação (proxy), chega até a camada 7, inspecionando o conteúdo. Balanceadores e proxies vivem nas camadas 4 a 7, distribuindo e terminando conexões. Repetidores e access points reforçam e estendem o alcance nas camadas 1 e 2. A regra prática: quanto mais alta a camada, mais o dispositivo entende sobre o tráfego e mais lentas e caras tendem a ser as decisões. Dois erros de projeto nascem de confundir isso: achar que switch roteia (ele não cruza sub-redes) e achar que o domínio de broadcast some sozinho (só o roteador o divide). Na camada 2 moram também os ataques clássicos: MAC flooding e ARP spoofing, contidos com port security e segmentação.",
+  "resumo": "Cada equipamento de rede toma decisões apenas com base na camada em que opera, e entender isso é a chave do módulo. O hub trabalha na camada 1 (física): ele não decide nada, só repete os bits elétricos para todas as portas. O switch trabalha na camada 2 (enlace): ele lê o endereço MAC de destino do quadro e encaminha só pela porta certa, usando uma tabela aprendida (CAM). O roteador trabalha na camada 3 (rede): ele olha o endereço IP de destino, escolhe a rota, separa domínios de broadcast e liga redes diferentes (dentro do switch, quem separa broadcast é a VLAN). O firewall atua entre as camadas 3 e 4 (IP, porta e estado da conexão) e, quando é do tipo aplicação (proxy), chega até a camada 7, inspecionando o conteúdo. Balanceadores e proxies vivem nas camadas 4 a 7, distribuindo e terminando conexões. Repetidores e access points reforçam e estendem o alcance nas camadas 1 e 2. A regra prática: quanto mais alta a camada, mais o dispositivo entende sobre o tráfego e mais lentas e caras tendem a ser as decisões. Dois erros de projeto nascem de confundir isso: achar que switch roteia (ele não cruza sub-redes) e achar que o domínio de broadcast some sozinho (só o roteador o divide). Na camada 2 moram também os ataques clássicos: MAC flooding e ARP spoofing, contidos com port security e segmentação.",
   "ficha": [
     {
       "rotulo": "Regra de ouro",
@@ -13,7 +13,7 @@
     },
     {
       "rotulo": "Domínio de broadcast",
-      "valor": "Só o roteador separa",
+      "valor": "Roteador ou VLAN separam",
       "dica": "O switch propaga broadcast por toda a VLAN; VLAN divide broadcast sem trocar de equipamento"
     },
     {

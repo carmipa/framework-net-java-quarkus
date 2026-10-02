@@ -53,7 +53,7 @@
     {
       "titulo": "Fragmentação e MTU",
       "icone": "content_cut",
-      "texto": "Cada enlace tem um MTU (tamanho máximo de quadro; ~1500 bytes na Ethernet). Se um pacote é maior que o MTU do próximo salto, o IPv4 o divide em fragmentos que o destino remonta usando os campos Identificação, Flags e Deslocamento. Se o bit DF estiver ligado, em vez de fragmentar, o roteador descarta o pacote e avisa por ICMP.",
+      "texto": "Cada enlace tem um MTU (o maior pacote IP que ele carrega dentro de um quadro: 1500 bytes na Ethernet, cujo quadro em si chega a 1518 com cabeçalho e FCS). Se um pacote é maior que o MTU do próximo salto, o IPv4 o divide em fragmentos que o destino remonta usando os campos Identificação, Flags e Deslocamento. Se o bit DF estiver ligado, em vez de fragmentar, o roteador descarta o pacote e avisa por ICMP.",
       "destaque": "MTU Ethernet típico = 1500 bytes"
     },
     {

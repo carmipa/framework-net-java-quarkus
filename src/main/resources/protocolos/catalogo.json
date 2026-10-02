@@ -121,10 +121,10 @@
   },
   {
     "nome": "TLS",
-    "camada": "Transporte/Sessão",
+    "camada": "Aplicação",
     "transporte": "TCP",
     "porta_comum": "Múltiplas",
-    "funcao": "Segurança e criptografia de ponta a ponta",
+    "funcao": "Segurança e criptografia de ponta a ponta, sobre o TCP (no modelo OSI, costuma ser posto na camada 6)",
     "seguro": "Sim",
     "badge": "🟢 Seguro",
     "badge_color": "success"
@@ -440,7 +440,7 @@
     "camada": "Aplicação",
     "transporte": "UDP",
     "porta_comum": "546/547",
-    "funcao": "Stateful DHCPv6 ou combined com SLAAC (flags IA_NA / IA_PD)",
+    "funcao": "DHCPv6 com estado (opções IA_NA para endereço e IA_PD para prefixo) ou sem estado junto do SLAAC; quem indica o modo são as flags M e O do Router Advertisement",
     "seguro": "Autenticação de servidor + segmentação L2",
     "badge": "🔵 Didático",
     "badge_color": "info"
