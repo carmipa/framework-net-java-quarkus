@@ -205,10 +205,16 @@
             }
             const w = invertOctets(m);
             wildInput.value = toDotted(w);
-            const ok = m.every((oct, i) => oct + w[i] === 255);
-            meta.innerHTML = ok
-                ? '<span class="text-success">Validação: wildcard + máscara = 255 em cada octeto.</span>'
-                : '<span class="text-danger">Octetos não somam 255 — revise a conversão.</span>';
+            // A soma 255 era verdadeira por construção (w = 255 − m) e aprovava até 255.0.255.0
+            // (auditoria CALC-32). O que se valida de fato é a máscara ser contígua: uns à esquerda.
+            const bits = m.map((o) => o.toString(2).padStart(8, "0")).join("");
+            const prefixo = bits.indexOf("0") === -1 ? 32 : bits.indexOf("0");
+            const contigua = bits.slice(prefixo).indexOf("1") === -1;
+            meta.innerHTML = contigua
+                ? '<span class="text-success">Máscara contígua (/' + prefixo
+                    + '): a wildcard é 255 − máscara em cada octeto.</span>'
+                : '<span class="text-danger">Máscara não contígua: os bits 1 precisam vir todos à esquerda. '
+                    + 'Wildcard não contígua existe em ACL, mas máscara de sub-rede não.</span>';
         };
         maskInput.addEventListener("input", sync);
         wildInput.addEventListener("input", () => {
