@@ -67,6 +67,14 @@ class PaginaErroProxyGeneratorTest {
     /** Onde as páginas ficam versionadas, para o script de instalação levar ao proxy. */
     private static final Path DESTINO = Path.of("scripts", "erro-proxy");
 
+    /**
+     * Onde a suíte gera para COMPARAR (auditoria OPS-21: a suíte reescrevia os HTML versionados em toda
+     * execução, sem comparar). Só com {@code REGENERAR_ERRO_PROXY=1} ela escreve em {@link #DESTINO}.
+     */
+    private static final Path GERADO = Path.of("build", "erro-proxy-gerado");
+
+    private static final boolean REGENERAR = "1".equals(System.getenv("REGENERAR_ERRO_PROXY"));
+
     private static final Path RAIZ_ESTATICOS =
             Path.of("src", "main", "resources", "META-INF", "resources");
 
@@ -158,8 +166,15 @@ class PaginaErroProxyGeneratorTest {
             }
             html = html.replace("<head>", "<head>\n    " + avisoDeOrigem(codigo));
 
-            Path arquivo = DESTINO.resolve(codigo + ".html");
+            Path arquivo = (REGENERAR ? DESTINO : GERADO).resolve(codigo + ".html");
             escrever(arquivo, html);
+            if (!REGENERAR) {
+                String versionado = ler(DESTINO.resolve(codigo + ".html")).replace("\r\n", "\n");
+                if (!versionado.equals(html.replace("\r\n", "\n"))) {
+                    problemas.add(codigo + ".html versionado está desatualizado em relação ao template: rode"
+                            + " REGENERAR_ERRO_PROXY=1 ./gradlew test --tests '*PaginaErroProxyGeneratorTest' e comite");
+                }
+            }
 
             // Guarda: relê o que foi gravado. Gerar não prova que ficou autônomo.
             String gravado = ler(arquivo);
@@ -247,7 +262,7 @@ class PaginaErroProxyGeneratorTest {
 
     private static void criarDiretorio() {
         try {
-            Files.createDirectories(DESTINO);
+            Files.createDirectories(REGENERAR ? DESTINO : GERADO);
         } catch (IOException e) {
             throw new UncheckedIOException("Não consegui criar " + DESTINO.toAbsolutePath(), e);
         }

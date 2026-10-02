@@ -67,7 +67,12 @@ public class HistoricoStore {
     @Inject
     TelemetriaLogger telemetriaLogger;
 
-    @ConfigProperty(name = "user.home")
+    /**
+     * Pasta-base do histórico ({@code <base>/.framework-net}). Propriedade própria porque {@code user.home}
+     * é propriedade de sistema e vence o application.properties: os testes gravavam no histórico real da
+     * máquina (auditoria OPS-21). Padrão: a pasta do usuário, como antes.
+     */
+    @ConfigProperty(name = "framework.historico.home", defaultValue = "${user.home}")
     String userHome;
 
     /** Teto do arquivo inteiro (todas as sessões): mantém a regravação por consulta pequena. */
