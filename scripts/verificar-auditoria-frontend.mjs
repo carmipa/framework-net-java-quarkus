@@ -329,6 +329,27 @@ for (const caso of [
   await page.context().close();
 }
 
+// FRONT-04 (auditoria de 2026-10-01) — o Mermaid 11 trocava o diagrama inválido por "Syntax error in text";
+// o fallback (definição em texto) nunca aparecia. Injeta um ";" na mensagem e confere texto + aviso.
+{
+  const page = await novaPagina(browser);
+  await page.route(/\/camadas\/dispositivos$/, async (r) => {
+    const resp = await r.fetch();
+    const html = (await resp.text()).replace('Checa porta e estado. Se negado, descarta', 'Checa porta e estado; se negado, descarta');
+    await r.fulfill({ response: resp, body: html });
+  });
+  await page.goto(BASE + '/camadas/dispositivos', { waitUntil: 'load', timeout: 45000 });
+  await page.waitForTimeout(2500);
+  const m = await page.evaluate(() => ({
+    erro: /Syntax error|Parse error/i.test(document.body.innerText),
+    aviso: !!document.querySelector('.aprof-mermaid-aviso'),
+    texto: /se negado/.test((document.querySelector('.aprof-mermaid') || {}).textContent || ''),
+  }));
+  registrar('FRONT-04 diagrama inválido cai no texto', !m.erro && m.aviso && m.texto,
+    `syntax error na tela=${m.erro}, aviso=${m.aviso}, definição em texto=${m.texto}`);
+  await page.context().close();
+}
+
 await browser.close();
 const reprovados = resultados.filter((r) => !r.ok);
 console.log(`\n${resultados.length - reprovados.length}/${resultados.length} passaram`);

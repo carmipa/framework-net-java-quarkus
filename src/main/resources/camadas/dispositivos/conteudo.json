@@ -61,7 +61,7 @@
   ],
   "diagrama": {
     "titulo": "Caminho de um pacote: switch, roteador e firewall",
-    "definicao": "sequenceDiagram\n    participant PC as Notebook (origem)\n    participant SW as Switch (L2)\n    participant RT as Roteador (L3)\n    participant FW as Firewall (L3-L7)\n    participant SRV as Servidor (destino)\n    PC->>SW: Quadro Ethernet (lê MAC de destino)\n    SW->>RT: Encaminha pela porta do gateway\n    RT->>FW: Escolhe a rota pelo IP de destino\n    FW-->>RT: Checa porta e estado; se negado, descarta\n    FW->>SRV: Libera o pacote permitido\n    SRV-->>PC: Resposta volta pelo caminho inverso",
+    "definicao": "sequenceDiagram\n    participant PC as Notebook (origem)\n    participant SW as Switch (L2)\n    participant RT as Roteador (L3)\n    participant FW as Firewall (L3-L7)\n    participant SRV as Servidor (destino)\n    PC->>SW: Quadro Ethernet (lê MAC de destino)\n    SW->>RT: Encaminha pela porta do gateway\n    RT->>FW: Escolhe a rota pelo IP de destino\n    FW-->>RT: Checa porta e estado. Se negado, descarta\n    FW->>SRV: Libera o pacote permitido\n    SRV-->>PC: Resposta volta pelo caminho inverso",
     "legenda": "A seta sólida (->>) é o pacote seguindo adiante; a seta tracejada (-->>) é a verificação/retorno. O switch decide por MAC, o roteador por IP e o firewall por porta e estado da conexão. Se a política negar, o pacote é descartado no firewall e nunca chega ao servidor."
   },
   "tabelas": [

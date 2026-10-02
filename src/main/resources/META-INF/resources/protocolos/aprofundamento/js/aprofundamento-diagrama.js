@@ -11,7 +11,10 @@
  *
  * Comportamento em caso de falha: Mermaid ausente (CDN bloqueado) ou definição
  * inválida não quebram a página — o bloco cai no fallback CSS (a definição em
- * texto mono) e o erro fica só no console.
+ * texto mono) e o erro fica só no console. A definição é conferida com
+ * mermaid.parse ANTES de desenhar: o Mermaid 11 troca o bloco inválido por um
+ * desenho "Syntax error in text", e o fallback nunca aparecia (auditoria FRONT-04).
+ * Bloco inválido fica em texto, com um aviso visível acima dele.
  */
 (function () {
     "use strict";
@@ -43,19 +46,54 @@
                 fontSize: "14px"
             }
         });
-        try {
-            // mermaid.run é ASSÍNCRONO: um try/catch síncrono não pega a rejeição da
-            // promise. O .catch evita "Uncaught (in promise)" quando um diagrama é
-            // inválido — o bloco cai no fallback CSS e o erro fica só no console.
-            var resultado = mermaid.run({ querySelector: ".aprof-mermaid" });
-            if (resultado && typeof resultado.catch === "function") {
-                resultado.catch(function (e) {
-                    console.warn("Mermaid não conseguiu renderizar o diagrama", e);
-                });
+        var blocos = Array.prototype.slice.call(document.querySelectorAll(".aprof-mermaid"));
+        var conferidos = blocos.map(function (el) {
+            var conferencia;
+            try {
+                conferencia = Promise.resolve(mermaid.parse(el.textContent, { suppressErrors: true }));
+            } catch (e) {
+                conferencia = Promise.resolve(false);
             }
-        } catch (e) {
-            console.warn("Mermaid não conseguiu inicializar", e);
+            return conferencia
+                .then(function (valido) { return valido ? el : manterEmTexto(el); })
+                .catch(function () { return manterEmTexto(el); });
+        });
+        Promise.all(conferidos).then(function (els) {
+            var validos = els.filter(Boolean);
+            if (!validos.length) {
+                return;
+            }
+            try {
+                // mermaid.run é ASSÍNCRONO: um try/catch síncrono não pega a rejeição da
+                // promise. O .catch evita "Uncaught (in promise)".
+                var resultado = mermaid.run({ nodes: validos });
+                if (resultado && typeof resultado.catch === "function") {
+                    resultado.catch(function (e) {
+                        console.warn("Mermaid não conseguiu renderizar o diagrama", e);
+                    });
+                }
+            } catch (e) {
+                console.warn("Mermaid não conseguiu inicializar", e);
+            }
+        });
+    }
+
+    function manterEmTexto(el) {
+        console.warn("Diagrama com definição inválida: mostrado em texto", el);
+        if (!el.previousElementSibling || !el.previousElementSibling.classList.contains("aprof-mermaid-aviso")) {
+            var aviso = document.createElement("p");
+            aviso.className = "small text-warning aprof-mermaid-aviso";
+            aviso.setAttribute("role", "note");
+            var icone = document.createElement("span");
+            icone.className = "material-symbols-outlined";
+            icone.setAttribute("aria-hidden", "true");
+            icone.setAttribute("translate", "no");
+            icone.textContent = "warning";
+            aviso.appendChild(icone);
+            aviso.appendChild(document.createTextNode(" Não foi possível desenhar este diagrama; a definição aparece em texto abaixo."));
+            el.parentNode.insertBefore(aviso, el);
         }
+        return null;
     }
 
     if (document.readyState === "loading") {

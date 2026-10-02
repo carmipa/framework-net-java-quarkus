@@ -67,7 +67,7 @@
   ],
   "diagrama": {
     "titulo": "Diffie-Hellman efêmero (ECDHE): valores públicos viram segredo compartilhado",
-    "definicao": "sequenceDiagram\n    participant A as Alice (cliente)\n    participant B as Bob (servidor)\n    Note over A: escolhe privada a (efêmera)\n    Note over B: escolhe privada b (efêmera)\n    A->>A: calcula A_pub = a * G\n    B->>B: calcula B_pub = b * G\n    A->>B: ClientHello + key_share A_pub\n    B->>A: ServerHello + key_share B_pub + assinatura do certificado\n    A->>A: calcula S = a * B_pub\n    B->>B: calcula S = b * A_pub\n    Note over A,B: S idêntico dos dois lados, nunca transmitido\n    Note over A,B: chaves de sessão = HKDF(S); dados cifrados com AES-GCM",
+    "definicao": "sequenceDiagram\n    participant A as Alice (cliente)\n    participant B as Bob (servidor)\n    Note over A: escolhe privada a (efêmera)\n    Note over B: escolhe privada b (efêmera)\n    A->>A: calcula A_pub = a * G\n    B->>B: calcula B_pub = b * G\n    A->>B: ClientHello + key_share A_pub\n    B->>A: ServerHello + key_share B_pub + assinatura do certificado\n    A->>A: calcula S = a * B_pub\n    B->>B: calcula S = b * A_pub\n    Note over A,B: S idêntico dos dois lados, nunca transmitido\n    Note over A,B: chaves de sessão = HKDF(S), dados cifrados com AES-GCM",
     "legenda": "G é o ponto gerador da curva; a e b são os privados efêmeros, descartados ao fim da sessão. Um espião vê A_pub e B_pub, mas reverter para a ou b exige resolver o logaritmo discreto. Os valores efêmeros vão assinados pela chave de longo prazo do certificado para impedir homem-no-meio."
   },
   "tabelas": [
