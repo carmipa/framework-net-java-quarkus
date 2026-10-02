@@ -81,3 +81,6 @@ screenshots/
 # Anotacoes locais das sessoes de trabalho com IA (checkpoint de continuidade):
 # ficam so na maquina do autor; o repositorio e publico.
 .claude/
+
+# Dependencias do Playwright dos roteiros de navegador: reinstalar com "npm ci" em scripts/ (OPS-19).
+scripts/node_modules/

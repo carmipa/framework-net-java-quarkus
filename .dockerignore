@@ -23,3 +23,6 @@ entrega-aed
 **/.DS_Store
 terminals
 agent-transcripts
+
+# Dependencias dos roteiros de navegador (17,5 MB): nao entram na imagem (OPS-19).
+scripts/node_modules
