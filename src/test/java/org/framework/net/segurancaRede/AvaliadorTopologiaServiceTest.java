@@ -43,6 +43,40 @@ class AvaliadorTopologiaServiceTest {
         assertTrue(d.pontoBloqueio().isEmpty());
     }
 
+    /**
+     * Auditoria CALC-21/CONT-04 — gabarito (A3): RFC 1122 §3.3.1.1, destino na mesma sub-rede é entregue
+     * direto, sem gateway. O switch L3 sem SVI nenhuma ainda comuta a VLAN. Fronteira (A1): o mesmo switch
+     * continua bloqueando o fluxo para OUTRA VLAN, e a porta fechada continua recusada.
+     */
+    @Test
+    @DisplayName("mesma VLAN: entrega por camada 2, sem gateway e sem SVI")
+    void mesmaVlanNaoPassaPeloGateway() {
+        String topo = String.join("\n",
+                "host H1 vlan=10",
+                "switchl3 SW",
+                "server S1 vlan=10 porta=443",
+                "server S2 vlan=20 porta=443",
+                "link H1 SW",
+                "link SW S1",
+                "link SW S2");
+        DiagnosticoFluxo d = servico.diagnosticar(topo, "H1", "S1", "443");
+        assertTrue(d.alcanca(), () -> "mesma VLAN não depende de gateway nem SVI; parou em " + d.pontoBloqueio());
+        assertTrue(d.saltos().stream().noneMatch(s -> s.camada().equals("L3")), d.saltos().toString());
+
+        assertFalse(servico.diagnosticar(topo, "H1", "S2", "443").alcanca(), "outra VLAN sem gateway não chega");
+        assertFalse(servico.diagnosticar(topo, "H1", "S1", "80").alcanca(), "porta fechada continua recusada");
+
+        // O firewall do modelo roteia: dois lados dele não são a mesma VLAN comutada.
+        String peloFirewall = String.join("\n",
+                "host H1 vlan=10",
+                "firewall FW",
+                "server S1 vlan=10 porta=443",
+                "link H1 FW",
+                "link FW S1");
+        assertFalse(servico.diagnosticar(peloFirewall, "H1", "S1", "443").alcanca(),
+                "camada 2 não atravessa firewall nem host");
+    }
+
     @Test
     @DisplayName("ACL nega a porta: bloqueia no firewall")
     void aclNegaBloqueiaNoFirewall() {

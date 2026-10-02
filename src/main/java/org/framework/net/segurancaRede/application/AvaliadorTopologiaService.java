@@ -150,6 +150,18 @@ public class AvaliadorTopologiaService {
 
     // ------------------------------------------------------------------ motor
 
+    /**
+     * Percorre o fluxo de um host até o destino e diz onde ele para.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> o aluno monta a topologia e vê, salto a salto, se o tráfego chega.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> destino na mesma VLAN é entregue por camada 2, sem gateway nem SVI;
+     * destino em outra VLAN vai pelo gateway e só cruza switch L3 que roteie as duas VLANs; firewall aplica
+     * a ACL; o servidor aceita só a porta que abre.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> origem ou destino inexistente, ou origem que não é host,
+     * lançam {@link SegurancaException}; bloqueio no caminho vira diagnóstico com o ponto de parada.</p>
+     */
     public DiagnosticoFluxo avaliar(TopologiaRede topo, String origemId, String destinoId, int porta) {
         Dispositivo origem = topo.por(origemId);
         Dispositivo destino = topo.por(destinoId);
@@ -169,6 +181,25 @@ public class AvaliadorTopologiaService {
 
         List<Salto> saltos = new ArrayList<>();
         int ordem = 1;
+
+        // Mesma VLAN = mesma sub-rede: o host entrega direto, por camada 2, sem gateway nem SVI
+        // (RFC 1122 §3.3.1.1). Antes o fluxo ia ao gateway e era bloqueado por "falta de SVI" (CALC-21).
+        if (destino.vlan() > 0 && destino.vlan() == origem.vlan()) {
+            List<String> l2 = caminhoNaVlan(topo, origemId, destinoId);
+            if (l2 == null) {
+                saltos.add(new Salto(ordem, origemId + " (host)", "L2", false,
+                        "Destino na mesma VLAN " + origem.vlan() + ", mas sem caminho de camada 2 até ele."));
+                return bloqueado(titulo, rotuloOrigem, rotuloDestino, origemId + " (host)", saltos);
+            }
+            saltos.add(new Salto(ordem++, origemId + " (host)", "L2", true,
+                    "Destino na mesma VLAN " + origem.vlan() + " (mesma sub-rede): entrega direta, sem gateway."));
+            for (int i = 1; i < l2.size() - 1; i++) {
+                Dispositivo d = topo.por(l2.get(i));
+                saltos.add(new Salto(ordem++, d.id() + " (" + rotuloTipo(d.tipo()) + ")", "L2", true,
+                        "Comuta na VLAN " + origem.vlan() + " (camada 2; não precisa de SVI)."));
+            }
+            return chegada(titulo, rotuloOrigem, rotuloDestino, destinoId, destino, porta, ordem, saltos);
+        }
 
         // Host de origem: precisa de gateway válido e ligado.
         String gw = origem.gateway();
@@ -231,7 +262,13 @@ public class AvaliadorTopologiaService {
             }
         }
 
-        // Destino.
+        return chegada(titulo, rotuloOrigem, rotuloDestino, destinoId, destino, porta, ordem, saltos);
+    }
+
+    /** Último salto: o destino aceita (ou recusa) a porta. Comum ao caminho roteado e ao da mesma VLAN. */
+    private static DiagnosticoFluxo chegada(String titulo, String rotuloOrigem, String rotuloDestino,
+                                            String destinoId, Dispositivo destino, int porta, int ordem,
+                                            List<Salto> saltos) {
         String noDestino = destinoId + " (" + rotuloTipo(destino.tipo()) + ")";
         if (destino.ehTipo("server") && destino.portaAberta() != porta) {
             saltos.add(new Salto(ordem, noDestino, "L4", false,
@@ -242,6 +279,44 @@ public class AvaliadorTopologiaService {
                 "Destino aceita a conexão na porta " + porta + "."));
         return new DiagnosticoFluxo("montado", titulo, rotuloOrigem, rotuloDestino, true, "",
                 "O fluxo percorre todo o caminho e chega ao destino.", saltos);
+    }
+
+    /**
+     * Caminho de camada 2 entre dois equipamentos da mesma VLAN.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> o tráfego dentro da VLAN é comutado, não roteado.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> só switch L3 comuta no meio do caminho (firewall do modelo roteia;
+     * host e servidor são pontas); menor caminho por busca em largura.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> sem caminho devolve {@code null}; não lança.</p>
+     */
+    private static List<String> caminhoNaVlan(TopologiaRede topo, String origemId, String destinoId) {
+        java.util.Map<String, String> anterior = new java.util.HashMap<>();
+        java.util.ArrayDeque<String> fila = new java.util.ArrayDeque<>();
+        fila.add(origemId);
+        anterior.put(origemId, "");
+        while (!fila.isEmpty()) {
+            String atual = fila.poll();
+            if (atual.equals(destinoId)) {
+                List<String> caminho = new ArrayList<>();
+                for (String n = destinoId; !n.isEmpty(); n = anterior.get(n)) {
+                    caminho.add(0, n);
+                }
+                return caminho;
+            }
+            if (!atual.equals(origemId) && !topo.por(atual).ehTipo("switchl3")) {
+                continue;
+            }
+            for (Enlace e : topo.enlaces()) {
+                String vizinho = e.a().equals(atual) ? e.b() : e.b().equals(atual) ? e.a() : null;
+                if (vizinho != null && !anterior.containsKey(vizinho) && topo.por(vizinho) != null) {
+                    anterior.put(vizinho, atual);
+                    fila.add(vizinho);
+                }
+            }
+        }
+        return null;
     }
 
     // ------------------------------------------------------------------ diagrama
