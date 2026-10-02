@@ -370,6 +370,44 @@ class EngenhariaReversaServiceTest {
                 "não pode aparecer um 'shutdown' que não existia:\n" + script);
     }
 
+    /**
+     * Auditoria CALC-05: A declara "neighbor 10.0.0.3", que é o BROADCAST do /30 do próprio A. Antes, B
+     * (10.0.0.2, certo) era "corrigido" para 10.0.0.3. Agora B não é tocado e o erro é apontado na linha de A.
+     * Fronteira (A1): o mesmo cenário com o vizinho certo (.2) não gera achado de rede/broadcast.
+     */
+    @Test
+    @DisplayName("vizinho no broadcast do /30: aponta a linha de quem declarou, não corrige o outro")
+    void vizinhoNoBroadcastNaoViraCorrecaoDoOutro() {
+        String a = """
+                hostname A
+                interface Serial0/0/0
+                 ip address 10.0.0.1 255.255.255.252
+                router bgp 65001
+                 neighbor 10.0.0.3 remote-as 65002
+                """;
+        String b = """
+                hostname B
+                interface Serial0/0/0
+                 ip address 10.0.0.2 255.255.255.252
+                router bgp 65002
+                 neighbor 10.0.0.1 remote-as 65001
+                """;
+        CenarioReconstruido cenario = servico.interpretar(a + "\n-------------\n" + b);
+        assertEquals("10.0.0.2", ip(cenario, "B", "Serial0/0/0"), "B estava certo e não pode virar o broadcast");
+        assertTrue(cenario.achados().stream().anyMatch(x -> "A".equals(x.roteador())
+                        && x.descricao().contains("broadcast")),
+                () -> "o erro tem de ser apontado em A: " + cenario.achados());
+        assertTrue(cenario.achados().stream().noneMatch(x -> "B".equals(x.roteador())
+                        && "Endereçamento".equals(x.categoria())),
+                () -> "B não tem nada a corrigir: " + cenario.achados());
+
+        CenarioReconstruido certo = servico.interpretar(a.replace("neighbor 10.0.0.3", "neighbor 10.0.0.2")
+                + "\n-------------\n" + b);
+        assertTrue(certo.achados().stream().noneMatch(x -> x.descricao().contains("broadcast")
+                        || x.descricao().contains("endereço de rede")),
+                () -> "vizinho certo não pode ser acusado: " + certo.achados());
+    }
+
     @Test
     @DisplayName("estado admin: comando ausente não inventa shutdown nem no shutdown")
     void reconstrucaoPreservaAusencia() {

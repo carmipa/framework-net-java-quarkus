@@ -457,6 +457,19 @@ public class AuditoriaConfiguracaoService {
                             "Uma sessão BGP precisa de dois roteadores; apontar para si mesmo nunca sobe."));
                     continue;
                 }
+                InterfaceLida reservado = interfaceOndeEReservado(r, v.ip());
+                if (reservado != null) {
+                    achados.add(AchadoConfiguracao.semCorrecao("BGP", r.hostname(), v.linha(),
+                            "neighbor " + v.ip() + " remote-as " + v.remoteAs(),
+                            "O vizinho " + v.ip() + " é o endereço de "
+                                    + (v.ip().equals(MascaraIpv4.enderecoDeRede(reservado.ip(), reservado.prefixo()))
+                                        ? "rede" : "broadcast")
+                                    + " da sub-rede " + MascaraIpv4.cidrDe(reservado.ip(), reservado.prefixo())
+                                    + " (" + reservado.nome() + ").",
+                            "Nenhum roteador pode ter esse endereço; o erro está nesta linha. Aponte para o "
+                                    + "endereço real do vizinho no enlace."));
+                    continue;
+                }
                 boolean conectado = r.interfacesComIp().stream()
                         .anyMatch(i -> MascaraIpv4.mesmaSubRede(i.ip(), v.ip(), i.prefixo()));
                 if (!conectado) {
@@ -601,6 +614,28 @@ public class AuditoriaConfiguracaoService {
         return indice;
     }
 
+    /**
+     * Interface do roteador cuja sub-rede tem {@code ip} como endereço de rede ou de broadcast.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> separar o vizinho que aponta para um endereço impossível do vizinho
+     * que aponta para um endereço que falta no outro roteador.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> só vale para prefixos até /30 — em /31 os dois endereços são de host
+     * (RFC 3021) e /32 é um endereço só.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> não lança; sem interface nessa condição devolve {@code null}.</p>
+     */
+    private static InterfaceLida interfaceOndeEReservado(RoteadorLido r, String ip) {
+        for (InterfaceLida i : r.interfacesComIp()) {
+            if (i.prefixo() <= 30 && MascaraIpv4.mesmaSubRede(i.ip(), ip, i.prefixo())
+                    && (ip.equals(MascaraIpv4.enderecoDeRede(i.ip(), i.prefixo()))
+                        || ip.equals(MascaraIpv4.broadcastDe(i.ip(), i.prefixo())))) {
+                return i;
+            }
+        }
+        return null;
+    }
+
     /** Para cada roteador, os endereços que os OUTROS scripts afirmam que ele possui. */
     private Map<String, List<Exigencia>> mapearExigencias(
             List<RoteadorLido> roteadores, Map<Integer, RoteadorLido> porAs,
@@ -624,6 +659,12 @@ public class AuditoriaConfiguracaoService {
                                 "Cole a configuração do roteador com \"router bgp " + v.remoteAs()
                                         + "\" para fechar esse lado da topologia."));
                     }
+                    continue;
+                }
+                // Vizinho que é rede/broadcast da sub-rede do próprio declarante não é endereço possível:
+                // o erro é da linha do declarante (conferirVizinhos acusa), e "corrigir" o outro roteador
+                // para esse endereço o deixaria com o broadcast do /30 (auditoria CALC-05).
+                if (interfaceOndeEReservado(r, v.ip()) != null) {
                     continue;
                 }
                 exigencias.computeIfAbsent(dono.hostname(), k -> new ArrayList<>())
