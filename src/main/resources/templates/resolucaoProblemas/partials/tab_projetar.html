@@ -104,7 +104,7 @@
                 </div>
                 <div class="col-lg-4 col-md-6">
                     <label class="form-label text-secondary">Topologia WAN</label>
-                    <select
+                    <select aria-label="Topologia WAN"
                         name="topology_type"
                         class="form-select {#if invalidFields.contains('topology_type')}is-invalid{/if}"
                         data-bs-toggle="tooltip"
@@ -152,7 +152,7 @@
                 </div>
                 <div class="col-lg-3 col-md-6">
                     <label class="form-label text-secondary">Acesso remoto (VTY)</label>
-                    <select
+                    <select aria-label="Acesso remoto (VTY)"
                         name="remote_access"
                         class="form-select"
                         data-bs-toggle="tooltip"
@@ -166,7 +166,7 @@
                 </div>
                 <div class="col-lg-3 col-md-6">
                     <label class="form-label text-secondary">Distribuição EIGRP/OSPF</label>
-                    <select
+                    <select aria-label="Distribuição EIGRP/OSPF"
                         name="routing_mode"
                         id="routing-mode-select"
                         class="form-select"

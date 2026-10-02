@@ -23,6 +23,18 @@ public class MarkdownRenderer {
     private static final Pattern STRONG = Pattern.compile("\\*\\*([^*]+)\\*\\*");
     private static final Pattern LINK = Pattern.compile("\\[([^\\]]+)\\]\\((https?://[^\\s)]+)\\)");
 
+    /**
+     * Converte o README em HTML para a Central de Documentação, com o sumário lateral.
+     *
+     * <p>PROPÓSITO DE NEGÓCIO: a documentação do site é o próprio README do repositório, lido e
+     * mostrado na página, para não existir uma segunda cópia que divirja.
+     *
+     * <p>INVARIANTES DO DOMÍNIO: texto do README sai escapado (código e tabela incluídos); o título
+     * do Markdown desce um nível no HTML (o "#" vira h2), porque a página já tem o seu h1; o nível
+     * original fica na classe {@code md-hN} e na seção do sumário.
+     *
+     * <p>COMPORTAMENTO EM CASO DE FALHA: entrada vazia devolve HTML vazio e sumário vazio; não lança.
+     */
     public RenderResult render(String markdown) {
         String texto = normalizarLinhasBadges(markdown);
         String[] linhas = texto.split("\n", -1);
@@ -118,7 +130,10 @@ public class MarkdownRenderer {
                 secao.put("tocNivel", nivel >= 3 ? 2 : 1);
                 secao.put("tocVisivel", tocVisivel(titulo, nivel));
                 secoes.add(secao);
-                blocos.add("<h" + nivel + " id=\"" + slug + "\">" + inline(titulo) + "</h" + nivel + ">");
+                // A página já tem o seu h1 ("Central de Documentação"): o "#" do README desce um nível,
+                // senão a página fica com dois h1 (FRONT-16). A classe guarda o nível do Markdown para o CSS.
+                int tag = Math.min(nivel + 1, 6);
+                blocos.add("<h" + tag + " id=\"" + slug + "\" class=\"md-h" + nivel + "\">" + inline(titulo) + "</h" + tag + ">");
                 continue;
             }
             Matcher ol = OL.matcher(stripped);

@@ -95,12 +95,6 @@
 
         const geoEhLocal = (g) => g && (g.reservado === true || g.motivo === "private_or_local");
 
-        const flagImageUrl = (codigo) => {
-            const cc = (codigo || "").toLowerCase();
-            if (!/^[a-z]{2}$/.test(cc)) return "";
-            return "https://flagcdn.com/24x18/" + cc + ".png";
-        };
-
         const codigoPaisParaBandeira = (codigo) => {
             const cc = (codigo || "").toUpperCase();
             if (cc === "LOCAL") return "🏠";
@@ -131,26 +125,17 @@
                         paisCell = '<span class="text-warning me-1" aria-hidden="true">🏠</span><span class="text-light">Local / reservado</span>';
                     } else if (g) {
                         const ccRaw = String(g.pais_codigo || g.codigo_pais || "").replace(/\s+/g, "").toUpperCase();
-                        let flagPart = "";
-                        if (/^[A-Z]{2}$/.test(ccRaw)) {
-                            const fu = flagImageUrl(ccRaw.toLowerCase());
-                            if (fu) {
-                                flagPart = '<img src="' + fu + '" alt="" width="22" height="16" class="me-1 align-middle rounded geo-flag-img" loading="lazy">';
-                            }
-                        }
-                        if (!flagPart) {
-                            flagPart = '<span class="me-1">' + escHist(g.pais_bandeira || "🌐") + "</span>";
-                        }
+                        // FRONT-18: bandeira local (emoji), nunca imagem de CDN.
+                        const flagPart = '<span class="me-1" aria-hidden="true">'
+                            + escHist(codigoPaisParaBandeira(ccRaw) || g.pais_bandeira || "🌐") + "</span>";
                         const ccLab = /^[A-Z]{2}$/.test(ccRaw) ? '<span class="text-secondary">' + escHist(ccRaw) + "</span> " : "";
                         paisCell = flagPart + ccLab + '<span class="text-light">' + escHist(g.pais || "—") + "</span>";
                     } else {
                         const cc = (it.mask_entrada || "").toUpperCase();
                         const flagEmoji = codigoPaisParaBandeira(cc);
-                        const flagUrl = flagImageUrl(cc.toLowerCase());
                         const flagHtml =
                             cc && cc !== "LOCAL"
-                                ? (flagEmoji ? '<span class="me-1">' + flagEmoji + "</span>" : "") +
-                                  '<img src="' + flagUrl + '" alt="" width="20" height="14" class="me-1" loading="lazy">'
+                                ? (flagEmoji ? '<span class="me-1" aria-hidden="true">' + flagEmoji + "</span>" : "")
                                 : cc === "LOCAL"
                                   ? '<span class="text-warning me-1" aria-hidden="true">🏠</span><span class="text-light">Local</span>'
                                   : "";
@@ -186,13 +171,13 @@
                         connCell = '<span class="badge bg-secondary" style="font-size:.7rem;">Reservado</span>';
                     } else if (g) {
                         if (g.proxy) {
-                            connCell = '<span class="badge bg-danger" style="font-size:.7rem;">🔴 Proxy/VPN</span>';
+                            connCell = '<span class="badge bg-danger" style="font-size:.7rem;">' + HtmlEscape.icone("vpn_lock", "Proxy/VPN") + '</span>';
                         } else if (g.hosting) {
-                            connCell = '<span class="badge bg-warning text-dark" style="font-size:.7rem;">🟡 Datacenter</span>';
+                            connCell = '<span class="badge bg-warning text-dark" style="font-size:.7rem;">' + HtmlEscape.icone("dns", "Datacenter") + '</span>';
                         } else if (g.mobile) {
                             connCell = '<span class="badge bg-info text-dark" style="font-size:.7rem;">📱 Móvel</span>';
                         } else {
-                            connCell = '<span class="badge bg-success" style="font-size:.7rem;">🟢 Direto</span>';
+                            connCell = '<span class="badge bg-success" style="font-size:.7rem;">' + HtmlEscape.icone("check_circle", "Direto") + '</span>';
                         }
                     } else {
                         connCell = '<span class="text-muted">—</span>';
@@ -354,17 +339,17 @@
                 const el = document.getElementById("texto-copia-oculto");
                 const texto = el ? el.value : "";
                 if (!texto) {
-                    btnCopiar.textContent = "Sem resultado";
-                    setTimeout(() => { btnCopiar.textContent = "📋 Copiar resultado"; }, 1500);
+                    btnCopiar.innerHTML = HtmlEscape.icone("block", "Sem resultado");
+                    setTimeout(() => { btnCopiar.innerHTML = HtmlEscape.icone("content_copy", "Copiar resultado"); }, 1500);
                     return;
                 }
                 try {
                     await navigator.clipboard.writeText(texto);
-                    btnCopiar.textContent = "✅ Copiado";
+                    btnCopiar.innerHTML = HtmlEscape.icone("check", "Copiado");
                 } catch (_) {
-                    btnCopiar.textContent = "❌ Falhou";
+                    btnCopiar.innerHTML = HtmlEscape.icone("error", "Falhou");
                 }
-                setTimeout(() => { btnCopiar.textContent = "📋 Copiar resultado"; }, 1500);
+                setTimeout(() => { btnCopiar.innerHTML = HtmlEscape.icone("content_copy", "Copiar resultado"); }, 1500);
             });
         }
     }

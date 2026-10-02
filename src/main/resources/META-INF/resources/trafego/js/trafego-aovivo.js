@@ -126,7 +126,7 @@
             tr.appendChild(td((rede.sinal || 0) + " dBm"));
             if (rede.aberta) tr.appendChild(badge("⚠ Aberta (insegura)", "risco"));
             else if (/^WEP/i.test(rede.seguranca || "")) tr.appendChild(badge("⚠ WEP (cifra quebrável)", "risco"));
-            else tr.appendChild(badge("🔒 Protegida", "ok"));
+            else tr.appendChild(badge("Protegida", "ok"));
             return tr;
         });
         fillTable("wifi-body", wRows, "Sem redes.", 4);

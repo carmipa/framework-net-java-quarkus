@@ -57,4 +57,24 @@ class ServiceWorkerCacheGuardTest {
             assertFalse(protegida(publico, prefixos, trechos), "não deveria ser excluído: " + publico);
         }
     }
+
+    /** FRONT-14: tudo o que a página offline carrega do próprio site está na casca pré-cacheada. */
+    @Test
+    void paginaOfflineTemTodosOsSeusRecursosNoPreCache() throws Exception {
+        String js = Files.readString(SW, java.nio.charset.StandardCharsets.UTF_8);
+        List<String> preCache = array(js, "PRE_CACHE");
+        String offline = Files.readString(Path.of("src/main/resources/META-INF/resources/offline.html"),
+                java.nio.charset.StandardCharsets.UTF_8);
+        Matcher m = Pattern.compile("(?:href|src)=\"(/[^\"]+)\"").matcher(offline);
+        List<String> faltando = new ArrayList<>();
+        int recursos = 0;
+        while (m.find()) {
+            recursos++;
+            if (!preCache.contains(m.group(1))) {
+                faltando.add(m.group(1));
+            }
+        }
+        org.junit.jupiter.api.Assertions.assertTrue(recursos >= 3, "instrumento cego: " + recursos + " recursos lidos");
+        org.junit.jupiter.api.Assertions.assertEquals(List.of(), faltando, "a página offline carrega o que não está na casca");
+    }
 }

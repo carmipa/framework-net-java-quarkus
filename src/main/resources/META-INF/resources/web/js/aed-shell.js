@@ -94,6 +94,52 @@
         }).observe(document.body, { attributes: true, attributeFilter: ["class"], childList: true, subtree: true });
     }
 
+    /**
+     * Setas dentro dos menus suspensos do topo (auditoria FRONT-24).
+     *
+     * PROPÓSITO DE NEGÓCIO: o Bootstrap só navega com as setas entre itens .dropdown-item; os do topo são
+     *   .aed-nav-link (estilo próprio), então quem usa teclado abria o menu e não entrava nele.
+     * INVARIANTES: Seta para baixo no botão abre o menu e foca o primeiro item; dentro do menu, setas
+     *   andam entre os itens (com volta), Home e End vão às pontas; Esc continua com o Bootstrap.
+     * FALHA: sem Bootstrap ou sem itens, não faz nada.
+     * Escuta na CAPTURA do document: o Bootstrap escuta ali também e dá stopPropagation nas setas, então
+     *   um ouvinte na bolha nunca as recebia (medido: o foco ficava no botão). Na mesma fase e no mesmo
+     *   alvo os dois rodam, em qualquer ordem: o show() de quem chega depois não faz nada (já aberto).
+     */
+    document.addEventListener("keydown", (ev) => {
+        if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(ev.key)) {
+            return;
+        }
+        const caixa = ev.target && ev.target.closest && ev.target.closest(".aed-nav-drop");
+        if (!caixa) {
+            return;
+        }
+        const itens = Array.from(caixa.querySelectorAll(".aed-nav-drop-menu .aed-nav-link"));
+        if (!itens.length) {
+            return;
+        }
+        const noBotao = ev.target.classList.contains("aed-nav-drop-toggle");
+        if (noBotao) {
+            if (ev.key !== "ArrowDown") {
+                return;
+            }
+            ev.preventDefault();
+            if (window.bootstrap && window.bootstrap.Dropdown) {
+                window.bootstrap.Dropdown.getOrCreateInstance(ev.target).show();
+            }
+            itens[0].focus();
+            return;
+        }
+        const atual = itens.indexOf(document.activeElement);
+        if (atual < 0) {
+            return;
+        }
+        ev.preventDefault();
+        const destino = ev.key === "Home" ? 0 : ev.key === "End" ? itens.length - 1
+            : (atual + (ev.key === "ArrowDown" ? 1 : -1) + itens.length) % itens.length;
+        itens[destino].focus();
+    }, true);
+
     /** Desabilita tooltips nativos vazios (regra do prompt). */
     document.querySelectorAll("[title='']").forEach((el) => el.removeAttribute("title"));
 

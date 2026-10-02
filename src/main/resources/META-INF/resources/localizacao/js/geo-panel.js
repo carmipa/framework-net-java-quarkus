@@ -126,6 +126,12 @@
             } else {
                 w.__geoPendingLoc = { lat: lat, lon: lon, label: label }; // globo ainda carregando
             }
+        } else {
+            // Sem coordenada (IP inválido, privado, serviço fora): o mapa e o globo não podem continuar
+            // mostrando o lugar da consulta anterior como se fosse desta (FRONT-13).
+            if (w.LocMap && w.LocMap.limparMarcador) w.LocMap.limparMarcador();
+            if (w.GeoGlobe && w.GeoGlobe.limpar) w.GeoGlobe.limpar();
+            w.__geoPendingLoc = null;
         }
     }
 

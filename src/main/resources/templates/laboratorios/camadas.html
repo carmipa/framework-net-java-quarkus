@@ -2,7 +2,7 @@
     e um switch, na mesma rede, com transporte UDP. Máquina de estados no cliente
     (laboratorios/js/camadas.js). Variáveis: activeMainMenu, labAtivo. !}
 {#include shared/base.html}
-{#title}Camadas em ação | Laboratórios Interativos{/title}
+{#title}Camadas em ação — Laboratórios Interativos | Framework de Redes A&D{/title}
 {#description}Laboratório interativo Camadas em ação: veja passo a passo uma mensagem ganhar cabeçalhos (UDP, IP, Ethernet), atravessar um switch e ser desencapsulada no destino, na mesma rede.{/description}
 {#extraHead}
 <link rel="stylesheet" href="/laboratorios/css/laboratorios.css?v=20261002">
@@ -183,8 +183,8 @@
         <div class="lab-modelo-cab">
             <h2 class="lab-secao-titulo mb-0"><span class="material-symbols-outlined" aria-hidden="true" translate="no">table_chart</span> Este cenário nos modelos</h2>
             <div class="lab-modelo-toggle" role="group" aria-label="Escolher modelo de referência">
-                <button type="button" class="aed-btn aed-btn-neutral btn-sm is-active" id="lab-modelo-tcpip" aria-pressed="true">TCP/IP</button>
-                <button type="button" class="aed-btn aed-btn-neutral btn-sm" id="lab-modelo-osi" aria-pressed="false">OSI</button>
+                <button type="button" class="aed-btn aed-btn-neutral btn-sm is-active" id="lab-modelo-tcpip" aria-pressed="true"><span class="material-symbols-outlined" translate="no" aria-hidden="true">layers</span> TCP/IP</button>
+                <button type="button" class="aed-btn aed-btn-neutral btn-sm" id="lab-modelo-osi" aria-pressed="false"><span class="material-symbols-outlined" translate="no" aria-hidden="true">layers</span> OSI</button>
             </div>
         </div>
         <div id="lab-modelo-explica" class="lab-modelo-explica"></div>

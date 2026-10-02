@@ -1,5 +1,5 @@
 {#include shared/base.html}
-{#title}CyberNet Framework | Região Geográfica{/title}
+{#title}Região Geográfica | Framework de Redes A&D{/title}
 {#content}
 <div class="container py-5">
     {#include shared/main_menu.html activeMainMenu='analise' /}
@@ -29,14 +29,14 @@
             </div>
             <div class="col-auto">
                 <button type="button" class="btn btn-sm btn-warning text-dark fw-semibold" id="btn-geo-localizar"
-                        data-bs-toggle="tooltip" title="Consulta a região deste endereço. Se vazio, usa o IP da ligação.">
-                    Localizar
+                        data-bs-toggle="tooltip" title="Consulta a região deste endereço. Se vazio, usa o IP da conexão atual.">
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">travel_explore</span> Localizar
                 </button>
             </div>
             <div class="col-auto">
                 <button type="button" class="btn btn-sm btn-outline-warning" id="btn-geo-refresh"
                         data-bs-toggle="tooltip" title="Limpa o campo e consulta pelo IP da sua conexão.">
-                    IP da ligação
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">my_location</span> IP da conexão
                 </button>
             </div>
         </form>
@@ -63,7 +63,7 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/analiseDidatica/js/geo_report.js?v=20260710"></script>
+<script src="/analiseDidatica/js/geo_report.js?v=20261002"></script>
 <script id="geo-initial-payload" type="application/json">{geoPayloadJson.raw}</script>
 <script>
 (function () {

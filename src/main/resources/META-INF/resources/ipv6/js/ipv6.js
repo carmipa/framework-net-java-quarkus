@@ -142,8 +142,8 @@
             if (t2) {
                 var rotulo = copiar.innerHTML; // preserva o rótulo original (Copiar plano / configuração)
                 navigator.clipboard.writeText(t2).then(
-                    function () { copiar.textContent = "✅ Copiado"; },
-                    function () { copiar.textContent = "❌ Falhou"; }
+                    function () { copiar.innerHTML = HtmlEscape.icone("check", "Copiado"); },
+                    function () { copiar.innerHTML = HtmlEscape.icone("error", "Falhou"); }
                 );
                 setTimeout(function () { copiar.innerHTML = rotulo; }, 1500);
             }
@@ -327,8 +327,8 @@
                 return;
             }
             navigator.clipboard.writeText(texto).then(
-                function () { btn.textContent = "✅ Copiado"; },
-                function () { btn.textContent = "❌ Falhou"; }
+                function () { btn.innerHTML = HtmlEscape.icone("check", "Copiado"); },
+                function () { btn.innerHTML = HtmlEscape.icone("error", "Falhou"); }
             );
             setTimeout(function () { btn.innerHTML = '<span class="material-symbols-outlined" translate="no" aria-hidden="true">content_copy</span> Copiar resultado'; }, 1500);
         });

@@ -122,10 +122,10 @@
     color: var(--aed-text-secondary, #8b97ad);
 }
 
-.markdown-doc h1,
-.markdown-doc h2,
-.markdown-doc h3,
-.markdown-doc h4 {
+.markdown-doc .md-h1,
+.markdown-doc .md-h2,
+.markdown-doc .md-h3,
+.markdown-doc .md-h4 {
     font-family: var(--aed-font-display, "Space Grotesk", sans-serif);
     color: var(--aed-text, #eef2f8);
     margin-top: 1.6rem;
@@ -134,14 +134,14 @@
     line-height: 1.25;
 }
 
-.markdown-doc h1 { font-size: 1.7rem; }
-.markdown-doc h2 {
+.markdown-doc .md-h1 { font-size: 1.7rem; }
+.markdown-doc .md-h2 {
     font-size: 1.3rem;
     padding-bottom: 0.35rem;
     border-bottom: 1px solid var(--aed-border, rgba(255, 255, 255, 0.08));
 }
-.markdown-doc h3 { font-size: 1.08rem; color: var(--aed-teal, #2dd4bf); }
-.markdown-doc h4 { font-size: 0.98rem; color: #8aa8ff; }
+.markdown-doc .md-h3 { font-size: 1.08rem; color: var(--aed-teal, #2dd4bf); }
+.markdown-doc .md-h4 { font-size: 0.98rem; color: #8aa8ff; }
 
 .markdown-doc p { margin: 0.6rem 0; }
 .markdown-doc strong { color: var(--aed-text, #eef2f8); }

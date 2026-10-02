@@ -1,6 +1,6 @@
 {! Aprofundamento do módulo. Reaproveita o corpo compartilhado, o CSS e o Mermaid. Variáveis: item, conteudo, aprofundamentos, aprofundamentoAtivo. !}
 {#include shared/base.html}
-{#title}CyberNet Framework | {item.titulo}{/title}
+{#title}{item.titulo} | Framework de Redes A&D{/title}
 {#description}{item.titulo} — {item.chamada}{/description}
 {#extraHead}
 <link rel="stylesheet" href="/protocolos/css/subnav.css?v=20260810">
@@ -13,7 +13,7 @@
     <header class="text-center mb-4">
         <div class="aprof-hero-icone" aria-hidden="true"><span class="material-symbols-outlined" translate="no" aria-hidden="true">{item.icone}</span></div>
         <span class="aed-eyebrow aed-eyebrow-teal">Aprofundamento · Wi-Fi</span>
-        <h2 class="mb-2" style="font-family:var(--aed-font-display);">{item.titulo}</h2>
+        <h1 class="h2 mb-2" style="font-family:var(--aed-font-display);">{item.titulo}</h1>
         <p class="text-secondary small mx-auto" style="max-width:48rem;">{conteudo.resumo}</p>
         {#if conteudo.ficha}
         <div class="aprof-ficha" role="list">

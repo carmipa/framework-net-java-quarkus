@@ -1,5 +1,5 @@
 {#include shared/base.html}
-{#title}FrameworkNet | Resolução de Problemas{/title}
+{#title}Resolução de Problemas | Framework de Redes A&D{/title}
 {#description}Resolução de problemas de endereçamento: VLSM para várias localidades, topologia WAN, prefixo configurável, EIGRP e OSPF, com exportação de laboratório Packet Tracer.{/description}
 {#extraHead}
 <link rel="stylesheet" href="/resolucaoProblemas/css/resolucao-page.css?v=20260703">
@@ -10,7 +10,7 @@
     {#include shared/main_menu.html activeMainMenu='resolucao' /}
     <div class="mb-4">
         <span class="aed-eyebrow aed-eyebrow-indigo">VLSM + WAN</span>
-        <h2 class="mb-2" style="font-family:var(--aed-font-display);">Resolução de Problemas de Redes</h2>
+        <h1 class="h2 mb-2" style="font-family:var(--aed-font-display);">Resolução de Problemas de Redes</h1>
     </div>
 
     {! As duas abas são o mesmo problema nos dois sentidos: uma vai do requisito ao
@@ -49,7 +49,7 @@
 {/content}
 {#extraScripts}
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11.17.2/dist/mermaid.min.js" integrity="sha384-EOXBFmc3gx5mb+vn0vPvvGqACToJD24hhacX5Yx+8NUUQrHIle/Qi5Bg9o3zKwW2" crossorigin="anonymous"></script>
-<script src="/web/js/html-escape.js?v=20260703"></script>
+<script src="/web/js/html-escape.js?v=20261002"></script>
 <script id="topology-details-json" type="application/json">{topologyDetailsJson.raw}</script>
 <script>
 window.__topologyDetails = JSON.parse(document.getElementById("topology-details-json")?.textContent || "{}");

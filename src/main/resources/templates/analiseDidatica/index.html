@@ -1,5 +1,5 @@
 {#include shared/base.html}
-{#title}CyberNet Framework | Paulo André{/title}
+{#title}Análise Didática | Framework de Redes A&D{/title}
 {#description}Análise didática de endereços IPv4 e IPv6: CIDR, máscara, wildcard, classe, RFC1918, rede e broadcast, com o cálculo mostrado bit a bit e comparador de endereços.{/description}
 {#extraHead}
 <link rel="stylesheet" href="/calculadora/css/calculadora.css?v=20260908" />
@@ -166,13 +166,13 @@
             <form method="GET" action="/analise" class="d-flex flex-wrap align-items-center gap-2 small">
                 <input type="hidden" name="tab" value="{activeTabPre}">
                 <label class="text-secondary">Por página</label>
-                <select name="history_limit" class="form-select form-select-sm bg-dark text-light border-secondary" style="width:auto;">
+                <select aria-label="Por página" name="history_limit" class="form-select form-select-sm bg-dark text-light border-secondary" style="width:auto;">
                     <option value="5" {#if historyLimitPre == '5'}selected{/if}>5</option>
                     <option value="10" {#if historyLimitPre == '10'}selected{/if}>10</option>
                     <option value="20" {#if historyLimitPre == '20'}selected{/if}>20</option>
                 </select>
                 <input type="hidden" name="history_page" value="{historyPage}">
-                <button type="submit" class="btn btn-sm btn-outline-info">Aplicar</button>
+                <button type="submit" class="btn btn-sm btn-outline-info"><span class="material-symbols-outlined" translate="no" aria-hidden="true">check</span> Aplicar</button>
             </form>
         </div>
         <p class="small text-secondary mb-2">Página {historyPage} de {totalHistoryPages} · {historyPageItems.size} registro(s) nesta página</p>
@@ -214,8 +214,8 @@
 </div>
 {/content}
 {#extraScripts}
-<script src="/analiseDidatica/js/geo_report.js?v=20260710"></script>
-<script src="/analiseDidatica/js/analise_widgets.js?v=20261001"></script>
-<script src="/analiseDidatica/js/analise.js?v=20260710"></script>
+<script src="/analiseDidatica/js/geo_report.js?v=20261002"></script>
+<script src="/analiseDidatica/js/analise_widgets.js?v=20261002"></script>
+<script src="/analiseDidatica/js/analise.js?v=20261002"></script>
 {/extraScripts}
 {/include}

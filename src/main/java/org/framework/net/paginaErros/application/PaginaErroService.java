@@ -143,8 +143,15 @@ public class PaginaErroService {
             return metodo + " " + caminho;
         }
 
+        /**
+         * Título da aba da página de erro.
+         * PROPÓSITO DE NEGÓCIO: quem tem várias abas abertas reconhece o erro e o site pelo título.
+         * INVARIANTES: mesmo formato das outras páginas, "&lt;página&gt; | Framework de Redes A&amp;D"
+         *   (FRONT-22: o site tinha cinco marcas diferentes); o Qute escapa o "&amp;" ao renderizar.
+         * FALHA: não falha; o código vem do próprio erro já classificado.
+         */
         public String tituloDaAba() {
-            return codigo + " — Framework de Redes";
+            return codigo + " | Framework de Redes A&D";
         }
     }
 }

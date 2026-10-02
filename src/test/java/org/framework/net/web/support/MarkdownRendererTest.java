@@ -27,6 +27,17 @@ class MarkdownRendererTest {
         assertFalse(html.contains("<p>| Modulo | Rota |</p>"));
     }
 
+    /** FRONT-16: a página já tem o seu h1; o "#" do README desce para h2 e a classe guarda o nível. */
+    @Test
+    void tituloDoReadmeNaoViraSegundoH1DaPagina() {
+        String html = renderer.render("# Framework\n\n## Seção\n\n###### Fundo\n").html();
+
+        assertFalse(html.contains("<h1"), html);
+        assertTrue(html.contains("<h2 id=\"framework\" class=\"md-h1\">"), html);
+        assertTrue(html.contains("<h3 id=\"secao\" class=\"md-h2\">"), html);
+        assertTrue(html.contains("<h6 id=\"fundo\" class=\"md-h6\">"), html);
+    }
+
     @Test
     void deveRenderizarBlocosComunsDoReadmeTecnico() {
         String markdown = """

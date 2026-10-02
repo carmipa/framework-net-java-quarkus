@@ -113,7 +113,9 @@
     function bandeiraHtml(cc, emoji) {
         var iso = String(cc || "").replace(/\s+/g, "").toUpperCase();
         if (/^[A-Z]{2}$/.test(iso)) {
-            return '<img src="https://flagcdn.com/w80/' + iso.toLowerCase() + '.png" width="46" height="34" class="priv-flag" alt="' + esc(iso) + '" loading="lazy">';
+            // FRONT-18: bandeira local (emoji pelo código ISO), nunca imagem de CDN.
+            var flag = String.fromCodePoint.apply(null, iso.split("").map(function (c) { return 127397 + c.charCodeAt(0); }));
+            return '<span class="priv-flag-emoji" title="' + esc(iso) + '" aria-label="' + esc(iso) + '">' + flag + "</span>";
         }
         return '<span class="priv-flag-emoji">' + esc(emoji || "🌐") + "</span>";
     }

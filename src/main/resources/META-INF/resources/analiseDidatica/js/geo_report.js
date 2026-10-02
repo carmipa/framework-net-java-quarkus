@@ -22,7 +22,7 @@
 
         if (j.erro) {
             rootEl.innerHTML =
-                '<div class="alert alert-danger mt-3"><strong>⚠️ Erro:</strong> ' +
+                '<div class="alert alert-danger mt-3"><strong>' + HtmlEscape.icone("warning", "Erro:") + '</strong> ' +
                 esc(j.erro) +
                 "</div>";
             return;
@@ -57,29 +57,20 @@
             const rawIso = String(j.pais_codigo || j.codigo_pais || "")
                 .replace(/\s+/g, "")
                 .toUpperCase();
-            const flagCdnSrc =
-                rawIso.length === 2 && /^[A-Z]{2}$/.test(rawIso)
-                    ? `https://flagcdn.com/w40/${rawIso.toLowerCase()}.png`
-                    : "";
+            // FRONT-18: bandeira local (emoji pelo código ISO), nunca imagem de CDN. Sem a fonte de emoji
+            // (Windows), o navegador mostra as duas letras do país — texto que ainda informa.
+            const bandeiraEmoji =
+                j.pais_bandeira && j.pais_bandeira !== "🌐"
+                    ? j.pais_bandeira
+                    : /^[A-Z]{2}$/.test(rawIso) ? String.fromCodePoint.apply(null, rawIso.split("").map(function (c) { return 127397 + c.charCodeAt(0); })) : "🌐";
             const cc = esc(j.pais_codigo || j.codigo_pais || "");
             const lat = j.latitude != null ? j.latitude : j.lat;
             const lon = j.longitude != null ? j.longitude : j.lon;
             const hasCoords = lat != null && lon != null;
             const rcolor = esc(j.risco_badge_color || "secondary");
             const flagHeaderHtml =
-                flagCdnSrc !== ""
-                    ? '<img src="' +
-                      esc(flagCdnSrc) +
-                      '" width="32" height="24" class="geo-flag-img rounded me-2" alt="" loading="lazy">'
-                    : '<span style="font-size:1.4rem;">' +
-                      esc(j.pais_bandeira || "🌐") +
-                      "</span>";
-            const flagPaísImg =
-                flagCdnSrc !== ""
-                    ? '<img src="' +
-                      esc(flagCdnSrc) +
-                      '" width="28" height="21" class="geo-flag-img rounded me-1" alt="" loading="lazy">'
-                    : "";
+                '<span style="font-size:1.4rem;" aria-hidden="true">' + esc(bandeiraEmoji) + "</span>";
+            const flagPaísImg = "";
             const locRows = [];
             locRows.push(
                 '<div class="col-12 col-md-6"><div class="p-2 rounded" style="background:rgba(255,255,255,0.05);overflow:hidden;">' +
@@ -87,9 +78,7 @@
                 '<div class="fw-bold d-flex align-items-center flex-wrap gap-2">' +
                 flagPaísImg +
                 "<span>" +
-                (flagCdnSrc
-                    ? esc(j.pais || "—")
-                    : esc(j.pais_bandeira || "🌐") + " " + esc(j.pais || "—")) +
+                esc(bandeiraEmoji) + " " + esc(j.pais || "—") +
                 "</span></div>"
             );
             if (cc) {
@@ -202,7 +191,7 @@
                 '<span class="badge fs-6 px-3 py-2 ' +
                 (proxyBad ? "bg-danger" : "bg-success") +
                 '">' +
-                esc(j.proxy_flag || (proxyBad ? "🔴 Proxy/VPN detectado" : "🟢 Conexão direta")) +
+                HtmlEscape.semaforo(j.proxy_flag || (proxyBad ? "🔴 Proxy/VPN detectado" : "🟢 Conexão direta")) +
                 "</span>";
             let extraConn = "";
             if (j.hosting_flag) {
@@ -242,7 +231,7 @@
                 esc(j.risco_badge || "") +
                 "</span></div>" +
                 '<div class="card-body">' +
-                '<h6 class="text-primary border-bottom pb-1 mb-2">📍 Localização</h6>' +
+                '<h6 class="text-primary border-bottom pb-1 mb-2">' + HtmlEscape.icone("place", "Localização") + '</h6>' +
                 '<div class="row g-2 mb-3" style="align-items:flex-start;">' +
                 locRows.join("") +
                 "</div>" +
@@ -268,7 +257,7 @@
                 esc(j.risco_recomendacao || "") +
                 "</p></div>" +
                 (j.fonte
-                    ? '<div class="text-end mt-2"><span class="text-muted" style="font-size:.75rem;">📡 Dados: <strong>' +
+                    ? '<div class="text-end mt-2"><span class="text-muted" style="font-size:.75rem;">' + HtmlEscape.icone("satellite_alt", "Dados:") + ' <strong>' +
                       esc(j.fonte) +
                       "</strong></span></div>"
                     : "") +
@@ -276,9 +265,16 @@
             return;
         }
 
+        // O motivo chega como código ("invalid", "network"…); na tela vai o título em português (FRONT-13).
+        var TITULOS = {
+            invalid: "Endereço inválido",
+            empty: "IP não identificado",
+            private_or_local: "Endereço local ou privado",
+            network: "Localização indisponível no momento"
+        };
         rootEl.innerHTML =
             '<div class="alert alert-secondary mt-3 mb-0" role="alert"><strong>' +
-            esc(j.motivo || "Aviso") +
+            esc(TITULOS[j.motivo] || "Aviso") +
             ":</strong> " +
             esc(j.mensagem || "Indisponível.") +
             "</div>";

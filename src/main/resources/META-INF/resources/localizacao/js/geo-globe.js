@@ -48,7 +48,11 @@ import Globe from "globe.gl";
                     .pointColor(function () { return "#ff3131"; })
                     .pointAltitude(0.08)
                     .pointRadius(0.5)
-                    .pointLabel(function (p) { return "<strong>" + (p.label || "") + "</strong>"; })
+                    // O rótulo vem do provedor de GeoIP (cidade, IP): escapado antes de virar HTML.
+                    .pointLabel(function (p) {
+                        return "<strong>" + String(p.label || "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                            .replace(/>/g, "&gt;").replace(/"/g, "&quot;") + "</strong>";
+                    })
                     .ringsData([])
                     .ringLat("lat")
                     .ringLng("lng")
@@ -102,6 +106,13 @@ import Globe from "globe.gl";
             setLocation: function (lat, lon, label) {
                 pendente = { lat: lat, lon: lon, label: label };
                 apply(pendente);
+            },
+            /** FRONT-13: consulta sem coordenada não pode deixar o ponto da consulta anterior. */
+            limpar: function () {
+                pendente = null;
+                if (!ready || !globe) return;
+                globe.pointsData([]).ringsData([]);
+                globe.pointOfView({ lat: -14, lng: -52, altitude: 1.9 }, 800);
             }
         };
     }
@@ -119,6 +130,10 @@ import Globe from "globe.gl";
         setLocation: function (lat, lon, label) {
             window.__geoPendingLoc = { lat: lat, lon: lon, label: label };
             geo.setLocation(lat, lon, label);
+        },
+        limpar: function () {
+            window.__geoPendingLoc = null;
+            geo.limpar();
         }
     };
     if (window.__geoPendingLoc) {

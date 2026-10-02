@@ -51,12 +51,13 @@ class CabecalhosEProxyHttpTest {
                 "https://unpkg.com",                 // Leaflet
                 "https://fonts.googleapis.com",      // Material Symbols
                 "https://fonts.gstatic.com",         // arquivos das fontes
-                "https://flagcdn.com",               // bandeiras do seletor de idioma
                 "tile.openstreetmap.org",            // tiles do mapa
                 "https://translate.google.com"}) {   // widget de tradução
             org.junit.jupiter.api.Assertions.assertTrue(csp.contains(origem),
                     "CSP sem a origem " + origem + ": o recurso vai parar de carregar.\nCSP: " + csp);
         }
+        // Bandeiras são locais (seletor desde 01/10, país da GeoIP desde FRONT-18): origem a menos no CSP.
+        org.junit.jupiter.api.Assertions.assertFalse(csp.contains("flagcdn.com"), csp);
 
         // Trava as diretivas que independem de origem externa.
         org.junit.jupiter.api.Assertions.assertTrue(csp.contains("object-src 'none'"), csp);

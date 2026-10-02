@@ -1,5 +1,5 @@
 {#include shared/base.html}
-{#title}Framework de Redes A&D | Localização{/title}
+{#title}Localização | Framework de Redes A&D{/title}
 {#description}Localização de endereços IP por GeoIP e de endereços por CEP, com o resultado no mapa e os dados de rede associados ao endereço consultado.{/description}
 {#extraHead}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
@@ -22,7 +22,7 @@
 
     <div class="text-center mb-4">
         <span class="aed-eyebrow aed-eyebrow-teal">Localização</span>
-        <h2 class="mb-2" style="font-family:var(--aed-font-display);">Localização por IP (GeoIP) e por CEP</h2>
+        <h1 class="h2 mb-2" style="font-family:var(--aed-font-display);">Localização por IP (GeoIP) e por CEP</h1>
         <p class="text-secondary small mx-auto" style="max-width:44rem;">
             Localize a região de um IP público (GeoIP) e o endereço de um CEP, plotados no mapa (OpenStreetMap).
         </p>
@@ -76,7 +76,7 @@
                     IP a localizar (opcional)
                     <button type="button" class="help-hint-btn" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top"
                             title="Entrada de IP"
-                            data-bs-content="Digite um IPv4 ou IPv6 público para localizar país e região. Se vazio, será usado o IP da conexão atual.">ℹ️</button>
+                            data-bs-content="Digite um IPv4 ou IPv6 público para localizar país e região. Se vazio, será usado o IP da conexão atual." aria-label="Ajuda: Entrada de IP"><span class="material-symbols-outlined" translate="no" aria-hidden="true">info</span></button>
                 </label>
                 <input type="text" class="form-control form-control-sm input-ip bg-dark text-light border-secondary"
                        id="geo-ip-digitar" name="ip" placeholder="ex.: 8.8.8.8 ou 2001:4860:4860::8888"
@@ -86,13 +86,13 @@
             <div class="col-auto">
                 <button type="button" class="aed-btn aed-btn-amber btn-sm" id="btn-geo-localizar"
                         data-bs-toggle="tooltip" data-bs-placement="top" title="Consulta geográfica do IP informado.">
-                    Localizar
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">travel_explore</span> Localizar
                 </button>
             </div>
             <div class="col-auto">
                 <button type="button" class="aed-btn aed-btn-neutral btn-sm" id="btn-geo-refresh"
                         data-bs-toggle="tooltip" data-bs-placement="top" title="Limpa o campo e usa o IP da conexão atual.">
-                    IP da ligação
+                    <span class="material-symbols-outlined" translate="no" aria-hidden="true">my_location</span> IP da conexão
                 </button>
             </div>
         </form>
@@ -239,10 +239,10 @@
 {#extraScripts}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <script src="/web/js/aed-tabs.js?v=20260710"></script>
-<script src="/analiseDidatica/js/geo_report.js?v=20260709"></script>
-<script src="/localizacao/js/localizacao.js?v=20260925f"></script>
-<script src="/localizacao/js/geo-panel.js?v=20260710"></script>
-<script src="/localizacao/js/privacidade.js?v=20260925e"></script>
-<script type="module" src="/localizacao/js/geo-globe.js?v=20260710d"></script>
+<script src="/analiseDidatica/js/geo_report.js?v=20261002"></script>
+<script src="/localizacao/js/localizacao.js?v=20261002"></script>
+<script src="/localizacao/js/geo-panel.js?v=20261002"></script>
+<script src="/localizacao/js/privacidade.js?v=20261002"></script>
+<script type="module" src="/localizacao/js/geo-globe.js?v=20261002"></script>
 {/extraScripts}
 {/include}

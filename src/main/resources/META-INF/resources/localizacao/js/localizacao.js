@@ -205,5 +205,14 @@
         }
     });
 
-    w.LocMap = { setMarker: setMarker, invalidate: function () { if (map) map.invalidateSize(); } };
+    /** Tira o marcador (FRONT-13: a consulta sem coordenada deixava o da consulta anterior). */
+    function limparMarcador() {
+        if (map && marker) {
+            map.removeLayer(marker);
+            marker = null;
+        }
+    }
+
+    w.LocMap = { setMarker: setMarker, limparMarcador: limparMarcador,
+        invalidate: function () { if (map) map.invalidateSize(); } };
 })(window);

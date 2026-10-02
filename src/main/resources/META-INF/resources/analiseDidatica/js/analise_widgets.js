@@ -178,15 +178,15 @@
     function initCopyCliButtons() {
         document.querySelectorAll(".copy-cli-model").forEach((btn) => {
             btn.addEventListener("click", async () => {
-                const original = btn.textContent;
+                const original = btn.innerHTML;
                 const txt = (btn.getAttribute("data-copy-text") || "").replace(/&#10;/g, "\n");
                 try {
                     await navigator.clipboard.writeText(txt);
-                    btn.textContent = "✅ Copiado";
+                    btn.innerHTML = HtmlEscape.icone("check", "Copiado");
                 } catch (_) {
-                    btn.textContent = "❌ Falhou";
+                    btn.innerHTML = HtmlEscape.icone("error", "Falhou");
                 }
-                setTimeout(() => { btn.textContent = original; }, 1200);
+                setTimeout(() => { btn.innerHTML = original; }, 1200);
             });
         });
     }

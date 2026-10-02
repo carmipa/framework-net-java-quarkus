@@ -285,13 +285,59 @@
         exportJsonBtn && exportJsonBtn.addEventListener("click", () => exportRowsJson(gridId, apply()));
         exportPdfBtn && exportPdfBtn.addEventListener("click", () => exportRowsPdf(gridId, apply()));
 
+        /**
+         * Copia a linha para a área de transferência (auditoria FRONT-15).
+         * Propósito: o botão não dava retorno, levava os campos internos da tabela (data-grid-row,
+         *   texto de busca) e, com a área de transferência bloqueada, lançava erro sem tratamento.
+         * Invariante: copia só os campos de conteúdo; diz o resultado na tela e ao leitor de tela.
+         * Falha: navegador sem permissão mostra a mensagem de erro; nunca lança.
+         */
+        async function copiarLinha(botao, linha) {
+            const internos = new Set(["gridRow", "gridMobileRow", "search"]);
+            const dados = {};
+            Object.keys(linha.dataset).forEach((k) => {
+                if (!internos.has(k)) {
+                    dados[k] = linha.dataset[k];
+                }
+            });
+            const icone = botao.querySelector(".material-symbols-outlined");
+            const iconeOriginal = icone ? icone.textContent : "";
+            let mensagem;
+            try {
+                await navigator.clipboard.writeText(JSON.stringify(dados, null, 2));
+                mensagem = "Linha copiada";
+                if (icone) icone.textContent = "check";
+            } catch (_) {
+                mensagem = "Não foi possível copiar: o navegador bloqueou a área de transferência";
+                if (icone) icone.textContent = "error";
+            }
+            botao.setAttribute("aria-label", mensagem);
+            avisar(mensagem);
+            setTimeout(() => {
+                if (icone) icone.textContent = iconeOriginal;
+                botao.removeAttribute("aria-label");
+            }, 1800);
+        }
+
+        function avisar(mensagem) {
+            let regiao = document.getElementById("datagrid-aviso");
+            if (!regiao) {
+                regiao = document.createElement("div");
+                regiao.id = "datagrid-aviso";
+                regiao.className = "visually-hidden";
+                regiao.setAttribute("aria-live", "polite");
+                document.body.appendChild(regiao);
+            }
+            regiao.textContent = mensagem;
+        }
+
         gridRoot.addEventListener("click", async (ev) => {
             const copyBtn = ev.target.closest(`[data-grid-copy="${gridId}"]`);
             const detailsBtn = ev.target.closest(`[data-grid-details="${gridId}"]`);
             const row = ev.target.closest(`[data-grid-row="${gridId}"], [data-grid-mobile-row="${gridId}"]`);
             if (!row) return;
             if (copyBtn) {
-                await navigator.clipboard.writeText(JSON.stringify({ ...row.dataset }, null, 2));
+                await copiarLinha(copyBtn, row);
             }
             if (detailsBtn && detailsModal) {
                 const d = row.dataset;
@@ -334,6 +380,14 @@
                         <p><strong>Alternativa segura:</strong> ${esc(d.alternativa || "")}</p>
                     `;
                 }
+                // FRONT-25: ao fechar, o foco volta ao botão que abriu (antes caía no topo da página e
+                // quem navega por teclado perdia o lugar na tabela).
+                const origem = detailsBtn;
+                detailsModalEl.addEventListener("hidden.bs.modal", () => {
+                    if (document.contains(origem)) {
+                        origem.focus();
+                    }
+                }, { once: true });
                 detailsModal.show();
             }
         });

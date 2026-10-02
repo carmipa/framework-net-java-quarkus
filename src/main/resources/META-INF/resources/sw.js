@@ -27,8 +27,9 @@
  *     /offline.html para navegacao e um erro 503 sintetico para o resto. Nenhuma
  *     falha do service worker impede a aplicacao de funcionar online.
  */
-/* v3: expurga caches anteriores, que guardavam export/API e páginas com dado pessoal da sessão. */
-const VERSAO = 'framework-net-v3';
+/* v3: expurga caches anteriores, que guardavam export/API e páginas com dado pessoal da sessão.
+   v4: a casca offline passa a levar o offline.css (a página offline aparecia sem estilo, FRONT-14). */
+const VERSAO = 'framework-net-v4';
 const CACHE_ESTATICO = `${VERSAO}-estatico`;
 const PAGINA_OFFLINE = '/offline.html';
 
@@ -37,6 +38,7 @@ const PRE_CACHE = [
   PAGINA_OFFLINE,
   '/web/css/app.css',
   '/web/css/aed-command-center.css',
+  '/web/css/offline.css',
   '/pwa/icone-192.png',
   // Fonte de ícones local: sem ela, offline, o glifo aparece como a palavra do nome.
   '/web/css/material-symbols.css?v=20260925',
