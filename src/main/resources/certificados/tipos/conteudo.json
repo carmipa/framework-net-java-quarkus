@@ -1,5 +1,5 @@
 {
-  "resumo": "Um certificado X.509 não é \"um só tipo\". Ele varia em duas dimensões independentes. A primeira é o NÍVEL DE VALIDAÇÃO que a Autoridade Certificadora (CA) fez antes de emitir: DV (só prova controle do domínio), OV (valida também a existência da organização) e EV (validação estendida, com verificação jurídica mais rigorosa). A segunda é o USO a que o certificado se destina, gravado nos campos de uso de chave (Key Usage) e uso estendido (Extended Key Usage): TLS de servidor (o mais comum), TLS de cliente para mTLS, assinatura de código (code signing) e assinatura/cifragem de e-mail (S/MIME). Cruzando com isso ainda há o ESCOPO dos nomes cobertos (single, SAN com vários nomes, ou wildcard cobrindo um nível de subdomínios) e a ORIGEM da confiança (emitido por CA pública confiável versus self-signed, que exige confiança manual). O ponto central é que, no browser moderno, DV, OV e EV mostram o MESMO cadeado: o EV perdeu o destaque visual (a barra verde com o nome da empresa foi removida do Chrome, Firefox e Safari). Portanto o cadeado prova cifragem e controle do domínio, jamais a idoneidade da empresa por trás dele. Este aprofundamento se conecta com o material sobre o protocolo TLS e com o Inspetor TLS disponíveis no site, onde você vê na prática qual certificado o servidor apresenta no handshake.",
+  "resumo": "Um certificado X.509 não é \"um só tipo\". Ele varia em duas dimensões independentes. A primeira é o NÍVEL DE VALIDAÇÃO que a Autoridade Certificadora (CA) fez antes de emitir: DV (só prova controle do domínio), OV (valida também a existência da organização) e EV (validação estendida, com verificação jurídica mais rigorosa). A segunda é o USO a que o certificado se destina, gravado nos campos de uso de chave (Key Usage) e uso estendido (Extended Key Usage): TLS de servidor (o mais comum), TLS de cliente para mTLS, assinatura de código (code signing) e assinatura/cifragem de e-mail (S/MIME). Cruzando com isso ainda há o ESCOPO dos nomes cobertos (single, SAN com vários nomes, ou wildcard cobrindo um nível de subdomínios) e a ORIGEM da confiança (emitido por CA pública confiável versus self-signed, que exige confiança manual). O ponto central é que, no browser moderno, DV, OV e EV mostram o MESMO cadeado: o EV perdeu o destaque visual (a barra verde com o nome da empresa foi removida do Chrome, Firefox e Safari). Portanto o cadeado prova cifragem e controle do domínio, jamais a idoneidade da empresa por trás dele. Este aprofundamento se conecta com o material sobre o protocolo TLS e com o Inspetor TLS do site (simulação: você informa os dados e ele aplica as regras de validação); o certificado que um servidor real apresenta sai do openssl s_client.",
   "ficha": [
     {
       "rotulo": "Dimensões independentes",
@@ -66,7 +66,7 @@
     {
       "titulo": "Uso é travado por extensões, não por costume",
       "icone": "badge",
-      "texto": "Key Usage e Extended Key Usage (EKU) gravam para que o certificado serve: serverAuth (TLS servidor), clientAuth (mTLS), codeSigning e emailProtection (S/MIME). Um certificado de servidor TLS não assina código, mesmo que a chave 'funcione' — o verificador rejeita pelo EKU errado. Veja no Inspetor TLS do site qual EKU o servidor apresenta.",
+      "texto": "Key Usage e Extended Key Usage (EKU) gravam para que o certificado serve: serverAuth (TLS servidor), clientAuth (mTLS), codeSigning e emailProtection (S/MIME). Um certificado de servidor TLS não assina código, mesmo que a chave 'funcione' — o verificador rejeita pelo EKU errado. Veja o EKU que um servidor real apresenta com openssl s_client | openssl x509 -noout -ext extendedKeyUsage.",
       "destaque": "O propósito está escrito no certificado."
     }
   ],
@@ -170,7 +170,7 @@
           "TLS servidor",
           "serverAuth",
           "Site HTTPS que o browser abre",
-          "Inspetor TLS do site / handshake TLS"
+          "openssl s_client / handshake TLS"
         ],
         [
           "TLS cliente (mTLS)",
@@ -271,9 +271,9 @@
     },
     {
       "titulo": "Inspecionar o certificado que um servidor apresenta no TLS",
-      "cenario": "Você quer ver ao vivo qual certificado, nível e nomes um site público entrega no handshake — o mesmo que o Inspetor TLS do site mostra de forma visual.",
+      "cenario": "Você quer ver ao vivo qual certificado, nível e nomes um site público entrega no handshake.",
       "comandos": "# Puxar o certificado servido e ver SAN + Issuer\nopenssl s_client -connect example.com:443 -servername example.com </dev/null 2>/dev/null \\\n  | openssl x509 -noout -subject -issuer -ext subjectAltName\n\n# Ver as datas de validade\nopenssl s_client -connect example.com:443 -servername example.com </dev/null 2>/dev/null \\\n  | openssl x509 -noout -dates",
-      "explicacao": "O -servername envia o SNI, essencial quando o servidor hospeda vários domínios. O Issuer revela a CA (ou aponta self-signed se bater com o Subject). Compare o resultado com o Inspetor TLS do site para ver os mesmos campos apresentados de forma didática."
+      "explicacao": "O -servername envia o SNI, essencial quando o servidor hospeda vários domínios. O Issuer revela a CA (ou aponta self-signed se bater com o Subject). Depois, informe esses mesmos campos no Inspetor TLS do site para ver como cada regra de validação os julga."
     },
     {
       "titulo": "Criar e inspecionar um keystore Java (keytool)",

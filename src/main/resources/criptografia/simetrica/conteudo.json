@@ -19,7 +19,7 @@
     {
       "rotulo": "Elemento não secreto e crítico",
       "valor": "IV / nonce (nunca repetir na mesma chave)",
-      "dica": "Pode ser público, mas jamais reutilizado"
+      "dica": "Pode ser público, mas jamais reutilizado; no CBC também tem de ser imprevisível"
     },
     {
       "rotulo": "Uso no TLS",
@@ -43,7 +43,7 @@
     {
       "titulo": "IV / nonce nunca deve repetir",
       "icone": "restart_alt",
-      "texto": "O IV (vetor de inicialização) ou nonce garante que cifrar a mesma mensagem duas vezes produza saídas diferentes. Ele não é secreto, mas é um número de uso único: repeti-lo sob a mesma chave, sobretudo em modos como GCM e CTR, quebra a segurança de forma catastrófica.",
+      "texto": "O IV (vetor de inicialização) ou nonce garante que cifrar a mesma mensagem duas vezes produza saídas diferentes. Ele não é secreto, mas é um número de uso único: repeti-lo sob a mesma chave, sobretudo em modos como GCM e CTR, quebra a segurança de forma catastrófica. No CBC não basta ser único: o IV tem de ser imprevisível (NIST SP 800-38A, apêndice C) — o IV previsível do TLS 1.0 é o que o BEAST explorou.",
       "destaque": "Não secreto, porém estritamente único por chave"
     },
     {
@@ -212,7 +212,7 @@
     },
     {
       "nome": "Força bruta por chave curta",
-      "como_funciona": "Cifras com chave pequena (DES com 56 bits, 3DES com 112 bits efetivos) têm espaço de chaves pequeno o suficiente para busca exaustiva com hardware moderno, expondo todo o tráfego cifrado no passado (retroativamente).",
+      "como_funciona": "Cifras com chave pequena, como o DES (56 bits), têm espaço de chaves pequeno o suficiente para busca exaustiva com hardware moderno, expondo todo o tráfego cifrado no passado (retroativamente). O 3DES (112 bits efetivos) não cai por força bruta: cai pelo bloco de 64 bits — com dezenas de GB na mesma chave, colisões de bloco vazam texto claro (Sweet32) — e o NIST proibiu usá-lo para cifrar a partir de 2024 (SP 800-131A).",
       "sinal": "Suítes de cifra legadas negociadas; algoritmos DES/3DES ainda habilitados",
       "gravidade": "Média",
       "gravidade_cor": "warning"

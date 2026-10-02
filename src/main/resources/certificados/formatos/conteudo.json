@@ -1,5 +1,5 @@
 {
-  "resumo": "Um certificado X.509 e as chaves associadas são sempre a mesma informação matemática (números, assinaturas, identidades), mas essa informação pode ser embalada em vários formatos de arquivo. Escolher o formato errado é a causa número um de erros do tipo \"unable to load certificate\": o conteúdo está correto, só que a ferramenta esperava outra embalagem. Este aprofundamento separa a CODIFICAÇÃO (PEM em Base64 legível x DER em binário) do CONTAINER (PKCS#12/PFX, que guarda certificado + chave privada + cadeia num único arquivo protegido por senha; PKCS#7/P7B, que só carrega certificados e cadeia, nunca a chave; e o mundo Java com JKS/keytool). Você vai aprender a converter entre todos eles com openssl e keytool, entender por que a chave privada é o ponto sensível de qualquer conversão, e diagnosticar os erros mais comuns. Para ver esses certificados em uso durante um handshake, o site também traz o módulo do protocolo TLS e o Inspetor TLS, onde o certificado apresentado pelo servidor aparece decodificado campo a campo.",
+  "resumo": "Um certificado X.509 e as chaves associadas são sempre a mesma informação matemática (números, assinaturas, identidades), mas essa informação pode ser embalada em vários formatos de arquivo. Escolher o formato errado é a causa número um de erros do tipo \"unable to load certificate\": o conteúdo está correto, só que a ferramenta esperava outra embalagem. Este aprofundamento separa a CODIFICAÇÃO (PEM em Base64 legível x DER em binário) do CONTAINER (PKCS#12/PFX, que guarda certificado + chave privada + cadeia num único arquivo protegido por senha; PKCS#7/P7B, que só carrega certificados e cadeia, nunca a chave; e o mundo Java com JKS/keytool). Você vai aprender a converter entre todos eles com openssl e keytool, entender por que a chave privada é o ponto sensível de qualquer conversão, e diagnosticar os erros mais comuns. Para ver esses certificados em uso durante um handshake, o site traz o módulo do protocolo TLS; o certificado de um servidor real, campo a campo, sai do openssl s_client | openssl x509 -text.",
   "ficha": [
     {
       "rotulo": "Codificações base",
@@ -263,7 +263,7 @@
     },
     {
       "nome": "Validar o par cert/chave e a cadeia após converter",
-      "como_funciona": "Depois de cada conversão, conferir que o certificado e a chave são o mesmo par (comparar os módulos/hash com openssl) e que a cadeia está completa. Isso evita publicar um cert que não casa com a chave ou uma cadeia quebrada. Para ver o resultado no ar, usar o módulo do protocolo TLS e o Inspetor TLS do site sobre o serviço configurado.",
+      "como_funciona": "Depois de cada conversão, conferir que o certificado e a chave são o mesmo par (comparar os módulos/hash com openssl) e que a cadeia está completa. Isso evita publicar um cert que não casa com a chave ou uma cadeia quebrada. Para ver o resultado no ar, use o openssl s_client contra o serviço configurado.",
       "cobre": "Erros silenciosos de conversão (chave trocada, cadeia incompleta).",
       "limite": "Confirma a correção técnica, não a política de guarda do segredo."
     }

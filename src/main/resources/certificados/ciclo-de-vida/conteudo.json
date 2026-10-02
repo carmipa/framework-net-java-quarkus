@@ -1,5 +1,5 @@
 {
-  "resumo": "O ciclo de vida de um certificado X.509 vai do pedido até a aposentadoria da chave. Começa quando o titular gera um par de chaves (privada + pública) na sua própria máquina; monta um CSR (Certificate Signing Request) que carrega a chave pública e os dados de identidade, assinado pela chave privada como prova de posse; envia o CSR para a Autoridade Certificadora (CA), que valida a identidade e o domínio; a CA emite o certificado assinado; o titular instala o certificado no servidor; e, antes do vencimento, renova. A chave privada NUNCA acompanha o CSR nem sobe para a CA. Validades curtas (90 dias, padrão Let's Encrypt) empurram a operação para a automação via ACME, reduzindo a janela de comprometimento e o risco de esquecer a renovação. No próprio site você encontra o aprofundamento do protocolo TLS e o Inspetor TLS, que mostra na prática o certificado servido numa conexão real.",
+  "resumo": "O ciclo de vida de um certificado X.509 vai do pedido até a aposentadoria da chave. Começa quando o titular gera um par de chaves (privada + pública) na sua própria máquina; monta um CSR (Certificate Signing Request) que carrega a chave pública e os dados de identidade, assinado pela chave privada como prova de posse; envia o CSR para a Autoridade Certificadora (CA), que valida a identidade e o domínio; a CA emite o certificado assinado; o titular instala o certificado no servidor; e, antes do vencimento, renova. A chave privada NUNCA acompanha o CSR nem sobe para a CA. Validades curtas (90 dias, padrão Let's Encrypt) empurram a operação para a automação via ACME, reduzindo a janela de comprometimento e o risco de esquecer a renovação. No próprio site você encontra o aprofundamento do protocolo TLS e o Inspetor TLS do site (simulação: você informa os dados e ele aplica as regras de validação).",
   "ficha": [
     {
       "rotulo": "Sigla-chave",
@@ -66,7 +66,7 @@
     {
       "titulo": "Instalação e cadeia completa",
       "icone": "account_tree",
-      "texto": "Instalar o certificado significa entregar ao servidor a chave privada, o certificado da entidade final e a cadeia de intermediárias (fullchain). Faltando um intermediário, muitos clientes recusam a conexão mesmo com o certificado válido. No site, o Inspetor TLS e o aprofundamento do protocolo TLS ajudam a visualizar a cadeia efetivamente servida numa conexão real.",
+      "texto": "Instalar o certificado significa entregar ao servidor a chave privada, o certificado da entidade final e a cadeia de intermediárias (fullchain). Faltando um intermediário, muitos clientes recusam a conexão mesmo com o certificado válido. Para ver a cadeia efetivamente servida, use o openssl s_client -showcerts; no site, o aprofundamento do protocolo TLS explica o handshake e o Inspetor TLS simula a validação.",
       "destaque": "Sirva sempre a fullchain: entidade final + intermediárias."
     }
   ],
@@ -264,7 +264,7 @@
     {
       "titulo": "Gerar par de chaves e CSR com OpenSSL",
       "cenario": "Você vai pedir um certificado TLS para www.exemplo.com.br. Gera a chave privada localmente e monta o CSR com SAN. Repare que a chave privada (server.key) fica só na sua máquina; para a CA você enviaria apenas server.csr.",
-      "comandos": "# Gera chave privada + CSR de uma vez (RSA 2048), com SAN embutido\nopenssl req -new -newkey rsa:2048 -nodes \\\n  -keyout server.key \\\n  -out server.csr \\\n  -subj \"/C=BR/ST=SP/L=Sao Paulo/O=Exemplo Ltda/CN=www.exemplo.com.br\" \\\n  -addext \"subjectAltName=DNS:www.exemplo.com.br,DNS:exemplo.com.br\"\n\n# Alternativa com ECDSA (P-256): chave mais curta, mesma seguranca\nopenssl ecparam -genkey -name prime256v1 -out server.key\nopenssl req -new -key server.key -out server.csr \\\n  -subj \"/CN=www.exemplo.com.br\" \\\n  -addext \"subjectAltName=DNS:www.exemplo.com.br\"\n\n# Le e confere o conteudo do CSR (Subject, chave publica, SAN)\nopenssl req -in server.csr -noout -text -verify",
+      "comandos": "# Gera chave privada + CSR de uma vez (RSA 2048), com SAN embutido\nopenssl req -new -newkey rsa:2048 -nodes \\\n  -keyout server.key \\\n  -out server.csr \\\n  -subj \"/C=BR/ST=SP/L=Sao Paulo/O=Exemplo Ltda/CN=www.exemplo.com.br\" \\\n  -addext \"subjectAltName=DNS:www.exemplo.com.br,DNS:exemplo.com.br\"\n\n# Alternativa com ECDSA (P-256): chave mais curta e seguranca MAIOR (P-256 equivale a RSA 3072)\nopenssl ecparam -genkey -name prime256v1 -out server.key\nopenssl req -new -key server.key -out server.csr \\\n  -subj \"/CN=www.exemplo.com.br\" \\\n  -addext \"subjectAltName=DNS:www.exemplo.com.br\"\n\n# Le e confere o conteudo do CSR (Subject, chave publica, SAN)\nopenssl req -in server.csr -noout -text -verify",
       "explicacao": "O -nodes deixa a chave sem senha (comum em servidores que reiniciam sozinhos). O -verify no último comando confirma a autoassinatura do CSR: é a prova de posse. Note que em nenhum momento a chave privada entra no CSR; o openssl req -in ... -text mostra apenas a chave PÚBLICA."
     },
     {
@@ -277,7 +277,7 @@
       "titulo": "Conferir se a chave corresponde ao certificado (modulus)",
       "cenario": "Depois de instalar, você quer garantir que server.key e server.crt são do mesmo par. Se os hashes divergirem, o servidor recusa a chave e o TLS não sobe.",
       "comandos": "# Para RSA: compara o modulo da chave e do certificado\nopenssl x509 -in server.crt -noout -modulus | openssl md5\nopenssl rsa  -in server.key -noout -modulus | openssl md5\n# Os dois md5 tem de ser IDENTICOS\n\n# Para ECDSA: compara a chave publica derivada dos dois lados\nopenssl x509 -in server.crt -noout -pubkey | openssl md5\nopenssl pkey -in server.key -pubout       | openssl md5\n\n# Ver a validade (notBefore / notAfter) do certificado instalado\nopenssl x509 -in server.crt -noout -dates",
-      "explicacao": "O módulo (RSA) ou a chave pública derivada (ECDSA) é um identificador do par: se os md5 batem, chave e certificado casam. Este é o teste que resolve o erro clássico 'key values mismatch' ao iniciar o servidor. Para inspecionar o que um servidor realmente serve numa conexão, o site tem o Inspetor TLS e o aprofundamento do protocolo TLS."
+      "explicacao": "O módulo (RSA) ou a chave pública derivada (ECDSA) é um identificador do par: se os md5 batem, chave e certificado casam. Este é o teste que resolve o erro clássico 'key values mismatch' ao iniciar o servidor. Para inspecionar o que um servidor realmente serve numa conexão, use o openssl s_client; o Inspetor TLS do site é uma simulação das regras de validação."
     }
   ],
   "diagnosticos": [
@@ -297,7 +297,7 @@
       "sintoma": "Alguns clientes conectam, outros recusam com 'unable to get local issuer certificate'",
       "causa_provavel": "Cadeia incompleta: o servidor serve só a entidade final, sem as intermediárias (falta a fullchain).",
       "comando": "openssl s_client -connect www.exemplo.com.br:443 -servername www.exemplo.com.br -showcerts 2>/dev/null | grep -E \"s:|i:\"",
-      "leitura": "A saída deve encadear entidade final -> intermediária -> raiz. Se aparece só um certificado, configure o servidor com o fullchain.pem em vez do cert.pem isolado. O Inspetor TLS do site ajuda a visualizar essa cadeia."
+      "leitura": "A saída deve encadear entidade final -> intermediária -> raiz. Se aparece só um certificado, configure o servidor com o fullchain.pem em vez do cert.pem isolado. O Inspetor TLS do site simula essa validação com os dados que você informa."
     },
     {
       "sintoma": "Aparece em Certificate Transparency um certificado para seu domínio que você não pediu",

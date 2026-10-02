@@ -89,7 +89,7 @@
       "suite": "TLS_AES_128_GCM_SHA256 (TLS 1.3)",
       "avaliacao": "Recomendada",
       "avaliacao_cor": "success",
-      "nota": "AEAD, forward secrecy obrigatória. É uma das cinco suites do 1.3 — todas seguras por construção."
+      "nota": "AEAD. É uma das cinco suites do 1.3 — todas seguras por construção. No 1.3 a suite não define a troca de chaves: o handshake completo usa (EC)DHE, com forward secrecy; só a retomada psk_ke e o 0-RTT ficam sem ela."
     },
     {
       "suite": "TLS_CHACHA20_POLY1305_SHA256 (TLS 1.3)",
@@ -107,7 +107,7 @@
       "suite": "AES-CBC (qualquer, com HMAC)",
       "avaliacao": "Evitar",
       "avaliacao_cor": "warning",
-      "nota": "Modo MAC-then-encrypt abriu Lucky13/BEAST por timing de padding. Removido no 1.3. Só mantenha por compatibilidade extrema, ciente do risco."
+      "nota": "No CBC do TLS, o MAC-then-encrypt abriu o Lucky13 (timing da checagem do padding), e no TLS 1.0 o IV previsível abriu o BEAST. Removido no 1.3. Só mantenha por compatibilidade extrema, ciente do risco."
     },
     {
       "suite": "RC4 / 3DES / DES",

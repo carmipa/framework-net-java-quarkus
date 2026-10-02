@@ -1,5 +1,5 @@
 {
-  "resumo": "A criptografia do TLS quase nunca falha por matemática quebrada; falha por erro de operação e por engano de confiança. Certificado expirado, nome que não bate com o domínio, cadeia incompleta enviada pelo servidor, uma autoridade que o cliente não reconhece, um algoritmo de assinatura fraco ou uma chave privada vazada: são esses os problemas que você encontra no dia a dia, e são eles que os atacantes exploram. Este aprofundamento mostra o que cada aviso do navegador realmente significa, como um ataque man-in-the-middle (MITM) usa uma CA falsa para se passar pelo servidor, por que o cadeado sozinho não prova segurança e como o momento perigoso é o clique em \"Prosseguir mesmo assim\". Você também aprende a reproduzir e diagnosticar cada erro com openssl e testssl, e a fechar as brechas com HSTS, validação completa da cadeia, TLS 1.2/1.3, Certificate Transparency (CT) e CAA. Para experimentar na prática, use o protocolo TLS explicado no site e o Inspetor TLS (\"teste você mesmo\"), que mostra a cadeia real de qualquer host.",
+  "resumo": "A criptografia do TLS quase nunca falha por matemática quebrada; falha por erro de operação e por engano de confiança. Certificado expirado, nome que não bate com o domínio, cadeia incompleta enviada pelo servidor, uma autoridade que o cliente não reconhece, um algoritmo de assinatura fraco ou uma chave privada vazada: são esses os problemas que você encontra no dia a dia, e são eles que os atacantes exploram. Este aprofundamento mostra o que cada aviso do navegador realmente significa, como um ataque man-in-the-middle (MITM) usa uma CA falsa para se passar pelo servidor, por que o cadeado sozinho não prova segurança e como o momento perigoso é o clique em \"Prosseguir mesmo assim\". Você também aprende a reproduzir e diagnosticar cada erro com openssl e testssl, e a fechar as brechas com HSTS, validação completa da cadeia, TLS 1.2/1.3, Certificate Transparency (CT) e CAA. Para experimentar, use o protocolo TLS explicado no site e o Inspetor TLS (\"teste você mesmo\"), uma simulação em que você informa nome, validade, emissor, versão e cipher e vê o veredito de cada regra; contra um servidor real, use os comandos openssl e testssl.sh dos laboratórios.",
   "ficha": [
     {
       "rotulo": "Camada afetada",
@@ -23,8 +23,8 @@
     },
     {
       "rotulo": "Ferramentas de diagnóstico",
-      "valor": "openssl s_client, testssl.sh, Inspetor TLS do site",
-      "dica": "Mostram cadeia, validade, algoritmos e versão de protocolo."
+      "valor": "openssl s_client e testssl.sh (servidor real); Inspetor TLS do site (simulação)",
+      "dica": "Os dois primeiros mostram a cadeia, a validade, os algoritmos e a versão de um servidor de verdade; o Inspetor aplica as regras aos dados que você informa."
     },
     {
       "rotulo": "Defesa de base",
@@ -247,7 +247,7 @@
       "titulo": "Inspecionar cadeia, validade e nome com openssl",
       "cenario": "Você quer ver, para um host real, qual cadeia é enviada, as datas de validade e a SAN, para diagnosticar expirado, cadeia incompleta ou nome que não bate.",
       "comandos": "# Ver a cadeia apresentada e o resultado da verificação\nopenssl s_client -connect exemplo.com.br:443 -servername exemplo.com.br -showcerts\n\n# Extrair validade (notBefore/notAfter), a SAN e o emissor\nopenssl s_client -connect exemplo.com.br:443 -servername exemplo.com.br 2>/dev/null \\\n  | openssl x509 -noout -dates -ext subjectAltName -issuer\n\n# Ver o algoritmo de assinatura (detecta SHA-1/MD5)\nopenssl s_client -connect exemplo.com.br:443 -servername exemplo.com.br 2>/dev/null \\\n  | openssl x509 -noout -text | grep -i 'Signature Algorithm'",
-      "explicacao": "A linha 'Verify return code' resume o veredito: 0 (ok) ou um código com a causa (por exemplo, 'unable to get local issuer certificate' indica intermediária ausente, e 'certificate has expired' indica validade vencida). O -servername envia o SNI, essencial em servidores com vários sites. Confira se o domínio consta em X509v3 Subject Alternative Name; o CN sozinho não basta. Esta é a mesma leitura que o Inspetor TLS do site apresenta de forma visual."
+      "explicacao": "A linha 'Verify return code' resume o veredito: 0 (ok) ou um código com a causa (por exemplo, 'unable to get local issuer certificate' indica intermediária ausente, e 'certificate has expired' indica validade vencida). O -servername envia o SNI, essencial em servidores com vários sites. Confira se o domínio consta em X509v3 Subject Alternative Name; o CN sozinho não basta. O Inspetor TLS do site aplica essas mesmas regras de forma visual, sobre os dados que você informa (simulação, sem conexão)."
     },
     {
       "titulo": "Varredura completa de protocolos e cifras com testssl",
@@ -279,7 +279,7 @@
       "sintoma": "ERR_CERT_COMMON_NAME_INVALID",
       "causa_provavel": "O domínio acessado não está na lista SAN do certificado",
       "comando": "openssl s_client -connect host:443 -servername host 2>/dev/null | openssl x509 -noout -ext subjectAltName",
-      "leitura": "Confirme se o domínio digitado consta em subjectAltName. Se não, o certificado foi emitido para outro nome; reemita incluindo todos os domínios (ou um wildcard) na SAN. O Inspetor TLS do site mostra essa lista de forma direta."
+      "leitura": "Confirme se o domínio digitado consta em subjectAltName. Se não, o certificado foi emitido para outro nome; reemita incluindo todos os domínios (ou um wildcard) na SAN. No Inspetor TLS do site você simula o caso: nome acessado fora da SAN é recusado."
     },
     {
       "sintoma": "Cadeado presente, mas a página mostra aviso de não segura",

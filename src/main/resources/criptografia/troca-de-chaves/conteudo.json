@@ -1,5 +1,5 @@
 {
-  "resumo": "Como dois lados que nunca se falaram antes chegam ao mesmo segredo trocando apenas valores públicos por um canal que qualquer um pode ler. O truque é o Diffie-Hellman: cada lado escolhe um número privado, deriva dele um valor público, envia esse valor público, e combina o público do outro com o próprio privado. O segredo compartilhado nasce dos dois lados sem nunca ter viajado pela rede. A variante moderna é o ECDHE (Diffie-Hellman efêmero sobre curvas elípticas), usado no handshake TLS: gera um par de chaves novo e descartável a cada conexão. Isso entrega forward secrecy (PFS, sigilo futuro): mesmo que a chave privada de longo prazo do servidor vaze amanhã, as sessões gravadas ontem continuam ilegíveis, porque as chaves que as protegeram já foram jogadas fora. O modelo antigo, RSA key transport, não tinha essa propriedade: o cliente cifrava o segredo com a chave pública do servidor e o mandava pronto, então vazar a chave RSA decifrava todo o tráfego passado capturado. O TLS 1.3 aposentou o key transport e só admite trocas efêmeras.",
+  "resumo": "Como dois lados que nunca se falaram antes chegam ao mesmo segredo trocando apenas valores públicos por um canal que qualquer um pode ler. O truque é o Diffie-Hellman: cada lado escolhe um número privado, deriva dele um valor público, envia esse valor público, e combina o público do outro com o próprio privado. O segredo compartilhado nasce dos dois lados sem nunca ter viajado pela rede. A variante moderna é o ECDHE (Diffie-Hellman efêmero sobre curvas elípticas), usado no handshake TLS: gera um par de chaves novo e descartável a cada conexão. Isso entrega forward secrecy (PFS, sigilo futuro): mesmo que a chave privada de longo prazo do servidor vaze amanhã, as sessões gravadas ontem continuam ilegíveis, porque as chaves que as protegeram já foram jogadas fora. O modelo antigo, RSA key transport, não tinha essa propriedade: o cliente cifrava o segredo com a chave pública do servidor e o mandava pronto, então vazar a chave RSA decifrava todo o tráfego passado capturado. O TLS 1.3 aposentou o key transport: o handshake completo sempre usa troca efêmera. A exceção é a retomada só com PSK (modo psk_ke) e os dados 0-RTT, que não têm forward secrecy.",
   "ficha": [
     {
       "rotulo": "Objetivo",
@@ -19,7 +19,7 @@
     {
       "rotulo": "Onde acontece",
       "valor": "Handshake TLS (key_share em ClientHello/ServerHello)",
-      "dica": "TLS 1.3 só aceita troca efêmera"
+      "dica": "No TLS 1.3 o handshake completo é sempre efêmero; a retomada psk_ke não"
     },
     {
       "rotulo": "Aposentado",
@@ -195,7 +195,7 @@
     },
     {
       "nome": "TLS 1.3 (somente efêmero)",
-      "como_funciona": "Adotar TLS 1.3, que removeu RSA key transport, renegociação e suites de exportação: toda sessão usa (EC)DHE efêmero com AEAD, tornando PFS obrigatório por design.",
+      "como_funciona": "Adotar TLS 1.3, que removeu RSA key transport, renegociação e suites de exportação: o handshake completo usa (EC)DHE efêmero com AEAD. Para a retomada também ter PFS, aceite só o modo psk_dhe_ke e evite 0-RTT onde o sigilo e o replay importam.",
       "cobre": "RSA key transport, rebaixamento para modos fracos",
       "limite": "Exige suporte de cliente e servidor; middleboxes antigos podem interferir."
     },

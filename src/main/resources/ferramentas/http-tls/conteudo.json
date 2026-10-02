@@ -1,5 +1,5 @@
 {
-  "resumo": "O par curl e openssl é o kit de bancada para dissecar HTTP e TLS diretamente no terminal, sem depender de navegador ou proxy gráfico. O curl mostra o caminho completo de uma requisição (resolução DNS, aperto de mão TCP, handshake TLS e a troca HTTP), enquanto o openssl abre o canal criptográfico e o certificado por dentro. Este aprofundamento ensina a ler o que cada etapa reporta, a diferenciar erro de rede de erro de aplicação, e a diagnosticar os dois clássicos que travam entrega em produção: cadeia de certificado incompleta ou expirada e loop de redirecionamento. Complementa o material de TLS/Certificados e o Inspetor TLS: aqui você reproduz na linha de comando o que aquelas ferramentas mostram na tela.",
+  "resumo": "O par curl e openssl é o kit de bancada para dissecar HTTP e TLS diretamente no terminal, sem depender de navegador ou proxy gráfico. O curl mostra o caminho completo de uma requisição (resolução DNS, aperto de mão TCP, handshake TLS e a troca HTTP), enquanto o openssl abre o canal criptográfico e o certificado por dentro. Este aprofundamento ensina a ler o que cada etapa reporta, a diferenciar erro de rede de erro de aplicação, e a diagnosticar os dois clássicos que travam entrega em produção: cadeia de certificado incompleta ou expirada e loop de redirecionamento. Complementa o material de TLS/Certificados e o Inspetor TLS (simulação): aqui você faz, contra servidores reais, o que lá é explicado ou simulado.",
   "ficha": [
     {
       "rotulo": "Ferramentas",
@@ -24,7 +24,7 @@
     {
       "rotulo": "Relacionado",
       "valor": "Inspetor TLS",
-      "dica": "reproduz na CLI o que o Inspetor TLS e o módulo de Certificados mostram"
+      "dica": "faz contra o servidor real o que o Inspetor TLS (simulação) e o módulo de Certificados explicam"
     }
   ],
   "conceitos": [

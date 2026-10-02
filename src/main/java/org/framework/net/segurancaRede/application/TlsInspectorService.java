@@ -133,8 +133,8 @@ public class TlsInspectorService {
             return atencao("Protocolo", versao + ": aceitável, mas exija 1.3 quando o público permitir — "
                     + "1.2 ainda carrega superfície de downgrade.");
         }
-        return falha("Protocolo", versao + ": versão obsoleta (TLS 1.0/1.1 ou SSL). Alvo de POODLE e "
-                + "downgrade — desligue no servidor.");
+        return falha("Protocolo", versao + ": versão obsoleta (TLS 1.0/1.1 ou SSL). O SSL 3.0 caiu pelo POODLE, o TLS 1.0 "
+                + "pelo BEAST, e os dois abrem margem a downgrade — desligue no servidor.");
     }
 
     private Checagem checarCipher(String cipher) {
@@ -148,7 +148,7 @@ public class TlsInspectorService {
             return ok("Cipher", cipher + ": AEAD moderna, sem os problemas de padding do CBC.");
         }
         if (c.contains("CBC")) {
-            return atencao("Cipher", cipher + ": modo CBC — associado a Lucky13/BEAST por timing de padding. "
+            return atencao("Cipher", cipher + ": modo CBC — Lucky13 (timing do padding) e, no TLS 1.0, BEAST (IV previsível). "
                     + "Prefira uma suite AEAD (GCM/CHACHA20).");
         }
         return atencao("Cipher", cipher + ": não reconhecida como AEAD conhecida. Confirme se é uma suite "

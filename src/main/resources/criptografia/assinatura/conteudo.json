@@ -1,5 +1,5 @@
 {
-  "resumo": "Assinatura digital e MAC resolvem o mesmo problema central — provar que uma mensagem veio de quem se diz e que ninguém a alterou — mas com garantias diferentes. A assinatura digital usa criptografia assimétrica: quem envia assina com a chave PRIVADA e qualquer pessoa verifica com a chave PÚBLICA, o que gera não-repúdio (só o dono da privada poderia ter assinado). O MAC (tipicamente HMAC) usa uma única chave simétrica compartilhada: rápido e simples, prova integridade e autenticidade entre as partes que possuem a chave, mas NÃO dá não-repúdio, porque qualquer detentor da chave poderia ter gerado a etiqueta. Ponto técnico que une os dois: assina-se ou autentica-se o HASH da mensagem, nunca o dado inteiro. Nem assinatura nem MAC escondem o conteúdo (isso é trabalho da cifra). Para amarrar uma chave pública a uma identidade real entra o certificado X.509 assinado por uma CA — a cadeia de confiança que impede um impostor de apresentar a própria chave pública como sendo a sua.",
+  "resumo": "Assinatura digital e MAC resolvem o mesmo problema central — provar que uma mensagem veio de quem se diz e que ninguém a alterou — mas com garantias diferentes. A assinatura digital usa criptografia assimétrica: quem envia assina com a chave PRIVADA e qualquer pessoa verifica com a chave PÚBLICA, o que gera não-repúdio (só o dono da privada poderia ter assinado). O MAC (tipicamente HMAC) usa uma única chave simétrica compartilhada: rápido e simples, prova integridade e autenticidade entre as partes que possuem a chave, mas NÃO dá não-repúdio, porque qualquer detentor da chave poderia ter gerado a etiqueta. Ponto técnico: no RSA e no ECDSA assina-se o HASH da mensagem; o HMAC e o Ed25519 recebem a mensagem inteira e fazem o hash por dentro do esquema. Nem assinatura nem MAC escondem o conteúdo (isso é trabalho da cifra). Para amarrar uma chave pública a uma identidade real entra o certificado X.509 assinado por uma CA — a cadeia de confiança que impede um impostor de apresentar a própria chave pública como sendo a sua.",
   "ficha": [
     {
       "rotulo": "Objetivo",
@@ -29,10 +29,10 @@
   ],
   "conceitos": [
     {
-      "titulo": "Assina-se o hash, não o dado todo",
+      "titulo": "RSA e ECDSA assinam o hash da mensagem",
       "icone": "fingerprint",
-      "texto": "A mensagem passa por um hash (ex.: SHA-256) e a operação criptográfica cara recai sobre esses poucos bytes. Isso torna a assinatura de tamanho fixo e eficiente independentemente do tamanho do arquivo. Por isso a resistência a colisão do hash é parte da segurança da assinatura: quebrar o hash equivale a forjar a assinatura.",
-      "destaque": "Hash primeiro, assinatura depois"
+      "texto": "No RSA e no ECDSA, a mensagem passa por um hash (ex.: SHA-256) e a operação criptográfica cara recai sobre esses poucos bytes; o Ed25519 e o HMAC recebem a mensagem inteira e fazem o hash por dentro. Isso torna a assinatura de tamanho fixo e eficiente independentemente do tamanho do arquivo. Por isso a resistência a colisão do hash é parte da segurança da assinatura: quebrar o hash equivale a forjar a assinatura.",
+      "destaque": "RSA/ECDSA: hash primeiro, assinatura depois"
     },
     {
       "titulo": "Privada assina, pública verifica",

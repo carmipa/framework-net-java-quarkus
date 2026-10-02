@@ -111,7 +111,7 @@
       "campo": "Subject Alternative Name (SAN)",
       "oque": "Extensão que lista todos os nomes cobertos: domínios (DNS), IPs e e-mails",
       "exemplo": "DNS:exemplo.com.br, DNS:www.exemplo.com.br, DNS:*.api.exemplo.com.br",
-      "nota": "É a fonte de verdade para os navegadores. Certificado sem o host no SAN gera erro de nome; use o Inspetor TLS do site para conferir os SANs realmente servidos"
+      "nota": "É a fonte de verdade para os navegadores. Certificado sem o host no SAN gera erro de nome; confira os SANs realmente servidos com openssl s_client (o Inspetor TLS do site simula essa checagem com o nome que você informa)"
     },
     {
       "campo": "Key Usage",
@@ -147,7 +147,7 @@
       "campo": "Authority Information Access (OCSP)",
       "oque": "URLs de serviços da CA: o respondedor OCSP e o certificado do emissor (CA Issuers)",
       "exemplo": "OCSP - URI:http://ocsp.ca.example.com; CA Issuers - URI:http://ca.example.com/r11.der",
-      "nota": "O OCSP verifica a revogação sob consulta e o OCSP stapling entrega essa resposta no próprio handshake TLS; algumas CAs (como a Let's Encrypt) estão descontinuando o OCSP em favor da CRL. Confira no Inspetor TLS do site"
+      "nota": "O OCSP verifica a revogação sob consulta e o OCSP stapling entrega essa resposta no próprio handshake TLS; a Let's Encrypt desligou o OCSP em agosto de 2025 e só publica CRL, e as regras do CA/Browser Forum tornaram o OCSP opcional para as CAs públicas"
     }
   ],
   "tipos": [
@@ -197,7 +197,7 @@
       "tipo": "Intermediária (Intermediate CA)",
       "valida": "Assinada pela raiz; emite os certificados folha em nome da raiz",
       "uso": "Camada operacional entre a raiz e a folha; o servidor deve enviar a intermediária junto na cadeia",
-      "observacao": "Isola a raiz do uso diário; esquecer de servir a intermediária causa erro de cadeia incompleta, visível no Inspetor TLS"
+      "observacao": "Isola a raiz do uso diário; esquecer de servir a intermediária causa erro de cadeia incompleta (o openssl s_client -showcerts mostra quantos certificados o servidor manda)"
     },
     {
       "tipo": "Folha (end-entity)",

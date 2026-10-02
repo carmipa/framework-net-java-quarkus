@@ -150,12 +150,12 @@
         [
           "Custo configurável",
           "Não",
-          "Sim (iterações, memória, paralelismo)"
+          "Sim: iterações em todas; memória e paralelismo só no Argon2 (e no scrypt)"
         ],
         [
           "Resistência a GPU/ASIC",
           "Baixa (velocidade ajuda o atacante)",
-          "Alta (Argon2 usa muita memória de propósito)"
+          "Alta no Argon2 (memória de propósito); média no bcrypt; baixa no PBKDF2, que só tem iterações"
         ],
         [
           "Usar para senha?",
@@ -236,7 +236,7 @@
     },
     {
       "nome": "Argon2id com salt único para senhas",
-      "como_funciona": "Cada senha recebe um salt aleatório único e passa por Argon2id (ou bcrypt/PBKDF2) com custo de tempo e memória calibrado. O salt inutiliza rainbow tables e o alto custo de memória torna a força bruta em GPU/ASIC economicamente inviável.",
+      "como_funciona": "Cada senha recebe um salt aleatório único e passa por Argon2id com custo de tempo e de memória calibrado (bcrypt e PBKDF2 só calibram o tempo). O salt inutiliza rainbow tables e o custo de memória do Argon2id torna a força bruta em GPU/ASIC economicamente inviável.",
       "cobre": "Rainbow tables, força bruta e dicionário contra senhas",
       "limite": "Não protege senha trivial de forma absoluta; exige também política de senha e limite de tentativas"
     },

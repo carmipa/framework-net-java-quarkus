@@ -124,7 +124,7 @@
           "~112 bits",
           "2048",
           "224",
-          "AES-112 (3DES)"
+          "3DES de 3 chaves (112 bits)"
         ],
         [
           "~128 bits",
