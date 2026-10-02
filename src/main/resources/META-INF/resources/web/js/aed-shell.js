@@ -99,7 +99,7 @@
      *
      * PROPÓSITO DE NEGÓCIO: o Bootstrap só navega com as setas entre itens .dropdown-item; os do topo são
      *   .aed-nav-link (estilo próprio), então quem usa teclado abria o menu e não entrava nele.
-     * INVARIANTES: Seta para baixo no botão abre o menu e foca o primeiro item; dentro do menu, setas
+     * INVARIANTES: Seta para baixo no botão abre o menu e foca o primeiro item (para cima, o último); dentro do menu, setas
      *   andam entre os itens (com volta), Home e End vão às pontas; Esc continua com o Bootstrap.
      * FALHA: sem Bootstrap ou sem itens, não faz nada.
      * Escuta na CAPTURA do document: o Bootstrap escuta ali também e dá stopPropagation nas setas, então
@@ -120,14 +120,14 @@
         }
         const noBotao = ev.target.classList.contains("aed-nav-drop-toggle");
         if (noBotao) {
-            if (ev.key !== "ArrowDown") {
+            if (ev.key !== "ArrowDown" && ev.key !== "ArrowUp") {
                 return;
             }
             ev.preventDefault();
             if (window.bootstrap && window.bootstrap.Dropdown) {
                 window.bootstrap.Dropdown.getOrCreateInstance(ev.target).show();
             }
-            itens[0].focus();
+            (ev.key === "ArrowDown" ? itens[0] : itens[itens.length - 1]).focus();
             return;
         }
         const atual = itens.indexOf(document.activeElement);
