@@ -49,6 +49,13 @@ class ResolucaoIpv4KernelTest {
     }
 
     @Test
+    void parseIpv4PartsRejeitaZeroAEsquerdaEDigitoNaoAscii() {
+        assertThrows(EntradaInvalidaException.class, () -> kernel.parseIpv4Parts("192.168.010.1", "IP"));
+        assertThrows(EntradaInvalidaException.class, () -> kernel.parseIpv4Parts("\u0661\u0669\u0662.168.0.1", "IP"));
+        assertEquals(0, kernel.parseIpv4Parts("192.168.0.1", "IP")[2]);
+    }
+
+    @Test
     void parseIpv4PartsValido() {
         int[] parts = kernel.parseIpv4Parts("10.20.30.40", "IP");
         assertEquals(10, parts[0]);

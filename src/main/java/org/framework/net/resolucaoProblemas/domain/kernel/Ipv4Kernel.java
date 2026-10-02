@@ -259,8 +259,15 @@ public class Ipv4Kernel {
             if (raw.isEmpty()) {
                 throw new EntradaInvalidaException(nomeCampo + " inválido: octeto " + octetoIdx + " está vazio.");
             }
-            if (!raw.chars().allMatch(Character::isDigit)) {
+            // Só dígitos ASCII: Character.isDigit aceitava dígitos árabe-índicos e o parseInt os convertia
+            // (auditoria CALC-33).
+            if (!raw.chars().allMatch(c -> c >= '0' && c <= '9')) {
                 throw new EntradaInvalidaException(nomeCampo + " inválido: octeto " + octetoIdx + " não é numérico.");
+            }
+            // "010" é 10 aqui e 8 (octal) no inet_aton de muitos sistemas: ambíguo, então recusado.
+            if (raw.length() > 1 && raw.charAt(0) == '0') {
+                throw new EntradaInvalidaException(nomeCampo + " inválido: octeto " + octetoIdx
+                        + " com zero à esquerda (\"" + raw + "\"); escreva sem o zero.");
             }
             if (raw.length() > 3) {
                 throw new EntradaInvalidaException(nomeCampo + " inválido: octeto " + octetoIdx + " fora de 0-255.");

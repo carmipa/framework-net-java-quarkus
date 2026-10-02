@@ -116,6 +116,15 @@ class DivisaoServiceTest {
         assertEquals(29, divisaoService.dividirPorHosts("10.0.0.0/24", "", "3").prefixoAlvo());
     }
 
+    /** Auditoria CALC-33: zero à esquerda (octal no inet_aton) e dígito não ASCII são recusados; "10.0.0.0" passa. */
+    @Test
+    void blocoComZeroAEsquerdaOuDigitoNaoAsciiERecusado() {
+        assertThrows(CalculadoraException.class, () -> divisaoService.dividirPorPrefixo("010.0.0.0/8", "", "16"));
+        assertThrows(CalculadoraException.class,
+                () -> divisaoService.dividirPorPrefixo("١٠.0.0.0/8", "", "16"));
+        assertEquals(16, divisaoService.dividirPorPrefixo("10.0.0.0/8", "", "16").prefixoAlvo());
+    }
+
     @Test
     void listagemGrandeEhTruncadaMasTotalRealPermanece() {
         PlanoDivisao plano = divisaoService.dividirPorPrefixo("10.0.0.0/8", "", "30");

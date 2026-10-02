@@ -45,9 +45,12 @@ public class SubnetKernel {
         }
         long resultado = 0L;
         for (String parte : partes) {
-            if (parte.isEmpty() || parte.length() > 3 || !parte.chars().allMatch(Character::isDigit)) {
+            // Só dígitos ASCII e sem zero à esquerda ("010" seria octal no inet_aton) — auditoria CALC-33.
+            if (parte.isEmpty() || parte.length() > 3 || !parte.chars().allMatch(c -> c >= '0' && c <= '9')
+                    || (parte.length() > 1 && parte.charAt(0) == '0')) {
                 throw new CalculadoraException(
-                        nomeCampo + " tem um octeto inválido (\"" + parte + "\") em " + valor + ".");
+                        nomeCampo + " tem um octeto inválido (\"" + parte + "\") em " + valor
+                                + ": use só dígitos de 0 a 9, sem zero à esquerda.");
             }
             int octeto = Integer.parseInt(parte);
             if (octeto > 255) {

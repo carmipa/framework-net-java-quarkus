@@ -47,6 +47,16 @@ class Ipv4KernelTest {
     }
 
     @Test
+    void parseIpv4PartsRejeitaZeroAEsquerdaEDigitoNaoAscii() {
+        // CALC-33: "010" é 8 (octal) no inet_aton; dígitos árabe-índicos passavam por Character.isDigit.
+        assertThrows(EntradaInvalidaException.class, () -> kernel.parseIpv4Parts("010.010.010.010"));
+        assertThrows(EntradaInvalidaException.class, () -> kernel.parseIpv4Parts("\u0661\u0669\u0662.168.0.1"));
+        // Fronteira (A1): o "0" sozinho e octetos sem zero à esquerda continuam valendo.
+        assertEquals(0, kernel.parseIpv4Parts("10.0.0.0")[3]);
+        assertEquals(100, kernel.parseIpv4Parts("10.100.0.1")[1]);
+    }
+
+    @Test
     void parseIpv4PartsRejeitaPontoSobrando() {
         // Ponto final/inicial produz octeto vazio e passa a ser rejeitado (split com limite -1).
         assertThrows(EntradaInvalidaException.class, () -> kernel.parseIpv4Parts("192.168.0.10."));
