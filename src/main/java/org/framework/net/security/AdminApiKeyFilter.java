@@ -7,12 +7,13 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.ext.Provider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 @Provider
@@ -92,9 +93,11 @@ public class AdminApiKeyFilter implements ContainerRequestFilter {
         }
 
         if (prefersHtml(requestContext)) {
-            URI login = UriBuilder.fromPath("/admin/login")
-                    .queryParam("redirect", safeRedirect(path))
-                    .build();
+            // Volta ao MESMO lugar, com a consulta (FRONT-03: o export do IPv6 perdia o endereço). O destino
+            // vai codificado inteiro (URLEncoder), para o & e o = da consulta não virarem parâmetros do login.
+            String destino = RedirecionamentoLocal.destino(RedirecionamentoLocal.comConsulta(
+                    path, requestContext.getUriInfo().getRequestUri().getRawQuery()), "/export/json");
+            URI login = URI.create("/admin/login?redirect=" + URLEncoder.encode(destino, StandardCharsets.UTF_8));
             requestContext.abortWith(Response.seeOther(login).build());
             return;
         }
@@ -167,13 +170,6 @@ public class AdminApiKeyFilter implements ContainerRequestFilter {
             return accept == null || accept.contains("text/html") || accept.contains("*/*");
         }
         return false;
-    }
-
-    private static String safeRedirect(String path) {
-        if (path == null || !path.startsWith("/") || path.startsWith("//")) {
-            return "/export/json";
-        }
-        return path;
     }
 
     private static String normalizePath(String path) {

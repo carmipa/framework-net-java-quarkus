@@ -389,4 +389,22 @@ class DiagnosticoHttpTest {
                 .extract().asByteArray();
         return new String(corpo, java.nio.charset.StandardCharsets.UTF_8);
     }
+
+    /**
+     * FRONT-03: a recusa em texto simples saía {@code text/plain} sem charset e o navegador mostrava
+     * "inválido" como mojibake. O filtro de charset declara UTF-8 em toda resposta de texto.
+     */
+    @Test
+    void recusaEmTextoSimplesDeclaraUtf8() {
+        byte[] corpo = given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("host", "xyz!@#")
+                .when().post("/diagnostico/api/ping")
+                .then()
+                .statusCode(400)
+                .contentType(containsString("text/plain"))
+                .contentType(containsString("charset=UTF-8"))
+                .extract().asByteArray();
+        assertTrue(new String(corpo, java.nio.charset.StandardCharsets.UTF_8).contains("hífen"));
+    }
 }

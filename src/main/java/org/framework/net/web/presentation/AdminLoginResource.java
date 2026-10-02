@@ -14,6 +14,7 @@ import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.framework.net.security.AdminApiKeyService;
+import org.framework.net.security.RedirecionamentoLocal;
 
 import java.net.URI;
 
@@ -86,11 +87,15 @@ public class AdminLoginResource {
                 .build();
     }
 
+    /**
+     * Destino local do retorno depois do login/logout.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> devolver o administrador à página de onde veio, com a consulta.</p>
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> só caminho local, pela regra única de {@link RedirecionamentoLocal}.</p>
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> destino externo ou inválido vira {@code /telemetria}; nunca lança.</p>
+     */
     private static String safeRedirect(String redirect) {
-        if (redirect == null || redirect.isBlank() || !redirect.startsWith("/") || redirect.startsWith("//")) {
-            return "/telemetria";
-        }
-        return redirect.strip();
+        return RedirecionamentoLocal.destino(redirect, "/telemetria");
     }
 
     private static String urlEncode(String value) {

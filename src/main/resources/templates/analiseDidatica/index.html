@@ -75,7 +75,11 @@
         <div class="tab-panel" data-tab-panel="comparador">{#include analiseDidatica/partials/tab_comparador.html /}</div>
         <div class="tab-panel" data-tab-panel="calculadora">{#include analiseDidatica/partials/tab_calculadora.html /}</div>
 
-        <div class="aed-action-row action-buttons mt-3">
+        <p class="small text-secondary mt-3 mb-0 d-flex align-items-center gap-1">
+            <span class="material-symbols-outlined" translate="no" aria-hidden="true" style="font-size:1rem;">lock</span>
+            Exportar em JSON ou PDF exige login de administrador; copiar o resultado não exige.
+        </p>
+        <div class="aed-action-row action-buttons mt-2">
             <a href="/export/json" class="aed-btn aed-btn-json" target="_blank" rel="noopener nofollow"
                data-bs-toggle="tooltip" data-bs-placement="top"
                title="Baixe o resultado da análise em formato JSON (requer login admin)">
