@@ -578,7 +578,7 @@
             var d = await r.json();
             if (r.ok && d.ok) {
                 mostrar("success", "cloud_done", "Snapshot " + d.snapshot + " publicado",
-                    d.registros + " registro(s) de " + d.visitantes + " visitante(s) distinto(s) · " +
+                    d.registros + " registro(s), " + d.visitantes + " identificador(es) consultado(s) distinto(s) · " +
                     d.arquivos.length + " arquivo(s).", d.url);
             } else if (r.status === 409) {
                 mostrar("warning", "block", "Snapshot do dia ja existe",

@@ -59,6 +59,36 @@ public class DatasetPublicavelService {
     private static final List<String> CAMPOS_REMOVIDOS =
             List.of("framework.field.lat", "framework.field.lon", "framework.field.gps");
 
+    /**
+     * Esquema fechado: os únicos campos de evento que vão ao dataset público, além dos identificadores
+     * pseudonimizados e da rota generalizada (auditoria OPS-02). São contagens, booleanos e vocabulário
+     * fixo do código. Texto livre ou valor digitado pelo visitante — mensagem de exceção, hostname,
+     * domínio, regra de ACL, rede, IP de laboratório, login — não está aqui e não sai. Campo novo que um
+     * evento passar a gravar fica de fora até alguém o acrescentar, e a contagem por nome aparece em
+     * {@code estatisticas.json} ({@code campos_fora_do_esquema}).
+     */
+    static final java.util.Set<String> CAMPOS_PUBLICAVEIS = java.util.Set.of(
+            "achados", "alcanca", "ataques", "atributos", "autenticacoes", "avisos", "bitsComuns", "blocos",
+            "bytes", "camadas", "campo", "campos", "cenario", "checagens", "checksumValido", "ciphers",
+            "clienteTipo", "conceitos", "concluiu", "consistente", "dados", "dhcpv6", "dispositivos",
+            "durationMs", "elapsedMs", "encaminhamentos", "encerramento", "enderecos", "enlaces", "entradas",
+            "erro", "errosCorrigidos", "errosSemCorrecao", "estrategia", "exibidas", "exibidos", "export_type",
+            "extras", "formato", "formatos", "hardening", "httpStatus", "interacoes", "interfaces", "licao",
+            "linhas", "links", "locais", "locations", "locationsCount", "mesmaLan", "metodo", "mitigacoes",
+            "modo", "motivo", "naoInterpretadas", "pagina", "pais", "passos", "passosSelecao", "pendencias",
+            "portaDestino", "prefixo", "prefixoAlvo", "prefixoBase", "prefixoResumo", "prefixoVlan",
+            "protecoes", "protocolo", "redes", "registros", "resultado", "roteadores", "segundos",
+            "statusCalc", "students_count", "sucesso", "suprimidosAntes", "suspeitos", "tabelas", "tempo",
+            "tipo", "tipoServido", "tipoSolicitado", "tipos", "topologia", "topology", "total", "totalBytes",
+            "totalSubredes", "traceId", "transporte", "truncado", "usados", "usedSubnets", "veredito",
+            "vlans", "wanLinks");
+
+    /** Campo de rota: generalizado como o {@code http.route}, nunca o caminho cru. */
+    private static final String CAMPO_ROTA = "framework.field.rota";
+
+    /** Maior valor publicado de um campo do esquema; acima disso não é vocabulário fixo. */
+    private static final int MAX_VALOR_PUBLICAVEL = 64;
+
     /** Atributos cujo valor identifica pessoa e vira pseudônimo do pacote. */
     private static final List<String> CAMPOS_IDENTIFICADORES =
             List.of("framework.field.ip", "framework.field.ip_hash", "framework.field.host",
@@ -85,6 +115,7 @@ public class DatasetPublicavelService {
         Map<String, String> pseudonimos = new LinkedHashMap<>();
         Map<String, Integer> descartes = new LinkedHashMap<>();
         Map<String, Integer> porEvento = new TreeMap<>();
+        Map<String, Integer> foraDoEsquema = new TreeMap<>();
         List<String> linhas = new ArrayList<>();
         List<Map<String, String>> planos = new ArrayList<>();
         int semCorrelacao = 0;
@@ -99,7 +130,7 @@ public class DatasetPublicavelService {
                 continue;
             }
             try {
-                Map<String, Object> registro = registroSanitizado(evento, pseudonimos);
+                Map<String, Object> registro = registroSanitizado(evento, pseudonimos, foraDoEsquema);
                 linhas.add(objectMapper.writeValueAsString(registro));
                 // O CSV nasce do registro JA SANITIZADO, nunca do evento cru: duas
                 // trilhas separadas divergiriam, e a mais permissiva venceria.
@@ -118,7 +149,7 @@ public class DatasetPublicavelService {
 
         String data = LocalDate.now(ZoneOffset.UTC).toString();
         Map<String, Object> estatisticas = montarEstatisticas(
-                data, linhas.size(), pseudonimos.size(), descartes, porEvento, semCorrelacao);
+                data, linhas.size(), pseudonimos.size(), descartes, porEvento, semCorrelacao, foraDoEsquema);
 
         Map<String, String> arquivos = new LinkedHashMap<>();
         String base = "dataset/" + data + "/";
@@ -136,7 +167,7 @@ public class DatasetPublicavelService {
 
         telemetriaLogger.logEvent("info", "telemetria", "dataset_gerado", Map.of(
                 "registros", linhas.size(),
-                "visitantes", pseudonimos.size(),
+                "identificadores", pseudonimos.size(),
                 "descartados", descartes.values().stream().mapToInt(Integer::intValue).sum()));
 
         return new Pacote(data, arquivos, linhas.size(), pseudonimos.size());
@@ -145,7 +176,8 @@ public class DatasetPublicavelService {
     // --------------------------------------------------------------- sanitização
 
     private Map<String, Object> registroSanitizado(TelemetriaEvent evento,
-                                                   Map<String, String> pseudonimos) {
+                                                   Map<String, String> pseudonimos,
+                                                   Map<String, Integer> foraDoEsquema) {
         List<Map<String, Object>> atributos = new ArrayList<>();
         Map<String, String> camposDoBody = new LinkedHashMap<>();
 
@@ -172,6 +204,14 @@ public class DatasetPublicavelService {
             }
             if (CAMPOS_IDENTIFICADORES.contains(chave)) {
                 valor = pseudonimo(valor, pseudonimos);
+            } else if (CAMPO_ROTA.equals(chave)) {
+                valor = rotaPublicavel(valor);
+            } else if (!CAMPOS_PUBLICAVEIS.contains(entrada.getKey())) {
+                foraDoEsquema.merge(entrada.getKey(), 1, Integer::sum);
+                continue;
+            } else if (valor.length() > MAX_VALOR_PUBLICAVEL || valor.indexOf('@') >= 0) {
+                foraDoEsquema.merge(entrada.getKey() + " (valor fora do formato)", 1, Integer::sum);
+                continue;
             }
             if (valor.isBlank()) {
                 continue;
@@ -288,7 +328,7 @@ public class DatasetPublicavelService {
             return "";
         }
         return pseudonimos.computeIfAbsent(valor,
-                v -> String.format(Locale.ROOT, "visitante-%03d", pseudonimos.size() + 1));
+                v -> String.format(Locale.ROOT, "id-%03d", pseudonimos.size() + 1));
     }
 
     private void atributo(List<Map<String, Object>> destino, String chave, String valor) {
@@ -381,15 +421,18 @@ public class DatasetPublicavelService {
     // ------------------------------------------------------------------ pacote
 
     private Map<String, Object> montarEstatisticas(
-            String data, int publicados, int visitantes, Map<String, Integer> descartes,
-            Map<String, Integer> porEvento, int semCorrelacao) {
+            String data, int publicados, int identificadores, Map<String, Integer> descartes,
+            Map<String, Integer> porEvento, int semCorrelacao, Map<String, Integer> foraDoEsquema) {
 
         Map<String, Object> estatisticas = new LinkedHashMap<>();
         estatisticas.put("gerado_em_utc", java.time.Instant.now().toString());
         estatisticas.put("snapshot", data);
         estatisticas.put("registros_publicados", publicados);
-        estatisticas.put("visitantes_distintos", visitantes);
+        // São os IPs, hosts e endereços CONSULTADOS (digitados nas ferramentas), pseudonimizados — não é
+        // contagem de visitantes do site, que o servidor nem guarda (auditoria OPS-02).
+        estatisticas.put("identificadores_distintos", identificadores);
         estatisticas.put("descartados", descartes);
+        estatisticas.put("campos_fora_do_esquema", foraDoEsquema);
         estatisticas.put("qualidade", Map.of("registros_sem_correlacao", semCorrelacao));
         estatisticas.put("pseudonimizacao", Map.of(
                 "metodo", "pseudonimo sequencial por pacote",
@@ -405,7 +448,10 @@ public class DatasetPublicavelService {
                 "campos", List.of("timeUnixNano", "severityText", "body", "attributes", "traceId"),
                 "atributos", List.of("framework.event_id", "framework.module", "event.name",
                         "framework.status", "http.request.method", "http.route",
-                        "http.response.status_code", "framework.duration_ms", "framework.field.*"));
+                        "http.response.status_code", "framework.duration_ms"),
+                "campos_framework_field", new java.util.TreeSet<>(CAMPOS_PUBLICAVEIS),
+                "campos_pseudonimizados", CAMPOS_IDENTIFICADORES,
+                "campo_rota_generalizada", CAMPO_ROTA);
     }
 
     private String leiaMe(String data, Map<String, Object> estatisticas) {
@@ -416,7 +462,8 @@ public class DatasetPublicavelService {
                 [frameworknet.carminati.dev.br](https://frameworknet.carminati.dev.br).
 
                 - Registros publicados: **%s**
-                - Visitantes distintos: **%s**
+                - Identificadores consultados distintos (IP, host ou endereço digitado nas ferramentas,
+                  pseudonimizado): **%s** — não é contagem de visitantes do site
 
                 ## Arquivos
 
@@ -436,7 +483,9 @@ public class DatasetPublicavelService {
 
                 | Dado original | Tratamento |
                 |---|---|
-                | Identificador de visitante (IP, host, endereço) | `visitante-NNN`, sequencial **dentro deste pacote** |
+                | IP, host ou endereço consultado | `id-NNN`, sequencial **dentro deste pacote** |
+                | Demais campos de evento | só os do esquema fechado (`schema.json`); texto livre, mensagem de erro, hostname, domínio, regra e rede ficam de fora |
+                | Rota | segmento que não é palavra fixa vira `{param}` |
                 | Coordenadas GPS | removidas |
                 | Campo `body` | reconstruído a partir dos atributos já sanitizados |
                 | Estáticos, `/q/*`, `/web/*`, `/telemetria/api*`, health | descartados |
@@ -455,7 +504,7 @@ public class DatasetPublicavelService {
                 público, coordenada ou e-mail residual no arquivo pronto.
                 """.formatted(data,
                 estatisticas.get("registros_publicados"),
-                estatisticas.get("visitantes_distintos"));
+                estatisticas.get("identificadores_distintos"));
     }
 
     /**
