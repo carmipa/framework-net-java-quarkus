@@ -96,10 +96,13 @@ public class AuditoriaConfiguracaoService {
             if (as > 0) {
                 String anterior = porAs.put(as, r.hostname());
                 if (anterior != null) {
-                    achados.add(AchadoConfiguracao.semCorrecao("BGP", r.hostname(), r.linhaInicial(),
-                            "router bgp " + as,
-                            "AS " + as + " declarado em \"" + anterior + "\" e em \"" + r.hostname() + "\".",
-                            "Em eBGP cada roteador de borda tem o seu AS; o cruzamento por AS fica ambíguo."));
+                    // AS repetido é iBGP, que é legítimo (CONT-33: saía como erro). O que se perde é só a
+                    // dedução de endereço por AS, que precisa de um roteador por AS.
+                    achados.add(AchadoConfiguracao.aviso("BGP", r.hostname(), r.linhaInicial(),
+                            "AS " + as + " declarado em \"" + anterior + "\" e em \"" + r.hostname()
+                                    + "\" — sessão iBGP entre eles?",
+                            "iBGP é válido; só a correção de endereço pelo cruzamento de \"neighbor ... remote-as\" "
+                                    + "deixa de valer para esse AS, que aponta para mais de um roteador."));
                 }
             }
         }
@@ -131,7 +134,8 @@ public class AuditoriaConfiguracaoService {
                     redes.add(corrigida);
                 }
                 blocos.add(new BlocoRoteamento(bloco.protocolo(), bloco.identificador(),
-                        bloco.vizinhos(), redes, bloco.autoSummaryDesligado(), bloco.linha()));
+                        bloco.vizinhos(), redes, bloco.autoSummaryDesligado(), bloco.linha(),
+                        bloco.outrasLinhas()));
             }
             saida.add(mudou
                     ? new RoteadorLido(r.hostname(), r.linhaInicial(), r.interfaces(), blocos, r.rotasEstaticas())
@@ -560,45 +564,97 @@ public class AuditoriaConfiguracaoService {
         }
     }
 
+    /**
+     * Confere se cada {@code network} de fato faz alguma coisa.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> apontar o anúncio que não sai (BGP) ou o {@code network} que não liga
+     * o protocolo em nenhuma interface (OSPF, EIGRP, RIP).</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> a gramática é a do bloco (auditoria CALC-12: a regra do BGP era
+     * aplicada aos quatro). BGP: o prefixo tem de existir exatamente na tabela — aqui, ser sub-rede de uma
+     * interface. OSPF e EIGRP com wildcard: basta UMA interface cujo IP case com rede + wildcard
+     * ({@code network 10.0.0.0 0.255.255.255} liga todas as interfaces 10.x). EIGRP sem wildcard e RIP: a
+     * rede é classful e casa qualquer interface dentro dela.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> não lança; endereço ou wildcard ilegível não gera aviso
+     * (a leitura do texto já acusa o que está malformado).</p>
+     */
     private void conferirAnuncios(List<RoteadorLido> roteadores, List<AchadoConfiguracao> achados) {
         for (RoteadorLido r : roteadores) {
             for (BlocoRoteamento bloco : r.blocos()) {
                 for (RedeAnunciada rede : bloco.redes()) {
-                    boolean conectada = r.interfacesComIp().stream()
-                            .anyMatch(i -> MascaraIpv4.enderecoDeRede(i.ip(), i.prefixo())
-                                    .equals(rede.rede()));
-                    if (!conectada) {
+                    if ("BGP".equals(bloco.protocolo())) {
+                        boolean conectada = r.interfacesComIp().stream()
+                                .anyMatch(i -> MascaraIpv4.enderecoDeRede(i.ip(), i.prefixo())
+                                        .equals(rede.rede()));
+                        if (!conectada) {
+                            achados.add(AchadoConfiguracao.aviso("Roteamento", r.hostname(), rede.linha(),
+                                    "O bloco BGP anuncia " + rede.rede()
+                                            + ", que não é sub-rede de nenhuma interface deste roteador.",
+                                    "No BGP, \"network\" só anuncia prefixo que já esteja na tabela de "
+                                            + "roteamento; sem rota correspondente o anúncio não sai."));
+                        }
+                        continue;
+                    }
+                    long base = MascaraIpv4.ipParaLong(rede.rede());
+                    long curinga = rede.wildcard() == null || rede.wildcard().isBlank()
+                            ? curingaClassful(base) : MascaraIpv4.ipParaLong(rede.wildcard());
+                    if (base < 0 || curinga < 0) {
+                        continue;
+                    }
+                    long fixos = ~curinga & 0xFFFFFFFFL;
+                    boolean ligaAlguma = r.interfacesComIp().stream()
+                            .map(i -> MascaraIpv4.ipParaLong(i.ip()))
+                            .anyMatch(ip -> ip >= 0 && (ip & fixos) == (base & fixos));
+                    if (!ligaAlguma) {
                         achados.add(AchadoConfiguracao.aviso("Roteamento", r.hostname(), rede.linha(),
-                                "O bloco " + bloco.protocolo() + " anuncia " + rede.rede()
-                                        + ", que não é sub-rede de nenhuma interface deste roteador.",
-                                "No BGP, \"network\" só anuncia prefixo que já esteja na tabela de "
-                                        + "roteamento; sem rota correspondente o anúncio não sai."));
+                                "O \"network " + rede.rede() + "\" do " + bloco.protocolo()
+                                        + " não casa com o IP de nenhuma interface deste roteador.",
+                                "Em " + bloco.protocolo() + " o \"network\" escolhe as INTERFACES onde o "
+                                        + "protocolo roda (IP da interface dentro de rede + curinga); sem "
+                                        + "nenhuma, a linha não faz nada."));
                     }
                 }
             }
         }
     }
 
+    /** Curinga da rede classful do endereço (A /8, B /16, C /24); D/E e inválidos devolvem -1. */
+    private static long curingaClassful(long endereco) {
+        if (endereco < 0) {
+            return -1;
+        }
+        int o1 = (int) (endereco >>> 24);
+        if (o1 < 128) {
+            return 0x00FFFFFFL;
+        }
+        if (o1 < 192) {
+            return 0x0000FFFFL;
+        }
+        if (o1 < 224) {
+            return 0x000000FFL;
+        }
+        return -1;
+    }
+
     private void conferirBoasPraticas(List<RoteadorLido> roteadores, List<AchadoConfiguracao> achados) {
         for (RoteadorLido r : roteadores) {
             for (InterfaceLida i : r.interfacesComIp()) {
+                // Loopback nasce ligada, e subinterface segue a física: "no shutdown" ausente nelas não é
+                // problema (auditoria CALC-14, CONT-33).
+                boolean nasceLigada = i.loopback() || i.nome().contains(".");
                 if (i.shutdownExplicito()) {
                     achados.add(AchadoConfiguracao.aviso("Interface", r.hostname(), i.linha(),
                             "A interface " + i.nome() + " tem endereço, mas está em \"shutdown\" explícito.",
                             "É intencional? Um endereço numa interface em shutdown não entra em operação até o \"no shutdown\"."));
-                } else if (!i.noShutdown()) {
+                } else if (!i.noShutdown() && !nasceLigada) {
                     achados.add(AchadoConfiguracao.aviso("Interface", r.hostname(), i.linha(),
                             "A interface " + i.nome() + " tem endereço, mas não recebeu \"no shutdown\".",
                             "Interface de roteador nasce administrativamente desligada no IOS."));
                 }
             }
-            BlocoRoteamento bgp = r.bgp();
-            if (bgp != null && !bgp.autoSummaryDesligado()) {
-                achados.add(AchadoConfiguracao.aviso("BGP", r.hostname(), bgp.linha(),
-                        "O bloco BGP não traz \"no auto-summary\".",
-                        "Em IOS antigo a sumarização automática pode anunciar o prefixo classful "
-                                + "no lugar da sub-rede pedida."));
-            }
+            // Sem aviso de "no auto-summary" no BGP: desde o IOS 12.3 o auto-summary do BGP já nasce
+            // desligado (CONT-33: o aviso mandava corrigir o que já é o padrão).
         }
     }
 
@@ -643,6 +699,11 @@ public class AuditoriaConfiguracaoService {
 
         Map<String, List<Exigencia>> exigencias = new LinkedHashMap<>();
         Set<Integer> ausentesRegistrados = new LinkedHashSet<>();
+        // AS com mais de um roteador (iBGP) não diz QUAL deles tem o endereço: deduzir pelo primeiro da lista
+        // acusava "faltam endereços" num roteador certo (CONT-33).
+        Map<Integer, Long> roteadoresPorAs = roteadores.stream().filter(x -> x.asBgp() > 0)
+                .collect(java.util.stream.Collectors.groupingBy(RoteadorLido::asBgp,
+                        java.util.stream.Collectors.counting()));
 
         for (RoteadorLido r : roteadores) {
             BlocoRoteamento bgp = r.bgp();
@@ -650,6 +711,9 @@ public class AuditoriaConfiguracaoService {
                 continue;
             }
             for (VizinhoBgp v : bgp.vizinhos()) {
+                if (roteadoresPorAs.getOrDefault(v.remoteAs(), 0L) > 1) {
+                    continue;
+                }
                 RoteadorLido dono = porAs.get(v.remoteAs());
                 if (dono == null) {
                     if (ausentesRegistrados.add(v.remoteAs())) {

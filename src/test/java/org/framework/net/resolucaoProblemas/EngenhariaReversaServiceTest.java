@@ -408,6 +408,92 @@ class EngenhariaReversaServiceTest {
                 () -> "vizinho certo não pode ser acusado: " + certo.achados());
     }
 
+    /** Auditoria CALC-11: o script reconstruído devolve o que o desenho não usa, em vez de engolir. */
+    @Test
+    @DisplayName("reconstrução preserva router-id, version, secondary, native e a distância da rota")
+    void reconstrucaoNaoEngoleLinhas() {
+        String script = reconstruir("""
+                hostname R1
+                interface GigabitEthernet0/0
+                 ip address 10.0.0.1 255.255.255.0
+                 ip address 10.0.1.1 255.255.255.0 secondary
+                 no shutdown
+                interface GigabitEthernet0/1.1
+                 encapsulation dot1Q 1 native
+                 ip address 10.0.2.1 255.255.255.0
+                router ospf 1
+                 router-id 1.1.1.1
+                 network 10.0.0.0 0.0.255.255 area 0
+                router rip
+                 version 2
+                 network 10.0.0.0
+                ip route 0.0.0.0 0.0.0.0 10.0.0.254 200
+                """);
+        assertTrue(script.contains(" ip address 10.0.0.1 255.255.255.0"), "o primário não pode virar o secundário:\n" + script);
+        assertTrue(script.contains(" ip address 10.0.1.1 255.255.255.0 secondary"), script);
+        assertTrue(script.contains(" encapsulation dot1Q 1 native"), script);
+        assertTrue(script.contains(" router-id 1.1.1.1"), script);
+        assertTrue(script.contains(" version 2"), script);
+        assertTrue(script.contains("ip route 0.0.0.0 0.0.0.0 10.0.0.254 200"), "rota flutuante virava principal:\n" + script);
+    }
+
+    /**
+     * Auditoria CALC-12/CALC-14/CONT-33 — gabarito (A3): IOS (network do OSPF/EIGRP casa o IP da interface
+     * com rede + curinga; RIP e EIGRP sem curinga usam a classful), Loopback nasce up, "ip add" é abreviação
+     * aceita, iBGP é válido e o auto-summary do BGP nasce desligado desde o 12.3. Fronteira (A1): um
+     * network de OSPF que não casa com nenhuma interface continua acusado.
+     */
+    @Test
+    @DisplayName("auditoria não acusa o que o IOS aceita, e continua acusando o network inútil")
+    void auditoriaSemFalsosPositivos() {
+        CenarioReconstruido c = servico.interpretar("""
+                hostname R1
+                interface GigabitEthernet0/0
+                 ip add 10.1.2.1 255.255.255.0
+                 no shutdown
+                interface Loopback0
+                 ip address 1.1.1.1 255.255.255.255
+                router ospf 1
+                 network 10.0.0.0 0.255.255.255 area 0
+                 network 172.16.0.0 0.0.255.255 area 0
+                router eigrp 100
+                 network 10.0.0.0
+                router bgp 65001
+                 network 10.1.2.0 mask 255.255.255.0
+                """);
+        String todos = c.achados().toString();
+        assertTrue(c.achados().stream().noneMatch(a -> "Sintaxe".equals(a.categoria())), "\"ip add\" é válido: " + todos);
+        assertTrue(c.achados().stream().noneMatch(a -> a.descricao().contains("Loopback0")), todos);
+        assertTrue(c.achados().stream().noneMatch(a -> a.descricao().contains("auto-summary")), todos);
+        assertTrue(c.achados().stream().noneMatch(a -> "Roteamento".equals(a.categoria())
+                        && a.descricao().contains("10.0.0.0")),
+                "10.0.0.0 0.255.255.255 (OSPF) e 10.0.0.0 (EIGRP, classful) ligam a Gi0/0 (10.1.2.1): " + todos);
+        assertTrue(c.achados().stream().anyMatch(a -> "Roteamento".equals(a.categoria())
+                        && a.descricao().contains("172.16.0.0")),
+                "network que não casa com nenhuma interface continua acusado: " + todos);
+
+        CenarioReconstruido ibgp = servico.interpretar("""
+                hostname A
+                interface GigabitEthernet0/0
+                 ip address 10.0.0.1 255.255.255.0
+                 no shutdown
+                router bgp 65001
+                 neighbor 10.0.0.2 remote-as 65001
+                -------------
+                hostname B
+                interface GigabitEthernet0/0
+                 ip address 10.0.0.2 255.255.255.0
+                 no shutdown
+                router bgp 65001
+                 neighbor 10.0.0.1 remote-as 65001
+                """);
+        assertTrue(ibgp.achados().stream()
+                        .allMatch(a -> a.severidade() == AchadoConfiguracao.Severidade.AVISO),
+                () -> "iBGP não é erro, nem gera 'faltam endereços' em quem está certo: " + ibgp.achados());
+        assertTrue(ibgp.achados().stream().anyMatch(a -> a.descricao().contains("iBGP")),
+                () -> "o AS repetido continua sinalizado como aviso: " + ibgp.achados());
+    }
+
     @Test
     @DisplayName("estado admin: comando ausente não inventa shutdown nem no shutdown")
     void reconstrucaoPreservaAusencia() {

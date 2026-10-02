@@ -269,7 +269,7 @@ public class ReconstrucaoTopologiaService {
                 linhas.add("!");
                 linhas.add("interface " + i.nome());
                 if (i.vlan() > 0) {
-                    linhas.add(" encapsulation dot1Q " + i.vlan());
+                    linhas.add(" encapsulation dot1Q " + i.vlan() + (i.dot1qNativa() ? " native" : ""));
                 }
                 if (!i.descricao().isBlank()) {
                     linhas.add(" description " + i.descricao());
@@ -278,6 +278,9 @@ public class ReconstrucaoTopologiaService {
                     String comando = "ip address " + i.ip() + " " + i.mascara();
                     marcarCorrecao(linhas, correcoes, comando);
                     linhas.add(" " + comando);
+                }
+                for (String secundario : i.secundarios()) {
+                    linhas.add(" ip address " + secundario + " secondary");
                 }
                 if (i.temClockRate()) {
                     linhas.add(" clock rate " + i.clockRateBps());
@@ -299,6 +302,9 @@ public class ReconstrucaoTopologiaService {
                 linhas.add("!");
                 linhas.add("router " + bloco.protocolo().toLowerCase(java.util.Locale.ROOT)
                         + (bloco.identificador() > 0 ? " " + bloco.identificador() : ""));
+                for (String outra : bloco.outrasLinhas()) {
+                    linhas.add(" " + outra);
+                }
                 for (VizinhoBgp v : bloco.vizinhos()) {
                     linhas.add(" neighbor " + v.ip() + " remote-as " + v.remoteAs());
                 }
@@ -314,7 +320,8 @@ public class ReconstrucaoTopologiaService {
             }
 
             for (RotaEstatica rota : r.rotasEstaticas()) {
-                linhas.add("ip route " + rota.rede() + " " + rota.mascara() + " " + rota.proximoSalto());
+                linhas.add("ip route " + rota.rede() + " " + rota.mascara() + " " + rota.proximoSalto()
+                        + (rota.complemento().isEmpty() ? "" : " " + rota.complemento()));
             }
 
             linhas.add("!");

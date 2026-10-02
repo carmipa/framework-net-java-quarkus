@@ -145,7 +145,8 @@ public class CiscoConfigParser {
 
             // --- ip route (global) --------------------------------------------
             if ("ip".equals(comando) && tokens.length >= 5 && "route".equalsIgnoreCase(tokens[1])) {
-                atual.rotasEstaticas.add(new RotaEstatica(tokens[2], tokens[3], tokens[4], numero));
+                String complemento = String.join(" ", java.util.Arrays.copyOfRange(tokens, 5, tokens.length));
+                atual.rotasEstaticas.add(new RotaEstatica(tokens[2], tokens[3], tokens[4], numero, complemento));
                 continue;
             }
 
@@ -187,7 +188,11 @@ public class CiscoConfigParser {
         String comando = tokens[0].toLowerCase(Locale.ROOT);
 
         if ("ip".equals(comando) && tokens.length >= 2 && pareceAddress(tokens[1])) {
-            if (!"address".equalsIgnoreCase(tokens[1])) {
+            // "ip add" e "ip addr" são abreviações que o IOS aceita; só o erro de digitação vira achado
+            // (auditoria CALC-14: "ip add" saía como corrigido).
+            String t1 = tokens[1].toLowerCase(Locale.ROOT);
+            boolean abreviacaoValida = "address".startsWith(t1) && t1.length() >= 3;
+            if (!abreviacaoValida) {
                 achados.add(AchadoConfiguracao.corrigido(
                         "Sintaxe", roteador, numero, linha,
                         linha.replaceFirst("(?i)\\b" + java.util.regex.Pattern.quote(tokens[1]) + "\\b", "address"),
@@ -199,6 +204,12 @@ public class CiscoConfigParser {
                         "Interface " + alvo.nome + " usa DHCP — sem endereço fixo não há como "
                                 + "posicioná-la na topologia.",
                         "Endereço obtido em tempo de execução não existe no texto."));
+                return true;
+            }
+            if (tokens.length >= 5 && "secondary".startsWith(tokens[4].toLowerCase(Locale.ROOT))
+                    && tokens[4].length() >= 3) {
+                // Secundário não substitui o primário (CALC-11).
+                alvo.secundarios.add(tokens[2] + " " + tokens[3]);
                 return true;
             }
             if (tokens.length >= 4) {
@@ -247,6 +258,7 @@ public class CiscoConfigParser {
         }
         if (ehPrefixoDe(comando, "encapsulation", 5) && tokens.length >= 3) {
             alvo.vlan = inteiroOu(tokens[2], 0);
+            alvo.dot1qNativa = tokens.length >= 4 && "native".equalsIgnoreCase(tokens[3]);
             return true;
         }
         return false;
@@ -321,11 +333,16 @@ public class CiscoConfigParser {
             return true;
         }
 
-        // router-id, version, passive-interface e afins: legítimos, sem efeito no desenho.
-        return ehPrefixoDe(comando, "version", 4)
+        // router-id, version, passive-interface e afins: legítimos, sem efeito no desenho — mas guardados
+        // como foram escritos, para o script reconstruído não os engolir (CALC-11).
+        boolean legitima = ehPrefixoDe(comando, "version", 4)
                 || comando.endsWith("router-id")
                 || ("bgp".equals(comando) && tokens.length >= 2)
                 || ehPrefixoDe(comando, "passive-interface", 7);
+        if (legitima) {
+            bloco.outrasLinhas.add(linha.strip());
+        }
+        return legitima;
     }
 
     // ------------------------------------------------------------------ apoio
@@ -494,6 +511,8 @@ public class CiscoConfigParser {
         private boolean shutdownExplicito;
         private String descricao = "";
         private int vlan;
+        private boolean dot1qNativa;
+        private final List<String> secundarios = new ArrayList<>();
 
         InterfaceEmMontagem(String nome, int linha) {
             this.nome = nome;
@@ -502,7 +521,7 @@ public class CiscoConfigParser {
 
         InterfaceLida selar() {
             return new InterfaceLida(nome, ip, mascaraTexto, prefixo, clockRateBps, noShutdown,
-                    shutdownExplicito, descricao, vlan, linha);
+                    shutdownExplicito, descricao, vlan, linha, secundarios, dot1qNativa);
         }
     }
 
@@ -512,6 +531,7 @@ public class CiscoConfigParser {
         private final int linha;
         private final List<VizinhoBgp> vizinhos = new ArrayList<>();
         private final List<RedeAnunciada> redes = new ArrayList<>();
+        private final List<String> outrasLinhas = new ArrayList<>();
         private boolean autoSummaryDesligado;
 
         BlocoEmMontagem(String protocolo, int identificador, int linha) {
@@ -522,7 +542,7 @@ public class CiscoConfigParser {
 
         BlocoRoteamento selar() {
             return new BlocoRoteamento(protocolo, identificador, vizinhos, redes,
-                    autoSummaryDesligado, linha);
+                    autoSummaryDesligado, linha, outrasLinhas);
         }
     }
 }

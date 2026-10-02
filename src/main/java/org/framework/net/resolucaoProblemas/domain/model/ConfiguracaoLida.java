@@ -102,7 +102,10 @@ public record ConfiguracaoLida(
      * O estado administrativo tem TRÊS valores distintos, não dois: {@code shutdown}
      * explícito ({@code shutdownExplicito=true}), {@code no shutdown} explícito
      * ({@code noShutdown=true}) e comando ausente (ambos {@code false}) — colapsar
-     * shutdown com ausência apagaria a intenção do operador na reconstrução.</p>
+     * shutdown com ausência apagaria a intenção do operador na reconstrução.
+     * {@code secundarios} guarda cada "ip máscara" declarado com {@code secondary} (o primário nunca é
+     * sobrescrito por ele) e {@code dot1qNativa} o {@code native} do {@code encapsulation dot1Q}: a
+     * reconstrução não pode engolir nenhum dos dois (auditoria CALC-11).</p>
      */
     public record InterfaceLida(
             String nome,
@@ -114,9 +117,18 @@ public record ConfiguracaoLida(
             boolean shutdownExplicito,
             String descricao,
             int vlan,
-            int linha) {
+            int linha,
+            List<String> secundarios,
+            boolean dot1qNativa) {
+
+        public InterfaceLida(String nome, String ip, String mascara, int prefixo, int clockRateBps,
+                             boolean noShutdown, boolean shutdownExplicito, String descricao, int vlan, int linha) {
+            this(nome, ip, mascara, prefixo, clockRateBps, noShutdown, shutdownExplicito, descricao, vlan, linha,
+                    List.of(), false);
+        }
 
         public InterfaceLida {
+            secundarios = secundarios == null ? List.of() : List.copyOf(secundarios);
             if (noShutdown && shutdownExplicito) {
                 throw new IllegalArgumentException(
                         "estado administrativo inconsistente: 'no shutdown' e 'shutdown' ao mesmo tempo em " + nome);
@@ -145,22 +157,35 @@ public record ConfiguracaoLida(
         /** Cópia com outro endereço — usada pela auditoria ao aplicar uma correção derivada. */
         public InterfaceLida comIp(String novoIp) {
             return new InterfaceLida(nome, novoIp, mascara, prefixo, clockRateBps, noShutdown,
-                    shutdownExplicito, descricao, vlan, linha);
+                    shutdownExplicito, descricao, vlan, linha, secundarios, dot1qNativa);
         }
     }
 
-    /** Bloco {@code router <protocolo> <id>} com o que foi declarado dentro dele. */
+    /**
+     * Bloco {@code router <protocolo> <id>} com o que foi declarado dentro dele.
+     *
+     * <p>{@code outrasLinhas} guarda, como foram escritas, as linhas legítimas que o desenho não usa
+     * ({@code router-id}, {@code version 2}, {@code passive-interface}, {@code bgp ...}): o script
+     * reconstruído as devolve em vez de engoli-las (auditoria CALC-11).</p>
+     */
     public record BlocoRoteamento(
             String protocolo,
             int identificador,
             List<VizinhoBgp> vizinhos,
             List<RedeAnunciada> redes,
             boolean autoSummaryDesligado,
-            int linha) {
+            int linha,
+            List<String> outrasLinhas) {
+
+        public BlocoRoteamento(String protocolo, int identificador, List<VizinhoBgp> vizinhos,
+                               List<RedeAnunciada> redes, boolean autoSummaryDesligado, int linha) {
+            this(protocolo, identificador, vizinhos, redes, autoSummaryDesligado, linha, List.of());
+        }
 
         public BlocoRoteamento {
             vizinhos = vizinhos == null ? List.of() : List.copyOf(vizinhos);
             redes = redes == null ? List.of() : List.copyOf(redes);
+            outrasLinhas = outrasLinhas == null ? List.of() : List.copyOf(outrasLinhas);
         }
     }
 
@@ -185,8 +210,22 @@ public record ConfiguracaoLida(
             int linha) {
     }
 
-    /** {@code ip route <rede> <máscara> <próximo salto>}. */
-    public record RotaEstatica(String rede, String mascara, String proximoSalto, int linha) {
+    /**
+     * {@code ip route <rede> <máscara> <próximo salto> [complemento]}.
+     *
+     * <p>{@code complemento} é o que vem depois do próximo salto (distância administrativa, {@code name},
+     * {@code permanent}, {@code tag}), preservado como foi escrito — sem ele a rota flutuante de backup
+     * virava rota principal no script reconstruído (auditoria CALC-11).</p>
+     */
+    public record RotaEstatica(String rede, String mascara, String proximoSalto, int linha, String complemento) {
+
+        public RotaEstatica(String rede, String mascara, String proximoSalto, int linha) {
+            this(rede, mascara, proximoSalto, linha, "");
+        }
+
+        public RotaEstatica {
+            complemento = complemento == null ? "" : complemento.strip();
+        }
     }
 
     /**
