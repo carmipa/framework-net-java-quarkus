@@ -116,7 +116,8 @@ if ($LASTEXITCODE -ne 0) { Write-Host '  Falha ao subir os containers.' -Foregro
 
 # --- 3. Esperar o healthcheck ---------------------------------------------
 Write-Host '  [..] Aguardando a aplicacao responder' -ForegroundColor DarkGray
-$url = "http://127.0.0.1:$Porta/"
+# /health: fora da telemetria (bater em / a cada 3 s enchia o painel no arranque).
+$url = "http://127.0.0.1:$Porta/health"
 $limite = (Get-Date).AddSeconds(150)
 $pronto = $false
 

@@ -46,23 +46,24 @@ services:
     volumes:
       - ./docker-data:/deployments/data
       # - ${GEO_DB_HOST_PATH:-./docker-data/geo/GeoLite2-City.mmdb}:/deployments/data/geo/GeoLite2-City.mmdb:ro
+    # Sem healthcheck aqui: vale o HEALTHCHECK do Dockerfile (/health, 30 s), o mesmo da producao.
+    # O antigo batia em / a cada 15 s e cada batida virava evento de telemetria (auditoria OPS-09).
+    mem_limit: ${MEM_LIMIT:-768m}
+    memswap_limit: ${MEM_LIMIT:-768m}
+    mem_reservation: 256m
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/ >/dev/null || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   redis:
     image: redis:7-alpine
     container_name: framework-net-redis-dev
-    # appendonly de proposito: a janela de telemetria no Stream sobrevive ao
-    # restart do container, que e metade do motivo de existir.
-    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "128mb", "--maxmemory-policy", "noeviction"]
-    volumes:
-      - redis-dev-data:/data
+    # Mesmo comando e teto da producao: sem disco, 48 MB e allkeys-lru. O dev com AOF e noeviction
+    # escondia o comportamento real (em producao o Stream e o cache dividem 48 MB e o Redis despeja).
+    command: redis-server --save "" --appendonly no --maxmemory 48mb --maxmemory-policy allkeys-lru
+    mem_limit: 64m
+    memswap_limit: 64m
     restart: unless-stopped
-
-volumes:
-  redis-dev-data:
