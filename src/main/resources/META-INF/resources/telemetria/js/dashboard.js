@@ -59,7 +59,13 @@
         $('t-http-5xx').classList.toggle('kpi-bad', (data.http5xx || 0) > 0);
 
         if ($('t-atualizado')) $('t-atualizado').textContent = data.atualizadoEm || '--';
-        if ($('t-periodo-label')) $('t-periodo-label').textContent = 'janela: ' + (PERIODO_LABEL[String(data.janelaMinutos)] || (data.janelaMinutos + ' min'));
+        if ($('t-periodo-label')) {
+            let rotulo = 'janela: ' + (PERIODO_LABEL[String(data.janelaMinutos)] || (data.janelaMinutos + ' min'));
+            if (data.coberturaDesde) rotulo += ' · dados desde ' + data.coberturaDesde;
+            if (data.coberturaParcial) rotulo += ' (cobertura parcial: o período pedido começa antes do evento mais antigo guardado)';
+            $('t-periodo-label').textContent = rotulo;
+            $('t-periodo-label').classList.toggle('text-warning', !!data.coberturaParcial);
+        }
         const pasta = $('t-pasta-logs');
         if (pasta) pasta.textContent = data.pastaLogs ? 'Logs: ' + data.pastaLogs : '';
     }

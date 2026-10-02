@@ -14,6 +14,8 @@ public record TelemetriaDashboard(
         int janelaMinutos,
         String atualizadoEm,
         long eventosJanela,
+        String coberturaDesde,
+        boolean coberturaParcial,
         long httpTotal,
         long http2xx,
         long http3xx,

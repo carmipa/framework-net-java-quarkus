@@ -46,6 +46,15 @@ public class TelemetriaStore {
     @ConfigProperty(name = "framework.telemetry.max-events", defaultValue = "5000")
     int maxEvents;
 
+    /**
+     * Quantos eventos o painel, o dataset e a exportação leem do Stream do Redis. Era o mesmo
+     * {@code max-events} da memória (500 em produção) enquanto o Stream guardava 50.000: "últimos 7 dias"
+     * era calculado sobre 500 eventos sem aviso (auditoria OPS-05). Agora a leitura alcança o que o
+     * Stream guarda ({@code framework.telemetry.stream.max-len}, mesmo padrão).
+     */
+    @ConfigProperty(name = "framework.telemetry.stream.janela-leitura", defaultValue = "5000")
+    int janelaLeitura;
+
     @ConfigProperty(name = "framework.telemetry.jsonl-max-bytes", defaultValue = "10485760")
     long jsonlMaxBytes;
 
@@ -172,11 +181,19 @@ public class TelemetriaStore {
         }
     }
 
+    /** Maior número de eventos que uma leitura devolve (memória ou Stream). */
+    public int janelaDeLeitura() {
+        return Math.max(maxEvents, janelaLeitura);
+    }
+
     public int maxEventos() {
         return maxEvents;
     }
 
-    /** Cópia dos eventos em memória (mais recentes primeiro), até {@code maxEvents}. */
+    /**
+     * Eventos para leitura (mais recentes primeiro): a janela maior entre a memória ({@code maxEvents}) e o
+     * Stream ({@code janela-leitura}).
+     */
     public List<TelemetriaEvent> snapshotEventos() {
         List<TelemetriaEvent> memoria;
         lock.lock();
@@ -194,7 +211,7 @@ public class TelemetriaStore {
         if (stream == null) {
             return memoria;
         }
-        List<TelemetriaEvent> doStream = stream.ultimos(maxEvents);
+        List<TelemetriaEvent> doStream = stream.ultimos(Math.max(maxEvents, janelaLeitura));
         return doStream.size() > memoria.size() ? doStream : memoria;
     }
 

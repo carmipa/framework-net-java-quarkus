@@ -41,6 +41,14 @@ public class TelemetriaDashboardService {
         Instant agora = Instant.now();
         Instant desde = janelaMinutos > 0 ? agora.minus(janelaMinutos, ChronoUnit.MINUTES) : Instant.EPOCH;
 
+        // Cobertura real: o evento mais antigo que o painel enxerga. Se o período pedido começa antes dele,
+        // o painel avisa em vez de apresentar uma janela menor como se fosse o período inteiro (OPS-05).
+        Instant maisAntigo = todos.stream().map(TelemetriaEvent::timestamp)
+                .filter(java.util.Objects::nonNull).min(Comparator.naturalOrder()).orElse(null);
+        boolean coberturaParcial = maisAntigo != null && (janelaMinutos == 0 || maisAntigo.isAfter(desde))
+                && todos.size() >= store.janelaDeLeitura();
+        String coberturaDesde = maisAntigo == null ? "" : ATUALIZADO.format(maisAntigo);
+
         List<TelemetriaEvent> janela = new ArrayList<>();
         List<TelemetriaEvent> http = new ArrayList<>();
         for (TelemetriaEvent e : todos) {
@@ -173,6 +181,8 @@ public class TelemetriaDashboardService {
                 janelaMinutos,
                 ATUALIZADO.format(agora),
                 janela.size(),
+                coberturaDesde,
+                coberturaParcial,
                 httpTotal, http2xx, http3xx, http4xx, http5xx,
                 taxaSucesso, taxaErroServidor,
                 latencia, metodos, paisesTop, clientesAgg, porModulo, topLentos, topErros, topRotas, atividade,

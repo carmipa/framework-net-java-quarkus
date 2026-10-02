@@ -34,6 +34,17 @@ class TelemetriaHttpTest {
     }
 
     @Test
+    void dashboardJsonInformaACoberturaReal() {
+        given()
+                .header("Cookie", cookieDeDono())
+                .when().get("/telemetria/api/dashboard?janela=10080")
+                .then()
+                .statusCode(200)
+                .body("coberturaDesde", notNullValue())
+                .body("coberturaParcial", notNullValue());
+    }
+
+    @Test
     void dashboardJson() {
         given()
                 .header("Cookie", cookieDeDono())
