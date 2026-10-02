@@ -40,7 +40,7 @@
     </details>
     <div class="mb-3">
         <span class="shield-badge"><span class="material-symbols-outlined icon" translate="no" aria-hidden="true">memory</span>VLSM Dinâmico</span>
-        <span class="shield-badge"><span class="material-symbols-outlined icon" translate="no" aria-hidden="true">public</span>WAN /30</span>
+        <span class="shield-badge"><span class="material-symbols-outlined icon" translate="no" aria-hidden="true">public</span>WAN /{formData.wanPrefix}</span>
         <span class="shield-badge"><span class="material-symbols-outlined icon" translate="no" aria-hidden="true">terminal</span>Cisco CLI</span>
         <span class="shield-badge"><span class="material-symbols-outlined icon" translate="no" aria-hidden="true">account_tree</span>Topologia Mermaid</span>
     </div>
@@ -300,7 +300,7 @@
                     spellcheck="false"
                     autocomplete="off"
                 >{classRosterPaste}</textarea>
-                <div class="form-text text-secondary">Usa os parâmetros WAN/roteamento do formulário acima (topologia, /30, EIGRP, OSPF, VTY).</div>
+                <div class="form-text text-secondary">Usa os parâmetros WAN/roteamento do formulário acima (topologia, prefixo WAN, EIGRP, OSPF, VTY).</div>
             </div>
             <div class="col-12">
                 <button
@@ -547,7 +547,7 @@
     </div>
 
     <div class="problem-box p-3 mb-3">
-        <h5 class="text-info mb-3 problem-title"><span class="material-symbols-outlined" translate="no" aria-hidden="true">link</span><span>Links WAN /30</span></h5>
+        <h5 class="text-info mb-3 problem-title"><span class="material-symbols-outlined" translate="no" aria-hidden="true">link</span><span>Links WAN /{scenario.wanPrefix}</span></h5>
         <div class="table-responsive">
             <table class="table table-dark table-bordered table-sm mb-0">
                 <thead>

@@ -39,6 +39,27 @@ class ResolucaoProblemasHttpTest {
                 .body(containsString("Matriz"));
     }
 
+    /** Auditoria CALC-39: o título dos enlaces dizia "/30" com outro prefixo WAN escolhido. */
+    @Test
+    void tituloDosEnlacesUsaOPrefixoWanEscolhido() {
+        given()
+                .contentType("application/x-www-form-urlencoded")
+                .formParam("action_type", "calculate")
+                .formParam("base_network", "172.42.0.0/16")
+                .formParam("topology_type", "star")
+                .formParam("wan_prefix", "29")
+                .formParam("eigrp_as", "203")
+                .formParam("remote_access", "telnet")
+                .formParam("routing_mode", "eigrp_only")
+                .formParam("loc_name", "Matriz", "Filial")
+                .formParam("loc_hosts", "100", "50")
+                .when().post("/resolucao-problemas")
+                .then()
+                .statusCode(200)
+                .body(containsString("Links WAN /29"))
+                .body(org.hamcrest.CoreMatchers.not(containsString("Links WAN /30")));
+    }
+
     @Test
     void postExportTxt() {
         given()

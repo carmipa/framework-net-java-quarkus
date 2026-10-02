@@ -73,7 +73,7 @@ public record ConfiguracaoLida(
         }
 
         /** Número do AS BGP, ou 0 quando o roteador não roda BGP. */
-        public int asBgp() {
+        public long asBgp() {
             BlocoRoteamento bgp = bgp();
             return bgp == null ? 0 : bgp.identificador();
         }
@@ -170,14 +170,14 @@ public record ConfiguracaoLida(
      */
     public record BlocoRoteamento(
             String protocolo,
-            int identificador,
+            long identificador,
             List<VizinhoBgp> vizinhos,
             List<RedeAnunciada> redes,
             boolean autoSummaryDesligado,
             int linha,
             List<String> outrasLinhas) {
 
-        public BlocoRoteamento(String protocolo, int identificador, List<VizinhoBgp> vizinhos,
+        public BlocoRoteamento(String protocolo, long identificador, List<VizinhoBgp> vizinhos,
                                List<RedeAnunciada> redes, boolean autoSummaryDesligado, int linha) {
             this(protocolo, identificador, vizinhos, redes, autoSummaryDesligado, linha, List.of());
         }
@@ -190,7 +190,7 @@ public record ConfiguracaoLida(
     }
 
     /** {@code neighbor <ip> remote-as <as>} — a declaração que sustenta todo o cruzamento. */
-    public record VizinhoBgp(String ip, int remoteAs, int linha) {
+    public record VizinhoBgp(String ip, long remoteAs, int linha) {
     }
 
     /**

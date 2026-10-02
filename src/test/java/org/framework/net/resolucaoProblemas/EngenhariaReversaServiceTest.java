@@ -553,6 +553,37 @@ class EngenhariaReversaServiceTest {
                 () -> "nada a acusar no endereçamento: " + ok.achados());
     }
 
+    /** Auditoria CALC-39 — RFC 6793/5396: AS de 4 bytes (asplain e asdot) não vira 0. */
+    @Test
+    @DisplayName("AS de 4 bytes é lido, cruzado e devolvido no script")
+    void asDeQuatroBytes() {
+        CenarioReconstruido c = servico.interpretar("""
+                hostname A
+                interface Serial0/0/0
+                 ip address 10.0.0.1 255.255.255.252
+                 clock rate 64000
+                 no shutdown
+                router bgp 4200000001
+                 neighbor 10.0.0.2 remote-as 64086.59906
+                -------------
+                hostname B
+                interface Serial0/0/0
+                 ip address 10.0.0.2 255.255.255.252
+                 no shutdown
+                router bgp 4200000002
+                 neighbor 10.0.0.1 remote-as 4200000001
+                """);
+        assertEquals(4200000001L, roteador(c, "A").asBgp());
+        assertEquals(4200000002L, roteador(c, "B").asBgp());
+        // A declara B em asdot (64086.59906 = 64086 × 65536 + 59906 = 4200000002): o cruzamento casa.
+        assertTrue(c.achados().stream().noneMatch(x -> "Endereçamento".equals(x.categoria())),
+                () -> "o asdot tem de apontar para B: " + c.achados());
+        String script = c.scripts().stream().map(CenarioReconstruido.ScriptCorrigido::conteudo)
+                .reduce("", (x, y) -> x + "\n" + y);
+        assertTrue(script.contains("router bgp 4200000001"), script);
+        assertTrue(c.pendencias().isEmpty(), () -> "os dois AS foram colados: " + c.pendencias());
+    }
+
     @Test
     @DisplayName("estado admin: comando ausente não inventa shutdown nem no shutdown")
     void reconstrucaoPreservaAusencia() {

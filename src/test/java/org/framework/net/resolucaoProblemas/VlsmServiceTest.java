@@ -117,6 +117,28 @@ class VlsmServiceTest {
                 daTurma.toString());
     }
 
+    /**
+     * Auditoria CALC-39: o texto citava "router ospf 1" com o processo 7; o mapa de seriais saía com as
+     * chaves internas loc_1...; e o erro de um aluno na importação da turma não dizia qual.
+     */
+    @Test
+    void textosDoCenarioUsamOsValoresDoCenario() {
+        NetworkScenarioResult s = vlsmService.solveNetworkProblem("10.0.0.0/16",
+                List.of(new LocationInput("Matriz", "50"), new LocationInput("Filial", "50")),
+                "star", 30, 71, "telnet", "ospf_only", 7);
+        String explicacoes = s.getRouterCliExplanations().toString();
+        assertTrue(explicacoes.contains("router ospf 7"), explicacoes);
+        assertFalse(explicacoes.contains("router ospf 1 "), explicacoes);
+        assertEquals(java.util.Set.of("Matriz", "Filial"), s.getTopologyInsights().getSerialWanByLocation().keySet());
+
+        var turma = bulkClassImport.parseClassRosterPaste(
+                "Ana Lima\t172.51.0.0/16\t100\t50\nBruno Costa\t172.52.0.0/30\t100\t50");
+        EntradaInvalidaException erro = assertThrows(EntradaInvalidaException.class,
+                () -> exportClassZip.generateClassRosterZipBuffer(turma,
+                        new org.framework.net.resolucaoProblemas.domain.model.ResolucaoFormData()));
+        assertTrue(erro.getMessage().contains("Bruno Costa"), erro.getMessage());
+    }
+
     private static List<String> nomesNoZip(byte[] zip) throws Exception {
         List<String> nomes = new java.util.ArrayList<>();
         try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zip))) {

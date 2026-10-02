@@ -137,7 +137,7 @@ public class CiscoConfigParser {
             // --- router <protocolo> ------------------------------------------
             if ("router".equals(comando) && tokens.length >= 2) {
                 String protocolo = tokens[1].toUpperCase(Locale.ROOT);
-                int id = tokens.length >= 3 ? inteiroOu(tokens[2], 0) : 0;
+                long id = tokens.length >= 3 ? asnOu(tokens[2], 0) : 0;
                 blocoAtual = atual.abrirBloco(protocolo, id, numero);
                 interfaceAtual = null;
                 continue;
@@ -296,7 +296,7 @@ public class CiscoConfigParser {
 
         if (ehPrefixoDe(comando, "neighbor", 4) && tokens.length >= 4
                 && "remote-as".equalsIgnoreCase(tokens[2])) {
-            bloco.vizinhos.add(new VizinhoBgp(tokens[1], inteiroOu(tokens[3], 0), numero));
+            bloco.vizinhos.add(new VizinhoBgp(tokens[1], asnOu(tokens[3], 0), numero));
             return true;
         }
 
@@ -440,6 +440,41 @@ public class CiscoConfigParser {
         return canonico + resto;
     }
 
+    /**
+     * Número de AS (ou de processo) como o IOS aceita.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> "router bgp 4200000001" (AS de 4 bytes, RFC 6793) virava 0 e o
+     * cruzamento por AS e o script reconstruído perdiam o número em silêncio (auditoria CALC-39).</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> asplain de 1 a 4294967295 ou asdot "X.Y" (X e Y de 0 a 65535,
+     * RFC 5396), convertido para asplain.</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> texto fora dessas formas devolve {@code alternativa}.</p>
+     */
+    private static long asnOu(String texto, long alternativa) {
+        String t = texto == null ? "" : texto.strip();
+        try {
+            int ponto = t.indexOf('.');
+            long valor;
+            if (ponto > 0) {
+                long alto = Long.parseLong(t.substring(0, ponto));
+                long baixo = Long.parseLong(t.substring(ponto + 1));
+                if (alto > 65535 || baixo > 65535) {
+                    return alternativa;
+                }
+                valor = alto * 65536 + baixo;
+            } else {
+                if (t.length() > 10) {
+                    return alternativa;
+                }
+                valor = Long.parseLong(t);
+            }
+            return valor >= 0 && valor <= 4294967295L ? valor : alternativa;
+        } catch (RuntimeException ex) {
+            return alternativa;
+        }
+    }
+
     private static int inteiroOu(String texto, int alternativa) {
         try {
             return Integer.parseInt(texto.strip());
@@ -481,7 +516,7 @@ public class CiscoConfigParser {
             return nova;
         }
 
-        BlocoEmMontagem abrirBloco(String protocolo, int identificador, int linha) {
+        BlocoEmMontagem abrirBloco(String protocolo, long identificador, int linha) {
             BlocoEmMontagem novo = new BlocoEmMontagem(protocolo, identificador, linha);
             blocos.add(novo);
             return novo;
@@ -527,14 +562,14 @@ public class CiscoConfigParser {
 
     private static final class BlocoEmMontagem {
         private final String protocolo;
-        private final int identificador;
+        private final long identificador;
         private final int linha;
         private final List<VizinhoBgp> vizinhos = new ArrayList<>();
         private final List<RedeAnunciada> redes = new ArrayList<>();
         private final List<String> outrasLinhas = new ArrayList<>();
         private boolean autoSummaryDesligado;
 
-        BlocoEmMontagem(String protocolo, int identificador, int linha) {
+        BlocoEmMontagem(String protocolo, long identificador, int linha) {
             this.protocolo = protocolo;
             this.identificador = identificador;
             this.linha = linha;

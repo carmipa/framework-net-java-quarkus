@@ -111,7 +111,7 @@ public class VlsmService {
         double overallEfficiency = totalHostsSupported > 0
                 ? round2((double) totalHostsRequested / totalHostsSupported * 100.0) : 0.0;
 
-        TopologyInsights topologyInsights = buildTopologyInsights(cleanedLans.size(), normalizedTopology);
+        TopologyInsights topologyInsights = buildTopologyInsights(cleanedLans, normalizedTopology);
         List<String> hostsCapacityWarnings = hostsCapacityWarnings(cleanedLans);
         List<GrowthForecast> growthForecast = growthForecast(cleanedLans);
         int suggestedPrefix = suggestedBasePrefix(totalConsumedAddresses, ipv4Kernel.prefixLength(baseNetwork));
@@ -152,7 +152,7 @@ public class VlsmService {
 
         scenario.setRouterCommands(exportTxtService.generateRouterLabBlocks(scenario));
         scenario.setPtRouterTables(exportTxtService.buildPtRouterTables(scenario));
-        scenario.setRouterCliExplanations(buildCliExplanations(cleanedLans, wanLinks, eigrpAs, routingPlan));
+        scenario.setRouterCliExplanations(buildCliExplanations(cleanedLans, wanLinks, eigrpAs, ospfProcess, routingPlan));
 
         String dhcpGatewaysRef = cleanedLans.stream()
                 .map(loc -> loc.getLocationName() + ": " + loc.getGateway() + " (" + loc.getNetmask() + ")")
@@ -188,8 +188,18 @@ public class VlsmService {
         }
     }
 
+    /**
+     * Explicação, linha a linha, do script de cada roteador.
+     *
+     * <p><b>PROPÓSITO DE NEGÓCIO:</b> o aluno entende o que cada comando do script faz.</p>
+     *
+     * <p><b>INVARIANTES DO DOMÍNIO:</b> os números citados (AS do EIGRP, processo OSPF) são os do cenário,
+     * os mesmos do script — o texto dizia "router ospf 1" com o processo 7 escolhido (auditoria CALC-39).</p>
+     *
+     * <p><b>COMPORTAMENTO EM CASO DE FALHA:</b> não lança; papel de roteamento ausente cai em EIGRP.</p>
+     */
     private Map<String, List<String>> buildCliExplanations(
-            List<LanBlock> lanBlocks, List<WanLink> wanLinks, int eigrpAs,
+            List<LanBlock> lanBlocks, List<WanLink> wanLinks, int eigrpAs, int ospfProcess,
             org.framework.net.resolucaoProblemas.domain.model.RoutingPlan routingPlan) {
         Map<String, Integer> linksPorLocal = new LinkedHashMap<>();
         for (WanLink link : wanLinks) {
@@ -208,7 +218,7 @@ public class VlsmService {
                 routingBits.add("router eigrp " + eigrpAs + " + network <rede> <wildcard> (AS " + eigrpAs + ").");
             }
             if ("ospf".equals(role) || "boundary".equals(role)) {
-                routingBits.add("router ospf 1 + network <rede> <wildcard> area 0 (domínio OSPF).");
+                routingBits.add("router ospf " + ospfProcess + " + network <rede> <wildcard> area 0 (domínio OSPF).");
             }
             if ("boundary".equals(role)) {
                 routingBits.add("redistribute: troca rotas entre EIGRP e OSPF neste roteador de fronteira.");
@@ -227,7 +237,8 @@ public class VlsmService {
         return explicacoes;
     }
 
-    private TopologyInsights buildTopologyInsights(int totalLocations, String selected) {
+    private TopologyInsights buildTopologyInsights(List<LanBlock> lans, String selected) {
+        int totalLocations = lans.size();
         String selectedNorm = planningService.normalizeTopologyType(selected);
         int starLinks = planningService.wanLinksCount("star", totalLocations);
         int extendedStarLinks = planningService.wanLinksCount("extended_star", totalLocations);
@@ -275,7 +286,13 @@ public class VlsmService {
         insights.setRecommended(recommendation);
         insights.setRecommendedReason(reason);
         insights.setSelectedNote(selectedNote);
-        insights.setSerialWanByLocation(serialMap);
+        // As chaves internas "loc_1", "loc_2"... saíam no lugar do nome da localidade (CALC-39).
+        Map<String, Integer> porNome = new LinkedHashMap<>();
+        serialMap.forEach((chave, n) -> {
+            int indice = Integer.parseInt(chave.substring(chave.indexOf('_') + 1)) - 1;
+            porNome.put(indice >= 0 && indice < lans.size() ? lans.get(indice).getLocationName() : chave, n);
+        });
+        insights.setSerialWanByLocation(porNome);
         insights.setRoutersWith3PlusSerial(routersWith3Serial);
         insights.setFiapCheckpointSerialOk(fiapSerialOk);
         insights.setFiapCheckpointNote(fiapNote);

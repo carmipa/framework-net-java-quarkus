@@ -83,7 +83,7 @@ public class AuditoriaConfiguracaoService {
     // ------------------------------------------------------------ identificação
 
     private void conferirIdentificacao(List<RoteadorLido> roteadores, List<AchadoConfiguracao> achados) {
-        Map<Integer, String> porAs = new LinkedHashMap<>();
+        Map<Long, String> porAs = new LinkedHashMap<>();
         Set<String> nomes = new LinkedHashSet<>();
         for (RoteadorLido r : roteadores) {
             if (!nomes.add(r.hostname())) {
@@ -92,7 +92,7 @@ public class AuditoriaConfiguracaoService {
                         "Dois blocos usam o mesmo hostname \"" + r.hostname() + "\".",
                         "Nomes repetidos impedem dizer a qual roteador cada interface pertence."));
             }
-            int as = r.asBgp();
+            long as = r.asBgp();
             if (as > 0) {
                 String anterior = porAs.put(as, r.hostname());
                 if (anterior != null) {
@@ -200,7 +200,7 @@ public class AuditoriaConfiguracaoService {
             List<RoteadorLido> roteadores, List<AchadoConfiguracao> achados,
             List<Pendencia> pendencias) {
 
-        Map<Integer, RoteadorLido> porAs = indicePorAs(roteadores);
+        Map<Long, RoteadorLido> porAs = indicePorAs(roteadores);
         Map<String, List<Exigencia>> exigidos = mapearExigencias(roteadores, porAs, pendencias);
         Set<String> todosEnderecos = enderecosDeclarados(roteadores);
 
@@ -709,8 +709,8 @@ public class AuditoriaConfiguracaoService {
 
     // ----------------------------------------------------------------- apoio
 
-    private Map<Integer, RoteadorLido> indicePorAs(List<RoteadorLido> roteadores) {
-        Map<Integer, RoteadorLido> indice = new LinkedHashMap<>();
+    private Map<Long, RoteadorLido> indicePorAs(List<RoteadorLido> roteadores) {
+        Map<Long, RoteadorLido> indice = new LinkedHashMap<>();
         for (RoteadorLido r : roteadores) {
             if (r.asBgp() > 0) {
                 indice.putIfAbsent(r.asBgp(), r);
@@ -743,14 +743,14 @@ public class AuditoriaConfiguracaoService {
 
     /** Para cada roteador, os endereços que os OUTROS scripts afirmam que ele possui. */
     private Map<String, List<Exigencia>> mapearExigencias(
-            List<RoteadorLido> roteadores, Map<Integer, RoteadorLido> porAs,
+            List<RoteadorLido> roteadores, Map<Long, RoteadorLido> porAs,
             List<Pendencia> pendencias) {
 
         Map<String, List<Exigencia>> exigencias = new LinkedHashMap<>();
-        Set<Integer> ausentesRegistrados = new LinkedHashSet<>();
+        Set<Long> ausentesRegistrados = new LinkedHashSet<>();
         // AS com mais de um roteador (iBGP) não diz QUAL deles tem o endereço: deduzir pelo primeiro da lista
         // acusava "faltam endereços" num roteador certo (CONT-33).
-        Map<Integer, Long> roteadoresPorAs = roteadores.stream().filter(x -> x.asBgp() > 0)
+        Map<Long, Long> roteadoresPorAs = roteadores.stream().filter(x -> x.asBgp() > 0)
                 .collect(java.util.stream.Collectors.groupingBy(RoteadorLido::asBgp,
                         java.util.stream.Collectors.counting()));
 
@@ -810,7 +810,7 @@ public class AuditoriaConfiguracaoService {
     }
 
     /** Endereço que um script afirma pertencer a outro roteador. */
-    private record Exigencia(String endereco, String declaradoPor, int asAlvo, int linha) {
+    private record Exigencia(String endereco, String declaradoPor, long asAlvo, int linha) {
     }
 
     private record Ponta(String roteador, InterfaceLida itf) {

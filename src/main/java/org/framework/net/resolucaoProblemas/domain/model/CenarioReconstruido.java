@@ -111,7 +111,7 @@ public record CenarioReconstruido(
     }
 
     /** Tabela por roteador, no mesmo formato usado no laboratório do Packet Tracer. */
-    public record TabelaRoteador(String roteador, int asBgp, List<LinhaTabela> linhas) {
+    public record TabelaRoteador(String roteador, long asBgp, List<LinhaTabela> linhas) {
 
         public TabelaRoteador {
             linhas = lista(linhas);

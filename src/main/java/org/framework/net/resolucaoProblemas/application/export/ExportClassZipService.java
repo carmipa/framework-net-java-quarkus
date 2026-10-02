@@ -47,16 +47,23 @@ public class ExportClassZipService {
              ZipOutputStream zf = new ZipOutputStream(memoryFile)) {
 
             for (ClassRosterRow row : rosterRows) {
-                NetworkScenarioResult scenario = vlsmService.solveNetworkProblem(
-                        row.getBaseNetwork(),
-                        row.getLocations(),
-                        settings.topologyType(),
-                        settings.wanPrefix(),
-                        settings.eigrpAs(),
-                        settings.remoteAccess(),
-                        settings.routingMode(),
-                        settings.ospfProcess()
-                );
+                NetworkScenarioResult scenario;
+                try {
+                    scenario = vlsmService.solveNetworkProblem(
+                            row.getBaseNetwork(),
+                            row.getLocations(),
+                            settings.topologyType(),
+                            settings.wanPrefix(),
+                            settings.eigrpAs(),
+                            settings.remoteAccess(),
+                            settings.routingMode(),
+                            settings.ospfProcess()
+                    );
+                } catch (EntradaInvalidaException ex) {
+                    // Com 40 alunos, "Rede base invalida" sem dizer de quem é obriga a caçar a linha (CALC-39).
+                    throw new EntradaInvalidaException("Aluno " + row.getStudentName() + " (rede "
+                            + row.getBaseNetwork() + "): " + ex.getMessage(), ex);
+                }
                 String folder = row.getFolderSlug();
                 String prefix = "por_aluno/" + folder + "/";
 
