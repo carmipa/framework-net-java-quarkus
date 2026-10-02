@@ -197,4 +197,19 @@ class HistoricoStoreTest {
         assertTrue(Files.readString(arquivo(home)).contains("203.0.113.50"), "o registro novo tem de ir para o v2");
         assertEquals(1, s.listar("S").size());
     }
+
+    /**
+     * A pasta-base nunca é uma expressão por expandir: em 02/10/2026 o padrão {@code "${user.home}"} da
+     * anotação não foi expandido e o quarkusDev gravou o histórico numa pasta com esse nome literal.
+     */
+    @Test
+    void pastaBaseNuncaEhExpressaoPorExpandir() {
+        HistoricoStore s = new HistoricoStore();
+        assertEquals(System.getProperty("user.home"), s.baseDoHistorico(), "sem propriedade vale a pasta do usuário");
+        s.homeConfigurado = java.util.Optional.of("/dados/historico");
+        assertEquals("/dados/historico", s.baseDoHistorico());
+        s.homeConfigurado = java.util.Optional.of("${user.home}");
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, s::baseDoHistorico,
+                "expressão por expandir não pode virar nome de pasta");
+    }
 }

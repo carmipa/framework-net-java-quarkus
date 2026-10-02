@@ -71,8 +71,14 @@ public class HistoricoStore {
      * Pasta-base do histórico ({@code <base>/.framework-net}). Propriedade própria porque {@code user.home}
      * é propriedade de sistema e vence o application.properties: os testes gravavam no histórico real da
      * máquina (auditoria OPS-21). Padrão: a pasta do usuário, como antes.
+     * Sem {@code defaultValue = "${user.home}"}: o valor padrão NÃO é expandido, e em 02/10/2026 o
+     * quarkusDev gravou o histórico numa pasta chamada literalmente "${user.home}" (no contêiner ela
+     * cairia fora do volume /deployments/data e o histórico sumiria a cada recriação).
      */
-    @ConfigProperty(name = "framework.historico.home", defaultValue = "${user.home}")
+    @ConfigProperty(name = "framework.historico.home")
+    Optional<String> homeConfigurado = Optional.empty();
+
+    /** Base efetiva; os testes de unidade a fixam direto. Nula = resolver pela configuração. */
     String userHome;
 
     /** Teto do arquivo inteiro (todas as sessões): mantém a regravação por consulta pequena. */
@@ -419,7 +425,24 @@ public class HistoricoStore {
      * arquivo antigo fica intocado com o que já era público antes da atualização.
      */
     private Path historyFile() {
-        return Paths.get(userHome, ".framework-net", "consulta_history.v2.json");
+        return Paths.get(baseDoHistorico(), ".framework-net", "consulta_history.v2.json");
+    }
+
+    /**
+     * Pasta-base do histórico.
+     * PROPÓSITO DE NEGÓCIO: o histórico didático sobrevive ao reinício; no contêiner, HOME aponta para o volume.
+     * INVARIANTES: nunca devolve texto com expressão de configuração por expandir ("${...}"); sem
+     *   propriedade, vale a pasta do usuário do processo (user.home).
+     * FALHA: propriedade com "${" não expandido é recusada com IllegalStateException, em vez de gravar numa
+     *   pasta com esse nome e perder o histórico em silêncio.
+     */
+    String baseDoHistorico() {
+        String base = userHome != null ? userHome
+                : homeConfigurado.filter(h -> !h.isBlank()).orElse(System.getProperty("user.home"));
+        if (base == null || base.contains("${")) {
+            throw new IllegalStateException("framework.historico.home sem valor válido: " + base);
+        }
+        return base;
     }
 
     private static int parsePositive(String value, int defaultValue) {
