@@ -67,7 +67,7 @@
   ],
   "diagrama": {
     "titulo": "SYN scan: como o nmap decide se a porta está aberta ou fechada",
-    "definicao": "sequenceDiagram\n    participant N as nmap (atacante autorizado)\n    participant A as Porta aberta\n    participant F as Porta fechada\n    Note over N,A: Caso 1 - porta ABERTA\n    N->>A: SYN (tento abrir a porta)\n    A-->>N: SYN/ACK (servico presente)\n    N->>A: RST (abandono, half-open)\n    Note over N,F: Caso 2 - porta FECHADA\n    N->>F: SYN (tento abrir a porta)\n    F-->>N: RST (viva, mas sem servico)\n    Note over N,F: Caso 3 - porta FILTRADA\n    N->>F: SYN (tento abrir a porta)\n    Note right of F: silencio - firewall descartou o pacote",
+    "definicao": "sequenceDiagram\n    participant N as nmap (atacante autorizado)\n    participant A as Porta aberta\n    participant F as Porta fechada\n    Note over N,A: Caso 1 - porta ABERTA\n    N->>A: SYN (tento abrir a porta)\n    A-->>N: SYN/ACK (serviço presente)\n    N->>A: RST (abandono, half-open)\n    Note over N,F: Caso 2 - porta FECHADA\n    N->>F: SYN (tento abrir a porta)\n    F-->>N: RST (viva, mas sem serviço)\n    Note over N,F: Caso 3 - porta FILTRADA\n    N->>F: SYN (tento abrir a porta)\n    Note right of F: silêncio - firewall descartou o pacote",
     "legenda": "No SYN scan, o nmap nunca completa a conexão. SYN/ACK significa aberta; RST significa fechada; ausência de resposta significa filtrada (firewall). O envio de RST após o SYN/ACK é o que mantém a conexão half-open."
   },
   "tabelas": [

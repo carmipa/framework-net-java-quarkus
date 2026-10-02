@@ -40,7 +40,7 @@
   ],
   "diagrama": {
     "titulo": "Ping e Traceroute em ação: Echo e Time Exceeded",
-    "definicao": "sequenceDiagram\n    participant O as Origem (seu PC)\n    participant R1 as Roteador salto 1\n    participant R2 as Roteador salto 2\n    participant D as Destino\n\n    Note over O,D: PING (mede o RTT)\n    O->>D: Echo Request (tipo 8, id + seq)\n    D-->>O: Echo Reply (tipo 0, mesmo id + seq)\n    Note over O: RTT = resposta menos envio\n\n    Note over O,D: TRACEROUTE (TTL crescente)\n    O->>R1: Pacote com TTL = 1\n    R1-->>O: Time Exceeded (tipo 11)\n    O->>R2: Pacote com TTL = 2\n    R2-->>O: Time Exceeded (tipo 11)\n    O->>D: Pacote com TTL = 3\n    D-->>O: Resposta final (destino alcancado)",
+    "definicao": "sequenceDiagram\n    participant O as Origem (seu PC)\n    participant R1 as Roteador salto 1\n    participant R2 as Roteador salto 2\n    participant D as Destino\n\n    Note over O,D: PING (mede o RTT)\n    O->>D: Echo Request (tipo 8, id + seq)\n    D-->>O: Echo Reply (tipo 0, mesmo id + seq)\n    Note over O: RTT = resposta menos envio\n\n    Note over O,D: TRACEROUTE (TTL crescente)\n    O->>R1: Pacote com TTL = 1\n    R1-->>O: Time Exceeded (tipo 11)\n    O->>R2: Pacote com TTL = 2\n    R2-->>O: Time Exceeded (tipo 11)\n    O->>D: Pacote com TTL = 3\n    D-->>O: Resposta final (destino alcançado)",
     "legenda": "No ping, o par Echo Request/Echo Reply mede o tempo de ida e volta. No traceroute, cada roteador que zera o TTL delata a si mesmo com um Time Exceeded, revelando a rota salto a salto até o destino responder diretamente."
   },
   "cabecalho": {

@@ -303,7 +303,7 @@ public class Ipv6Calculator {
     private static String uso(Tipo t) {
         return switch (t) {
             case LOOPBACK -> "Testes internos e comunicação dentro do próprio dispositivo";
-            case LINK_LOCAL -> "Comunicação local no enlace, auto-configuração (NDP)";
+            case LINK_LOCAL -> "Comunicação local no enlace, autoconfiguração (NDP)";
             case ULA -> "Comunicação em rede privada, similar ao RFC1918 (ULA)";
             case MULTICAST -> "Transmissão para um grupo de dispositivos";
             case DOCUMENTACAO -> "Exemplos em livros e documentação (RFC 3849); nunca roteado na Internet";

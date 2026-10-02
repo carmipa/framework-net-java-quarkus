@@ -72,7 +72,7 @@
   ],
   "diagrama": {
     "titulo": "O caminho certo e o caminho que vaza",
-    "definicao": "flowchart TD\n    subgraph CERTO[Modo correto - banco protegido]\n        direction LR\n        A1[Aplicacao backend] -->|127.0.0.1 ou rede privada| B1[(Banco de dados)]\n        FW1[Firewall default-deny] -.protege.-> B1\n        AUTH1[Usuario e senha forte] -.exige.-> B1\n    end\n    subgraph ERRADO[Modo errado - banco exposto]\n        direction LR\n        B2[(MongoDB 27017 ou Redis 6379 em bind 0.0.0.0 sem senha)] -->|porta aberta na internet| ATK[Atacante ou scanner automatico]\n        ATK -->|dump e exclusao| RANS[Ransomware de banco]\n    end\n    CERTO -.escolha isto.-> FIM[Dados seguros]\n    ERRADO -.leva a isto.-> VAZ[Vazamento e resgate]",
+    "definicao": "flowchart TD\n    subgraph CERTO[Modo correto - banco protegido]\n        direction LR\n        A1[Aplicação backend] -->|127.0.0.1 ou rede privada| B1[(Banco de dados)]\n        FW1[Firewall default-deny] -.protege.-> B1\n        AUTH1[Usuário e senha forte] -.exige.-> B1\n    end\n    subgraph ERRADO[Modo errado - banco exposto]\n        direction LR\n        B2[(MongoDB 27017 ou Redis 6379 em bind 0.0.0.0 sem senha)] -->|porta aberta na internet| ATK[Atacante ou scanner automático]\n        ATK -->|dump e exclusão| RANS[Ransomware de banco]\n    end\n    CERTO -.escolha isto.-> FIM[Dados seguros]\n    ERRADO -.leva a isto.-> VAZ[Vazamento e resgate]",
     "legenda": "À esquerda, a aplicação fala com o banco por loopback ou rede privada, com firewall e senha. À direita, o banco escuta em 0.0.0.0 sem senha e é encontrado por scanners automáticos que copiam, apagam e cobram resgate pelos dados."
   },
   "tabelas": [

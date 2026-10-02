@@ -72,7 +72,7 @@
   ],
   "diagrama": {
     "titulo": "Ataque de amplificação e reflexão via DNS",
-    "definicao": "sequenceDiagram\n    participant A as Atacante (IP falsificado)\n    participant R as Resolver DNS aberto (53/UDP)\n    participant V as Vitima\n    Note over A: Escreve o IP da vitima<br/>como origem do pacote\n    A->>R: Consulta pequena (ANY example.com) com origem falsa da vitima\n    Note over R: O resolver acredita<br/>na origem e responde\n    R-->>V: Resposta enorme enviada para a vitima\n    Note over V: A vitima recebe trafego<br/>que nunca pediu (DDoS)\n    A->>R: Repete com milhares de resolvers abertos\n    R-->>V: A enxurrada somada satura o link da vitima",
+    "definicao": "sequenceDiagram\n    participant A as Atacante (IP falsificado)\n    participant R as Resolver DNS aberto (53/UDP)\n    participant V as Vítima\n    Note over A: Escreve o IP da vítima<br/>como origem do pacote\n    A->>R: Consulta pequena (ANY example.com) com origem falsa da vítima\n    Note over R: O resolver acredita<br/>na origem e responde\n    R-->>V: Resposta enorme enviada para a vítima\n    Note over V: A vítima recebe tráfego<br/>que nunca pediu (DDoS)\n    A->>R: Repete com milhares de resolvers abertos\n    R-->>V: A enxurrada somada satura o link da vítima",
     "legenda": "As setas contínuas (->>) são os pedidos pequenos do atacante com origem forjada; as tracejadas (-->>) são as respostas grandes que os resolvers despejam sobre a vítima. Um pedido de dezenas de bytes vira resposta de kilobytes, e o volume somado de muitos resolvers derruba o alvo."
   },
   "tabelas": [

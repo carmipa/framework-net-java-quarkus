@@ -67,7 +67,7 @@
   ],
   "diagrama": {
     "titulo": "Sobreposição no 2.4 GHz e os canais 1 / 6 / 11",
-    "definicao": "flowchart LR\n    C1[\"Canal 1 - 2412 MHz\"]:::ok\n    C3[\"Canal 3 - 2422 MHz\"]:::bad\n    C6[\"Canal 6 - 2437 MHz\"]:::ok\n    C9[\"Canal 9 - 2452 MHz\"]:::bad\n    C11[\"Canal 11 - 2462 MHz\"]:::ok\n    C1 -->|\"sobrepoe\"| C3\n    C3 -->|\"sobrepoe\"| C6\n    C6 -->|\"sobrepoe\"| C9\n    C9 -->|\"sobrepoe\"| C11\n    C1 -.->|\"nao sobrepoe\"| C6\n    C6 -.->|\"nao sobrepoe\"| C11\n    classDef ok fill:#1a7f37,color:#ffffff,stroke:#0f5323,stroke-width:2px;\n    classDef bad fill:#b35900,color:#ffffff,stroke:#7a3d00,stroke-width:1px;",
+    "definicao": "flowchart LR\n    C1[\"Canal 1 - 2412 MHz\"]:::ok\n    C3[\"Canal 3 - 2422 MHz\"]:::bad\n    C6[\"Canal 6 - 2437 MHz\"]:::ok\n    C9[\"Canal 9 - 2452 MHz\"]:::bad\n    C11[\"Canal 11 - 2462 MHz\"]:::ok\n    C1 -->|\"sobrepõe\"| C3\n    C3 -->|\"sobrepõe\"| C6\n    C6 -->|\"sobrepõe\"| C9\n    C9 -->|\"sobrepõe\"| C11\n    C1 -.->|\"não sobrepõe\"| C6\n    C6 -.->|\"não sobrepõe\"| C11\n    classDef ok fill:#1a7f37,color:#ffffff,stroke:#0f5323,stroke-width:2px;\n    classDef bad fill:#b35900,color:#ffffff,stroke:#7a3d00,stroke-width:1px;",
     "legenda": "Em verde, o trio ortogonal padrão (1, 6 e 11), separados por 25 MHz cada. As setas cheias mostram que qualquer canal intermediário (3, 9, etc.) invade os vizinhos; as setas tracejadas mostram os saltos sem sobreposição. Com 11 canais, 1, 6 e 11 é a única forma de ter três redes independentes no 2.4 GHz; com os 13 canais do Brasil, 2/7/12 e 3/8/13 também servem."
   },
   "tabelas": [

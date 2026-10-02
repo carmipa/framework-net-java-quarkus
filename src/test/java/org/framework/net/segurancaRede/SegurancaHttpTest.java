@@ -441,6 +441,19 @@ class SegurancaHttpTest {
                 .body(not(containsString("<!DOCTYPE html>")));
     }
 
+    /** CONT-50: a direção do pacote aparecia como o código interno ("SAIDA", sem acento) na tela. */
+    @Test
+    void estadoMostraADirecaoEmPortugues() {
+        given()
+                .when().get("/seguranca/api/estado?cenario=conexao-saida")
+                .then()
+                .statusCode(200)
+                .body(containsString(">Saída</span>"))
+                .body(containsString(">Entrada</span>"))
+                .body(not(containsString(">SAIDA</span>")))
+                .body(not(containsString(">ENTRADA</span>")));
+    }
+
     @Test
     void estadoCenarioDesconhecidoRetorna400() {
         given()

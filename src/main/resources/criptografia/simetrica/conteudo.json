@@ -61,7 +61,7 @@
   ],
   "diagrama": {
     "titulo": "A mesma chave nos dois lados",
-    "definicao": "sequenceDiagram\n    participant A as Alice (emissora)\n    participant C as Canal inseguro\n    participant B as Bob (receptor)\n    Note over A,B: Ambos ja compartilham a mesma chave secreta K\n    A->>A: texto claro + K + nonce\n    A->>A: cifrar com AES-256-GCM\n    A->>C: texto cifrado + nonce + tag\n    C->>B: texto cifrado + nonce + tag\n    B->>B: verificar tag com K\n    B->>B: decifrar com a MESMA chave K\n    Note over B: tag invalida, entao rejeita (nao decifra)",
+    "definicao": "sequenceDiagram\n    participant A as Alice (emissora)\n    participant C as Canal inseguro\n    participant B as Bob (receptor)\n    Note over A,B: Ambos já compartilham a mesma chave secreta K\n    A->>A: texto claro + K + nonce\n    A->>A: cifrar com AES-256-GCM\n    A->>C: texto cifrado + nonce + tag\n    C->>B: texto cifrado + nonce + tag\n    B->>B: verificar tag com K\n    B->>B: decifrar com a MESMA chave K\n    Note over B: tag inválida, entao rejeita (não decifra)",
     "legenda": "A mesma chave secreta K cifra na origem e decifra no destino. O nonce e a tag viajam junto do texto cifrado; o nonce garante unicidade e a tag garante integridade. A chave nunca trafega pelo canal inseguro: ela é combinada antes, tipicamente via troca assimétrica no handshake do TLS."
   },
   "tabelas": [

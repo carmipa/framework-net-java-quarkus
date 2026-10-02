@@ -72,7 +72,7 @@
   ],
   "diagrama": {
     "titulo": "Os quatro usos de um certificado X.509 e o EKU exigido",
-    "definicao": "flowchart TD\n    CA[CA emite certificado<br/>com EKU especifico] --> HTTPS[HTTPS / TLS servidor]\n    CA --> MTLS[mTLS / TLS mutuo]\n    CA --> CS[Code signing]\n    CA --> SMIME[S/MIME / e-mail]\n\n    HTTPS -->|EKU serverAuth| S443[Servidor prova o dominio<br/>na porta 443]\n    MTLS -->|serverAuth + clientAuth| BOTH[Servidor E cliente<br/>provam identidade]\n    CS -->|EKU codeSigning| BIN[Assina binario ou driver<br/>origem + integridade]\n    SMIME -->|EKU emailProtection| MAIL[Assina e cifra<br/>a mensagem]\n\n    S443 -.->|simule a validação| INSP[Inspetor TLS do site<br/>simulação]\n    BOTH -.->|mesmo handshake TLS| INSP",
+    "definicao": "flowchart TD\n    CA[CA emite certificado<br/>com EKU específico] --> HTTPS[HTTPS / TLS servidor]\n    CA --> MTLS[mTLS / TLS mútuo]\n    CA --> CS[Code signing]\n    CA --> SMIME[S/MIME / e-mail]\n\n    HTTPS -->|EKU serverAuth| S443[Servidor prova o domínio<br/>na porta 443]\n    MTLS -->|serverAuth + clientAuth| BOTH[Servidor E cliente<br/>provam identidade]\n    CS -->|EKU codeSigning| BIN[Assina binário ou driver<br/>origem + integridade]\n    SMIME -->|EKU emailProtection| MAIL[Assina e cifra<br/>a mensagem]\n\n    S443 -.->|simule a validação| INSP[Inspetor TLS do site<br/>simulação]\n    BOTH -.->|mesmo handshake TLS| INSP",
     "legenda": "A CA carimba no certificado, via EKU, para que ele serve. HTTPS e mTLS acontecem no handshake TLS (porta 443) — o protocolo TLS do site mostra essa etapa; code signing e S/MIME assinam artefatos fora da conexão."
   },
   "tabelas": [

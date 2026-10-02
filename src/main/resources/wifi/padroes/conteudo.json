@@ -67,7 +67,7 @@
   ],
   "diagrama": {
     "titulo": "Evolução dos padrões 802.11 (1999 a 2024)",
-    "definicao": "flowchart LR\n  b[\"802.11b - 1999\n2.4 GHz - 11 Mbps\nDSSS\"] --> a[\"802.11a - 1999\n5 GHz - 54 Mbps\nOFDM\"]\n  a --> g[\"802.11g - 2003\n2.4 GHz - 54 Mbps\nOFDM\"]\n  g --> n[\"Wi-Fi 4 / 802.11n - 2009\n2.4 e 5 GHz - 600 Mbps\nMIMO\"]\n  n --> ac[\"Wi-Fi 5 / 802.11ac - 2013\n5 GHz - ate 6.9 Gbps\nMU-MIMO (downlink)\"]\n  ac --> ax[\"Wi-Fi 6/6E / 802.11ax - 2019\n2.4/5/6 GHz - 9.6 Gbps\nOFDMA + 1024-QAM\"]\n  ax --> be[\"Wi-Fi 7 / 802.11be - 2024\n2.4/5/6 GHz - 46 Gbps\n320 MHz + MLO\"]",
+    "definicao": "flowchart LR\n  b[\"802.11b - 1999\n2.4 GHz - 11 Mbps\nDSSS\"] --> a[\"802.11a - 1999\n5 GHz - 54 Mbps\nOFDM\"]\n  a --> g[\"802.11g - 2003\n2.4 GHz - 54 Mbps\nOFDM\"]\n  g --> n[\"Wi-Fi 4 / 802.11n - 2009\n2.4 e 5 GHz - 600 Mbps\nMIMO\"]\n  n --> ac[\"Wi-Fi 5 / 802.11ac - 2013\n5 GHz - até 6.9 Gbps\nMU-MIMO (downlink)\"]\n  ac --> ax[\"Wi-Fi 6/6E / 802.11ax - 2019\n2.4/5/6 GHz - 9.6 Gbps\nOFDMA + 1024-QAM\"]\n  ax --> be[\"Wi-Fi 7 / 802.11be - 2024\n2.4/5/6 GHz - 46 Gbps\n320 MHz + MLO\"]",
     "legenda": "Cada geração mantém compatibilidade regressiva com as anteriores na mesma banda; por isso um cliente antigo (ex.: 802.11g) conectado numa rede moderna reduz a eficiência do canal para todos."
   },
   "tabelas": [

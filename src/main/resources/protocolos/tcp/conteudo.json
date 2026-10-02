@@ -77,7 +77,7 @@
   ],
   "diagrama": {
     "titulo": "Ciclo de vida de uma conexão TCP: abertura em 3 vias e encerramento em 4 tempos",
-    "definicao": "sequenceDiagram\n    participant C as Cliente\n    participant S as Servidor\n    Note over S: LISTEN (aguardando conexoes)\n    Note over C: CLOSED\n    C->>S: SYN (seq=x)\n    Note over C: SYN_SENT\n    S-->>C: SYN-ACK (seq=y, ack=x+1)\n    Note over S: SYN_RECEIVED\n    C->>S: ACK (ack=y+1)\n    Note over C,S: ESTABLISHED (dados nos dois sentidos)\n    C->>S: FIN (seq=m)\n    Note over C: FIN_WAIT_1\n    S-->>C: ACK (ack=m+1)\n    Note over C: FIN_WAIT_2\n    Note over S: CLOSE_WAIT\n    S->>C: FIN (seq=n)\n    Note over S: LAST_ACK\n    C-->>S: ACK (ack=n+1)\n    Note over C: TIME_WAIT (espera 2 MSL)\n    Note over S: CLOSED",
+    "definicao": "sequenceDiagram\n    participant C as Cliente\n    participant S as Servidor\n    Note over S: LISTEN (aguardando conexões)\n    Note over C: CLOSED\n    C->>S: SYN (seq=x)\n    Note over C: SYN_SENT\n    S-->>C: SYN-ACK (seq=y, ack=x+1)\n    Note over S: SYN_RECEIVED\n    C->>S: ACK (ack=y+1)\n    Note over C,S: ESTABLISHED (dados nos dois sentidos)\n    C->>S: FIN (seq=m)\n    Note over C: FIN_WAIT_1\n    S-->>C: ACK (ack=m+1)\n    Note over C: FIN_WAIT_2\n    Note over S: CLOSE_WAIT\n    S->>C: FIN (seq=n)\n    Note over S: LAST_ACK\n    C-->>S: ACK (ack=n+1)\n    Note over C: TIME_WAIT (espera 2 MSL)\n    Note over S: CLOSED",
     "legenda": "As setas cheias (->>) são mensagens iniciadas pelo lado; as tracejadas (-->>) são as respostas/confirmações. Cada Note marca o estado da máquina de estados TCP em cada momento. Repare que são 3 mensagens para abrir e 4 para fechar, porque cada lado encerra o seu sentido do fluxo separadamente."
   },
   "cabecalho": {

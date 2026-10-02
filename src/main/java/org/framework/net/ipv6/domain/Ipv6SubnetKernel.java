@@ -48,7 +48,7 @@ public class Ipv6SubnetKernel {
             new FaixaEspecial("2001:2::/48", "Benchmarking", "Testes de desempenho em laboratório; não roteável (RFC 5180)"),
             new FaixaEspecial("2001::/32", "Teredo", "Túnel IPv6 sobre UDP/IPv4"),
             new FaixaEspecial("2002::/16", "6to4", "Túnel IPv6 sobre IPv4"),
-            new FaixaEspecial("fe80::/10", "Link-local", "Válido só no enlace; não roteável (auto-configuração/NDP)"),
+            new FaixaEspecial("fe80::/10", "Link-local", "Válido só no enlace; não roteável (autoconfiguração/NDP)"),
             new FaixaEspecial("fc00::/7", "ULA / Privado", "Uso interno, similar ao RFC 1918 do IPv4 (RFC 4193)"),
             new FaixaEspecial("ff00::/8", "Multicast", "Transmissão para um grupo (IPv6 não tem broadcast)"),
             new FaixaEspecial("2000::/3", "Global unicast", "Roteável na Internet")

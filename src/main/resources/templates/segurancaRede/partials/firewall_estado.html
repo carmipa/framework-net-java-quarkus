@@ -32,7 +32,7 @@
                 <tr>
                     <td class="text-muted">{a.pacote.passo}</td>
                     <td>
-                        <span class="badge bg-secondary">{a.pacote.direcao}</span>
+                        <span class="badge bg-secondary">{#if a.pacote.saida}Saída{#else if a.pacote.entrada}Entrada{#else}{a.pacote.direcao}{/if}</span>
                         <code class="text-info" translate="no">{a.pacote.flag}</code>
                         <div class="text-muted small">{a.pacote.resumo}</div>
                     </td>

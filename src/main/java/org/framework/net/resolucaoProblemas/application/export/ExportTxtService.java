@@ -418,18 +418,18 @@ public class ExportTxtService {
         lines.add("");
         lines.add(packetTracerHardwareNotePlainBlock());
         lines.add("IMPORTANTE — Como este pacote configura a rede:");
-        lines.add("  O Cisco Packet Tracer NAO le um unico ficheiro que aplique tudo sozinho. "
-                + "Os ficheiros .txt deste pacote sao comandos IOS para colar no CLI de cada roteador (bloco a bloco). "
+        lines.add("  O Cisco Packet Tracer NAO le um unico arquivo que aplique tudo sozinho. "
+                + "Os arquivos .txt deste pacote sao comandos IOS para colar no CLI de cada roteador (bloco a bloco). "
                 + "Depois disso, roteamento (EIGRP e/ou OSPF), redistribuicao na fronteira e DHCP "
                 + "passam a funcionar conforme o cenario calculado.");
         lines.add("");
-        lines.add("O QUE HA NESTE PACOTE (ficheiros)");
+        lines.add("O QUE HA NESTE PACOTE (arquivos)");
         lines.add("-".repeat(78));
         lines.add("  1) GUIA_MONTAGEM_PACKET_TRACER.txt (este guia) — leia primeiro.");
         lines.add("  2) README_LAB.txt — instrucoes curtas.");
         lines.add("  3) LAB_TOPOLOGY.mermaid — diagrama logico (topologia WAN + LAN).");
-        lines.add("  4) config_packet_tracer_consolidado.txt — todos os scripts CLI num unico ficheiro.");
-        lines.add("  5) configs_individuais/R-*.txt — um ficheiro por roteador.");
+        lines.add("  4) config_packet_tracer_consolidado.txt — todos os scripts CLI num unico arquivo.");
+        lines.add("  5) configs_individuais/R-*.txt — um arquivo por roteador.");
         lines.add("");
         lines.add("RESUMO DO CENARIO CALCULADO");
         lines.add("-".repeat(78));

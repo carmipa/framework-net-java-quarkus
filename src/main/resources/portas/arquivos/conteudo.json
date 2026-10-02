@@ -77,7 +77,7 @@
   ],
   "diagrama": {
     "titulo": "Cadeia de ataque: SMB (445) exposto até ransomware",
-    "definicao": "flowchart TD\n    A[Atacante na internet] -->|varredura da porta 445| B{445 exposta na borda?}\n    B -->|Nao, bloqueada no firewall| C[Conexao recusada<br/>ataque para aqui]\n    B -->|Sim, SMBv1 sem patch| D[Explora EternalBlue<br/>MS17-010]\n    D --> E[Execucao remota de codigo<br/>sem autenticacao]\n    E --> F[Coleta credenciais<br/>e mapeia shares]\n    F --> G[Movimento lateral<br/>para outras estacoes]\n    G --> H[Ransomware criptografa<br/>arquivos da rede]\n    C -.->|caminho seguro| I[SMBv3 assinado<br/>somente na rede interna]",
+    "definicao": "flowchart TD\n    A[Atacante na internet] -->|varredura da porta 445| B{445 exposta na borda?}\n    B -->|Não, bloqueada no firewall| C[Conexão recusada<br/>ataque para aqui]\n    B -->|Sim, SMBv1 sem patch| D[Explora EternalBlue<br/>MS17-010]\n    D --> E[Execução remota de código<br/>sem autenticação]\n    E --> F[Coleta credenciais<br/>e mapeia shares]\n    F --> G[Movimento lateral<br/>para outras estações]\n    G --> H[Ransomware criptografa<br/>arquivos da rede]\n    C -.->|caminho seguro| I[SMBv3 assinado<br/>somente na rede interna]",
     "legenda": "O ponto de decisão é a exposição da porta 445. Bloqueada na borda, o ataque morre no início. Exposta e sem o patch MS17-010, o EternalBlue abre caminho para execução remota, roubo de credenciais, movimento lateral e, por fim, ransomware em toda a rede."
   },
   "tabelas": [
